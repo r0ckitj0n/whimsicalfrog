@@ -25,6 +25,7 @@ interface ItemInfoColumnProps {
     onLocalSkuChange: (val: string) => void;
     onFieldChange: (field: string, value: string | number) => void;
     onGenerateSku: () => Promise<void>;
+    onRegenerateSku?: () => Promise<void>;
     onGenerateInfoAndMarketing: () => Promise<void>;
     isBusy: boolean;
     primaryImage: string;
@@ -49,6 +50,7 @@ export const ItemInfoColumn: React.FC<ItemInfoColumnProps> = ({
     onLocalSkuChange,
     onFieldChange,
     onGenerateSku,
+    onRegenerateSku,
     onGenerateInfoAndMarketing,
     isBusy,
     primaryImage,
@@ -111,6 +113,16 @@ export const ItemInfoColumn: React.FC<ItemInfoColumnProps> = ({
                                 data-help-id="inventory-sku-generate"
                             >
                                 ✨
+                            </button>
+                        )}
+                        {!isAdding && !isReadOnly && onRegenerateSku && (
+                            <button
+                                onClick={onRegenerateSku}
+                                className="px-3 py-2 bg-amber-100 hover:bg-amber-200 rounded-lg text-sm font-medium transition-colors"
+                                data-help-id="inventory-sku-regenerate"
+                                title="Regenerate SKU and update related records"
+                            >
+                                ♻
                             </button>
                         )}
                     </div>

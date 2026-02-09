@@ -1,4 +1,7 @@
+import { useEffect, useMemo, useState } from 'react';
 import { IBackgroundsHook, IBackground } from '../../../../../types/backgrounds.js';
+import { useAIPromptTemplates } from '../../../../../hooks/admin/useAIPromptTemplates.js';
+import type { IRoomImageGenerationRequest } from '../../../../../types/room-generation.js';
 
 interface VisualsTabProps {
     backgrounds: IBackgroundsHook;
@@ -8,6 +11,7 @@ interface VisualsTabProps {
     onApplyBackground: (bgId: number) => Promise<void>;
     onDeleteBackground: (bgId: number, name: string) => Promise<void>;
     onBackgroundUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
+    onGenerateBackground: (request: IRoomImageGenerationRequest) => Promise<{ success: boolean; error?: string }>;
     getImageUrl: (bg: { webp_filename?: string; image_filename?: string }) => string;
 }
 
@@ -19,8 +23,75 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
     onApplyBackground,
     onDeleteBackground,
     onBackgroundUpload,
+    onGenerateBackground,
     getImageUrl
 }) => {
+    const [selectedTemplateKey, setSelectedTemplateKey] = useState<string>('');
+    const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+    const [isGenerating, setIsGenerating] = useState(false);
+    const {
+        templates,
+        variables,
+        isLoading: templatesLoading,
+        fetchTemplates,
+        fetchVariables
+    } = useAIPromptTemplates();
+
+    const roomTemplates = useMemo(
+        () => templates.filter(t => t.context_type === 'room_generation' && !!t.is_active),
+        [templates]
+    );
+
+    useEffect(() => {
+        void fetchTemplates();
+        void fetchVariables();
+    }, [fetchTemplates, fetchVariables]);
+
+    useEffect(() => {
+        if (!selectedTemplateKey && roomTemplates.length > 0) {
+            setSelectedTemplateKey(roomTemplates[0].template_key);
+        }
+    }, [roomTemplates, selectedTemplateKey]);
+
+    useEffect(() => {
+        if (variables.length === 0) return;
+        setVariableValues(prev => {
+            const next = { ...prev };
+            for (const v of variables) {
+                if (!(v.variable_key in next) && v.sample_value) {
+                    next[v.variable_key] = v.sample_value;
+                }
+            }
+            return next;
+        });
+    }, [variables]);
+
+    const handleGenerate = async () => {
+        if (!selectedRoom) {
+            window.WFToast?.error?.('Select a room first');
+            return;
+        }
+        if (!selectedTemplateKey) {
+            window.WFToast?.error?.('Select an AI template');
+            return;
+        }
+
+        setIsGenerating(true);
+        const result = await onGenerateBackground({
+            room_number: selectedRoom,
+            template_key: selectedTemplateKey,
+            variables: variableValues,
+            provider: 'openai'
+        });
+        setIsGenerating(false);
+
+        if (!result.success) {
+            window.WFToast?.error?.(result.error || 'AI image generation failed');
+            return;
+        }
+        window.WFToast?.success?.('AI room background generated and saved to library');
+    };
+
     return (
         <div className="p-8 lg:p-10 overflow-y-auto flex-1">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -62,6 +133,48 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                         <p className="text-xs font-black text-slate-600 uppercase tracking-widest">Upload Content</p>
                     </button>
                     <input id="bg-upload-input" type="file" className="hidden" accept="image/*" onChange={onBackgroundUpload} />
+
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+                        <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Generate With AI (OpenAI)</div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Template</label>
+                            <select
+                                value={selectedTemplateKey}
+                                onChange={(e) => setSelectedTemplateKey(e.target.value)}
+                                className="w-full text-xs font-bold p-2.5 border border-slate-200 rounded-lg bg-white"
+                                disabled={templatesLoading || isGenerating}
+                            >
+                                <option value="">Select template...</option>
+                                {roomTemplates.map(template => (
+                                    <option key={template.id} value={template.template_key}>
+                                        {template.template_name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="max-h-40 overflow-auto space-y-2 pr-1">
+                            {variables.map(v => (
+                                <div key={`room-var-${v.id}`} className="space-y-1">
+                                    <label className="text-[10px] font-bold text-slate-500">{v.display_name}</label>
+                                    <input
+                                        type="text"
+                                        value={variableValues[v.variable_key] ?? ''}
+                                        onChange={(e) => setVariableValues(prev => ({ ...prev, [v.variable_key]: e.target.value }))}
+                                        className="w-full text-[11px] p-2 border border-slate-200 rounded-lg bg-white"
+                                        disabled={isGenerating}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => void handleGenerate()}
+                            disabled={isGenerating || !selectedTemplateKey || roomTemplates.length === 0}
+                            className="w-full btn btn-primary px-3 py-2 text-[10px] font-black uppercase tracking-widest disabled:opacity-60"
+                        >
+                            {isGenerating ? 'Generating...' : 'Generate Room Image'}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Library */}

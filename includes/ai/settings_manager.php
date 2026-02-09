@@ -17,7 +17,13 @@ class AISettingsManager
             'ai_timeout' => 30,
             'fallback_to_local' => true,
             'ai_brand_voice' => '',
-            'ai_content_tone' => 'professional'
+            'ai_content_tone' => 'professional',
+            'ai_theme_words_enabled' => true,
+            'ai_theme_words_enabled_name' => true,
+            'ai_theme_words_enabled_description' => true,
+            'ai_theme_words_enabled_keywords' => false,
+            'ai_theme_words_enabled_selling_points' => false,
+            'ai_theme_words_enabled_call_to_action' => false
         ];
 
         try {
@@ -29,7 +35,15 @@ class AISettingsManager
                     $defaults[$key] = (float) $value;
                 elseif (in_array($key, ['ai_max_tokens', 'ai_timeout']))
                     $defaults[$key] = (int) $value;
-                elseif (in_array($key, ['fallback_to_local']))
+                elseif (in_array($key, [
+                    'fallback_to_local',
+                    'ai_theme_words_enabled',
+                    'ai_theme_words_enabled_name',
+                    'ai_theme_words_enabled_description',
+                    'ai_theme_words_enabled_keywords',
+                    'ai_theme_words_enabled_selling_points',
+                    'ai_theme_words_enabled_call_to_action'
+                ], true))
                     $defaults[$key] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
                 else
                     $defaults[$key] = $value;
@@ -48,7 +62,25 @@ class AISettingsManager
 
     public static function updateAISettings($settings)
     {
-        $valid = ['ai_provider', 'openai_model', 'anthropic_model', 'google_model', 'meta_model', 'ai_temperature', 'ai_max_tokens', 'ai_timeout', 'fallback_to_local', 'ai_brand_voice', 'ai_content_tone'];
+        $valid = [
+            'ai_provider',
+            'openai_model',
+            'anthropic_model',
+            'google_model',
+            'meta_model',
+            'ai_temperature',
+            'ai_max_tokens',
+            'ai_timeout',
+            'fallback_to_local',
+            'ai_brand_voice',
+            'ai_content_tone',
+            'ai_theme_words_enabled',
+            'ai_theme_words_enabled_name',
+            'ai_theme_words_enabled_description',
+            'ai_theme_words_enabled_keywords',
+            'ai_theme_words_enabled_selling_points',
+            'ai_theme_words_enabled_call_to_action'
+        ];
         $secrets = ['openai_api_key', 'anthropic_api_key', 'google_api_key', 'meta_api_key'];
 
         foreach ($settings as $key => $value) {

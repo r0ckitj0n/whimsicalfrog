@@ -15,6 +15,12 @@ export interface IAISettings {
     fallback_to_local: boolean;
     ai_brand_voice?: string;
     ai_content_tone: string;
+    ai_theme_words_enabled: boolean;
+    ai_theme_words_enabled_name: boolean;
+    ai_theme_words_enabled_description: boolean;
+    ai_theme_words_enabled_keywords: boolean;
+    ai_theme_words_enabled_selling_points: boolean;
+    ai_theme_words_enabled_call_to_action: boolean;
     ai_cost_temperature: number;
     ai_price_temperature: number;
     ai_cost_multiplier_base: number;
@@ -147,6 +153,5 @@ export interface IAISuggestionsParams {
     cost_price?: number | string;
     tier?: string;
 }
-
 
 

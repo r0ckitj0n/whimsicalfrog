@@ -126,7 +126,11 @@ class UserUpdateHelper
                         'role' => $updatedUser['role'],
                         'first_name' => $updatedUser['first_name'] ?? null,
                         'last_name' => $updatedUser['last_name'] ?? null,
-                        'phone_number' => $updatedUser['phone_number'] ?? null
+                        'phone_number' => $updatedUser['phone_number'] ?? null,
+                        'address_line_1' => $updatedUser['address_line_1'] ?? null,
+                        'city' => $updatedUser['city'] ?? null,
+                        'state' => $updatedUser['state'] ?? null,
+                        'zip_code' => $updatedUser['zip_code'] ?? null
                     ];
                 }
             }

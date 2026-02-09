@@ -35,6 +35,58 @@ $whimsicalTheme = isset($input['whimsicalTheme']) ? (bool) $input['whimsicalThem
 $preferredBrandVoice = trim($input['brandVoice'] ?? '');
 $preferredContentTone = trim($input['contentTone'] ?? '');
 $useImages = $input['useImages'] ?? false;
+// Load default AI theme settings so generation behavior can be centrally controlled from AI Settings.
+$aiThemeSettings = [
+    'ai_brand_voice' => '',
+    'ai_content_tone' => 'professional',
+    'ai_theme_words_enabled' => true,
+    'ai_theme_words_enabled_name' => true,
+    'ai_theme_words_enabled_description' => true,
+    'ai_theme_words_enabled_keywords' => false,
+    'ai_theme_words_enabled_selling_points' => false,
+    'ai_theme_words_enabled_call_to_action' => false,
+];
+try {
+    $settingRows = Database::queryAll(
+        "SELECT setting_key, setting_value FROM business_settings
+         WHERE category = 'ai'
+         AND setting_key IN (
+            'ai_brand_voice',
+            'ai_content_tone',
+            'ai_theme_words_enabled',
+            'ai_theme_words_enabled_name',
+            'ai_theme_words_enabled_description',
+            'ai_theme_words_enabled_keywords',
+            'ai_theme_words_enabled_selling_points',
+            'ai_theme_words_enabled_call_to_action'
+         )"
+    );
+    foreach ($settingRows as $row) {
+        $key = (string) ($row['setting_key'] ?? '');
+        if (!array_key_exists($key, $aiThemeSettings)) {
+            continue;
+        }
+        $isBooleanSetting = in_array($key, [
+            'ai_theme_words_enabled',
+            'ai_theme_words_enabled_name',
+            'ai_theme_words_enabled_description',
+            'ai_theme_words_enabled_keywords',
+            'ai_theme_words_enabled_selling_points',
+            'ai_theme_words_enabled_call_to_action'
+        ], true);
+        $aiThemeSettings[$key] = $isBooleanSetting
+            ? filter_var((string) ($row['setting_value'] ?? ''), FILTER_VALIDATE_BOOLEAN)
+            : trim((string) ($row['setting_value'] ?? ''));
+    }
+} catch (Throwable $settingsError) {
+    error_log('suggest_marketing.php failed loading AI theme settings: ' . $settingsError->getMessage());
+}
+if ($preferredBrandVoice === '') {
+    $preferredBrandVoice = trim((string) ($aiThemeSettings['ai_brand_voice'] ?? ''));
+}
+if ($preferredContentTone === '') {
+    $preferredContentTone = trim((string) ($aiThemeSettings['ai_content_tone'] ?? 'professional'));
+}
 
 if (empty($name)) {
     Response::error('Item name is required for marketing suggestion.', 400);
@@ -52,13 +104,30 @@ if ($whimsicalTheme !== null) {
 }
 
 $themeInspiration = [];
-if ($whimsicalTheme || $preferredContentTone === 'whimsical_frog') {
+$themeWordsEnabled = (bool) ($aiThemeSettings['ai_theme_words_enabled'] ?? true);
+$themeWordFieldSettings = [
+    'name/title' => (bool) ($aiThemeSettings['ai_theme_words_enabled_name'] ?? true),
+    'description' => (bool) ($aiThemeSettings['ai_theme_words_enabled_description'] ?? true),
+    'keywords' => (bool) ($aiThemeSettings['ai_theme_words_enabled_keywords'] ?? false),
+    'selling points' => (bool) ($aiThemeSettings['ai_theme_words_enabled_selling_points'] ?? false),
+    'calls to action' => (bool) ($aiThemeSettings['ai_theme_words_enabled_call_to_action'] ?? false),
+];
+$enabledThemeWordFields = [];
+foreach ($themeWordFieldSettings as $fieldName => $isEnabled) {
+    if ($isEnabled) {
+        $enabledThemeWordFields[] = $fieldName;
+    }
+}
+$themeModeRequested = ($whimsicalTheme || $preferredContentTone === 'whimsical_frog');
+if ($themeWordsEnabled && $themeModeRequested && !empty($enabledThemeWordFields)) {
     require_once __DIR__ . '/../includes/theme_words/manager.php';
     $themeInspiration = get_whimsical_inspiration(5);
     $wordList = array_map(fn($item) => $item['text'], $themeInspiration);
     if (!empty($wordList)) {
+        $enabledFieldsForPrompt = implode(', ', $enabledThemeWordFields);
         $brandVoicePrompt .= ". Incorporate these brand-aligned keywords organically: " . implode(', ', $wordList);
         $contentTonePrompt .= ". Use a selection of these words if they fit the context: " . implode(', ', $wordList);
+        $contentTonePrompt .= ". Apply theme words only to these fields: {$enabledFieldsForPrompt}.";
     }
 }
 

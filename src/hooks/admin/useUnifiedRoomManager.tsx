@@ -209,6 +209,16 @@ export const useUnifiedRoomManager = ({
             }
         }, [selectedRoom, backgrounds]),
 
+        handleGenerateBackground: useCallback(async (request: import('../../types/room-generation.js').IRoomImageGenerationRequest) => {
+            if (!selectedRoom) {
+                return { success: false, error: 'No room selected' };
+            }
+            return backgrounds.generateRoomBackground({
+                ...request,
+                room_number: selectedRoom
+            });
+        }, [selectedRoom, backgrounds]),
+
         // Handlers - Boundaries (delegated to base boundaries hook with room scope)
         handleActivateMap: useCallback(async (id: string | number) => {
             if (selectedRoom) {

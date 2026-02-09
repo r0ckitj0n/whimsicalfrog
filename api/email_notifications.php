@@ -12,7 +12,7 @@ function sendOrderConfirmationEmails($order_id, $pdo)
 {
     $results = [WF_Constants::ROLE_CUSTOMER => false, WF_Constants::ROLE_ADMIN => false];
     try {
-        $order = Database::queryOne("SELECT o.*, u.first_name, u.last_name, u.email, u.username, u.phone_number FROM orders o LEFT JOIN users u ON o.user_id = u.id WHERE o.id = ?", [$order_id]);
+        $order = Database::queryOne("SELECT o.*, u.first_name, u.last_name, u.email, u.username, u.phone_number, u.role FROM orders o LEFT JOIN users u ON o.user_id = u.id WHERE o.id = ?", [$order_id]);
         if (!$order)
             return $results;
 
@@ -27,10 +27,8 @@ function sendOrderConfirmationEmails($order_id, $pdo)
             $templates[$a['email_type']] = $a;
 
         $vars = EmailNotificationHelper::prepareOrderVariables($order, $orderItems);
-
-        if (isset($templates[WF_Constants::EMAIL_TYPE_ORDER_CONFIRMATION]) && !empty($order['email'])) {
-            $results['customer'] = sendTemplatedEmail($templates[WF_Constants::EMAIL_TYPE_ORDER_CONFIRMATION], $order['email'], $vars, WF_Constants::EMAIL_TYPE_ORDER_CONFIRMATION);
-        }
+        $customerEmail = trim((string) ($order['email'] ?? ''));
+        $adminEmail = null;
 
         if (isset($templates[WF_Constants::EMAIL_TYPE_ADMIN_NOTIFICATION])) {
             $adminEmail = defined('ADMIN_EMAIL') ? ADMIN_EMAIL : null;
@@ -41,6 +39,23 @@ function sendOrderConfirmationEmails($order_id, $pdo)
             }
             if ($adminEmail)
                 $results['admin'] = sendTemplatedEmail($templates[WF_Constants::EMAIL_TYPE_ADMIN_NOTIFICATION], $adminEmail, $vars, WF_Constants::EMAIL_TYPE_ADMIN_NOTIFICATION);
+        }
+
+        if (isset($templates[WF_Constants::EMAIL_TYPE_ORDER_CONFIRMATION]) && $customerEmail !== '') {
+            // Avoid sending customer "thank you" template to the configured admin mailbox.
+            $sameAsAdminRecipient = is_string($adminEmail) && $adminEmail !== '' && strcasecmp($customerEmail, $adminEmail) === 0;
+            $role = strtolower(trim((string) ($order['role'] ?? '')));
+            $isAdminPurchaser = in_array($role, [
+                WF_Constants::ROLE_ADMIN,
+                WF_Constants::ROLE_SUPERADMIN,
+                WF_Constants::ROLE_DEVOPS,
+                'administrator'
+            ], true);
+            if ($sameAsAdminRecipient || $isAdminPurchaser) {
+                error_log("Skipped order_confirmation for order {$order_id}: recipient is admin mailbox or admin purchaser");
+            } else {
+                $results['customer'] = sendTemplatedEmail($templates[WF_Constants::EMAIL_TYPE_ORDER_CONFIRMATION], $customerEmail, $vars, WF_Constants::EMAIL_TYPE_ORDER_CONFIRMATION);
+            }
         }
     } catch (Exception $e) {
         error_log("Email error: " . $e->getMessage());

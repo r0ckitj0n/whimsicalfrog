@@ -62,6 +62,7 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
         handleApplyBackground,
         handleDeleteBackground,
         handleBackgroundUpload,
+        handleGenerateBackground,
         handleSaveBoundaries,
         handleDeleteMap,
         handleRenameMap,
@@ -205,6 +206,7 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                                     onApplyBackground={handleApplyBackground}
                                     onDeleteBackground={handleDeleteBackground}
                                     onBackgroundUpload={handleBackgroundUpload}
+                                    onGenerateBackground={handleGenerateBackground}
                                     getImageUrl={getImageUrl}
                                 />
                             )}

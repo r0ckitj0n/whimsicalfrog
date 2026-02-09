@@ -69,6 +69,12 @@ function getAISettings()
         'fallback_to_local' => true,
         'ai_brand_voice' => '',
         'ai_content_tone' => 'professional',
+        'ai_theme_words_enabled' => true,
+        'ai_theme_words_enabled_name' => true,
+        'ai_theme_words_enabled_description' => true,
+        'ai_theme_words_enabled_keywords' => false,
+        'ai_theme_words_enabled_selling_points' => false,
+        'ai_theme_words_enabled_call_to_action' => false,
         // Advanced AI Temperature & Configuration Settings
         'ai_cost_temperature' => 0.7,
         'ai_price_temperature' => 0.7,
@@ -92,7 +98,16 @@ function getAISettings()
                 $defaults[$key] = (float) $value;
             } elseif (in_array($key, ['ai_max_tokens', 'ai_timeout'])) {
                 $defaults[$key] = (int) $value;
-            } elseif (in_array($key, ['fallback_to_local', 'ai_conservative_mode'])) {
+            } elseif (in_array($key, [
+                'fallback_to_local',
+                'ai_conservative_mode',
+                'ai_theme_words_enabled',
+                'ai_theme_words_enabled_name',
+                'ai_theme_words_enabled_description',
+                'ai_theme_words_enabled_keywords',
+                'ai_theme_words_enabled_selling_points',
+                'ai_theme_words_enabled_call_to_action'
+            ], true)) {
                 $defaults[$key] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
             } else {
                 $defaults[$key] = $value;
@@ -201,6 +216,12 @@ function initializeAISettings($pdo)
         'fallback_to_local' => ['1', $descriptions['fallback_to_local'], 'boolean', "Fallback to Jon's AI"],
         'ai_brand_voice' => ['', $descriptions['ai_brand_voice'], 'text', $displayNames['ai_brand_voice']],
         'ai_content_tone' => ['professional', $descriptions['ai_content_tone'], 'text', $displayNames['ai_content_tone']],
+        'ai_theme_words_enabled' => ['1', $descriptions['ai_theme_words_enabled'], 'boolean', $displayNames['ai_theme_words_enabled']],
+        'ai_theme_words_enabled_name' => ['1', $descriptions['ai_theme_words_enabled_name'], 'boolean', $displayNames['ai_theme_words_enabled_name']],
+        'ai_theme_words_enabled_description' => ['1', $descriptions['ai_theme_words_enabled_description'], 'boolean', $displayNames['ai_theme_words_enabled_description']],
+        'ai_theme_words_enabled_keywords' => ['0', $descriptions['ai_theme_words_enabled_keywords'], 'boolean', $displayNames['ai_theme_words_enabled_keywords']],
+        'ai_theme_words_enabled_selling_points' => ['0', $descriptions['ai_theme_words_enabled_selling_points'], 'boolean', $displayNames['ai_theme_words_enabled_selling_points']],
+        'ai_theme_words_enabled_call_to_action' => ['0', $descriptions['ai_theme_words_enabled_call_to_action'], 'boolean', $displayNames['ai_theme_words_enabled_call_to_action']],
         'ai_cost_temperature' => ['0.7', $descriptions['ai_cost_temperature'], 'number', $displayNames['ai_cost_temperature']],
         'ai_price_temperature' => ['0.7', $descriptions['ai_price_temperature'], 'number', $displayNames['ai_price_temperature']],
         'ai_cost_multiplier_base' => ['1.0', $descriptions['ai_cost_multiplier_base'], 'number', $displayNames['ai_cost_multiplier_base']],
@@ -224,4 +245,3 @@ function initializeAISettings($pdo)
 
     return $inserted;
 }
-

@@ -38,6 +38,7 @@ export interface IBackgroundsHook {
     fetchRooms: () => Promise<void>;
     fetchBackgroundsForRoom: (room: string) => Promise<void>;
     uploadBackground: (file: File, roomNumber: string, name?: string) => Promise<{ success: boolean; data?: { success?: boolean }; error?: string }>;
+    generateRoomBackground: (request: import('./room-generation.js').IRoomImageGenerationRequest) => Promise<{ success: boolean; data?: import('./room-generation.js').IRoomImageGenerationResponse['data']; error?: string }>;
     applyBackground: (room: string, backgroundId: number) => Promise<boolean>;
     deleteBackground: (backgroundId: number, room: string) => Promise<boolean>;
 }

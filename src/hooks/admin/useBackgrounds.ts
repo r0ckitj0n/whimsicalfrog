@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { ApiClient } from '../../core/ApiClient.js';
 import logger from '../../core/logger.js';
 import type { IBackground, IBackgroundRoomOption, IBackgroundsResponse } from '../../types/backgrounds.js';
+import type { IRoomImageGenerationRequest, IRoomImageGenerationResponse } from '../../types/room-generation.js';
 
 // Re-export for backward compatibility
 export type { IBackground, IBackgroundRoomOption as IRoomOption } from '../../types/backgrounds.js';
@@ -147,6 +148,31 @@ export const useBackgrounds = () => {
         }
     }, [fetchBackgroundsForRoom]);
 
+    const generateRoomBackground = useCallback(async (request: IRoomImageGenerationRequest): Promise<{ success: boolean; data?: IRoomImageGenerationResponse['data']; error?: string }> => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const res = await ApiClient.post<IRoomImageGenerationResponse>('/api/generate_room_image.php', request);
+            if (!res?.success) {
+                throw new Error(res?.error || 'Failed to generate room background');
+            }
+
+            const room = request.room_number;
+            if (room) {
+                await fetchBackgroundsForRoom(room);
+            }
+
+            return { success: true, data: res.data };
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Failed to generate room background';
+            logger.error('generateRoomBackground failed', err);
+            setError(message);
+            return { success: false, error: message };
+        } finally {
+            setIsLoading(false);
+        }
+    }, [fetchBackgroundsForRoom]);
+
     const deleteBackground = useCallback(async (backgroundId: number, room: string) => {
         setIsLoading(true);
         try {
@@ -176,6 +202,7 @@ export const useBackgrounds = () => {
         fetchRooms,
         fetchBackgroundsForRoom,
         uploadBackground,
+        generateRoomBackground,
         applyBackground,
         deleteBackground
     };

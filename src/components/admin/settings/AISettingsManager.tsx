@@ -5,6 +5,8 @@ import { isDraftDirty } from '../../../core/utils.js';
 import { ProviderConfiguration } from './ai/ProviderConfiguration.js';
 import { BehaviorParameters } from './ai/BehaviorParameters.js';
 import { PricingWeights } from './ai/PricingWeights.js';
+import { SystemPromptsTab } from './ai/SystemPromptsTab.js';
+import { ThemeWordsTab } from './ai/ThemeWordsTab.js';
 import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface AISettingsManagerProps {
@@ -24,6 +26,8 @@ interface TestResult {
     details?: TestDetails;
 }
 
+type AISettingsTab = 'provider' | 'tuning' | 'theme_words' | 'prompts';
+
 export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, title }) => {
     const {
         settings,
@@ -40,6 +44,7 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, t
     const [initialState, setInitialState] = useState<IAISettings | null>(null);
     const [testResult, setTestResult] = useState<TestResult | null>(null);
     const [isTesting, setIsTesting] = useState(false);
+    const [activeTab, setActiveTab] = useState<AISettingsTab>('provider');
     const hasInitialized = useRef(false);
 
     useEffect(() => {
@@ -170,6 +175,39 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, t
                     </div>
                 </div>
 
+                <div className="px-6 pt-4">
+                    <div className="wf-tabs bg-slate-100/50 rounded-2xl p-1.5 border border-slate-200/50 flex items-center gap-1.5 self-start">
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('provider')}
+                            className={`wf-tab ${activeTab === 'provider' ? 'is-active' : ''}`}
+                        >
+                            AI Provider
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('tuning')}
+                            className={`wf-tab ${activeTab === 'tuning' ? 'is-active' : ''}`}
+                        >
+                            AI Tuning
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('theme_words')}
+                            className={`wf-tab ${activeTab === 'theme_words' ? 'is-active' : ''}`}
+                        >
+                            Theme Words
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('prompts')}
+                            className={`wf-tab ${activeTab === 'prompts' ? 'is-active' : ''}`}
+                        >
+                            System Prompts
+                        </button>
+                    </div>
+                </div>
+
                 <div className="modal-body wf-admin-modal-body flex-1 overflow-y-auto">
                     <div className="p-10">
                         {error && <div className="p-4 mb-8 bg-red-50 border border-red-100 text-red-600 text-xs font-bold rounded-2xl animate-in shake duration-500">Error: {error}</div>}
@@ -208,10 +246,10 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, t
                         </div>
 
                         <form onSubmit={handleSave} className="space-y-0">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                <div className="space-y-10">
+                            {activeTab === 'provider' && (
+                                <div className="space-y-10 max-w-3xl">
                                     <div className="space-y-4">
-                                        <label className="block text-xs font-black text-gray-400 uppercase tracking-widest leading-none mb-1.5 ml-1">1. AI Provider</label>
+                                        <label className="block text-xs font-black text-gray-400 uppercase tracking-widest leading-none mb-1.5 ml-1">AI Provider</label>
                                         <div className="space-y-3">
                                             <select
                                                 value={localSettings.ai_provider}
@@ -233,8 +271,10 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, t
                                         onChange={handleChange}
                                     />
                                 </div>
+                            )}
 
-                                <div className="space-y-10">
+                            {activeTab === 'tuning' && (
+                                <div className="space-y-10 max-w-3xl">
                                     <BehaviorParameters
                                         settings={localSettings}
                                         onChange={handleChange}
@@ -245,7 +285,18 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, t
                                         onChange={handleChange}
                                     />
                                 </div>
-                            </div>
+                            )}
+
+                            {activeTab === 'prompts' && (
+                                <SystemPromptsTab />
+                            )}
+
+                            {activeTab === 'theme_words' && (
+                                <ThemeWordsTab
+                                    settings={localSettings}
+                                    onChange={handleChange}
+                                />
+                            )}
                         </form>
                     </div>
                 </div>

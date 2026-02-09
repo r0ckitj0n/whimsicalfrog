@@ -4,6 +4,12 @@ interface IAuthFormData {
     username: string;
     password: string;
     email?: string;
+    first_name?: string;
+    last_name?: string;
+    address_line_1?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
 }
 
 interface AuthFormProps {
@@ -40,16 +46,91 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                 </div>
 
                 {mode === 'register' && (
-                    <div className="flex flex-col">
-                        <label>Email</label>
-                        <input
-                            type="email" name="email" required
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            className="form-input"
-                            placeholder=""
-                        />
-                    </div>
+                    <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="flex flex-col">
+                                <label>First Name</label>
+                                <input
+                                    type="text"
+                                    name="first_name"
+                                    value={formData.first_name || ''}
+                                    onChange={handleInputChange}
+                                    className="form-input"
+                                    placeholder=""
+                                />
+                            </div>
+                            <div className="flex flex-col">
+                                <label>Last Name</label>
+                                <input
+                                    type="text"
+                                    name="last_name"
+                                    value={formData.last_name || ''}
+                                    onChange={handleInputChange}
+                                    className="form-input"
+                                    placeholder=""
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col">
+                            <label>Email</label>
+                            <input
+                                type="email" name="email" required
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                className="form-input"
+                                placeholder=""
+                            />
+                        </div>
+
+                        <div className="flex flex-col">
+                            <label>Address</label>
+                            <input
+                                type="text"
+                                name="address_line_1"
+                                value={formData.address_line_1 || ''}
+                                onChange={handleInputChange}
+                                className="form-input"
+                                placeholder=""
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="flex flex-col">
+                                <label>City</label>
+                                <input
+                                    type="text"
+                                    name="city"
+                                    value={formData.city || ''}
+                                    onChange={handleInputChange}
+                                    className="form-input"
+                                    placeholder=""
+                                />
+                            </div>
+                            <div className="flex flex-col">
+                                <label>State</label>
+                                <input
+                                    type="text"
+                                    name="state"
+                                    value={formData.state || ''}
+                                    onChange={handleInputChange}
+                                    className="form-input"
+                                    placeholder=""
+                                />
+                            </div>
+                            <div className="flex flex-col">
+                                <label>ZIP</label>
+                                <input
+                                    type="text"
+                                    name="zip_code"
+                                    value={formData.zip_code || ''}
+                                    onChange={handleInputChange}
+                                    className="form-input"
+                                    placeholder=""
+                                />
+                            </div>
+                        </div>
+                    </>
                 )}
 
                 <div className="flex flex-col">

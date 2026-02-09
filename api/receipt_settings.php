@@ -9,14 +9,11 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/receipt/settings_manager.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/ai_providers.php';
 
-$isAdmin = (isset($_SESSION['user']['role']) && strtolower($_SESSION['user']['role']) === WF_Constants::ROLE_ADMIN) ||
-    (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false);
-
-if (!$isAdmin) {
-    Response::forbidden('Admin access required');
-}
+// Centralized admin guard to keep role handling consistent (admin/superadmin/devops/administrator).
+AuthHelper::requireAdmin(403, 'Admin access required');
 
 try {
     Database::getInstance();

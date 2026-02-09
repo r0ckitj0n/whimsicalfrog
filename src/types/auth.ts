@@ -7,6 +7,9 @@ export interface IUserProfile {
     last_name?: string;
     phone_number?: string;
     address_line_1?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
     profile_completion_required?: boolean;
 }
 
@@ -27,6 +30,9 @@ export interface IWhoAmIResponse {
     first_name: string;
     last_name: string;
     address_line_1?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
     profile_completion_required?: boolean;
 }
 
@@ -48,6 +54,10 @@ export interface IRegisterData {
     email: string;
     first_name: string;
     last_name: string;
+    address_line_1?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
 }
 
 export interface ICompleteProfileRequest {
@@ -56,6 +66,9 @@ export interface ICompleteProfileRequest {
     email: string;
     phone_number: string;
     address_line_1: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
 }
 
 export interface ICompleteProfileResponse {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { IEmailLog } from '../../../../../hooks/admin/useEmailHistory.js';
 import { EMAIL_STATUS } from '../../../../../core/constants.js';
 import { formatDate, formatTime } from '../../../../../core/date-utils.js';
@@ -9,9 +10,19 @@ interface EmailLogDetailModalProps {
 }
 
 export const EmailLogDetailModal: React.FC<EmailLogDetailModalProps> = ({ log, onClose }) => {
-    return (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95">
+    const modalContent = (
+        <div
+            className="admin-modal-overlay over-header show topmost"
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => {
+                if (e.target === e.currentTarget) onClose();
+            }}
+        >
+            <div
+                className="admin-modal admin-modal-content show bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <div className="px-6 py-4 border-b bg-gray-50 flex items-center justify-between">
                     <h3 className="font-bold text-gray-800">Email Details</h3>
                     <button
@@ -69,4 +80,6 @@ export const EmailLogDetailModal: React.FC<EmailLogDetailModalProps> = ({ log, o
             </div>
         </div>
     );
+
+    return createPortal(modalContent, document.body);
 };

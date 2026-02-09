@@ -113,6 +113,9 @@ try {
     $email = null;
     $phone_number = null;
     $address_line_1 = null;
+    $city = null;
+    $state = null;
+    $zip_code = null;
     $profile_completion_required = false;
 
     if (!empty($_SESSION['user'])) {
@@ -130,6 +133,9 @@ try {
         $email = $user['email'] ?? null;
         $phone_number = $user['phone_number'] ?? null;
         $address_line_1 = $user['address_line_1'] ?? null;
+        $city = $user['city'] ?? null;
+        $state = $user['state'] ?? null;
+        $zip_code = $user['zip_code'] ?? null;
         $profile_completion_required = !empty($user['profile_completion_required']);
     } elseif (isset($_SESSION['user_id'])) {
         $user_id_raw = is_scalar($_SESSION['user_id']) ? (string) $_SESSION['user_id'] : null;
@@ -204,6 +210,15 @@ try {
     }
     if ($address_line_1 !== null) {
         $payload['address_line_1'] = (string) $address_line_1;
+    }
+    if ($city !== null) {
+        $payload['city'] = (string) $city;
+    }
+    if ($state !== null) {
+        $payload['state'] = (string) $state;
+    }
+    if ($zip_code !== null) {
+        $payload['zip_code'] = (string) $zip_code;
     }
     $payload['profile_completion_required'] = $profile_completion_required;
 

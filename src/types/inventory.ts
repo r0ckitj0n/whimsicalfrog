@@ -231,6 +231,17 @@ export interface IAddInventoryResponse extends ICommonApiResponse {
     };
 }
 
+export interface ISkuRegenerateResponse {
+    success: boolean;
+    current_sku?: string;
+    new_sku?: string;
+    updated_counts?: Record<string, number>;
+    skipped_targets?: string[];
+    excluded_historical_targets?: string[];
+    message?: string;
+    error?: string;
+}
+
 /** Audit item structure used in inventory health checks */
 export interface IAuditItem {
     sku: string;

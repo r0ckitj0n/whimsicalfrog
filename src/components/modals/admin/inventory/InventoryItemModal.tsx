@@ -84,6 +84,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
         setLocalSku,
         handleFieldChange,
         generateSku,
+        regenerateSku,
         handleGenerateAll,
         handleGenerateInfoAndMarketing,
         handleSave,
@@ -248,6 +249,24 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
             return prev;
         });
     };
+
+    const handleRegenerateSku = useCallback(async () => {
+        const result = await regenerateSku();
+        if (!result.success || !result.newSku || result.newSku === sku || isAdding) return;
+
+        setSearchParams(prev => {
+            prev.delete('add');
+            if (mode === 'view') {
+                prev.set('view', result.newSku as string);
+                prev.delete('edit');
+            } else {
+                prev.set('edit', result.newSku as string);
+                prev.delete('view');
+            }
+            return prev;
+        });
+        onSaved?.();
+    }, [regenerateSku, sku, isAdding, setSearchParams, mode, onSaved]);
 
     const attemptClose = async () => {
         if (isSaving) return;
@@ -455,6 +474,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                                 onLocalSkuChange={setLocalSku}
                                 onFieldChange={handleFieldChange}
                                 onGenerateSku={generateSku}
+                                onRegenerateSku={handleRegenerateSku}
                                 onGenerateInfoAndMarketing={handleGenerateInfoAndMarketing}
                                 isBusy={is_busy}
                                 primaryImage={resolvedPrimaryImage}

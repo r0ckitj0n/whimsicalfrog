@@ -17,6 +17,8 @@ export type {
 } from './payment.js';
 export type { PaymentMethod, ShippingMethod } from './payment.js';
 export type * from './ai.js';
+export type * from './ai-prompts.js';
+export type * from './room-generation.js';
 export type * from './newsletter.js';
 // dashboard.ts has IDashboardMetrics which conflicts with admin.ts, use dashboard version
 export type {
@@ -52,4 +54,3 @@ export type * from './help.js';
 export type * from './marketing.js';
 export type * from './shipping.js';
 export type * from './pos.js';
-

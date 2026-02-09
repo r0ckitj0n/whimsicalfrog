@@ -5,7 +5,7 @@ import { useInventoryAI } from './useInventoryAI.js';
 import { useCostBreakdown } from './useCostBreakdown.js';
 import { usePriceBreakdown } from './usePriceBreakdown.js';
 import { useAIGenerationOrchestrator, type GenerationStep, type GenerationContext } from './useAIGenerationOrchestrator.js';
-import { IInventoryItem, IItemDetails } from '../../types/inventory.js';
+import { IInventoryItem, IItemDetails, ISkuRegenerateResponse } from '../../types/inventory.js';
 import type { MarketingData } from './inventory-ai/useMarketingManager.js';
 import type { IAISuggestionsParams, IAISuggestionsResponse } from '../../types/ai.js';
 
@@ -254,6 +254,47 @@ export const useInventoryItemForm = ({
         setIsDirty(true);
         window.WFToast?.info?.('Temporary SKU assigned. Final category SKU is generated when saving.');
     };
+
+    const regenerateSku = useCallback(async (): Promise<{ success: boolean; newSku?: string; updatedCounts?: Record<string, number>; error?: string }> => {
+        if (isAdding || isReadOnly || isSaving) {
+            return { success: false, error: 'SKU regeneration is only available while editing.' };
+        }
+
+        const currentSku = String(item?.sku || localSku || '').trim();
+        if (!currentSku) {
+            return { success: false, error: 'Current SKU is missing.' };
+        }
+
+        try {
+            const res = await ApiClient.post<ISkuRegenerateResponse>('/api/regenerate_sku.php', {
+                current_sku: currentSku,
+                category: formData.category || undefined
+            });
+
+            if (!res?.success || !res.new_sku) {
+                const error = res?.error || 'Failed to regenerate SKU';
+                window.WFToast?.error?.(error);
+                return { success: false, error };
+            }
+
+            setLocalSku(res.new_sku);
+            setIsDirty(false);
+            refresh();
+
+            const updatedTargets = Object.values(res.updated_counts || {}).reduce((sum, count) => sum + Number(count || 0), 0);
+            window.WFToast?.success?.(`SKU updated to ${res.new_sku} (${updatedTargets} references updated)`);
+
+            return {
+                success: true,
+                newSku: res.new_sku,
+                updatedCounts: res.updated_counts || {}
+            };
+        } catch (err) {
+            const error = err instanceof Error ? err.message : 'Failed to regenerate SKU';
+            window.WFToast?.error?.(error);
+            return { success: false, error };
+        }
+    }, [isAdding, isReadOnly, isSaving, item?.sku, localSku, formData.category, refresh]);
 
     const promoteTempSkuForCategory = useCallback(async (resolvedCategory: string) => {
         if (!isAdding) return;
@@ -651,6 +692,7 @@ export const useInventoryItemForm = ({
         generateSku,
         handleGenerateAll,
         handleGenerateInfoAndMarketing,
+        regenerateSku,
         handleSave,
         handleApplyCost,
         handleApplyPrice,

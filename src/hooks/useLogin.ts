@@ -21,7 +21,11 @@ export const useLogin = (initialMode: 'login' | 'register' = 'login', onClose: (
         password: '',
         email: '',
         first_name: '',
-        last_name: ''
+        last_name: '',
+        address_line_1: '',
+        city: '',
+        state: '',
+        zip_code: ''
     });
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);

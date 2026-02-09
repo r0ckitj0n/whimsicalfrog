@@ -29,6 +29,80 @@ interface CreateRoomFormState {
     generate_image: boolean;
 }
 
+const AUTOGENERATE_LABEL = '(autogenerate)';
+
+const furnitureStyleOptions = [
+    AUTOGENERATE_LABEL,
+    'tiered light-wood shelving units',
+    'modern matte-black floating shelves',
+    'rustic reclaimed wood display tables',
+    'glass-front display cabinets',
+    'industrial pipe-and-wood shelving',
+    'curved boutique wall niches',
+    'minimal white modular cubes',
+    'vintage apothecary drawer wall'
+];
+
+const accentDecorOptions = [
+    AUTOGENERATE_LABEL,
+    'tiny potted succulents and miniature ceramic milk jugs',
+    'small lanterns and mossy stones',
+    'hanging ivy strands and brass trinkets',
+    'vintage books and porcelain figurines',
+    'woven baskets and dried florals',
+    'mini chalkboards and painted pebbles',
+    'glass bottles with fairy lights',
+    'seasonal garlands and ribbon bundles'
+];
+
+const frogActionOptions = [
+    AUTOGENERATE_LABEL,
+    'wiping down the empty counter with a cloth',
+    'adjusting shelf spacing with a tape measure',
+    'reviewing a clipboard checklist',
+    'arranging decorative props near displays',
+    'welcoming visitors with a cheerful wave',
+    'pointing toward featured display zones',
+    'inspecting lighting over the shelving',
+    'sweeping the floor with a tiny broom'
+];
+
+const vibeOptions = [
+    AUTOGENERATE_LABEL,
+    'refreshing and bright',
+    'cozy and inviting',
+    'playful and energetic',
+    'calm and elegant',
+    'warm and nostalgic',
+    'whimsical and magical',
+    'modern and premium',
+    'rustic and handcrafted'
+];
+
+const colorSchemeOptions = [
+    AUTOGENERATE_LABEL,
+    "robin's egg blue and soft orange",
+    'sage green and cream',
+    'dusty rose and antique gold',
+    'navy and warm brass',
+    'mint and coral',
+    'charcoal and ivory',
+    'lavender and pale teal',
+    'terracotta and sand'
+];
+
+const backgroundElementsOptions = [
+    AUTOGENERATE_LABEL,
+    'giant floating fruit shapes',
+    'oversized botanical motifs',
+    'storybook clouds and stars',
+    'subtle geometric wall inlays',
+    'ornate vintage frames and arches',
+    'floating paper lantern clusters',
+    'soft mural waves and swirls',
+    'woodland silhouettes and vines'
+];
+
 const defaultFormState: CreateRoomFormState = {
     room_number: '',
     room_name: '',
@@ -36,12 +110,12 @@ const defaultFormState: CreateRoomFormState = {
     display_order: 0,
     description: '',
     room_theme: '',
-    display_furniture_style: 'tiered light-wood shelving units',
-    thematic_accent_decorations: 'tiny potted succulents and miniature ceramic milk jugs',
-    frog_action: 'wiping down the empty counter with a cloth',
-    vibe_adjectives: 'refreshing and bright',
-    color_scheme: "robin's egg blue and soft orange",
-    background_thematic_elements: 'giant floating fruit shapes',
+    display_furniture_style: AUTOGENERATE_LABEL,
+    thematic_accent_decorations: AUTOGENERATE_LABEL,
+    frog_action: AUTOGENERATE_LABEL,
+    vibe_adjectives: AUTOGENERATE_LABEL,
+    color_scheme: AUTOGENERATE_LABEL,
+    background_thematic_elements: AUTOGENERATE_LABEL,
     image_size: '1536x1024',
     generate_image: true
 };
@@ -96,6 +170,13 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
     }, [variables]);
 
     const resolvedVariables = useMemo(() => {
+        const normalizeAutoValue = (value: string, fallbackInstruction: string): string => {
+            const trimmed = value.trim();
+            if (!trimmed || trimmed.toLowerCase() === AUTOGENERATE_LABEL.toLowerCase()) {
+                return fallbackInstruction;
+            }
+            return trimmed;
+        };
         const roomTheme = form.room_theme.trim() || form.room_name.trim() || form.description.trim() || 'cozy boutique';
         return {
             ...variableDefaults,
@@ -105,12 +186,30 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             display_order: String(form.display_order || 0),
             room_description: form.description.trim(),
             room_theme: roomTheme,
-            display_furniture_style: form.display_furniture_style.trim(),
-            thematic_accent_decorations: form.thematic_accent_decorations.trim(),
-            frog_action: form.frog_action.trim(),
-            vibe_adjectives: form.vibe_adjectives.trim(),
-            color_scheme: form.color_scheme.trim(),
-            background_thematic_elements: form.background_thematic_elements.trim()
+            display_furniture_style: normalizeAutoValue(
+                form.display_furniture_style,
+                'Invent a custom display furniture style specifically for this room context; do not pick from preset dropdown examples'
+            ),
+            thematic_accent_decorations: normalizeAutoValue(
+                form.thematic_accent_decorations,
+                'Invent custom accent decorations that fit this room context and keep staging surfaces open; do not pick from preset dropdown examples'
+            ),
+            frog_action: normalizeAutoValue(
+                form.frog_action,
+                'Invent a custom frog proprietor action that matches this room concept; do not pick from preset dropdown examples'
+            ),
+            vibe_adjectives: normalizeAutoValue(
+                form.vibe_adjectives,
+                'Invent custom vibe adjectives that best fit this room concept; do not pick from preset dropdown examples'
+            ),
+            color_scheme: normalizeAutoValue(
+                form.color_scheme,
+                'Invent a custom color scheme suitable for this room concept and product presentation; do not pick from preset dropdown examples'
+            ),
+            background_thematic_elements: normalizeAutoValue(
+                form.background_thematic_elements,
+                'Invent custom oversized thematic background elements for this room context; do not pick from preset dropdown examples'
+            )
         };
     }, [form, variableDefaults]);
 
@@ -184,6 +283,31 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
 
     const updateForm = <K extends keyof CreateRoomFormState>(key: K, value: CreateRoomFormState[K]) => {
         setForm((prev) => ({ ...prev, [key]: value }));
+    };
+
+    const renderEditableDropdown = (
+        label: string,
+        field: keyof CreateRoomFormState,
+        value: string,
+        options: string[]
+    ) => {
+        const listId = `create-room-${String(field)}-options`;
+        return (
+            <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</label>
+                <input
+                    list={listId}
+                    value={value}
+                    onChange={(e) => updateForm(field, e.target.value as CreateRoomFormState[typeof field])}
+                    className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white"
+                />
+                <datalist id={listId}>
+                    {options.map((opt) => (
+                        <option key={`${listId}-${opt}`} value={opt} />
+                    ))}
+                </datalist>
+            </div>
+        );
     };
 
     const handleCopyPrompt = async () => {
@@ -356,32 +480,14 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Room Theme</label>
                                     <input value={form.room_theme} onChange={(e) => updateForm('room_theme', e.target.value)} className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white" />
                                 </div>
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Furniture Style</label>
-                                    <input value={form.display_furniture_style} onChange={(e) => updateForm('display_furniture_style', e.target.value)} className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white" />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Accent Decor</label>
-                                    <input value={form.thematic_accent_decorations} onChange={(e) => updateForm('thematic_accent_decorations', e.target.value)} className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white" />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Frog Action</label>
-                                    <input value={form.frog_action} onChange={(e) => updateForm('frog_action', e.target.value)} className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white" />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Vibe</label>
-                                    <input value={form.vibe_adjectives} onChange={(e) => updateForm('vibe_adjectives', e.target.value)} className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white" />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Color Scheme</label>
-                                    <input value={form.color_scheme} onChange={(e) => updateForm('color_scheme', e.target.value)} className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white" />
-                                </div>
+                                {renderEditableDropdown('Furniture Style', 'display_furniture_style', form.display_furniture_style, furnitureStyleOptions)}
+                                {renderEditableDropdown('Accent Decor', 'thematic_accent_decorations', form.thematic_accent_decorations, accentDecorOptions)}
+                                {renderEditableDropdown('Frog Action', 'frog_action', form.frog_action, frogActionOptions)}
+                                {renderEditableDropdown('Vibe', 'vibe_adjectives', form.vibe_adjectives, vibeOptions)}
+                                {renderEditableDropdown('Color Scheme', 'color_scheme', form.color_scheme, colorSchemeOptions)}
                             </div>
 
-                            <div>
-                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Background Elements</label>
-                                <input value={form.background_thematic_elements} onChange={(e) => updateForm('background_thematic_elements', e.target.value)} className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white" />
-                            </div>
+                            {renderEditableDropdown('Background Elements', 'background_thematic_elements', form.background_thematic_elements, backgroundElementsOptions)}
                         </div>
                     </div>
 

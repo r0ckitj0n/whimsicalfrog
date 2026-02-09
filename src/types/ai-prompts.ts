@@ -21,6 +21,8 @@ export interface IAIPromptVariable {
     updated_at?: string;
 }
 
+export type IAIPromptDropdownOptionsByVariable = Record<string, string[]>;
+
 export interface IAIGenerationHistoryRow {
     id: number;
     template_key: string;
@@ -33,6 +35,12 @@ export interface IAIGenerationHistoryRow {
     error_message?: string;
     created_by?: string;
     created_at: string;
+}
+
+export interface IAIPromptDropdownOptionsResponse {
+    success: boolean;
+    options_by_variable?: IAIPromptDropdownOptionsByVariable;
+    error?: string;
 }
 
 export interface IAIPromptTemplatesResponse {

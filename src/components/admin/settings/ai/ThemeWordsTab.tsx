@@ -44,7 +44,7 @@ export const ThemeWordsTab: React.FC<ThemeWordsTabProps> = ({ settings, onChange
     const masterEnabled = settings.ai_theme_words_enabled ?? true;
 
     return (
-        <div className="space-y-8 max-w-3xl">
+        <div className="space-y-8 max-w-none">
             <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
                 <div className="flex items-start justify-between gap-4">
                     <div>
@@ -67,7 +67,7 @@ export const ThemeWordsTab: React.FC<ThemeWordsTabProps> = ({ settings, onChange
 
             <div className={`rounded-2xl border p-5 ${masterEnabled ? 'border-emerald-100 bg-emerald-50/30' : 'border-slate-200 bg-slate-50/50'}`}>
                 <h4 className="text-xs font-black uppercase tracking-widest text-slate-700 mb-4">Field Controls</h4>
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                     {fieldToggles.map((toggle) => (
                         <label
                             key={toggle.key}

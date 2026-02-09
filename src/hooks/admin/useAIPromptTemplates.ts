@@ -7,12 +7,15 @@ import type {
     IAIPromptTemplatesResponse,
     IAIPromptVariablesResponse,
     IAIPromptTemplateActionResponse,
-    IAIGenerationHistoryRow
+    IAIGenerationHistoryRow,
+    IAIPromptDropdownOptionsByVariable,
+    IAIPromptDropdownOptionsResponse
 } from '../../types/ai-prompts.js';
 
 export const useAIPromptTemplates = () => {
     const [templates, setTemplates] = useState<IAIPromptTemplate[]>([]);
     const [variables, setVariables] = useState<IAIPromptVariable[]>([]);
+    const [dropdownOptionsByVariable, setDropdownOptionsByVariable] = useState<IAIPromptDropdownOptionsByVariable>({});
     const [history, setHistory] = useState<IAIGenerationHistoryRow[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -57,6 +60,42 @@ export const useAIPromptTemplates = () => {
         }
     }, []);
 
+    const fetchDropdownOptions = useCallback(async () => {
+        setError(null);
+        try {
+            const res = await ApiClient.get<IAIPromptDropdownOptionsResponse>('/api/ai_prompt_templates.php', { action: 'list_dropdown_options' });
+            if (res?.success) {
+                setDropdownOptionsByVariable(res.options_by_variable || {});
+            } else {
+                setError(res?.error || 'Failed to load dropdown options');
+            }
+        } catch (err) {
+            logger.error('[useAIPromptTemplates] fetchDropdownOptions failed', err);
+            setError('Unable to load dropdown options');
+        }
+    }, []);
+
+    const saveDropdownOptions = useCallback(async (optionsByVariable: IAIPromptDropdownOptionsByVariable) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const res = await ApiClient.post<IAIPromptTemplateActionResponse>('/api/ai_prompt_templates.php?action=save_dropdown_options', {
+                options_by_variable: optionsByVariable
+            });
+            if (!res?.success) {
+                throw new Error(res?.error || 'Failed to save dropdown options');
+            }
+            await fetchDropdownOptions();
+            return { success: true };
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Failed to save dropdown options';
+            setError(message);
+            return { success: false, error: message };
+        } finally {
+            setIsLoading(false);
+        }
+    }, [fetchDropdownOptions]);
+
     const saveTemplate = useCallback(async (template: Partial<IAIPromptTemplate>) => {
         setIsLoading(true);
         setError(null);
@@ -98,13 +137,16 @@ export const useAIPromptTemplates = () => {
     return {
         templates,
         variables,
+        dropdownOptionsByVariable,
         history,
         isLoading,
         error,
         fetchTemplates,
         fetchVariables,
         fetchHistory,
+        fetchDropdownOptions,
         saveTemplate,
-        deleteTemplate
+        deleteTemplate,
+        saveDropdownOptions
     };
 };

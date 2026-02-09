@@ -8,6 +8,100 @@ require_once __DIR__ . '/../includes/auth_helper.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
+const AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL = '(autogenerate)';
+const AI_PROMPT_DROPDOWN_DEFAULTS = [
+    'display_furniture_style' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'tiered light-wood shelving units',
+        'modern matte-black floating shelves',
+        'rustic reclaimed wood display tables',
+        'glass-front display cabinets',
+        'industrial pipe-and-wood shelving',
+        'curved boutique wall niches',
+        'minimal white modular cubes',
+        'vintage apothecary drawer wall',
+    ],
+    'thematic_accent_decorations' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'tiny potted succulents and miniature ceramic milk jugs',
+        'small lanterns and mossy stones',
+        'hanging ivy strands and brass trinkets',
+        'vintage books and porcelain figurines',
+        'woven baskets and dried florals',
+        'mini chalkboards and painted pebbles',
+        'glass bottles with fairy lights',
+        'seasonal garlands and ribbon bundles',
+    ],
+    'frog_action' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'wiping down the empty counter with a cloth',
+        'adjusting shelf spacing with a tape measure',
+        'reviewing a clipboard checklist',
+        'arranging decorative props near displays',
+        'welcoming visitors with a cheerful wave',
+        'pointing toward featured display zones',
+        'inspecting lighting over the shelving',
+        'sweeping the floor with a tiny broom',
+    ],
+    'vibe_adjectives' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'refreshing and bright',
+        'cozy and inviting',
+        'playful and energetic',
+        'calm and elegant',
+        'warm and nostalgic',
+        'whimsical and magical',
+        'modern and premium',
+        'rustic and handcrafted',
+    ],
+    'color_scheme' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        "robin's egg blue and soft orange",
+        'sage green and cream',
+        'dusty rose and antique gold',
+        'navy and warm brass',
+        'mint and coral',
+        'charcoal and ivory',
+        'lavender and pale teal',
+        'terracotta and sand',
+    ],
+    'background_thematic_elements' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'giant floating fruit shapes',
+        'oversized botanical motifs',
+        'storybook clouds and stars',
+        'subtle geometric wall inlays',
+        'ornate vintage frames and arches',
+        'floating paper lantern clusters',
+        'soft mural waves and swirls',
+        'woodland silhouettes and vines',
+    ],
+];
+
+function ai_prompt_templates_normalize_dropdown_values(array $rawOptions): array
+{
+    $seen = [];
+    $normalized = [AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL];
+
+    foreach ($rawOptions as $raw) {
+        $value = trim((string) $raw);
+        if ($value === '') {
+            continue;
+        }
+        if (strlen($value) > 191) {
+            throw new InvalidArgumentException('Dropdown option values must be 191 characters or fewer');
+        }
+        $key = strtolower($value);
+        if (isset($seen[$key]) || $key === strtolower(AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL)) {
+            continue;
+        }
+        $seen[$key] = true;
+        $normalized[] = $value;
+    }
+
+    return $normalized;
+}
+
 function ai_prompt_templates_init_tables(): void
 {
     Database::execute("CREATE TABLE IF NOT EXISTS ai_prompt_templates (
@@ -50,6 +144,18 @@ function ai_prompt_templates_init_tables(): void
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         INDEX idx_template_created (template_key, created_at),
         INDEX idx_status_created (status, created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    Database::execute("CREATE TABLE IF NOT EXISTS ai_prompt_dropdown_options (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        variable_key VARCHAR(120) NOT NULL,
+        option_value VARCHAR(191) NOT NULL,
+        display_order INT NOT NULL DEFAULT 0,
+        is_active TINYINT(1) NOT NULL DEFAULT 1,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_variable_option (variable_key, option_value),
+        INDEX idx_variable_active_order (variable_key, is_active, display_order)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
@@ -126,6 +232,24 @@ PROMPT;
             [$v[0], $v[1], $v[2], $v[3]]
         );
     }
+
+    foreach (AI_PROMPT_DROPDOWN_DEFAULTS as $variableKey => $values) {
+        $existing = Database::queryOne(
+            'SELECT COUNT(*) AS cnt FROM ai_prompt_dropdown_options WHERE variable_key = ?',
+            [$variableKey]
+        );
+        if ((int) ($existing['cnt'] ?? 0) > 0) {
+            continue;
+        }
+        $normalizedValues = ai_prompt_templates_normalize_dropdown_values($values);
+        foreach ($normalizedValues as $index => $value) {
+            Database::execute(
+                "INSERT INTO ai_prompt_dropdown_options (variable_key, option_value, display_order, is_active)
+                 VALUES (?, ?, ?, 1)",
+                [$variableKey, $value, $index]
+            );
+        }
+    }
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
@@ -137,7 +261,7 @@ if ($action === '' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'GET') {
     $action = 'list_templates';
 }
 
-$readActions = ['list_templates', 'list_variables', 'list_history'];
+$readActions = ['list_templates', 'list_variables', 'list_history', 'list_dropdown_options'];
 if (!in_array($action, $readActions, true)) {
     Response::validateMethod('POST');
 }
@@ -169,6 +293,31 @@ try {
                  ORDER BY display_name ASC'
             );
             Response::json(['success' => true, 'variables' => $variables]);
+            break;
+        }
+
+        case 'list_dropdown_options': {
+            $rows = Database::queryAll(
+                'SELECT variable_key, option_value
+                 FROM ai_prompt_dropdown_options
+                 WHERE is_active = 1
+                 ORDER BY variable_key ASC, display_order ASC, id ASC'
+            );
+
+            $optionsByVariable = [];
+            foreach ($rows as $row) {
+                $variableKey = trim((string) ($row['variable_key'] ?? ''));
+                $value = trim((string) ($row['option_value'] ?? ''));
+                if ($variableKey === '' || $value === '') {
+                    continue;
+                }
+                if (!isset($optionsByVariable[$variableKey])) {
+                    $optionsByVariable[$variableKey] = [];
+                }
+                $optionsByVariable[$variableKey][] = $value;
+            }
+
+            Response::json(['success' => true, 'options_by_variable' => $optionsByVariable]);
             break;
         }
 
@@ -212,6 +361,34 @@ try {
 
             Database::execute('DELETE FROM ai_prompt_templates WHERE id = ?', [$id]);
             Response::json(['success' => true, 'message' => 'Template deleted']);
+            break;
+        }
+
+        case 'save_dropdown_options': {
+            $incoming = $input['options_by_variable'] ?? null;
+            if (!is_array($incoming)) {
+                Response::error('options_by_variable object is required', null, 422);
+            }
+
+            foreach ($incoming as $variableKey => $options) {
+                $key = trim((string) $variableKey);
+                if ($key === '' || !preg_match('/^[a-z0-9_]+$/', $key)) {
+                    Response::error('Invalid variable_key in options_by_variable', null, 422);
+                }
+                if (!is_array($options)) {
+                    Response::error('Each options_by_variable entry must be an array of strings', null, 422);
+                }
+                $normalizedValues = ai_prompt_templates_normalize_dropdown_values($options);
+                Database::execute('DELETE FROM ai_prompt_dropdown_options WHERE variable_key = ?', [$key]);
+                foreach ($normalizedValues as $index => $value) {
+                    Database::execute(
+                        'INSERT INTO ai_prompt_dropdown_options (variable_key, option_value, display_order, is_active) VALUES (?, ?, ?, 1)',
+                        [$key, $value, $index]
+                    );
+                }
+            }
+
+            Response::json(['success' => true, 'message' => 'Dropdown options saved']);
             break;
         }
 

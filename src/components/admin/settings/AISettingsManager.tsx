@@ -247,10 +247,10 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, t
 
                         <form onSubmit={handleSave} className="space-y-0">
                             {activeTab === 'provider' && (
-                                <div className="space-y-10 max-w-3xl">
-                                    <div className="space-y-4">
+                                <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+                                    <div className="xl:col-span-5 space-y-4">
                                         <label className="block text-xs font-black text-gray-400 uppercase tracking-widest leading-none mb-1.5 ml-1">AI Provider</label>
-                                        <div className="space-y-3">
+                                        <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
                                             <select
                                                 value={localSettings.ai_provider}
                                                 onChange={e => handleChange('ai_provider', e.target.value)}
@@ -264,17 +264,19 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, t
                                         </div>
                                     </div>
 
-                                    <ProviderConfiguration
-                                        settings={localSettings}
-                                        models={models}
-                                        onFetchModels={fetchModels}
-                                        onChange={handleChange}
-                                    />
+                                    <div className="xl:col-span-7">
+                                        <ProviderConfiguration
+                                            settings={localSettings}
+                                            models={models}
+                                            onFetchModels={fetchModels}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
                                 </div>
                             )}
 
                             {activeTab === 'tuning' && (
-                                <div className="space-y-10 max-w-3xl">
+                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
                                     <BehaviorParameters
                                         settings={localSettings}
                                         onChange={handleChange}
@@ -292,10 +294,12 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, t
                             )}
 
                             {activeTab === 'theme_words' && (
-                                <ThemeWordsTab
-                                    settings={localSettings}
-                                    onChange={handleChange}
-                                />
+                                <div className="max-w-none">
+                                    <ThemeWordsTab
+                                        settings={localSettings}
+                                        onChange={handleChange}
+                                    />
+                                </div>
                             )}
                         </form>
                     </div>

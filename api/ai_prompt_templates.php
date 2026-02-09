@@ -65,8 +65,10 @@ Room description/context: {{room_description}}.
 Create a themed {{room_theme}} corner inside the whimsical frog’s cottage.
 
 The area features prominent {{display_furniture_style}} intended for future product placement.
-CRITICAL CONSTRAINT: The main surfaces of these displays must remain completely flat and empty.
-Include small, non-obtrusive {{thematic_accent_decorations}} placed intermittently as separators/bookends, leaving clear open spaces between accents.
+CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.
+Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.
+Keep decorative elements strictly on walls, ceiling, floor edges, corners, or perimeter zones away from display surfaces.
+Maintain large uninterrupted open display zones for future item placement.
 
 The signature fedora-wearing 3D cartoon frog is present as the proprietor. He is depicted {{frog_action}}, surveying his shop with pride.
 

@@ -70,8 +70,10 @@ Room description/context: {{room_description}}.
 Create a themed {{room_theme}} corner inside the whimsical frog’s cottage.
 
 The area features prominent {{display_furniture_style}} intended for future product placement.
-CRITICAL CONSTRAINT: The main surfaces of these displays must remain completely flat and empty.
-Include small, non-obtrusive {{thematic_accent_decorations}} placed intermittently as separators/bookends, leaving clear open spaces between accents.
+CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.
+Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.
+Keep decorative elements strictly on walls, ceiling, floor edges, corners, or perimeter zones away from display surfaces.
+Maintain large uninterrupted open display zones for future item placement.
 
 The signature fedora-wearing 3D cartoon frog is present as the proprietor. He is depicted {{frog_action}}, surveying his shop with pride.
 
@@ -422,12 +424,29 @@ try {
         $backgroundName .= ' ' . date('Ymd-His');
     }
 
+    $savedImageUrl = '/images/' . $pngRel;
+
     Database::execute(
         'INSERT INTO backgrounds (room_number, name, image_filename, png_filename, webp_filename, is_active) VALUES (?, ?, ?, ?, ?, 0)',
         [$roomNumber, $backgroundName, $pngRel, $pngRel, $webpRel]
     );
 
     $backgroundId = (int) Database::lastInsertId();
+
+    $roomSettingsUpdated = false;
+    try {
+        $updated = Database::execute(
+            "UPDATE room_settings
+             SET background_url = ?
+             WHERE room_number = ?
+               AND (background_url IS NULL OR TRIM(background_url) = '')",
+            [$savedImageUrl, $roomNumber]
+        );
+        $roomSettingsUpdated = $updated > 0;
+    } catch (Throwable $roomSettingsError) {
+        error_log('generate_room_image room_settings background_url update failed: ' . $roomSettingsError->getMessage());
+    }
+
     $historyId = wf_log_generation_history([
         'template_key' => $templateKey,
         'prompt_text' => $prompt,
@@ -450,10 +469,11 @@ try {
             'image_filename' => $pngRel,
             'webp_filename' => $webpRel,
             'is_active' => 0,
-            'image_url' => '/images/' . $pngRel,
+            'image_url' => $savedImageUrl,
             'webp_url' => $webpRel !== '' ? '/images/' . $webpRel : null
         ],
         'history_id' => $historyId,
+        'room_settings_background_url_updated' => $roomSettingsUpdated,
         'template_key' => $templateKey,
         'provider' => $provider,
         'model' => $model,

@@ -68,10 +68,12 @@ export const BoundariesTab: React.FC<BoundariesTabProps> = ({
     isEditMode,
     previewKey
 }) => {
+    const resolvedBackgroundUrl = bgUrl || getImageUrl(activeBackground || {});
+
     return (
         <div className="flex-1 h-full flex overflow-hidden min-h-0">
             <MapSidebar
-                bgUrl={bgUrl || getImageUrl(activeBackground || {})}
+                bgUrl={resolvedBackgroundUrl}
                 onBgUrlChange={onBgUrlChange}
                 iconPanelColor={iconPanelColor}
                 onIconPanelColorChange={onIconPanelColorChange}
@@ -101,7 +103,7 @@ export const BoundariesTab: React.FC<BoundariesTabProps> = ({
             <main className="flex-1 h-full relative bg-slate-900/50 overflow-y-auto overflow-x-hidden min-h-0 p-1 pointer-events-auto">
                 <div className="flex items-start justify-center min-h-full pointer-events-auto">
                     <MapCanvas
-                        bgUrl={getImageUrl(activeBackground || {})}
+                        bgUrl={resolvedBackgroundUrl}
                         areas={areas}
                         onAreasChange={onAreasChange}
                         selectedIds={selectedIds}

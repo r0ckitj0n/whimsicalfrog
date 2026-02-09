@@ -214,6 +214,42 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
         primaryImageUrl: string,
         lockedWords?: Record<string, string>
     ): Promise<GenerationStepResult> => {
+        const mapInfoResponse = (response: {
+            success: boolean;
+            info_suggestion?: {
+                name?: string;
+                description?: string;
+                category?: string;
+                weight_oz?: number | string;
+                package_length_in?: number | string;
+                package_width_in?: number | string;
+                package_height_in?: number | string;
+            };
+            error?: string;
+        }): GenerationStepResult => {
+            if (response && response.success && response.info_suggestion) {
+                return {
+                    success: true,
+                    stepName: 'info',
+                    data: {
+                        name: response.info_suggestion.name || '',
+                        description: response.info_suggestion.description || '',
+                        category: response.info_suggestion.category || '',
+                        weightOz: toNumber(response.info_suggestion.weight_oz),
+                        packageLengthIn: toNumber(response.info_suggestion.package_length_in),
+                        packageWidthIn: toNumber(response.info_suggestion.package_width_in),
+                        packageHeightIn: toNumber(response.info_suggestion.package_height_in)
+                    }
+                };
+            }
+            return {
+                success: false,
+                stepName: 'info',
+                data: {},
+                error: response?.error || 'Failed to generate item info from image'
+            };
+        };
+
         try {
             console.log('[AI Orchestrator] executeInfoStep called with:', { sku, primaryImageUrl: primaryImageUrl?.substring(0, 100) });
 
@@ -241,28 +277,40 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
             });
 
             console.log('[AI Orchestrator] executeInfoStep response:', response);
-
-            if (response && response.success && response.info_suggestion) {
-                return {
-                    success: true,
-                    stepName: 'info',
-                    data: {
-                        name: response.info_suggestion.name || '',
-                        description: response.info_suggestion.description || '',
-                        category: response.info_suggestion.category || '',
-                        weightOz: toNumber(response.info_suggestion.weight_oz),
-                        packageLengthIn: toNumber(response.info_suggestion.package_length_in),
-                        packageWidthIn: toNumber(response.info_suggestion.package_width_in),
-                        packageHeightIn: toNumber(response.info_suggestion.package_height_in)
-                    }
-                };
+            const firstPass = mapInfoResponse(response);
+            if (firstPass.success) {
+                return firstPass;
             }
-            return {
-                success: false,
-                stepName: 'info',
-                data: {},
-                error: response?.error || 'Failed to generate item info from image'
-            };
+
+            const shouldFallbackToTextOnly = (firstPass.error || '').toLowerCase().includes('vision-capable model');
+            if (shouldFallbackToTextOnly) {
+                const fallback = await ApiClient.post<{
+                    success: boolean;
+                    info_suggestion?: {
+                        name?: string;
+                        description?: string;
+                        category?: string;
+                        weight_oz?: number | string;
+                        package_length_in?: number | string;
+                        package_width_in?: number | string;
+                        package_height_in?: number | string;
+                    };
+                    error?: string;
+                }>('/api/suggest_all.php', {
+                    sku,
+                    useImages: false,
+                    step: 'info',
+                    locked_words: lockedWords || {},
+                    image_first_priority: false
+                });
+                const fallbackResult = mapInfoResponse(fallback);
+                if (fallbackResult.success) {
+                    window.WFToast?.info?.('Vision model unavailable; generated item info using text-only fallback.');
+                    return fallbackResult;
+                }
+            }
+
+            return firstPass;
         } catch (err) {
             logger.error('Info generation step failed', err);
             return {

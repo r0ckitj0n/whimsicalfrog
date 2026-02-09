@@ -143,27 +143,31 @@ export const MediaAndVariantsSection: React.FC<MediaAndVariantsSectionProps> = (
                 </div>
             </div>
 
-            <div className="bg-gradient-to-br from-emerald-50 via-green-50/70 to-white rounded-2xl border border-emerald-200 shadow-sm overflow-hidden">
-                <div className="px-4 py-2.5 bg-emerald-50/80 border-b border-emerald-200">
-                    <h3 className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest flex items-center gap-2">
-                        <span>👔</span> Gender, Size & Color Management
-                    </h3>
+            {!isAdding && (
+                <div className="bg-gradient-to-br from-emerald-50 via-green-50/70 to-white rounded-2xl border border-emerald-200 shadow-sm overflow-hidden">
+                    <div className="px-4 py-2.5 bg-emerald-50/80 border-b border-emerald-200">
+                        <h3 className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest flex items-center gap-2">
+                            <span>👔</span> Gender, Size & Color Management
+                        </h3>
+                    </div>
+                    <div className="p-4">
+                    <p className="text-xs text-slate-600 mb-2">
+                        Nested Inventory Editor (by Gender → Color → Size)
+                    </p>
+                    <NestedInventoryTable
+                        sku={sku}
+                        isReadOnly={isReadOnly}
+                        onStockChange={onStockChange}
+                    />
+                    </div>
                 </div>
-                <div className="p-4">
-                <p className="text-xs text-slate-600 mb-2">
-                    Nested Inventory Editor (by Gender → Color → Size)
-                </p>
-                <NestedInventoryTable
-                    sku={sku}
-                    isReadOnly={isReadOnly || isAdding}
-                    onStockChange={onStockChange}
-                />
-                </div>
-            </div>
+            )}
 
-            <div className="bg-gradient-to-br from-amber-50 via-orange-50/70 to-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden">
-                <OptionSettingsPanel sku={sku} isReadOnly={isReadOnly} />
-            </div>
+            {!isAdding && (
+                <div className="bg-gradient-to-br from-amber-50 via-orange-50/70 to-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden">
+                    <OptionSettingsPanel sku={sku} isReadOnly={isReadOnly} />
+                </div>
+            )}
         </div>
     );
 };

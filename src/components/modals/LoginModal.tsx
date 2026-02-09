@@ -104,6 +104,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 left: `${left}px`,
                 width: `${width}px`,
                 maxWidth: `${width}px`,
+                maxHeight: `calc(100vh - ${Math.max(top + 12, 24)}px)`,
                 margin: 0
             } : {
                 margin: 'auto'
@@ -224,4 +225,3 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 };
 
 export default LoginModal;
-

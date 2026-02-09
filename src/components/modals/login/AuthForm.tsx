@@ -16,6 +16,8 @@ interface IAuthFormData {
 interface AuthFormProps {
     mode: 'login' | 'register';
     formData: IAuthFormData;
+    canSubmitRegister: boolean;
+    registerHelperText: string | null;
     isLoading: boolean;
     error: string | null;
     success: string | null;
@@ -26,6 +28,8 @@ interface AuthFormProps {
 export const AuthForm: React.FC<AuthFormProps> = ({
     mode,
     formData,
+    canSubmitRegister,
+    registerHelperText,
     isLoading,
     error,
     success,
@@ -58,6 +62,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                                     onChange={handleInputChange}
                                     className="form-input"
                                     placeholder=""
+                                    required
                                 />
                             </div>
                             <div className="flex flex-col">
@@ -69,6 +74,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                                     onChange={handleInputChange}
                                     className="form-input"
                                     placeholder=""
+                                    required
                                 />
                             </div>
                         </div>
@@ -93,6 +99,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                                 onChange={handleInputChange}
                                 className="form-input"
                                 placeholder=""
+                                required
                             />
                         </div>
 
@@ -118,6 +125,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                                     onChange={handleInputChange}
                                     className="form-input"
                                     placeholder=""
+                                    required
                                 />
                             </div>
                             <div className="flex flex-col">
@@ -129,6 +137,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                                     onChange={handleInputChange}
                                     className="form-input"
                                     placeholder=""
+                                    required
                                 />
                             </div>
                             <div className="flex flex-col">
@@ -140,6 +149,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                                     onChange={handleInputChange}
                                     className="form-input"
                                     placeholder=""
+                                    required
                                 />
                             </div>
                         </div>
@@ -160,7 +170,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
 
                 <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isLoading || (mode === 'register' && !canSubmitRegister)}
                     className="btn btn-primary w-full py-4 flex items-center justify-center gap-2 uppercase tracking-widest font-black"
                 >
                     {isLoading ? (
@@ -172,6 +182,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                     )}
                     <span>{mode === 'login' ? "Let's Go" : 'Create Account'}</span>
                 </button>
+
+                {mode === 'register' && !isLoading && !canSubmitRegister && registerHelperText && (
+                    <p className="text-sm font-semibold text-amber-700 text-center -mt-2">
+                        {registerHelperText}
+                    </p>
+                )}
             </form>
 
             {error && (

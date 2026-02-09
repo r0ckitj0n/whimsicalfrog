@@ -5,6 +5,7 @@ require_once dirname(__DIR__) . '/api/config.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
 require_once dirname(__DIR__) . '/includes/response.php';
 require_once dirname(__DIR__) . '/includes/user_meta.php';
+require_once dirname(__DIR__) . '/includes/helpers/ProfileCompletionHelper.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
@@ -24,7 +25,7 @@ try {
     $data = Response::getJsonInput();
 
     // Validate required fields
-    $required = ['username', 'email', 'password'];
+    $required = ['username', 'email', 'password', 'first_name', 'last_name', 'address_line_1', 'city', 'state', 'zip_code'];
     foreach ($required as $field) {
         if (!isset($data[$field]) || empty($data[$field])) {
             Response::error("$field is required");
@@ -43,6 +44,10 @@ try {
         Response::error('Invalid email format');
     }
 
+    if ($username === '' || trim($password) === '') {
+        Response::error('username and password are required');
+    }
+
     // Optional fields
     $first_name = trim($data['first_name'] ?? '');
     $last_name = trim($data['last_name'] ?? '');
@@ -52,6 +57,20 @@ try {
     $city = trim($data['city'] ?? '');
     $state = trim($data['state'] ?? '');
     $zip_code = trim($data['zip_code'] ?? '');
+
+    $requiredProfileFields = [
+        'first_name' => $first_name,
+        'last_name' => $last_name,
+        'address_line_1' => $address_line_1,
+        'city' => $city,
+        'state' => $state,
+        'zip_code' => $zip_code,
+    ];
+    foreach ($requiredProfileFields as $field => $value) {
+        if ($value === '') {
+            Response::error("$field is required");
+        }
+    }
 
     // Check if username already exists
     $row = Database::queryOne('SELECT COUNT(*) AS c FROM users WHERE username = ?', [$username]);
@@ -98,8 +117,20 @@ try {
         $zip_code
     ]);
 
+    $profileSeed = [
+        'first_name' => $first_name,
+        'last_name' => $last_name,
+        'email' => $email,
+        'address_line_1' => $address_line_1,
+        'city' => $city,
+        'state' => $state,
+        'zip_code' => $zip_code,
+    ];
+    $missingProfileFields = wf_profile_missing_fields($profileSeed);
+    $profileCompletionRequired = count($missingProfileFields) > 0;
+
     set_user_meta_many($user_id, [
-        'profile_completion_required' => '1'
+        'profile_completion_required' => $profileCompletionRequired ? '1' : '0'
     ]);
 
     // Log successful registration using centralized logging
@@ -123,7 +154,12 @@ try {
         'last_name' => $last_name,
         'phone_number' => $phone_number,
         'address_line_1' => $address_line_1,
-        'profile_completion_required' => true
+        'address_line_2' => $address_line_2,
+        'city' => $city,
+        'state' => $state,
+        'zip_code' => $zip_code,
+        'profile_missing_fields' => $missingProfileFields,
+        'profile_completion_required' => $profileCompletionRequired
     ];
 
     // Return success response using centralized method
@@ -136,7 +172,12 @@ try {
         'last_name' => $last_name,
         'phone_number' => $phone_number,
         'address_line_1' => $address_line_1,
-        'profile_completion_required' => true,
+        'address_line_2' => $address_line_2,
+        'city' => $city,
+        'state' => $state,
+        'zip_code' => $zip_code,
+        'profile_missing_fields' => $missingProfileFields,
+        'profile_completion_required' => $profileCompletionRequired,
         'autoLogin' => true
     ], 'Registration successful');
 

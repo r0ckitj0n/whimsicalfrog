@@ -28,6 +28,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         mode,
         setMode,
         formData,
+        canSubmitRegister,
+        registerHelperText,
         isLoading,
         error,
         success,
@@ -212,6 +214,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                             isLoading={isLoading}
                             error={error}
                             success={success}
+                            canSubmitRegister={canSubmitRegister}
+                            registerHelperText={registerHelperText}
                             handleInputChange={handleInputChange}
                             handleSubmit={handleSubmit}
                         />

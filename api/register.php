@@ -3,6 +3,7 @@
 // Include centralized systems
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/helpers/ProfileCompletionHelper.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
@@ -22,7 +23,7 @@ try {
     $data = Response::getJsonInput();
 
     // Validate required fields
-    $required = ['username', 'password', 'email'];
+    $required = ['username', 'password', 'email', 'first_name', 'last_name', 'address_line_1', 'city', 'state', 'zip_code'];
     foreach ($required as $field) {
         if (!isset($data[$field]) || empty($data[$field])) {
             Response::error("$field is required");
@@ -41,6 +42,10 @@ try {
         Response::error('Invalid email format');
     }
 
+    if ($username === '' || trim($password) === '') {
+        Response::error('username and password are required');
+    }
+
     // Optional fields with defaults
     $role = $data['role'] ?? 'Customer';
     $first_name = trim($data['first_name'] ?? '');
@@ -51,6 +56,20 @@ try {
     $city = trim($data['city'] ?? '');
     $state = trim($data['state'] ?? '');
     $zip_code = trim($data['zip_code'] ?? '');
+
+    $requiredProfileFields = [
+        'first_name' => $first_name,
+        'last_name' => $last_name,
+        'address_line_1' => $address_line_1,
+        'city' => $city,
+        'state' => $state,
+        'zip_code' => $zip_code,
+    ];
+    foreach ($requiredProfileFields as $field => $value) {
+        if ($value === '') {
+            Response::error("$field is required");
+        }
+    }
 
     // Check if username already exists
     $row = Database::queryOne('SELECT COUNT(*) AS c FROM users WHERE username = ?', [$username]);
@@ -101,6 +120,18 @@ try {
         $zip_code
     ]);
 
+    $profileSeed = [
+        'first_name' => $first_name,
+        'last_name' => $last_name,
+        'email' => $email,
+        'address_line_1' => $address_line_1,
+        'city' => $city,
+        'state' => $state,
+        'zip_code' => $zip_code,
+    ];
+    $missingProfileFields = wf_profile_missing_fields($profileSeed);
+    $profileCompletionRequired = count($missingProfileFields) > 0;
+
     // Set default user meta
     require_once dirname(__DIR__) . '/includes/user_meta.php';
     set_user_meta_many($user_id, [
@@ -109,7 +140,7 @@ try {
         'vip' => '0',
         'preferred_contact' => 'email',
         'preferred_language' => 'English',
-        'profile_completion_required' => '1'
+        'profile_completion_required' => $profileCompletionRequired ? '1' : '0'
     ]);
 
     // Log successful registration
@@ -129,7 +160,8 @@ try {
         'first_name' => $first_name,
         'last_name' => $last_name,
         'phone_number' => $phone_number,
-        'profile_completion_required' => true
+        'profile_missing_fields' => $missingProfileFields,
+        'profile_completion_required' => $profileCompletionRequired
     ], 'User registered successfully');
 
 } catch (PDOException $e) {

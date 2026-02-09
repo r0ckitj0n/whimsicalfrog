@@ -49,8 +49,10 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ 
         if (!formData.first_name.trim()) return 'first name';
         if (!formData.last_name.trim()) return 'last name';
         if (!formData.email.trim()) return 'email';
-        if (!formData.phone_number.trim()) return 'phone number';
         if (!formData.address_line_1.trim()) return 'address';
+        if (!formData.city.trim()) return 'city';
+        if (!formData.state.trim()) return 'state';
+        if (!formData.zip_code.trim()) return 'ZIP code';
         return null;
     }, [formData]);
 
@@ -169,7 +171,7 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ 
                     </div>
                     <div className="flex flex-col">
                         <label className="text-sm font-bold text-gray-700">Phone Number</label>
-                        <input type="tel" name="phone_number" className="form-input" value={formData.phone_number} onChange={handleChange} required />
+                        <input type="tel" name="phone_number" className="form-input" value={formData.phone_number || ''} onChange={handleChange} />
                     </div>
                     <div className="flex flex-col">
                         <label className="text-sm font-bold text-gray-700">Address</label>
@@ -178,15 +180,15 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className="flex flex-col">
                             <label className="text-sm font-bold text-gray-700">City</label>
-                            <input type="text" name="city" className="form-input" value={formData.city || ''} onChange={handleChange} />
+                            <input type="text" name="city" className="form-input" value={formData.city || ''} onChange={handleChange} required />
                         </div>
                         <div className="flex flex-col">
                             <label className="text-sm font-bold text-gray-700">State</label>
-                            <input type="text" name="state" className="form-input" value={formData.state || ''} onChange={handleChange} />
+                            <input type="text" name="state" className="form-input" value={formData.state || ''} onChange={handleChange} required />
                         </div>
                         <div className="flex flex-col">
                             <label className="text-sm font-bold text-gray-700">ZIP</label>
-                            <input type="text" name="zip_code" className="form-input" value={formData.zip_code || ''} onChange={handleChange} />
+                            <input type="text" name="zip_code" className="form-input" value={formData.zip_code || ''} onChange={handleChange} required />
                         </div>
                     </div>
 

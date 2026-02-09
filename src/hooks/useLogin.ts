@@ -6,6 +6,40 @@ import { useNotificationContext } from '../context/NotificationContext.js';
 import { IRegisterData } from '../types/auth.js';
 import { buildPostAuthRedirectPlan } from '../core/auth-redirect.js';
 
+interface ILoginFormData extends IRegisterData {
+    phone_number: string;
+    address_line_2: string;
+}
+
+const getRegisterValidationMessage = (formData: ILoginFormData): string | null => {
+    const requiredFieldChecks: Array<{ value: string; label: string }> = [
+        { value: formData.username, label: 'Username is required.' },
+        { value: formData.password, label: 'Password is required.' },
+        { value: formData.first_name, label: 'First Name is required.' },
+        { value: formData.last_name, label: 'Last Name is required.' },
+        { value: formData.email, label: 'Email is required.' },
+        { value: formData.address_line_1, label: 'Address Line 1 is required.' },
+        { value: formData.city, label: 'City is required.' },
+        { value: formData.state, label: 'State is required.' },
+        { value: formData.zip_code, label: 'ZIP is required.' }
+    ];
+
+    const missingField = requiredFieldChecks.find(field => field.value.trim().length === 0);
+    if (missingField) {
+        return missingField.label;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+        return 'Enter a valid email address.';
+    }
+
+    return null;
+};
+
+const isValidRegistrationData = (formData: ILoginFormData): boolean => {
+    return getRegisterValidationMessage(formData) === null;
+};
+
 /**
  * Hook for managing login and registration state and actions.
  * Extracted from LoginModal.tsx
@@ -16,12 +50,13 @@ export const useLogin = (initialMode: 'login' | 'register' = 'login', onClose: (
     const { setIsCartOpen } = useApp();
     const { success: showSuccess, error: showError } = useNotificationContext();
     const [mode, setMode] = useState<'login' | 'register'>(initialMode);
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<ILoginFormData>({
         username: '',
         password: '',
         email: '',
         first_name: '',
         last_name: '',
+        phone_number: '',
         address_line_1: '',
         address_line_2: '',
         city: '',
@@ -73,7 +108,7 @@ export const useLogin = (initialMode: 'login' | 'register' = 'login', onClose: (
                 showError(res.error || 'Login failed. Please try again.', { duration: 4000 });
             }
         } else {
-            const res = await register(formData);
+            const res = await register(formData as unknown as Record<string, unknown>);
             if (res.success) {
                 setSuccess('Account created! You can now sign in.');
                 showSuccess('Account created successfully! Please sign in. 🎉', { duration: 4000 });
@@ -85,10 +120,15 @@ export const useLogin = (initialMode: 'login' | 'register' = 'login', onClose: (
         }
     };
 
+    const canSubmitRegister = isValidRegistrationData(formData);
+    const registerHelperText = canSubmitRegister ? null : getRegisterValidationMessage(formData);
+
     return {
         mode,
         setMode,
         formData,
+        canSubmitRegister,
+        registerHelperText,
         isLoading,
         error,
         success,

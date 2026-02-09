@@ -54,22 +54,23 @@ export interface IRegisterData {
     email: string;
     first_name: string;
     last_name: string;
-    address_line_1?: string;
+    address_line_1: string;
     address_line_2?: string;
-    city?: string;
-    state?: string;
-    zip_code?: string;
+    city: string;
+    state: string;
+    zip_code: string;
+    phone_number?: string;
 }
 
 export interface ICompleteProfileRequest {
     first_name: string;
     last_name: string;
     email: string;
-    phone_number: string;
+    phone_number?: string;
     address_line_1: string;
-    city?: string;
-    state?: string;
-    zip_code?: string;
+    city: string;
+    state: string;
+    zip_code: string;
 }
 
 export interface ICompleteProfileResponse {

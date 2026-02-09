@@ -5,6 +5,7 @@ require_once dirname(__DIR__) . '/includes/session.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/includes/user_meta.php';
 require_once dirname(__DIR__) . '/includes/helpers/UserUpdateHelper.php';
+require_once dirname(__DIR__) . '/includes/helpers/ProfileCompletionHelper.php';
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -66,11 +67,21 @@ try {
     $state = trim((string) ($payload['state'] ?? ''));
     $zipCode = trim((string) ($payload['zip_code'] ?? ''));
 
-    if ($firstName === '' || $lastName === '' || $email === '' || $phoneNumber === '' || $addressLine1 === '') {
+    $profilePayload = [
+        'first_name' => $firstName,
+        'last_name' => $lastName,
+        'email' => $email,
+        'address_line_1' => $addressLine1,
+        'city' => $city,
+        'state' => $state,
+        'zip_code' => $zipCode,
+    ];
+    $missingProfileFields = wf_profile_missing_fields($profilePayload);
+    if (count($missingProfileFields) > 0) {
         http_response_code(422);
         echo json_encode([
             'success' => false,
-            'error' => 'First name, last name, email, phone number, and address are required'
+            'error' => 'Please complete all required profile fields before continuing'
         ]);
         exit;
     }

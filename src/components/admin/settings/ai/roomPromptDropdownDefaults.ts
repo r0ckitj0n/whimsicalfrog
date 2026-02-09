@@ -120,6 +120,102 @@ export const ROOM_PROMPT_DROPDOWN_DEFAULTS: Record<string, string[]> = {
         'floating paper lantern clusters',
         'soft mural waves and swirls',
         'woodland silhouettes and vines'
+    ],
+    image_style_declaration: [
+        AUTOGENERATE_LABEL,
+        'A high-quality 3D cartoon render for room',
+        'A premium cinematic 3D cartoon render for room',
+        'A whimsical storybook 3D cartoon render for room',
+        'A polished boutique-style 3D cartoon render for room',
+        'A bright family-friendly 3D cartoon render for room'
+    ],
+    location_phrase: [
+        AUTOGENERATE_LABEL,
+        "corner inside the whimsical frog’s cottage",
+        "feature nook inside the whimsical frog’s cottage",
+        "showcase alcove inside the whimsical frog’s cottage",
+        "merchandising corner inside the whimsical frog’s cottage",
+        "themed room vignette inside the whimsical frog’s cottage"
+    ],
+    character_statement: [
+        AUTOGENERATE_LABEL,
+        'The signature fedora-wearing 3D cartoon frog is present as the proprietor. He is depicted {{frog_action}}, surveying his shop with pride.',
+        'The iconic fedora-wearing frog shopkeeper appears in scene. He is shown {{frog_action}}, welcoming guests with confidence.',
+        'A charismatic frog proprietor in a signature fedora anchors the scene. He is depicted {{frog_action}}, guiding the boutique mood.',
+        'The whimsical frog owner is clearly visible as the host. He is portrayed {{frog_action}}, keeping the space lively and inviting.',
+        'A polished frog merchant in a fedora is featured as proprietor. He is depicted {{frog_action}}, overseeing the display floor.'
+    ],
+    aesthetic_statement: [
+        AUTOGENERATE_LABEL,
+        "Background walls/ceiling include decorative oversized 3D {{background_thematic_elements}} that reinforce the room's function.",
+        'Walls and ceiling feature oversized 3D {{background_thematic_elements}} that strengthen the room story.',
+        'Decorative large-scale 3D {{background_thematic_elements}} frame the walls and ceiling to support the concept.',
+        'The backdrops use oversized 3D {{background_thematic_elements}} across walls and ceiling for visual identity.',
+        'Background architecture incorporates prominent 3D {{background_thematic_elements}} to anchor the theme.'
+    ],
+    critical_constraint_line: [
+        AUTOGENERATE_LABEL,
+        'CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.',
+        'CRITICAL CONSTRAINT: Keep every merchandising surface empty, unobstructed, and ready for future products.',
+        'CRITICAL CONSTRAINT: No objects may occupy shelves, counters, racks, tabletops, hooks, bins, or stands.',
+        'CRITICAL CONSTRAINT: Preserve clean, empty display planes across all merchandising fixtures.',
+        'CRITICAL CONSTRAINT: All product-display fixtures must remain bare and flat for post-generation placement.'
+    ],
+    no_props_line: [
+        AUTOGENERATE_LABEL,
+        'Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.',
+        'Do NOT place decorative or functional objects on shelving, counters, tables, hooks, racks, bins, or stands.',
+        'Do NOT add products, props, baskets, signage, florals, books, or accessories to display surfaces.',
+        'Do NOT populate any merchandising surfaces with items of any kind.',
+        'Do NOT stage objects on product-display fixtures; keep them completely clear.'
+    ],
+    decorative_elements_line: [
+        AUTOGENERATE_LABEL,
+        'Keep decorative elements strictly on walls, ceiling, floor edges, corners, or perimeter zones away from display surfaces.',
+        'Place decorative accents only on walls, ceiling, and perimeter floor zones, never on display fixtures.',
+        'Constrain decorative details to architectural boundaries and wall/ceiling regions away from merchandising surfaces.',
+        'Keep all aesthetic props to the perimeter and structural surfaces, not display planes.',
+        'Position decor in edge zones and overhead areas only, leaving display fixtures untouched.'
+    ],
+    open_display_zones_line: [
+        AUTOGENERATE_LABEL,
+        'Maintain large uninterrupted open display zones for future item placement.',
+        'Preserve broad, unobstructed merchandising zones for future product insertion.',
+        'Ensure generous open surface area remains available across all display fixtures.',
+        'Leave continuous clear display space throughout the room for later catalog staging.',
+        'Maintain clean and uninterrupted placement-ready zones on every display fixture.'
+    ],
+    art_style_line: [
+        AUTOGENERATE_LABEL,
+        "Art style: modern 3D children's cartoon animation (Pixar-esque).",
+        'Art style: polished 3D storybook cartoon with cinematic lighting.',
+        'Art style: high-end stylized 3D animation with playful boutique charm.',
+        'Art style: premium whimsical 3D cartoon with expressive forms and clean shading.',
+        'Art style: contemporary animated 3D illustration with family-friendly tone.'
+    ],
+    surfaces_line: [
+        AUTOGENERATE_LABEL,
+        'Surfaces: smooth, vibrant, saturated colors, clean presentation.',
+        'Surfaces: clean materials, soft gloss, and vibrant but controlled color richness.',
+        'Surfaces: polished, tidy, high-clarity textures with bright stylized color.',
+        'Surfaces: simplified smooth geometry with crisp, appealing cartoon finish.',
+        'Surfaces: refined, uncluttered, color-forward materials optimized for product staging.'
+    ],
+    text_constraint_line: [
+        AUTOGENERATE_LABEL,
+        'Text constraint: strictly NO TEXT anywhere in the image.',
+        'Text constraint: do not render letters, words, logos, labels, or signage text.',
+        'Text constraint: avoid all typography and written marks in-scene.',
+        'Text constraint: no textual elements of any kind may appear.',
+        'Text constraint: output must be fully text-free.'
+    ],
+    lighting_line: [
+        AUTOGENERATE_LABEL,
+        'Lighting: bright and inviting, highlighting empty display surface textures for product insertion.',
+        'Lighting: clean boutique brightness that emphasizes open shelf and counter surfaces.',
+        'Lighting: warm-balanced key and fill setup that keeps empty fixtures clearly visible.',
+        'Lighting: vibrant retail-style illumination with clear separation on display planes.',
+        'Lighting: welcoming high-clarity scene lighting optimized for future product compositing.'
     ]
 };
 

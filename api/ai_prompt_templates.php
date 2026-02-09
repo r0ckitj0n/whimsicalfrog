@@ -111,6 +111,102 @@ const AI_PROMPT_DROPDOWN_DEFAULTS = [
         'soft mural waves and swirls',
         'woodland silhouettes and vines',
     ],
+    'image_style_declaration' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'A high-quality 3D cartoon render for room',
+        'A premium cinematic 3D cartoon render for room',
+        'A whimsical storybook 3D cartoon render for room',
+        'A polished boutique-style 3D cartoon render for room',
+        'A bright family-friendly 3D cartoon render for room',
+    ],
+    'location_phrase' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        "corner inside the whimsical frog’s cottage",
+        "feature nook inside the whimsical frog’s cottage",
+        "showcase alcove inside the whimsical frog’s cottage",
+        "merchandising corner inside the whimsical frog’s cottage",
+        "themed room vignette inside the whimsical frog’s cottage",
+    ],
+    'character_statement' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'The signature fedora-wearing 3D cartoon frog is present as the proprietor. He is depicted {{frog_action}}, surveying his shop with pride.',
+        'The iconic fedora-wearing frog shopkeeper appears in scene. He is shown {{frog_action}}, welcoming guests with confidence.',
+        'A charismatic frog proprietor in a signature fedora anchors the scene. He is depicted {{frog_action}}, guiding the boutique mood.',
+        'The whimsical frog owner is clearly visible as the host. He is portrayed {{frog_action}}, keeping the space lively and inviting.',
+        'A polished frog merchant in a fedora is featured as proprietor. He is depicted {{frog_action}}, overseeing the display floor.',
+    ],
+    'aesthetic_statement' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        "Background walls/ceiling include decorative oversized 3D {{background_thematic_elements}} that reinforce the room's function.",
+        'Walls and ceiling feature oversized 3D {{background_thematic_elements}} that strengthen the room story.',
+        'Decorative large-scale 3D {{background_thematic_elements}} frame the walls and ceiling to support the concept.',
+        'The backdrops use oversized 3D {{background_thematic_elements}} across walls and ceiling for visual identity.',
+        'Background architecture incorporates prominent 3D {{background_thematic_elements}} to anchor the theme.',
+    ],
+    'critical_constraint_line' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.',
+        'CRITICAL CONSTRAINT: Keep every merchandising surface empty, unobstructed, and ready for future products.',
+        'CRITICAL CONSTRAINT: No objects may occupy shelves, counters, racks, tabletops, hooks, bins, or stands.',
+        'CRITICAL CONSTRAINT: Preserve clean, empty display planes across all merchandising fixtures.',
+        'CRITICAL CONSTRAINT: All product-display fixtures must remain bare and flat for post-generation placement.',
+    ],
+    'no_props_line' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.',
+        'Do NOT place decorative or functional objects on shelving, counters, tables, hooks, racks, bins, or stands.',
+        'Do NOT add products, props, baskets, signage, florals, books, or accessories to display surfaces.',
+        'Do NOT populate any merchandising surfaces with items of any kind.',
+        'Do NOT stage objects on product-display fixtures; keep them completely clear.',
+    ],
+    'decorative_elements_line' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'Keep decorative elements strictly on walls, ceiling, floor edges, corners, or perimeter zones away from display surfaces.',
+        'Place decorative accents only on walls, ceiling, and perimeter floor zones, never on display fixtures.',
+        'Constrain decorative details to architectural boundaries and wall/ceiling regions away from merchandising surfaces.',
+        'Keep all aesthetic props to the perimeter and structural surfaces, not display planes.',
+        'Position decor in edge zones and overhead areas only, leaving display fixtures untouched.',
+    ],
+    'open_display_zones_line' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'Maintain large uninterrupted open display zones for future item placement.',
+        'Preserve broad, unobstructed merchandising zones for future product insertion.',
+        'Ensure generous open surface area remains available across all display fixtures.',
+        'Leave continuous clear display space throughout the room for later catalog staging.',
+        'Maintain clean and uninterrupted placement-ready zones on every display fixture.',
+    ],
+    'art_style_line' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        "Art style: modern 3D children's cartoon animation (Pixar-esque).",
+        'Art style: polished 3D storybook cartoon with cinematic lighting.',
+        'Art style: high-end stylized 3D animation with playful boutique charm.',
+        'Art style: premium whimsical 3D cartoon with expressive forms and clean shading.',
+        'Art style: contemporary animated 3D illustration with family-friendly tone.',
+    ],
+    'surfaces_line' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'Surfaces: smooth, vibrant, saturated colors, clean presentation.',
+        'Surfaces: clean materials, soft gloss, and vibrant but controlled color richness.',
+        'Surfaces: polished, tidy, high-clarity textures with bright stylized color.',
+        'Surfaces: simplified smooth geometry with crisp, appealing cartoon finish.',
+        'Surfaces: refined, uncluttered, color-forward materials optimized for product staging.',
+    ],
+    'text_constraint_line' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'Text constraint: strictly NO TEXT anywhere in the image.',
+        'Text constraint: do not render letters, words, logos, labels, or signage text.',
+        'Text constraint: avoid all typography and written marks in-scene.',
+        'Text constraint: no textual elements of any kind may appear.',
+        'Text constraint: output must be fully text-free.',
+    ],
+    'lighting_line' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'Lighting: bright and inviting, highlighting empty display surface textures for product insertion.',
+        'Lighting: clean boutique brightness that emphasizes open shelf and counter surfaces.',
+        'Lighting: warm-balanced key and fill setup that keeps empty fixtures clearly visible.',
+        'Lighting: vibrant retail-style illumination with clear separation on display planes.',
+        'Lighting: welcoming high-clarity scene lighting optimized for future product compositing.',
+    ],
 ];
 
 function ai_prompt_templates_normalize_dropdown_values(array $rawOptions): array
@@ -135,6 +231,21 @@ function ai_prompt_templates_normalize_dropdown_values(array $rawOptions): array
     }
 
     return $normalized;
+}
+
+function ai_prompt_templates_resolve_prompt_text(string $template, array $resolvedVariables): string
+{
+    $prompt = $template;
+    for ($pass = 0; $pass < 5; $pass++) {
+        $previous = $prompt;
+        foreach ($resolvedVariables as $key => $value) {
+            $prompt = str_replace('{{' . $key . '}}', (string) $value, $prompt);
+        }
+        if ($prompt === $previous) {
+            break;
+        }
+    }
+    return $prompt;
 }
 
 function ai_prompt_templates_init_tables(): void
@@ -197,30 +308,30 @@ function ai_prompt_templates_init_tables(): void
 function ai_prompt_templates_seed_defaults(): void
 {
     $defaultTemplate = <<<'PROMPT'
-A high-quality 3D cartoon render for room {{room_number}}.
+{{image_style_declaration}} {{room_number}}.
 Room name: {{room_name}}.
 Door label: {{door_label}}.
 Display order: {{display_order}}.
 Room description/context: {{room_description}}.
 
-Create a themed {{room_theme}} corner inside the whimsical frog’s cottage.
+Create a themed {{room_theme}} {{location_phrase}}.
 
 The area features prominent {{display_furniture_style}} intended for future product placement.
-CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.
-Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.
-Keep decorative elements strictly on walls, ceiling, floor edges, corners, or perimeter zones away from display surfaces.
-Maintain large uninterrupted open display zones for future item placement.
+{{critical_constraint_line}}
+{{no_props_line}}
+{{decorative_elements_line}}
+{{open_display_zones_line}}
 
-The signature fedora-wearing 3D cartoon frog is present as the proprietor. He is depicted {{frog_action}}, surveying his shop with pride.
+{{character_statement}}
 
 Atmosphere: {{vibe_adjectives}}.
 Color palette: {{color_scheme}}.
-Background walls/ceiling include decorative oversized 3D {{background_thematic_elements}} that reinforce the room's function.
+{{aesthetic_statement}}
 
-Art style: modern 3D children's cartoon animation (Pixar-esque).
-Surfaces: smooth, vibrant, saturated colors, clean presentation.
-Text constraint: strictly NO TEXT anywhere in the image.
-Lighting: bright and inviting, highlighting empty display surface textures for product insertion.
+{{art_style_line}}
+{{surfaces_line}}
+{{text_constraint_line}}
+{{lighting_line}}
 PROMPT;
 
     Database::execute(
@@ -253,6 +364,18 @@ PROMPT;
         ['vibe_adjectives', 'Vibe Adjectives', 'Atmosphere mood words.', 'refreshing and bright'],
         ['color_scheme', 'Color Scheme Combinations', 'Dominant color pairings for the scene.', "robin's egg blue and soft orange"],
         ['background_thematic_elements', 'Background Thematic Elements', 'Large decor elements on walls/ceiling to establish context.', 'giant floating fruit shapes'],
+        ['image_style_declaration', 'Image Style Declaration', 'Lead-in phrase used before the room number.', 'A high-quality 3D cartoon render for room'],
+        ['location_phrase', 'Location', 'Location phrase used in the themed-scene sentence.', "corner inside the whimsical frog’s cottage"],
+        ['character_statement', 'Character', 'Primary character statement for the frog proprietor.', 'The signature fedora-wearing 3D cartoon frog is present as the proprietor. He is depicted {{frog_action}}, surveying his shop with pride.'],
+        ['aesthetic_statement', 'Aesthetic', 'Aesthetic statement describing background thematic elements.', "Background walls/ceiling include decorative oversized 3D {{background_thematic_elements}} that reinforce the room's function."],
+        ['critical_constraint_line', 'Critical Constraint', 'Constraint line for keeping display surfaces empty.', 'CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.'],
+        ['no_props_line', 'No Props Line', 'Explicit ban on props and products on display surfaces.', 'Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.'],
+        ['decorative_elements_line', 'Decorative Elements Line', 'Placement rule for decorative elements.', 'Keep decorative elements strictly on walls, ceiling, floor edges, corners, or perimeter zones away from display surfaces.'],
+        ['open_display_zones_line', 'Open Display Zones Line', 'Rule to preserve large empty display zones.', 'Maintain large uninterrupted open display zones for future item placement.'],
+        ['art_style_line', 'Art Style', 'Art-style declaration line.', "Art style: modern 3D children's cartoon animation (Pixar-esque)."],
+        ['surfaces_line', 'Surfaces', 'Surface treatment declaration line.', 'Surfaces: smooth, vibrant, saturated colors, clean presentation.'],
+        ['text_constraint_line', 'Text Constraint', 'Constraint line prohibiting text in generated image.', 'Text constraint: strictly NO TEXT anywhere in the image.'],
+        ['lighting_line', 'Lighting', 'Lighting declaration line.', 'Lighting: bright and inviting, highlighting empty display surface textures for product insertion.'],
     ];
 
     foreach ($variables as $v) {
@@ -539,10 +662,7 @@ try {
                 $resolved[(string) $k] = trim((string) $v);
             }
 
-            $prompt = (string) ($template['prompt_text'] ?? '');
-            foreach ($resolved as $key => $value) {
-                $prompt = str_replace('{{' . $key . '}}', $value, $prompt);
-            }
+            $prompt = ai_prompt_templates_resolve_prompt_text((string) ($template['prompt_text'] ?? ''), $resolved);
 
             $user = AuthHelper::getCurrentUser();
             $createdBy = null;

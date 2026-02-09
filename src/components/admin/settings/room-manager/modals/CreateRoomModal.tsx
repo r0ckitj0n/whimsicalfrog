@@ -4,7 +4,8 @@ import { useAIPromptTemplates } from '../../../../../hooks/admin/useAIPromptTemp
 import type { IRoomData } from '../../../../../types/room.js';
 import type { IRoomImageGenerationRequest } from '../../../../../types/room-generation.js';
 import {
-    AUTOGENERATE_LABEL
+    AUTOGENERATE_LABEL,
+    ROOM_PROMPT_DROPDOWN_DEFAULTS
 } from '../../ai/roomPromptDropdownDefaults.js';
 
 interface CreateRoomModalProps {
@@ -28,6 +29,18 @@ interface CreateRoomFormState {
     vibe_adjectives: string;
     color_scheme: string;
     background_thematic_elements: string;
+    image_style_declaration: string;
+    location_phrase: string;
+    character_statement: string;
+    aesthetic_statement: string;
+    critical_constraint_line: string;
+    no_props_line: string;
+    decorative_elements_line: string;
+    open_display_zones_line: string;
+    art_style_line: string;
+    surfaces_line: string;
+    text_constraint_line: string;
+    lighting_line: string;
     scale_mode: 'modal' | 'fullscreen' | 'fixed';
     generate_image: boolean;
 }
@@ -45,6 +58,18 @@ const defaultFormState: CreateRoomFormState = {
     vibe_adjectives: AUTOGENERATE_LABEL,
     color_scheme: AUTOGENERATE_LABEL,
     background_thematic_elements: AUTOGENERATE_LABEL,
+    image_style_declaration: AUTOGENERATE_LABEL,
+    location_phrase: AUTOGENERATE_LABEL,
+    character_statement: AUTOGENERATE_LABEL,
+    aesthetic_statement: AUTOGENERATE_LABEL,
+    critical_constraint_line: AUTOGENERATE_LABEL,
+    no_props_line: AUTOGENERATE_LABEL,
+    decorative_elements_line: AUTOGENERATE_LABEL,
+    open_display_zones_line: AUTOGENERATE_LABEL,
+    art_style_line: AUTOGENERATE_LABEL,
+    surfaces_line: AUTOGENERATE_LABEL,
+    text_constraint_line: AUTOGENERATE_LABEL,
+    lighting_line: AUTOGENERATE_LABEL,
     scale_mode: 'modal',
     generate_image: true
 };
@@ -72,6 +97,21 @@ const parsePlaceholderKeys = (prompt: string): string[] => {
     return Array.from(out);
 };
 
+const resolveTemplateText = (template: string, values: Record<string, string>): string => {
+    let prompt = template;
+    for (let pass = 0; pass < 5; pass += 1) {
+        const keys = parsePlaceholderKeys(prompt);
+        if (keys.length === 0) break;
+        const prev = prompt;
+        for (const key of keys) {
+            const value = values[key] ?? '';
+            prompt = prompt.replaceAll(`{{${key}}}`, value);
+        }
+        if (prompt === prev) break;
+    }
+    return prompt;
+};
+
 export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
     isOpen,
     roomsData,
@@ -87,9 +127,11 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
     const {
         templates,
         variables,
+        dropdownOptionsByVariable,
         isLoading: templatesLoading,
         fetchTemplates,
-        fetchVariables
+        fetchVariables,
+        fetchDropdownOptions
     } = useAIPromptTemplates();
 
     const roomTemplates = useMemo(
@@ -152,6 +194,54 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             background_thematic_elements: normalizeAutoValue(
                 form.background_thematic_elements,
                 'Invent custom oversized thematic background elements for this room context; do not pick from preset dropdown examples'
+            ),
+            image_style_declaration: normalizeAutoValue(
+                form.image_style_declaration,
+                'A high-quality 3D cartoon render for room'
+            ),
+            location_phrase: normalizeAutoValue(
+                form.location_phrase,
+                'corner inside the whimsical frog’s cottage'
+            ),
+            character_statement: normalizeAutoValue(
+                form.character_statement,
+                'The signature fedora-wearing 3D cartoon frog is present as the proprietor. He is depicted {{frog_action}}, surveying his shop with pride.'
+            ),
+            aesthetic_statement: normalizeAutoValue(
+                form.aesthetic_statement,
+                "Background walls/ceiling include decorative oversized 3D {{background_thematic_elements}} that reinforce the room's function."
+            ),
+            critical_constraint_line: normalizeAutoValue(
+                form.critical_constraint_line,
+                'CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.'
+            ),
+            no_props_line: normalizeAutoValue(
+                form.no_props_line,
+                'Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.'
+            ),
+            decorative_elements_line: normalizeAutoValue(
+                form.decorative_elements_line,
+                'Keep decorative elements strictly on walls, ceiling, floor edges, corners, or perimeter zones away from display surfaces.'
+            ),
+            open_display_zones_line: normalizeAutoValue(
+                form.open_display_zones_line,
+                'Maintain large uninterrupted open display zones for future item placement.'
+            ),
+            art_style_line: normalizeAutoValue(
+                form.art_style_line,
+                "Art style: modern 3D children's cartoon animation (Pixar-esque)."
+            ),
+            surfaces_line: normalizeAutoValue(
+                form.surfaces_line,
+                'Surfaces: smooth, vibrant, saturated colors, clean presentation.'
+            ),
+            text_constraint_line: normalizeAutoValue(
+                form.text_constraint_line,
+                'Text constraint: strictly NO TEXT anywhere in the image.'
+            ),
+            lighting_line: normalizeAutoValue(
+                form.lighting_line,
+                'Lighting: bright and inviting, highlighting empty display surface textures for product insertion.'
             )
         };
     }, [form, variableDefaults]);
@@ -159,20 +249,15 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
     const generatedPromptText = useMemo(() => {
         const basePrompt = selectedTemplate?.prompt_text || '';
         if (!basePrompt) return '';
-        const expectedKeys = parsePlaceholderKeys(basePrompt);
         const values: Record<string, string> = resolvedVariables;
-        let prompt = basePrompt;
-        for (const key of expectedKeys) {
-            const value = values[key] ?? '';
-            prompt = prompt.replaceAll(`{{${key}}}`, value);
-        }
-        return prompt;
+        return resolveTemplateText(basePrompt, values);
     }, [selectedTemplate?.prompt_text, resolvedVariables]);
 
     useEffect(() => {
         if (!isOpen) return;
         void fetchTemplates();
         void fetchVariables();
+        void fetchDropdownOptions();
         void ApiClient.get<{ success?: boolean; settings?: { room_generation_template_key?: string } }>(
             '/api/ai_settings.php',
             { action: 'get_settings' }
@@ -182,7 +267,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         }).catch(() => {
             // Optional preference key; ignore if unavailable.
         });
-    }, [isOpen, fetchTemplates, fetchVariables]);
+    }, [isOpen, fetchTemplates, fetchVariables, fetchDropdownOptions]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -234,6 +319,39 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
 
     const updateForm = <K extends keyof CreateRoomFormState>(key: K, value: CreateRoomFormState[K]) => {
         setForm((prev) => ({ ...prev, [key]: value }));
+    };
+
+    const renderEditableDropdown = (
+        label: string,
+        field: keyof CreateRoomFormState,
+        value: string
+    ) => {
+        const listId = `create-room-${String(field)}-options`;
+        const options = getOptionsForVariable(String(field));
+        return (
+            <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</label>
+                <input
+                    list={listId}
+                    value={value}
+                    onChange={(e) => updateForm(field, e.target.value as CreateRoomFormState[typeof field])}
+                    className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white"
+                />
+                <datalist id={listId}>
+                    {options.map((opt) => (
+                        <option key={`${listId}-${opt}`} value={opt} />
+                    ))}
+                </datalist>
+            </div>
+        );
+    };
+
+    const getOptionsForVariable = (variableKey: string): string[] => {
+        const apiOptions = dropdownOptionsByVariable[variableKey];
+        if (Array.isArray(apiOptions) && apiOptions.length > 0) {
+            return apiOptions;
+        }
+        return ROOM_PROMPT_DROPDOWN_DEFAULTS[variableKey] || [AUTOGENERATE_LABEL];
     };
 
     const handleCopyPrompt = async () => {
@@ -415,6 +533,28 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                             <p className="text-[11px] text-slate-500">
                                 Prompt variable fields default to <span className="font-mono">{AUTOGENERATE_LABEL}</span> for new rooms.
                             </p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {renderEditableDropdown('Room Theme', 'room_theme', form.room_theme)}
+                                {renderEditableDropdown('Furniture Style', 'display_furniture_style', form.display_furniture_style)}
+                                {renderEditableDropdown('Accent Decor', 'thematic_accent_decorations', form.thematic_accent_decorations)}
+                                {renderEditableDropdown('Frog Action', 'frog_action', form.frog_action)}
+                                {renderEditableDropdown('Vibe Adjectives', 'vibe_adjectives', form.vibe_adjectives)}
+                                {renderEditableDropdown('Color Scheme', 'color_scheme', form.color_scheme)}
+                                {renderEditableDropdown('Background Elements', 'background_thematic_elements', form.background_thematic_elements)}
+                                {renderEditableDropdown('Image Style Declaration', 'image_style_declaration', form.image_style_declaration)}
+                                {renderEditableDropdown('Location Phrase', 'location_phrase', form.location_phrase)}
+                                {renderEditableDropdown('Character Statement', 'character_statement', form.character_statement)}
+                                {renderEditableDropdown('Aesthetic Statement', 'aesthetic_statement', form.aesthetic_statement)}
+                                {renderEditableDropdown('Critical Constraint', 'critical_constraint_line', form.critical_constraint_line)}
+                                {renderEditableDropdown('No Props Line', 'no_props_line', form.no_props_line)}
+                                {renderEditableDropdown('Decorative Elements Line', 'decorative_elements_line', form.decorative_elements_line)}
+                                {renderEditableDropdown('Open Display Zones Line', 'open_display_zones_line', form.open_display_zones_line)}
+                                {renderEditableDropdown('Art Style Line', 'art_style_line', form.art_style_line)}
+                                {renderEditableDropdown('Surfaces Line', 'surfaces_line', form.surfaces_line)}
+                                {renderEditableDropdown('Text Constraint Line', 'text_constraint_line', form.text_constraint_line)}
+                                {renderEditableDropdown('Lighting Line', 'lighting_line', form.lighting_line)}
+                            </div>
                         </div>
                     </div>
 

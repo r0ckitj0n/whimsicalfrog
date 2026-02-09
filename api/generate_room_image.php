@@ -61,30 +61,30 @@ function wf_ai_prompt_tables_init(): void
 function wf_ai_prompt_seed_defaults(): void
 {
     $defaultTemplate = <<<'PROMPT'
-A high-quality 3D cartoon render for room {{room_number}}.
+{{image_style_declaration}} {{room_number}}.
 Room name: {{room_name}}.
 Door label: {{door_label}}.
 Display order: {{display_order}}.
 Room description/context: {{room_description}}.
 
-Create a themed {{room_theme}} corner inside the whimsical frog’s cottage.
+Create a themed {{room_theme}} {{location_phrase}}.
 
 The area features prominent {{display_furniture_style}} intended for future product placement.
-CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.
-Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.
-Keep decorative elements strictly on walls, ceiling, floor edges, corners, or perimeter zones away from display surfaces.
-Maintain large uninterrupted open display zones for future item placement.
+{{critical_constraint_line}}
+{{no_props_line}}
+{{decorative_elements_line}}
+{{open_display_zones_line}}
 
-The signature fedora-wearing 3D cartoon frog is present as the proprietor. He is depicted {{frog_action}}, surveying his shop with pride.
+{{character_statement}}
 
 Atmosphere: {{vibe_adjectives}}.
 Color palette: {{color_scheme}}.
-Background walls/ceiling include decorative oversized 3D {{background_thematic_elements}} that reinforce the room's function.
+{{aesthetic_statement}}
 
-Art style: modern 3D children's cartoon animation (Pixar-esque).
-Surfaces: smooth, vibrant, saturated colors, clean presentation.
-Text constraint: strictly NO TEXT anywhere in the image.
-Lighting: bright and inviting, highlighting empty display surface textures for product insertion.
+{{art_style_line}}
+{{surfaces_line}}
+{{text_constraint_line}}
+{{lighting_line}}
 PROMPT;
 
     Database::execute(
@@ -117,6 +117,18 @@ PROMPT;
         ['vibe_adjectives', 'Vibe Adjectives', 'Atmosphere mood words.', 'refreshing and bright'],
         ['color_scheme', 'Color Scheme Combinations', 'Dominant color pairings for the scene.', "robin's egg blue and soft orange"],
         ['background_thematic_elements', 'Background Thematic Elements', 'Large decor elements on walls/ceiling to establish context.', 'giant floating fruit shapes'],
+        ['image_style_declaration', 'Image Style Declaration', 'Lead-in phrase used before the room number.', 'A high-quality 3D cartoon render for room'],
+        ['location_phrase', 'Location', 'Location phrase used in the themed-scene sentence.', "corner inside the whimsical frog’s cottage"],
+        ['character_statement', 'Character', 'Primary character statement for the frog proprietor.', 'The signature fedora-wearing 3D cartoon frog is present as the proprietor. He is depicted {{frog_action}}, surveying his shop with pride.'],
+        ['aesthetic_statement', 'Aesthetic', 'Aesthetic statement describing background thematic elements.', "Background walls/ceiling include decorative oversized 3D {{background_thematic_elements}} that reinforce the room's function."],
+        ['critical_constraint_line', 'Critical Constraint', 'Constraint line for keeping display surfaces empty.', 'CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.'],
+        ['no_props_line', 'No Props Line', 'Explicit ban on props and products on display surfaces.', 'Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.'],
+        ['decorative_elements_line', 'Decorative Elements Line', 'Placement rule for decorative elements.', 'Keep decorative elements strictly on walls, ceiling, floor edges, corners, or perimeter zones away from display surfaces.'],
+        ['open_display_zones_line', 'Open Display Zones Line', 'Rule to preserve large empty display zones.', 'Maintain large uninterrupted open display zones for future item placement.'],
+        ['art_style_line', 'Art Style', 'Art-style declaration line.', "Art style: modern 3D children's cartoon animation (Pixar-esque)."],
+        ['surfaces_line', 'Surfaces', 'Surface treatment declaration line.', 'Surfaces: smooth, vibrant, saturated colors, clean presentation.'],
+        ['text_constraint_line', 'Text Constraint', 'Constraint line prohibiting text in generated image.', 'Text constraint: strictly NO TEXT anywhere in the image.'],
+        ['lighting_line', 'Lighting', 'Lighting declaration line.', 'Lighting: bright and inviting, highlighting empty display surface textures for product insertion.'],
     ];
 
     foreach ($variables as $v) {
@@ -131,6 +143,21 @@ PROMPT;
             [$v[0], $v[1], $v[2], $v[3]]
         );
     }
+}
+
+function wf_resolve_prompt_text(string $template, array $resolvedVariables): string
+{
+    $prompt = $template;
+    for ($pass = 0; $pass < 5; $pass++) {
+        $previous = $prompt;
+        foreach ($resolvedVariables as $key => $value) {
+            $prompt = str_replace('{{' . $key . '}}', (string) $value, $prompt);
+        }
+        if ($prompt === $previous) {
+            break;
+        }
+    }
+    return $prompt;
 }
 
 function wf_get_current_user_id(): ?string
@@ -325,10 +352,7 @@ try {
         $resolved[(string) $key] = trim((string) $value);
     }
 
-    $prompt = (string) ($template['prompt_text'] ?? '');
-    foreach ($resolved as $key => $value) {
-        $prompt = str_replace('{{' . $key . '}}', $value, $prompt);
-    }
+    $prompt = wf_resolve_prompt_text((string) ($template['prompt_text'] ?? ''), $resolved);
 
     $settingsRows = Database::queryAll("SELECT setting_key, setting_value FROM business_settings WHERE category = 'ai'");
     $settings = [];

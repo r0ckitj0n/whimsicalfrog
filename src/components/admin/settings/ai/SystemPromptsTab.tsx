@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAIPromptTemplates } from '../../../../hooks/admin/useAIPromptTemplates.js';
-import { ApiClient } from '../../../../core/ApiClient.js';
 import type { IAIPromptTemplate } from '../../../../types/ai-prompts.js';
 import { RoomPromptDropdownOptionsEditor } from './RoomPromptDropdownOptionsEditor.js';
+import { PromptVariablesEditor } from './PromptVariablesEditor.js';
 
 const slugifyKey = (value: string) =>
     value
@@ -21,27 +21,23 @@ export const SystemPromptsTab: React.FC = () => {
         error,
         fetchTemplates,
         fetchVariables,
-        fetchHistory,
         fetchDropdownOptions,
-        history,
         saveTemplate,
         deleteTemplate,
-        saveDropdownOptions
+        saveDropdownOptions,
+        saveVariables
     } = useAIPromptTemplates();
 
     const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
     const [draft, setDraft] = useState<Partial<IAIPromptTemplate> | null>(null);
     const [isPickerOpen, setIsPickerOpen] = useState(false);
-    const [builderValues, setBuilderValues] = useState<Record<string, string>>({});
-    const [builtPrompt, setBuiltPrompt] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
     useEffect(() => {
         void fetchTemplates();
         void fetchVariables();
-        void fetchHistory();
         void fetchDropdownOptions();
-    }, [fetchTemplates, fetchVariables, fetchHistory, fetchDropdownOptions]);
+    }, [fetchTemplates, fetchVariables, fetchDropdownOptions]);
 
     useEffect(() => {
         if (templates.length === 0) {
@@ -69,9 +65,7 @@ export const SystemPromptsTab: React.FC = () => {
     const isDirty = useMemo(() => {
         if (!selectedTemplate || !draft) return false;
         return (
-            (draft.template_key || '') !== selectedTemplate.template_key ||
             (draft.template_name || '') !== selectedTemplate.template_name ||
-            (draft.description || '') !== (selectedTemplate.description || '') ||
             (draft.context_type || '') !== selectedTemplate.context_type ||
             (draft.prompt_text || '') !== selectedTemplate.prompt_text
         );
@@ -99,9 +93,9 @@ export const SystemPromptsTab: React.FC = () => {
 
         const payload: Partial<IAIPromptTemplate> = {
             id: draft.id && draft.id > 0 ? draft.id : undefined,
-            template_key: slugifyKey(draft.template_key || draft.template_name || ''),
+            template_key: slugifyKey(draft.template_name || ''),
             template_name: draft.template_name,
-            description: draft.description || '',
+            description: '',
             context_type: draft.context_type || 'room_generation',
             prompt_text: draft.prompt_text,
             is_active: 1
@@ -148,31 +142,6 @@ export const SystemPromptsTab: React.FC = () => {
             return { ...prev, prompt_text: nextText };
         });
         setIsPickerOpen(false);
-    };
-
-    const handleBuildRoomPrompt = async () => {
-        if (!draft?.template_key) {
-            window.WFToast?.error?.('Select a template first');
-            return;
-        }
-        try {
-            const res = await ApiClient.post<{ success: boolean; prompt_text?: string; error?: string }>(
-                '/api/ai_prompt_templates.php?action=build_room_prompt',
-                {
-                    template_key: draft.template_key,
-                    variables: builderValues
-                }
-            );
-            if (!res?.success || !res.prompt_text) {
-                throw new Error(res?.error || 'Failed to build prompt');
-            }
-            setBuiltPrompt(res.prompt_text);
-            void fetchHistory();
-            window.WFToast?.success?.('Room prompt generated and logged');
-        } catch (err) {
-            const message = err instanceof Error ? err.message : 'Failed to build prompt';
-            window.WFToast?.error?.(message);
-        }
     };
 
     return (
@@ -229,34 +198,13 @@ export const SystemPromptsTab: React.FC = () => {
             {draft && (
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
                     <div className="xl:col-span-7 space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Template Name</label>
-                                <input
-                                    type="text"
-                                    value={draft.template_name || ''}
-                                    onChange={(e) => setDraft(prev => prev ? { ...prev, template_name: e.target.value } : prev)}
-                                    className="w-full text-xs font-bold p-3 border border-slate-200 rounded-xl bg-white"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Template Key</label>
-                                <input
-                                    type="text"
-                                    value={draft.template_key || ''}
-                                    onChange={(e) => setDraft(prev => prev ? { ...prev, template_key: slugifyKey(e.target.value) } : prev)}
-                                    className="w-full text-xs font-mono p-3 border border-slate-200 rounded-xl bg-white"
-                                />
-                            </div>
-                        </div>
-
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Description</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Template Name</label>
                             <input
                                 type="text"
-                                value={draft.description || ''}
-                                onChange={(e) => setDraft(prev => prev ? { ...prev, description: e.target.value } : prev)}
-                                className="w-full text-xs font-medium p-3 border border-slate-200 rounded-xl bg-white"
+                                value={draft.template_name || ''}
+                                onChange={(e) => setDraft(prev => prev ? { ...prev, template_name: e.target.value } : prev)}
+                                className="w-full text-xs font-bold p-3 border border-slate-200 rounded-xl bg-white"
                             />
                         </div>
 
@@ -304,58 +252,15 @@ export const SystemPromptsTab: React.FC = () => {
                     </div>
 
                     <div className="xl:col-span-5 space-y-4">
-                        <div className="space-y-4 border border-slate-200 rounded-xl p-4 bg-slate-50/60">
-                            <div className="flex items-center justify-between">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Room Prompt Builder</label>
-                                <button
-                                    type="button"
-                                    onClick={handleBuildRoomPrompt}
-                                    className="btn btn-primary px-4 py-2 text-xs font-black uppercase tracking-widest"
-                                >
-                                    Build Prompt
-                                </button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {variables.map(v => (
-                                    <div key={`builder-${v.id}`} className="space-y-1">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                                            {v.display_name}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={builderValues[v.variable_key] ?? v.sample_value ?? ''}
-                                            onChange={(e) => setBuilderValues(prev => ({ ...prev, [v.variable_key]: e.target.value }))}
-                                            className="w-full text-xs p-2.5 border border-slate-200 rounded-lg bg-white"
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Generated Prompt (Logged to History)</label>
-                                <textarea
-                                    value={builtPrompt}
-                                    onChange={(e) => setBuiltPrompt(e.target.value)}
-                                    rows={8}
-                                    className="w-full text-xs font-mono p-3 border border-slate-200 rounded-lg bg-white"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Recent Generation History</label>
-                                <div className="max-h-40 overflow-auto border border-slate-200 rounded-lg bg-white divide-y divide-slate-100">
-                                    {history.slice(0, 8).map(row => (
-                                        <div key={row.id} className="px-3 py-2 text-[11px]">
-                                            <div className="font-bold text-slate-700">{row.template_key}</div>
-                                            <div className="text-slate-500">{row.status} {row.created_at ? `• ${row.created_at}` : ''}</div>
-                                        </div>
-                                    ))}
-                                    {history.length === 0 && (
-                                        <div className="px-3 py-3 text-[11px] text-slate-500 italic">No generation history yet.</div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                        <PromptVariablesEditor
+                            variables={variables}
+                            optionsByVariable={dropdownOptionsByVariable}
+                            isLoading={isLoading}
+                            onSave={saveVariables}
+                        />
 
                         <RoomPromptDropdownOptionsEditor
+                            variables={variables}
                             optionsByVariable={dropdownOptionsByVariable}
                             isLoading={isLoading}
                             onSave={saveDropdownOptions}

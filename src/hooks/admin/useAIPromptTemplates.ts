@@ -96,6 +96,27 @@ export const useAIPromptTemplates = () => {
         }
     }, [fetchDropdownOptions]);
 
+    const saveVariables = useCallback(async (payload: IAIPromptVariable[]) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const res = await ApiClient.post<IAIPromptTemplateActionResponse>('/api/ai_prompt_templates.php?action=save_variables', {
+                variables: payload
+            });
+            if (!res?.success) {
+                throw new Error(res?.error || 'Failed to save variables');
+            }
+            await fetchVariables();
+            return { success: true };
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Failed to save variables';
+            setError(message);
+            return { success: false, error: message };
+        } finally {
+            setIsLoading(false);
+        }
+    }, [fetchVariables]);
+
     const saveTemplate = useCallback(async (template: Partial<IAIPromptTemplate>) => {
         setIsLoading(true);
         setError(null);
@@ -147,6 +168,7 @@ export const useAIPromptTemplates = () => {
         fetchDropdownOptions,
         saveTemplate,
         deleteTemplate,
-        saveDropdownOptions
+        saveDropdownOptions,
+        saveVariables
     };
 };

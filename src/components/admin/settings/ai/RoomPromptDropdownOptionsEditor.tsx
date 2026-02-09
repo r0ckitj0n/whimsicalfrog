@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import type { IAIPromptDropdownOptionsByVariable } from '../../../../types/ai-prompts.js';
+import type { IAIPromptDropdownOptionsByVariable, IAIPromptVariable } from '../../../../types/ai-prompts.js';
 import {
     AUTOGENERATE_LABEL,
     ROOM_PROMPT_DROPDOWN_DEFAULTS,
-    ROOM_PROMPT_DROPDOWN_DEFINITIONS
+    getVariableLabel
 } from './roomPromptDropdownDefaults.js';
 
 interface RoomPromptDropdownOptionsEditorProps {
+    variables: IAIPromptVariable[];
     optionsByVariable: IAIPromptDropdownOptionsByVariable;
     isLoading: boolean;
     onSave: (next: IAIPromptDropdownOptionsByVariable) => Promise<{ success: boolean; error?: string }>;
@@ -29,39 +30,45 @@ const parseDraftText = (raw: string): string[] => {
 };
 
 export const RoomPromptDropdownOptionsEditor: React.FC<RoomPromptDropdownOptionsEditorProps> = ({
+    variables,
     optionsByVariable,
     isLoading,
     onSave
 }) => {
     const [drafts, setDrafts] = useState<Record<string, string>>({});
 
-    const mergedOptions = useMemo(() => {
+    const variableOrder = useMemo(
+        () => [...variables].sort((a, b) => String(a.display_name || a.variable_key).localeCompare(String(b.display_name || b.variable_key))),
+        [variables]
+    );
+
+    const mergedOptions: IAIPromptDropdownOptionsByVariable = useMemo(() => {
         const map: IAIPromptDropdownOptionsByVariable = {};
-        for (const def of ROOM_PROMPT_DROPDOWN_DEFINITIONS) {
-            map[def.variable_key] = optionsByVariable[def.variable_key] || ROOM_PROMPT_DROPDOWN_DEFAULTS[def.variable_key] || [AUTOGENERATE_LABEL];
+        for (const variable of variableOrder) {
+            map[variable.variable_key] = optionsByVariable[variable.variable_key] || ROOM_PROMPT_DROPDOWN_DEFAULTS[variable.variable_key] || [AUTOGENERATE_LABEL];
         }
         return map;
-    }, [optionsByVariable]);
+    }, [optionsByVariable, variableOrder]);
 
     useEffect(() => {
         const nextDrafts: Record<string, string> = {};
-        for (const def of ROOM_PROMPT_DROPDOWN_DEFINITIONS) {
-            nextDrafts[def.variable_key] = buildDraftText(mergedOptions[def.variable_key] || [AUTOGENERATE_LABEL]);
+        for (const variable of variableOrder) {
+            nextDrafts[variable.variable_key] = buildDraftText(mergedOptions[variable.variable_key] || [AUTOGENERATE_LABEL]);
         }
         setDrafts(nextDrafts);
-    }, [mergedOptions]);
+    }, [mergedOptions, variableOrder]);
 
     const handleSave = async () => {
         const nextPayload: IAIPromptDropdownOptionsByVariable = {};
-        for (const def of ROOM_PROMPT_DROPDOWN_DEFINITIONS) {
-            const raw = drafts[def.variable_key] || AUTOGENERATE_LABEL;
-            nextPayload[def.variable_key] = parseDraftText(raw);
+        for (const variable of variableOrder) {
+            const raw = drafts[variable.variable_key] || AUTOGENERATE_LABEL;
+            nextPayload[variable.variable_key] = parseDraftText(raw);
         }
         const res = await onSave(nextPayload);
         if (res.success) {
-            window.WFToast?.success?.('Room dropdown presets saved');
+            window.WFToast?.success?.('Prompt variable options saved');
         } else {
-            window.WFToast?.error?.(res.error || 'Failed to save room dropdown presets');
+            window.WFToast?.error?.(res.error || 'Failed to save prompt variable options');
         }
     };
 
@@ -69,7 +76,7 @@ export const RoomPromptDropdownOptionsEditor: React.FC<RoomPromptDropdownOptions
         <div className="space-y-4 border border-slate-200 rounded-xl p-4 bg-slate-50/60">
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Room Dropdown Presets</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Prompt Variable Options</label>
                     <p className="text-[11px] text-slate-500 mt-1">Edit one option per line. The first option is always `{AUTOGENERATE_LABEL}`.</p>
                 </div>
                 <button
@@ -78,17 +85,19 @@ export const RoomPromptDropdownOptionsEditor: React.FC<RoomPromptDropdownOptions
                     disabled={isLoading}
                     className="btn btn-primary px-4 py-2 text-xs font-black uppercase tracking-widest"
                 >
-                    Save Presets
+                    Save Options
                 </button>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-                {ROOM_PROMPT_DROPDOWN_DEFINITIONS.map((def) => (
-                    <div key={def.variable_key} className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">{def.label}</label>
+                {variableOrder.map((variable) => (
+                    <div key={variable.variable_key} className="space-y-1">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                            {getVariableLabel(variable.variable_key, variable.display_name)}
+                        </label>
                         <textarea
-                            value={drafts[def.variable_key] || AUTOGENERATE_LABEL}
-                            onChange={(e) => setDrafts((prev) => ({ ...prev, [def.variable_key]: e.target.value }))}
+                            value={drafts[variable.variable_key] || AUTOGENERATE_LABEL}
+                            onChange={(e) => setDrafts((prev) => ({ ...prev, [variable.variable_key]: e.target.value }))}
                             rows={5}
                             className="w-full text-xs p-2.5 border border-slate-200 rounded-lg bg-white font-medium"
                         />

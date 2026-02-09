@@ -197,7 +197,12 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             .map((r) => String(r.room_number || '').trim())
             .filter((val) => /^\d+$/.test(val))
             .map((val) => parseInt(val, 10));
-        const nextRoomNumber = numericRooms.length > 0 ? String(Math.max(...numericRooms) + 1) : '1';
+        const usedRoomNumbers = new Set<number>(numericRooms.filter((n) => n >= 1));
+        let candidateRoomNumber = 1;
+        while (usedRoomNumbers.has(candidateRoomNumber)) {
+            candidateRoomNumber += 1;
+        }
+        const nextRoomNumber = String(candidateRoomNumber);
         const nextDisplayOrder = roomsData.length > 0
             ? Math.max(...roomsData.map((r) => Number(r.display_order || 0))) + 1
             : 1;

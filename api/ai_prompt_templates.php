@@ -10,6 +10,60 @@ header('Content-Type: application/json; charset=utf-8');
 
 const AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL = '(autogenerate)';
 const AI_PROMPT_DROPDOWN_DEFAULTS = [
+    'room_number' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+        '7',
+    ],
+    'room_name' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'Holiday Collection',
+        'Spring Garden Boutique',
+        'Woodland Gift Nook',
+        'Frog Atelier',
+        'Cozy Candle Corner',
+        'Artisan Market Hall',
+    ],
+    'door_label' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'Holidays',
+        'Seasonal',
+        'Best Sellers',
+        'New Arrivals',
+        'Custom Gifts',
+        'Featured',
+    ],
+    'display_order' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '10',
+    ],
+    'room_description' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'A cozy holiday gift room with warm seasonal accents.',
+        'A bright handcrafted market corner with open shelves.',
+        'A whimsical frog-owned boutique for custom keepsakes.',
+        'A playful studio featuring themed product staging zones.',
+        'A calm premium display room with clean merchandising lines.',
+    ],
+    'room_theme' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'cozy cafe',
+        'rustic farmhouse',
+        'magical apothecary',
+        'artisan bakery',
+        'storybook gift shop',
+        'modern boutique',
+    ],
     'display_furniture_style' => [
         AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
         'tiered light-wood shelving units',
@@ -350,6 +404,45 @@ try {
             }
 
             Response::json(['success' => true, 'message' => 'Template saved']);
+            break;
+        }
+
+        case 'save_variables': {
+            $incoming = $input['variables'] ?? null;
+            if (!is_array($incoming)) {
+                Response::error('variables array is required', null, 422);
+            }
+
+            foreach ($incoming as $row) {
+                if (!is_array($row)) {
+                    Response::error('Each variables entry must be an object', null, 422);
+                }
+                $variableKey = trim((string) ($row['variable_key'] ?? ''));
+                $displayName = trim((string) ($row['display_name'] ?? ''));
+                $description = trim((string) ($row['description'] ?? ''));
+                $sampleValue = trim((string) ($row['sample_value'] ?? ''));
+                $isActive = !array_key_exists('is_active', $row) || !empty($row['is_active']) ? 1 : 0;
+
+                if ($variableKey === '' || !preg_match('/^[a-z0-9_]+$/', $variableKey)) {
+                    Response::error('variable_key is required and must be snake_case', null, 422);
+                }
+                if ($displayName === '') {
+                    Response::error('display_name is required for each variable', null, 422);
+                }
+
+                Database::execute(
+                    'INSERT INTO ai_prompt_variables (variable_key, display_name, description, sample_value, is_active)
+                     VALUES (?, ?, ?, ?, ?)
+                     ON DUPLICATE KEY UPDATE
+                        display_name = VALUES(display_name),
+                        description = VALUES(description),
+                        sample_value = VALUES(sample_value),
+                        is_active = VALUES(is_active)',
+                    [$variableKey, $displayName, $description, $sampleValue, $isActive]
+                );
+            }
+
+            Response::json(['success' => true, 'message' => 'Variables saved']);
             break;
         }
 

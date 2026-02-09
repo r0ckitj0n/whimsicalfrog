@@ -1,20 +1,60 @@
 export const AUTOGENERATE_LABEL = '(autogenerate)';
 
-export interface IRoomPromptDropdownOptionDefinition {
-    variable_key: string;
-    label: string;
-}
-
-export const ROOM_PROMPT_DROPDOWN_DEFINITIONS: IRoomPromptDropdownOptionDefinition[] = [
-    { variable_key: 'display_furniture_style', label: 'Furniture Style' },
-    { variable_key: 'thematic_accent_decorations', label: 'Accent Decor' },
-    { variable_key: 'frog_action', label: 'Frog Action' },
-    { variable_key: 'vibe_adjectives', label: 'Vibe' },
-    { variable_key: 'color_scheme', label: 'Color Scheme' },
-    { variable_key: 'background_thematic_elements', label: 'Background Elements' }
-];
-
 export const ROOM_PROMPT_DROPDOWN_DEFAULTS: Record<string, string[]> = {
+    room_number: [
+        AUTOGENERATE_LABEL,
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+        '7'
+    ],
+    room_name: [
+        AUTOGENERATE_LABEL,
+        'Holiday Collection',
+        'Spring Garden Boutique',
+        'Woodland Gift Nook',
+        'Frog Atelier',
+        'Cozy Candle Corner',
+        'Artisan Market Hall'
+    ],
+    door_label: [
+        AUTOGENERATE_LABEL,
+        'Holidays',
+        'Seasonal',
+        'Best Sellers',
+        'New Arrivals',
+        'Custom Gifts',
+        'Featured'
+    ],
+    display_order: [
+        AUTOGENERATE_LABEL,
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '10'
+    ],
+    room_description: [
+        AUTOGENERATE_LABEL,
+        'A cozy holiday gift room with warm seasonal accents.',
+        'A bright handcrafted market corner with open shelves.',
+        'A whimsical frog-owned boutique for custom keepsakes.',
+        'A playful studio featuring themed product staging zones.',
+        'A calm premium display room with clean merchandising lines.'
+    ],
+    room_theme: [
+        AUTOGENERATE_LABEL,
+        'cozy cafe',
+        'rustic farmhouse',
+        'magical apothecary',
+        'artisan bakery',
+        'storybook gift shop',
+        'modern boutique'
+    ],
     display_furniture_style: [
         AUTOGENERATE_LABEL,
         'tiered light-wood shelving units',
@@ -81,4 +121,13 @@ export const ROOM_PROMPT_DROPDOWN_DEFAULTS: Record<string, string[]> = {
         'soft mural waves and swirls',
         'woodland silhouettes and vines'
     ]
+};
+
+export const getVariableLabel = (variableKey: string, displayName?: string): string => {
+    if (displayName && displayName.trim()) return displayName.trim();
+    return variableKey
+        .split('_')
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
 };

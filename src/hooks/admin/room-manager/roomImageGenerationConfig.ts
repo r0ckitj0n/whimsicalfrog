@@ -66,7 +66,7 @@ export const DEFAULT_ROOM_IMAGE_VARIABLE_VALUES: Record<RoomImagePromptVariableK
     background_thematic_elements: AUTOGENERATE_LABEL,
     image_style_declaration: AUTOGENERATE_LABEL,
     location_phrase: AUTOGENERATE_LABEL,
-    character_statement: 'The signature fedora-wearing 3D cartoon frog is present as the proprietor. He is depicted {{frog_action}}, surveying his shop with pride.',
+    character_statement: AUTOGENERATE_LABEL,
     aesthetic_statement: AUTOGENERATE_LABEL,
     critical_constraint_line: 'CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.',
     no_props_line: 'Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.',

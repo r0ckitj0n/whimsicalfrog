@@ -8,25 +8,16 @@ let businessLocale = 'en-US';
 let businessCurrency = 'USD';
 let businessDstEnabled = true;
 
-function parseMySqlDateParts(input: string): { year: number; month: number; day: number; hour: number; minute: number; second: number } | null {
+function parseMySqlDateAsUtc(input: string) {
     const trimmed = input.trim();
-    const match = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/);
-    if (!match) return null;
-    return {
-        year: parseInt(match[1], 10),
-        month: parseInt(match[2], 10),
-        day: parseInt(match[3], 10),
-        hour: parseInt(match[4], 10),
-        minute: parseInt(match[5], 10),
-        second: parseInt(match[6], 10)
-    };
-}
-
-function formatMySqlWallDate(input: string, options: Intl.DateTimeFormatOptions = {}) {
-    const parts = parseMySqlDateParts(input);
-    if (!parts) return null;
-    const d = new Date(Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second));
-    return new Intl.DateTimeFormat(businessLocale, { timeZone: 'UTC', ...options }).format(d);
+    if (!trimmed) return new Date(NaN);
+    if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(trimmed)) {
+        return new Date(trimmed.replace(' ', 'T') + 'Z');
+    }
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(trimmed)) {
+        return new Date(trimmed + 'Z');
+    }
+    return new Date(trimmed);
 }
 
 function parseGmtOffsetToMinutes(offsetLabel: string): number | null {
@@ -60,7 +51,7 @@ function getStandardTimezoneOffsetMinutes(timezone: string): number | null {
 function toBusinessDate(date: string | number | Date) {
     const parsed = date instanceof Date
         ? new Date(date.getTime())
-        : new Date(date);
+        : (typeof date === 'string' ? parseMySqlDateAsUtc(date) : new Date(date));
     if (isNaN(parsed.getTime())) return parsed;
 
     if (!businessDstEnabled) {
@@ -116,15 +107,6 @@ export function getBusinessCurrency() {
  */
 export function formatDate(date: string | number | Date, options: Intl.DateTimeFormatOptions = {}) {
     try {
-        if (typeof date === 'string') {
-            const mysqlWallDate = formatMySqlWallDate(date, {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-                ...options
-            });
-            if (mysqlWallDate) return mysqlWallDate;
-        }
         const d = toBusinessDate(date);
         if (isNaN(d.getTime())) return 'N/A';
 
@@ -147,15 +129,6 @@ export function formatDate(date: string | number | Date, options: Intl.DateTimeF
  */
 export function formatTime(date: string | number | Date, options: Intl.DateTimeFormatOptions = {}) {
     try {
-        if (typeof date === 'string') {
-            const mysqlWallTime = formatMySqlWallDate(date, {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true,
-                ...options
-            });
-            if (mysqlWallTime) return mysqlWallTime;
-        }
         const d = toBusinessDate(date);
         if (isNaN(d.getTime())) return '';
 

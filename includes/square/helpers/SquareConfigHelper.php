@@ -170,6 +170,16 @@ class SquareConfigHelper
 
         $env = $settings['square_environment'] ?? 'sandbox';
         $prefix = ($env === 'production') ? 'square_production_' : 'square_sandbox_';
+        $tokenKey = $prefix . 'access_token';
+        $whKey = $prefix . 'webhook_signature_key';
+
+        $scopedTokenSecret = function_exists('secret_get') ? secret_get($tokenKey) : null;
+        $legacyTokenSecret = function_exists('secret_get') ? secret_get('square_access_token') : null;
+        $scopedTokenPresent = function_exists('secret_has') ? secret_has($tokenKey) : false;
+        $legacyTokenPresent = function_exists('secret_has') ? secret_has('square_access_token') : false;
+
+        $scopedWebhookSecret = function_exists('secret_get') ? secret_get($whKey) : null;
+        $legacyWebhookSecret = function_exists('secret_get') ? secret_get('square_webhook_signature_key') : null;
 
         $resolved = [
             'enabled' => in_array(strtolower($settings['square_enabled'] ?? ''), ['true', '1'], true),
@@ -178,20 +188,20 @@ class SquareConfigHelper
             'location_id' => $settings[$prefix . 'location_id'] ?? $settings['square_location_id'] ?? '',
             'access_token' => '',
             'webhook_signature_key' => '',
+            'access_token_secret_present' => ($scopedTokenPresent || $legacyTokenPresent),
+            'access_token_secret_unreadable' => (($scopedTokenPresent && $scopedTokenSecret === null) || ($legacyTokenPresent && $legacyTokenSecret === null)),
             'inventory_sync_enabled' => in_array(strtolower($settings['inventory_sync_enabled'] ?? ''), ['true', '1'], true),
             'price_sync_enabled' => in_array(strtolower($settings['price_sync_enabled'] ?? ''), ['true', '1'], true),
             'sync_fields' => json_decode($settings['sync_fields'] ?? '[]', true) ?: []
         ];
 
         // Resolve secrets (fallback to DB values for compatibility with older saves)
-        $tokenKey = $prefix . 'access_token';
-        $resolved['access_token'] = secret_get($tokenKey)
-            ?: secret_get('square_access_token')
+        $resolved['access_token'] = $scopedTokenSecret
+            ?: $legacyTokenSecret
             ?: ($settings[$tokenKey] ?? $settings['square_access_token'] ?? '');
         
-        $whKey = $prefix . 'webhook_signature_key';
-        $resolved['webhook_signature_key'] = secret_get($whKey)
-            ?: secret_get('square_webhook_signature_key')
+        $resolved['webhook_signature_key'] = $scopedWebhookSecret
+            ?: $legacyWebhookSecret
             ?: ($settings[$whKey] ?? $settings['square_webhook_signature_key'] ?? '');
 
         return $resolved;

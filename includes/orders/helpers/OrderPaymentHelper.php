@@ -11,14 +11,32 @@ class OrderPaymentHelper
     public static function processSquarePayment($token, $amount, $address = null)
     {
         $credentials = self::getSquareCredentials();
-        if (!$credentials['enabled'] || empty($credentials['token']) || empty($credentials['location_id'])) {
+        $problems = [];
+        if (!$credentials['enabled']) {
+            $problems[] = 'Square integration is disabled';
+        }
+        if (empty($credentials['token'])) {
+            if (!empty($credentials['token_secret_unreadable'])) {
+                $problems[] = 'Square access token secret is unreadable (re-enter the access token in Square settings)';
+            } else {
+                $problems[] = 'Square access token is missing';
+            }
+        }
+        if (empty($credentials['location_id'])) {
+            $problems[] = 'Square location ID is missing';
+        }
+
+        if (!empty($problems)) {
             self::logError('Square not properly configured', [
                 'env' => $credentials['environment'] ?? 'sandbox',
                 'enabled' => $credentials['enabled'],
                 'has_token' => !empty($credentials['token']),
-                'has_location' => !empty($credentials['location_id'])
+                'has_location' => !empty($credentials['location_id']),
+                'token_secret_present' => !empty($credentials['token_secret_present']),
+                'token_secret_unreadable' => !empty($credentials['token_secret_unreadable']),
+                'problems' => $problems,
             ]);
-            throw new Exception('Payment configuration error');
+            throw new Exception('Payment configuration error: ' . implode('; ', $problems));
         }
 
         $baseUrl = ($credentials['environment'] ?? 'sandbox') === 'production'
@@ -100,6 +118,8 @@ class OrderPaymentHelper
                     'environment' => (string) ($resolved['environment'] ?? 'sandbox'),
                     'token' => (string) ($resolved['access_token'] ?? ''),
                     'location_id' => (string) ($resolved['location_id'] ?? ''),
+                    'token_secret_present' => self::toBool($resolved['access_token_secret_present'] ?? false),
+                    'token_secret_unreadable' => self::toBool($resolved['access_token_secret_unreadable'] ?? false),
                 ];
             }
         } catch (Exception $e) {
@@ -130,6 +150,8 @@ class OrderPaymentHelper
             'environment' => $squareEnv,
             'token' => $token,
             'location_id' => $locationId,
+            'token_secret_present' => false,
+            'token_secret_unreadable' => false,
         ];
     }
 

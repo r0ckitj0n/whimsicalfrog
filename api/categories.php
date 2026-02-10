@@ -50,6 +50,56 @@ SQL;
     }
 }
 
+function category_slugify(string $value): string
+{
+    $slug = strtolower(trim($value));
+    $slug = preg_replace('/[^a-z0-9]+/', '-', $slug) ?? '';
+    $slug = trim($slug, '-');
+    return $slug !== '' ? $slug : 'category';
+}
+
+function category_default_sku_rules(string $name): string
+{
+    $letters = preg_replace('/[^A-Za-z]/', '', $name) ?? '';
+    $prefix = strtoupper(substr($letters, 0, 2));
+    return $prefix !== '' ? $prefix : 'CA';
+}
+
+function category_table_columns(PDO $db): array
+{
+    static $cache = null;
+    if (is_array($cache)) {
+        return $cache;
+    }
+
+    $cache = [];
+    $rows = $db->query('SHOW COLUMNS FROM categories')->fetchAll();
+    foreach ($rows as $row) {
+        $name = strtolower((string) ($row['Field'] ?? ''));
+        if ($name !== '') {
+            $cache[$name] = true;
+        }
+    }
+
+    return $cache;
+}
+
+function category_unique_slug(PDO $db, string $name): string
+{
+    $base = category_slugify($name);
+    $slug = $base;
+    $i = 2;
+    while ($i <= 250) {
+        $row = Database::queryOne('SELECT id FROM categories WHERE slug = ? LIMIT 1', [$slug]);
+        if (!$row) {
+            return $slug;
+        }
+        $slug = $base . '-' . $i;
+        $i++;
+    }
+    return $base . '-' . time();
+}
+
 try {
     $input = json_decode(file_get_contents('php://input'), true) ?? [];
     $action = $_GET['action'] ?? $_POST['action'] ?? $input['action'] ?? WF_Constants::ACTION_LIST;
@@ -96,9 +146,36 @@ try {
             }
             $db = Database::getInstance();
             ensure_categories_table($db);
-            // Insert or ignore duplicate
-            $stmt = $db->prepare('INSERT INTO categories (name) VALUES (?)');
-            $stmt->execute([$name]);
+            $existing = Database::queryOne('SELECT id FROM categories WHERE name = ? LIMIT 1', [$name]);
+            if ($existing && isset($existing['id'])) {
+                Response::noChanges(['name' => $name]);
+            }
+
+            $cols = category_table_columns($db);
+            $fields = ['name'];
+            $values = [$name];
+
+            if (isset($cols['description'])) {
+                $fields[] = 'description';
+                $values[] = '';
+            }
+            if (isset($cols['sku_rules'])) {
+                $fields[] = 'sku_rules';
+                $values[] = category_default_sku_rules($name);
+            }
+            if (isset($cols['slug'])) {
+                $fields[] = 'slug';
+                $values[] = category_unique_slug($db, $name);
+            }
+            if (isset($cols['is_active'])) {
+                $fields[] = 'is_active';
+                $values[] = 1;
+            }
+
+            $placeholders = implode(', ', array_fill(0, count($fields), '?'));
+            $sql = 'INSERT INTO categories (' . implode(', ', $fields) . ') VALUES (' . $placeholders . ')';
+            $stmt = $db->prepare($sql);
+            $stmt->execute($values);
             $affected = (int) $stmt->rowCount();
             if ($affected > 0) {
                 Response::updated(['name' => $name]);

@@ -204,6 +204,12 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
                                         )}
                                         <button
                                             type="button"
+                                            onClick={() => openViewer(image)}
+                                            className="admin-action-btn btn-icon--view"
+                                            data-help-id="common-view"
+                                        />
+                                        <button
+                                            type="button"
                                             onClick={() => { void handleDeleteImage(image.id); }}
                                             className="admin-action-btn btn-icon--delete"
                                             data-help-id="inventory-image-delete"

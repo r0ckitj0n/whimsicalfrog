@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ItemSelector } from '../../settings/ai-suggestions/ItemSelector.js';
 
 interface ItemInfoColumnProps {
@@ -59,6 +59,8 @@ export const ItemInfoColumn: React.FC<ItemInfoColumnProps> = ({
     onToggleFieldLock,
     onLockedWordsChange
 }) => {
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
     return (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-4 py-2.5 bg-slate-100/80 border-b border-slate-200">
@@ -68,14 +70,25 @@ export const ItemInfoColumn: React.FC<ItemInfoColumnProps> = ({
             </div>
 
             <div className="px-4 py-3 border-b border-slate-200 bg-slate-50/50">
-                <img
-                    src={primaryImage}
-                    alt={formData.name || sku}
-                    className="w-full h-40 object-cover rounded-xl border border-slate-200 shadow-sm"
-                    onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/images/placeholder.webp';
-                    }}
-                />
+                <div className="relative group">
+                    <img
+                        src={primaryImage}
+                        alt={formData.name || sku}
+                        className="w-full h-40 object-cover rounded-xl border border-slate-200 shadow-sm"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/images/placeholder.webp';
+                        }}
+                    />
+                    <div className="absolute inset-0 rounded-xl bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button
+                            type="button"
+                            className="admin-action-btn btn-icon--view"
+                            data-help-id="common-view"
+                            aria-label="View larger image"
+                            onClick={() => setIsPreviewOpen(true)}
+                        />
+                    </div>
+                </div>
             </div>
 
             {!isReadOnly && (
@@ -263,6 +276,41 @@ export const ItemInfoColumn: React.FC<ItemInfoColumnProps> = ({
                     Run AI processes to generate data for Item Information, Cost Analysis, Price Analysis, and Marketing fields.
                 </p>
             </div>
+
+            {isPreviewOpen && (
+                <div
+                    className="fixed inset-0 z-[var(--wf-z-topmost)] flex items-center justify-center p-4 bg-black/80"
+                    onClick={() => setIsPreviewOpen(false)}
+                    role="presentation"
+                >
+                    <div
+                        className="viewer-content relative bg-black/90 p-4 rounded-xl shadow-2xl max-w-4xl w-full"
+                        onClick={(e) => e.stopPropagation()}
+                        role="presentation"
+                    >
+                        <div className="flex items-center justify-between p-3 border-b">
+                            <h3 className="text-sm font-medium truncate">{formData.name || sku}</h3>
+                            <button
+                                onClick={() => setIsPreviewOpen(false)}
+                                className="admin-action-btn btn-icon--close"
+                                type="button"
+                                data-help-id="common-close"
+                            />
+                        </div>
+                        <div className="p-4 flex items-center justify-center bg-gray-100 min-h-[300px]">
+                            <img
+                                src={primaryImage}
+                                alt={formData.name || sku}
+                                className="max-h-[70vh] object-contain"
+                                loading="lazy"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = '/images/placeholder.webp';
+                                }}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

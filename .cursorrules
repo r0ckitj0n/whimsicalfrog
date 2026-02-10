@@ -5,7 +5,7 @@
 - **Dev Site (Backend):** http://localhost:8080
 - **Live Site:** https://whimsicalfrog.us
 - **Legacy Backup:** /Volumes/Media/~Archives/Websites/WhimsicalFrog - Backups/2026-01-01
-- **Credentials:** admin / Pass.123
+- **Credentials:** Never store plaintext credentials in repo rules. Use `.env` and local secret stores only.
 
 This is the consolidated **portable** ruleset for the Whimsical Frog repository.
 
@@ -41,6 +41,58 @@ This is the consolidated **portable** ruleset for the Whimsical Frog repository.
 
 ### Tooling
 - Repo rules are documented here and synced into `.windsurfrules` by `scripts/dev.sh`.
+
+## Security Baseline (Non-Negotiable)
+
+### Endpoint Security
+- Every mutating endpoint MUST require explicit auth (`requireAdmin(true)` for admin writes, `requireLogin()` for user writes) unless it is intentionally public.
+- Public-write endpoints (registration/newsletter/contact) MUST use strict payload validation, abuse controls, and clear allowlisted behavior.
+- Mutating actions MUST be `POST` (or `PUT`/`DELETE`) only. `GET` MUST be read-only.
+- Every endpoint with actions MUST enforce an explicit action allowlist.
+- Never keep localhost/dev auth bypass code paths in production endpoint logic.
+
+### Input Validation
+- Validate and normalize all external input at endpoint boundaries.
+- Enforce identifier patterns (e.g., SKU/order/table IDs) with strict regex allowlists.
+- Enforce enum allowlists for status/type/provider fields.
+- Clamp numeric bounds and enforce length limits on strings/JSON payloads.
+- Reject invalid JSON and unsupported content types with explicit 4xx responses.
+
+### SQL Safety
+- Parameterize all untrusted values in SQL.
+- Dynamic SQL identifiers (table/column/order direction) are prohibited unless validated against strict allowlists.
+- Never concatenate raw request data into SQL, including `ORDER BY`, `LIMIT`, table names, and column names.
+- Prefer `information_schema` checks for table existence over string-built `SHOW TABLES LIKE` where applicable.
+
+### File and Path Safety
+- For any file operation, enforce `realpath` containment in approved base directories.
+- Validate filenames with allowlists and block traversal patterns.
+- Restrict upload types by MIME + extension, and set explicit max sizes.
+- Store runtime artifacts under `/.local/state/` and never commit them.
+
+### CSRF, Session, and Cookie Policy
+- Admin/browser-session mutating endpoints MUST enforce CSRF tokens.
+- Session cookies must remain `HttpOnly`, `Secure` (HTTPS), and `SameSite=Lax` or stricter.
+- Regenerate session ID after login and privilege elevation.
+
+### CORS and Headers
+- Do not use wildcard CORS for privileged endpoints.
+- CORS origin allowlists must be explicit for non-public APIs.
+- Prefer security headers (`X-Content-Type-Options`, `X-Frame-Options`/`frame-ancestors`, `Referrer-Policy`, CSP where feasible).
+
+### Secrets and Crypto
+- API keys/tokens/secrets MUST be stored in secret store or environment variables; never in source.
+- Passwords MUST be hashed with `password_hash`/`password_verify`; no plaintext or reversible storage.
+- Never log secrets, full tokens, or sensitive personal data.
+
+### Error Handling and Logging
+- Return safe, structured error messages to clients; keep sensitive stack details in server logs only.
+- Log auth failures, access denials, validation failures, and destructive admin actions with actor + timestamp.
+- Silent catch blocks are prohibited except explicitly non-critical paths with clear rationale.
+
+### Change Validation
+- For endpoint/security changes, run: PHP lint, TypeScript check, and repository hygiene before completion.
+- Security-impacting migrations must include rollback notes and verification steps.
 
 ## Coding Guidelines
 

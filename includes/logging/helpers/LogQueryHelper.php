@@ -3,6 +3,23 @@
 
 class LogQueryHelper
 {
+    private static function isValidIdentifier($value)
+    {
+        return is_string($value) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $value) === 1;
+    }
+
+    private static function tableExists($tableName)
+    {
+        if (!self::isValidIdentifier($tableName)) {
+            return false;
+        }
+        $row = Database::queryOne(
+            "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?",
+            [$tableName]
+        );
+        return ((int)($row['c'] ?? 0)) > 0;
+    }
+
     /**
      * Build list of available database and file logs
      */
@@ -15,22 +32,29 @@ class LogQueryHelper
             $tableName = $info['table'];
 
             // Ensure table exists
-            if (empty(Database::queryAll("SHOW TABLES LIKE '$tableName'"))) {
+            if (!self::tableExists($tableName)) {
                 LogMaintenanceHelper::createLogTable($tableName, $type);
             }
 
             $count = 0;
             $lastEntryTime = null;
             try {
-                $rowCount = Database::queryOne("SELECT COUNT(*) as count FROM $tableName");
+                if (!self::isValidIdentifier($tableName)) {
+                    throw new Exception('Invalid log table name');
+                }
+                $rowCount = Database::queryOne("SELECT COUNT(*) as count FROM `$tableName`");
                 $count = $rowCount ? (int) $rowCount['count'] : 0;
 
                 $timestampField = $info['timestamp_field'];
-                $lastResult = Database::queryOne("SELECT MAX($timestampField) as last_entry FROM $tableName");
+                if (!self::isValidIdentifier($timestampField)) {
+                    throw new Exception('Invalid timestamp field');
+                }
+                $lastResult = Database::queryOne("SELECT MAX(`$timestampField`) as last_entry FROM `$tableName`");
                 if ($lastResult && $lastResult['last_entry']) {
                     $lastEntryTime = $lastResult['last_entry'];
                 }
             } catch (Exception $e) {
+                error_log('buildAvailableLogs failed for ' . $type . ': ' . $e->getMessage());
             }
 
             $logs[] = array_merge($info, [
@@ -60,6 +84,11 @@ class LogQueryHelper
         $table = $config['table'];
         $timestampField = $config['timestamp_field'];
         $fields = $config['select_fields'] ?? '*';
+        if (!self::isValidIdentifier($table) || !self::isValidIdentifier($timestampField)) {
+            throw new Exception('Invalid log configuration');
+        }
+        $page = max(1, (int)$page);
+        $limit = max(1, min((int)$limit, 200));
         $offset = ($page - 1) * $limit;
 
         $where = [];
@@ -70,14 +99,14 @@ class LogQueryHelper
             $from = $filters['from'];
             if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $from))
                 $from .= ' 00:00:00';
-            $where[] = "$timestampField >= ?";
+            $where[] = "`$timestampField` >= ?";
             $params[] = $from;
         }
         if (!empty($filters['to'])) {
             $to = $filters['to'];
             if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $to))
                 $to .= ' 23:59:59';
-            $where[] = "$timestampField <= ?";
+            $where[] = "`$timestampField` <= ?";
             $params[] = $to;
         }
         if (!empty($filters['status']) && $type === 'email_logs') {
@@ -92,26 +121,26 @@ class LogQueryHelper
         $whereSql = !empty($where) ? ' WHERE ' . implode(' AND ', $where) : '';
 
         // Sorting
-        $orderSql = "$timestampField DESC";
+        $orderSql = "`$timestampField` DESC";
         if ($type === 'email_logs' && !empty($filters['sort'])) {
             switch ($filters['sort']) {
                 case 'sent_at_asc':
-                    $orderSql = "$timestampField ASC";
+                    $orderSql = "`$timestampField` ASC";
                     break;
                 case 'subject_asc':
-                    $orderSql = "email_subject ASC, $timestampField DESC";
+                    $orderSql = "email_subject ASC, `$timestampField` DESC";
                     break;
                 case 'subject_desc':
-                    $orderSql = "email_subject DESC, $timestampField DESC";
+                    $orderSql = "email_subject DESC, `$timestampField` DESC";
                     break;
             }
         }
 
-        $countRow = Database::queryOne("SELECT COUNT(*) as total FROM $table$whereSql", $params);
+        $countRow = Database::queryOne("SELECT COUNT(*) as total FROM `$table`$whereSql", $params);
         $totalCount = $countRow ? (int) $countRow['total'] : 0;
 
         $entries = Database::queryAll(
-            "SELECT $fields FROM $table$whereSql ORDER BY $orderSql LIMIT ? OFFSET ?",
+            "SELECT $fields FROM `$table`$whereSql ORDER BY $orderSql LIMIT ? OFFSET ?",
             array_merge($params, [$limit, $offset])
         );
 
@@ -182,6 +211,14 @@ class LogQueryHelper
      */
     public static function searchLogs($query, $type = '', $filters = [])
     {
+        $query = trim((string)$query);
+        if ($query === '') {
+            return [];
+        }
+        if (strlen($query) > 255) {
+            $query = substr($query, 0, 255);
+        }
+
         $results = [];
         $searchDefinitions = [
             'client_logs' => ['level', 'message', 'page_url'],
@@ -204,23 +241,33 @@ class LogQueryHelper
             try {
                 $config = $configs[$table];
                 $timestampField = $config['timestamp_field'];
+                if (!self::isValidIdentifier($table) || !self::isValidIdentifier($timestampField)) {
+                    continue;
+                }
 
                 $whereOr = [];
                 $params = [];
                 foreach ($searchFields as $field) {
-                    $whereOr[] = "$field LIKE ?";
+                    if (!self::isValidIdentifier($field)) {
+                        continue;
+                    }
+                    $whereOr[] = "`$field` LIKE ?";
                     $params[] = "%$query%";
                 }
+                if (count($whereOr) === 0) {
+                    continue;
+                }
 
-                $sql = "SELECT *, '$table' as source_table FROM $table WHERE (" . implode(' OR ', $whereOr) . ")";
+                $sql = "SELECT *, '$table' as source_table FROM `$table` WHERE (" . implode(' OR ', $whereOr) . ")";
 
                 // Add common filters if needed (e.g. date range)
                 // ... (simplified for now to match original)
 
-                $sql .= " ORDER BY $timestampField DESC LIMIT 50";
+                $sql .= " ORDER BY `$timestampField` DESC LIMIT 50";
                 $tableResults = Database::queryAll($sql, $params);
                 $results = array_merge($results, $tableResults);
             } catch (Exception $e) {
+                error_log('searchLogs failed for ' . $table . ': ' . $e->getMessage());
             }
         }
 
@@ -241,10 +288,15 @@ class LogQueryHelper
         $counts = [];
         foreach (['error_logs', 'client_logs', 'analytics_logs', 'admin_activity_logs', 'email_logs'] as $table) {
             try {
-                $row = Database::queryOne("SELECT COUNT(*) as count FROM $table");
+                if (!self::isValidIdentifier($table)) {
+                    $counts[$table] = 0;
+                    continue;
+                }
+                $row = Database::queryOne("SELECT COUNT(*) as count FROM `$table`");
                 $counts[$table] = $row ? (int) $row['count'] : 0;
             } catch (Exception $e) {
                 $counts[$table] = 0;
+                error_log('getLoggingStatus failed for ' . $table . ': ' . $e->getMessage());
             }
         }
 
@@ -261,7 +313,7 @@ class LogQueryHelper
     public static function getDistinctEmailTypes()
     {
         try {
-            $rows = Database::queryAll("SELECT DISTINCT email_type FROM email_logs WHERE email_type IS NOT NULL AND email_type != '' ORDER BY email_type ASC");
+            $rows = Database::queryAll("SELECT DISTINCT email_type FROM `email_logs` WHERE email_type IS NOT NULL AND email_type != '' ORDER BY email_type ASC");
             $types = [];
             foreach ($rows as $r) {
                 if (!empty($r['email_type']))
@@ -269,6 +321,7 @@ class LogQueryHelper
             }
             return $types;
         } catch (Exception $e) {
+            error_log('getDistinctEmailTypes failed: ' . $e->getMessage());
             return [];
         }
     }

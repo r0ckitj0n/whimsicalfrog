@@ -12,6 +12,7 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/ai_image_processor.php';
 require_once __DIR__ . '/../includes/helpers/MultiImageUploadHelper.php';
 
@@ -182,15 +183,25 @@ function wf_resolve_best_processing_source(string $rootDir, string $currentRelPa
 }
 
 try {
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
         Response::methodNotAllowed();
     }
+    requireAdmin(true);
 
-    $sku = isset($_GET['sku']) ? trim($_GET['sku']) : '';
-    $force = isset($_GET['force']) ? ($_GET['force'] === '1' || strtolower($_GET['force']) === 'true') : false;
+    $body = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($body)) {
+        $body = [];
+    }
+
+    $sku = trim((string)($_POST['sku'] ?? $body['sku'] ?? ''));
+    $forceRaw = $_POST['force'] ?? $body['force'] ?? false;
+    $force = $forceRaw === true || $forceRaw === 1 || $forceRaw === '1' || strtolower((string)$forceRaw) === 'true';
 
     if ($sku === '') {
         Response::json(['success' => false, 'error' => 'SKU is required']);
+    }
+    if (!preg_match('/^[A-Za-z0-9-]{3,64}$/', $sku)) {
+        Response::json(['success' => false, 'error' => 'Invalid SKU format'], 422);
     }
 
     Database::getInstance();

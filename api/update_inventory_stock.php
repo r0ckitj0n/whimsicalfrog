@@ -3,18 +3,31 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
+requireAdmin(true);
 
 try {
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+        Response::methodNotAllowed('Method not allowed');
+    }
     Database::getInstance();
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['inventoryId']) || !array_key_exists('stock_quantity', $data)) {
+    if (!is_array($data)) {
+        Response::error('Invalid JSON', null, 400);
+    }
+
+    $skuInput = $data['sku'] ?? $data['inventoryId'] ?? null;
+    if (!isset($skuInput) || !array_key_exists('stock_quantity', $data)) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Invalid request: inventoryId and stock_quantity required']);
+        echo json_encode(['success' => false, 'error' => 'Invalid request: sku/inventoryId and stock_quantity required']);
         exit;
     }
 
-    $sku = $data['inventoryId'];
+    $sku = trim((string)$skuInput);
+    if (preg_match('/^[A-Za-z0-9-]{3,64}$/', $sku) !== 1) {
+        Response::error('Invalid SKU format', null, 422);
+    }
     $stock = $data['stock_quantity'];
     if (!is_numeric($stock) || $stock < 0) {
         http_response_code(400);

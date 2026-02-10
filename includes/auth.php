@@ -147,15 +147,6 @@ function getUsername()
  */
 function requireAuth($redirectTo = null)
 {
-    // Local diagnostic bypass: allow wf_diag_bypass=1 to skip auth on localhost
-    try {
-        $host = $_SERVER['HTTP_HOST'] ?? '';
-        if (strpos($host, 'localhost') !== false && isset($_GET['wf_diag_bypass']) && $_GET['wf_diag_bypass'] === '1') {
-            return;
-        }
-    } catch (\Throwable $____e) { /* noop */
-    }
-
     ensureSessionStarted();
     if (!isLoggedIn()) {
         if ($redirectTo) {
@@ -173,15 +164,6 @@ function requireAuth($redirectTo = null)
  */
 function requireAdmin($apiResponse = false)
 {
-    // Local diagnostic bypass: allow wf_diag_bypass=1 to skip admin enforcement on localhost
-    try {
-        $host = $_SERVER['HTTP_HOST'] ?? '';
-        if (strpos($host, 'localhost') !== false && isset($_GET['wf_diag_bypass']) && $_GET['wf_diag_bypass'] === '1') {
-            return;
-        }
-    } catch (\Throwable $____e) { /* noop */
-    }
-
     if (!isLoggedIn()) {
         if ($apiResponse) {
             http_response_code(401);

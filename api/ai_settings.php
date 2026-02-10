@@ -10,9 +10,7 @@ require_once 'ai_providers.php';
 require_once 'ai_settings_helper.php';
 require_once __DIR__ . '/../includes/auth.php';
 
-// Check if user is admin (with dev-only bypass option)
-
-// Determine action as early as possible for conditional auth
+// Determine action and input early
 $input = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false) {
     $input = json_decode(file_get_contents('php://input'), true) ?? [];
@@ -20,26 +18,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['CONTENT_TYPE'] ?? 
 }
 
 $__wf_action = $_GET['action'] ?? $_POST['action'] ?? '';
-
-// Security Check: Ensure user is logged in and is an Admin
-$isLoggedIn = isLoggedIn();
-$isAdmin = isAdmin();
-
-// Dev-only bypass: allow saving from localhost when explicitly enabled via env
-$__wf_is_localhost = isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false);
-$__wf_dev_allow_ai_save = getenv('WF_DEV_ALLOW_AI_SAVE') === '1';
-$__wf_dev_header = isset($_SERVER['HTTP_X_WF_DEV_ADMIN']) && $_SERVER['HTTP_X_WF_DEV_ADMIN'] === '1';
-$__wf_dev_bypass = $__wf_is_localhost && ($__wf_dev_allow_ai_save || $__wf_dev_header);
-
-// For read-only actions on localhost, allow UI to function without full admin
-if ((!$isLoggedIn || !$isAdmin) && !$__wf_dev_bypass) {
-    $readOnlyOk = $__wf_is_localhost && in_array($__wf_action, ['get_settings', 'get_providers', 'list_models'], true);
-    if (!$readOnlyOk) {
-        Response::forbidden('Admin access required');
-    }
-}
+requireAdmin(true);
 
 $action = $__wf_action;
+$allowedActions = ['get_settings', 'get_providers', 'update_settings', 'test_provider', 'list_models', 'init_ai_settings'];
+if (!in_array($action, $allowedActions, true)) {
+    Response::error('Invalid action', null, 400);
+}
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$postOnlyActions = ['update_settings', 'test_provider', 'init_ai_settings'];
+if (in_array($action, $postOnlyActions, true) && $method !== 'POST') {
+    Response::methodNotAllowed('Method not allowed');
+}
+if (!in_array($action, $postOnlyActions, true) && $method !== 'GET') {
+    Response::methodNotAllowed('Method not allowed');
+}
 
 try {
     try {
@@ -62,7 +55,7 @@ try {
 
         case 'update_settings':
             $input = json_decode(file_get_contents('php://input'), true);
-            if (!$input) {
+            if (!is_array($input) || empty($input)) {
                 Response::error('Invalid JSON input', null, 400);
             }
 
@@ -72,8 +65,19 @@ try {
 
         case 'test_provider':
             $provider = $_POST['provider'] ?? $_GET['provider'] ?? '';
+            $provider = strtolower(trim((string)$provider));
+            $allowedProviders = [
+                WF_Constants::AI_PROVIDER_OPENAI,
+                WF_Constants::AI_PROVIDER_ANTHROPIC,
+                WF_Constants::AI_PROVIDER_GOOGLE,
+                WF_Constants::AI_PROVIDER_META,
+                WF_Constants::AI_PROVIDER_JONS_AI
+            ];
             if (empty($provider)) {
                 Response::error('Provider not specified', null, 400);
+            }
+            if (!in_array($provider, $allowedProviders, true)) {
+                Response::error('Invalid provider', null, 422);
             }
 
             $result = getAIProviders()->testProvider($provider);
@@ -82,10 +86,24 @@ try {
 
         case 'list_models':
             $provider = $_GET['provider'] ?? '';
+            $provider = strtolower(trim((string)$provider));
             $force = isset($_GET['force']) && ($_GET['force'] === '1' || strtolower($_GET['force']) === 'true');
             $source = $_GET['source'] ?? '';
+            $source = strtolower(trim((string)$source));
+            $allowedProviders = [
+                WF_Constants::AI_PROVIDER_OPENAI,
+                WF_Constants::AI_PROVIDER_ANTHROPIC,
+                WF_Constants::AI_PROVIDER_GOOGLE,
+                WF_Constants::AI_PROVIDER_META
+            ];
             if (!$provider) {
                 Response::error('Provider not specified', null, 400);
+            }
+            if (!in_array($provider, $allowedProviders, true)) {
+                Response::error('Invalid provider', null, 422);
+            }
+            if (!in_array($source, ['', 'openrouter'], true)) {
+                Response::error('Invalid source', null, 422);
             }
             try {
                 if ($source === 'openrouter') {
@@ -103,9 +121,6 @@ try {
             $result = initializeAISettings($pdo);
             Response::json(['success' => true, 'message' => 'AI settings initialized', 'inserted' => $result]);
             break;
-
-        default:
-            Response::error('Invalid action', null, 400);
     }
 
 } catch (Exception $e) {

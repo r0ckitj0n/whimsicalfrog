@@ -49,6 +49,7 @@ try {
 
     // Optional fields with defaults
     $role = $data['role'] ?? 'Customer';
+    $role = in_array($role, [WF_Constants::ROLE_CUSTOMER, 'Customer'], true) ? WF_Constants::ROLE_CUSTOMER : WF_Constants::ROLE_CUSTOMER;
     $first_name = trim($data['first_name'] ?? '');
     $last_name = trim($data['last_name'] ?? '');
     $phone_number = trim($data['phone_number'] ?? '');
@@ -57,6 +58,17 @@ try {
     $city = trim($data['city'] ?? '');
     $state = trim($data['state'] ?? '');
     $zip_code = trim($data['zip_code'] ?? '');
+    if (strlen($username) > 80 || strlen($password) < 8 || strlen($password) > 255) {
+        Response::error('Invalid username or password length');
+    }
+    if (
+        strlen($first_name) > 100 || strlen($last_name) > 100 ||
+        strlen($phone_number) > 30 || strlen($address_line_1) > 255 ||
+        strlen($address_line_2) > 255 || strlen($city) > 120 ||
+        strlen($state) > 80 || strlen($zip_code) > 20
+    ) {
+        Response::error('One or more fields are too long');
+    }
 
     $requiredProfileFields = [
         'first_name' => $first_name,

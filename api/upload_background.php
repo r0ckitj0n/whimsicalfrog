@@ -12,6 +12,7 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers/ImageUploadHelper.php';
 require_once __DIR__ . '/ai_image_processor.php';
 
@@ -23,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Response::methodNotAllowed('Method not allowed');
 }
+requireAdmin(true);
 
 try {
     // Validate inputs

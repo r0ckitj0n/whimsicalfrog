@@ -19,9 +19,10 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
+require_once __DIR__ . '/../includes/response.php';
 
-// Centralized admin check
-AuthHelper::requireAdmin();
+// Strict admin session check (avoid helper local bypass for this endpoint)
+requireAdmin(true);
 
 try {
     try {
@@ -31,8 +32,20 @@ try {
         throw $e;
     }
 
-    $input = json_decode(file_get_contents('php://input'), true) ?? [];
+    $input = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($input)) {
+        $input = [];
+    }
     $action = $_POST['action'] ?? $_GET['action'] ?? $input['action'] ?? WF_Constants::ACTION_STATUS;
+    $allowedActions = [
+        WF_Constants::ACTION_STATUS,
+        WF_Constants::ACTION_QUERY,
+        WF_Constants::ACTION_EMAIL_LOGS,
+        WF_Constants::ACTION_FIX_SAMPLE_EMAIL
+    ];
+    if (!in_array($action, $allowedActions, true)) {
+        Response::error('Invalid action', null, 400);
+    }
     $result = ['success' => false, 'message' => '', 'data' => null];
 
     switch ($action) {
@@ -44,8 +57,8 @@ try {
                 'success' => true,
                 'message' => 'Database connection successful',
                 'data' => [
-                    'database_name' => $database,
-                    'host' => $host,
+                    'database_name' => (wf_get_db_config(WF_Constants::ENV_LOCAL)['db'] ?? null),
+                    'host' => (wf_get_db_config(WF_Constants::ENV_LOCAL)['host'] ?? null),
                     'tables' => $tables,
                     'table_count' => count($tables),
                     'timestamp' => date('Y-m-d H:i:s')
@@ -61,34 +74,31 @@ try {
                 break;
             }
 
-            // Security: Only allow SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP
-            $allowedOperations = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'CREATE', 'ALTER', 'DROP', 'SHOW', 'DESCRIBE'];
+            // Security: read-only query endpoint
+            $allowedOperations = ['SELECT', 'SHOW', 'DESCRIBE', 'EXPLAIN'];
             $firstWord = strtoupper(trim(explode(' ', trim($sql))[0]));
 
-            if (!in_array($firstWord, $allowedOperations)) {
+            if (!in_array($firstWord, $allowedOperations, true)) {
                 $result = ['success' => false, 'error' => 'SQL operation not allowed: ' . $firstWord];
+                break;
+            }
+            if (strlen($sql) > 20000) {
+                $result = ['success' => false, 'error' => 'SQL query too large'];
+                break;
+            }
+            if (strpos($sql, ';') !== false) {
+                $result = ['success' => false, 'error' => 'Multiple SQL statements are not allowed'];
                 break;
             }
 
             try {
-                if (in_array($firstWord, ['SELECT', 'SHOW', 'DESCRIBE'])) {
-                    // Read operations
-                    $data = Database::queryAll($sql);
-                    $result = [
-                        'success' => true,
-                        'message' => 'Query executed successfully',
-                        'data' => $data,
-                        'row_count' => count($data)
-                    ];
-                } else {
-                    // Write operations
-                    $affected = Database::execute($sql);
-                    $result = [
-                        'success' => $affected !== false,
-                        'message' => ($affected !== false) ? 'Query executed successfully' : 'Query execution failed',
-                        'affected_rows' => ($affected !== false) ? (int)$affected : 0
-                    ];
-                }
+                $data = Database::queryAll($sql);
+                $result = [
+                    'success' => true,
+                    'message' => 'Query executed successfully',
+                    'data' => $data,
+                    'row_count' => count($data)
+                ];
             } catch (PDOException $e) {
                 $result = ['success' => false, 'error' => 'SQL Error: ' . $e->getMessage()];
             }

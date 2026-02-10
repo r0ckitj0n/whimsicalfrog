@@ -7,10 +7,12 @@
 
 require_once __DIR__ . '/../api/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Response::methodNotAllowed('Invalid request method');
 }
+requireAdmin(true);
 
 try {
     try {
@@ -27,7 +29,7 @@ try {
     }
     $imageId = $input['imageId'] ?? '';
 
-    if (empty($imageId)) {
+    if (empty($imageId) || !ctype_digit((string)$imageId)) {
         Response::error('Image ID is required', null, 400);
     }
 
@@ -49,9 +51,11 @@ try {
     Database::execute("DELETE FROM item_images WHERE id = ?", [$imageId]);
 
     // Delete physical file
-    $fullPath = __DIR__ . '/../' . $imagePath;
-    if (file_exists($fullPath)) {
-        unlink($fullPath);
+    $fullPath = __DIR__ . '/../' . ltrim((string)$imagePath, '/');
+    $rootDir = realpath(__DIR__ . '/..');
+    $realPath = realpath($fullPath);
+    if ($rootDir !== false && $realPath !== false && strpos($realPath, $rootDir) === 0 && file_exists($realPath)) {
+        unlink($realPath);
     }
 
     // If this was the primary image, automatically promote the next image to primary

@@ -1,7 +1,15 @@
 <?php
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/response.php';
 
 header('Content-Type: application/json');
+requireAdmin(true);
+
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+    Response::json(['success' => false, 'error' => 'Method not allowed'], 405);
+    exit;
+}
 
 try {
     try {
@@ -30,6 +38,9 @@ try {
     $tableDetails = [];
 
     foreach ($activeTables as $table) {
+        if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', (string)$table)) {
+            continue;
+        }
         $category = 'other'; // default category
 
         // Get table structure for better categorization

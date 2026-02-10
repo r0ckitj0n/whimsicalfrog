@@ -3,6 +3,41 @@
 
 class DatabaseImportHelper
 {
+    private static function isValidIdentifier($value)
+    {
+        return is_string($value) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $value) === 1;
+    }
+
+    private static function tableExists(PDO $pdo, $tableName)
+    {
+        if (!self::isValidIdentifier($tableName)) {
+            return false;
+        }
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?"
+        );
+        $stmt->execute([$tableName]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+        return ((int)($row['c'] ?? 0)) > 0;
+    }
+
+    private static function getTableColumns(PDO $pdo, $tableName)
+    {
+        if (!self::isValidIdentifier($tableName)) {
+            throw new Exception('Invalid table name');
+        }
+        $stmt = $pdo->query("DESCRIBE `$tableName`");
+        $columns = $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
+        $validColumns = [];
+        foreach ($columns as $column) {
+            $columnName = (string)$column;
+            if (self::isValidIdentifier($columnName)) {
+                $validColumns[] = $columnName;
+            }
+        }
+        return $validColumns;
+    }
+
     /**
      * Import SQL content
      */
@@ -10,6 +45,27 @@ class DatabaseImportHelper
     {
         if (empty($sqlContent)) {
             throw new Exception('No SQL content provided');
+        }
+        if (!is_string($sqlContent) || strlen($sqlContent) > 5_000_000) {
+            throw new Exception('SQL payload is too large');
+        }
+        $forbiddenPatterns = [
+            '/\bINTO\s+OUTFILE\b/i',
+            '/\bLOAD_FILE\s*\(/i',
+            '/\bLOAD\s+DATA\b/i',
+            '/\bINFILE\b/i',
+            '/\bGRANT\b/i',
+            '/\bREVOKE\b/i',
+            '/\bCREATE\s+USER\b/i',
+            '/\bDROP\s+USER\b/i',
+            '/\bSET\s+GLOBAL\b/i',
+            '/\bINSTALL\s+PLUGIN\b/i',
+            '/\bUNINSTALL\s+PLUGIN\b/i'
+        ];
+        foreach ($forbiddenPatterns as $pattern) {
+            if (preg_match($pattern, $sqlContent) === 1) {
+                throw new Exception('SQL contains forbidden operations');
+            }
         }
 
         $pdo = Database::getInstance();
@@ -55,18 +111,20 @@ class DatabaseImportHelper
         if (empty($tableName) || empty($csvContent)) {
             throw new Exception('Table name and CSV content are required');
         }
+        if (!self::isValidIdentifier($tableName)) {
+            throw new Exception('Invalid table name');
+        }
+        if (!is_string($csvContent) || strlen($csvContent) > 5_000_000) {
+            throw new Exception('CSV payload is too large');
+        }
 
         $pdo = Database::getInstance();
-        
-        // Validate table exists
-        $stmt = $pdo->query("SHOW TABLES LIKE " . $pdo->quote($tableName));
-        if ($stmt->rowCount() == 0) {
+        if (!self::tableExists($pdo, $tableName)) {
             throw new Exception("Table '$tableName' does not exist");
         }
 
         // Get table columns
-        $stmt = $pdo->query("DESCRIBE `$tableName`");
-        $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $columns = self::getTableColumns($pdo, $tableName);
 
         $lines = str_getcsv($csvContent, "\n");
         $rowsImported = 0;
@@ -81,8 +139,9 @@ class DatabaseImportHelper
 
         $columnMapping = [];
         foreach ($headers as $i => $header) {
-            if (in_array($header, $columns)) {
-                $columnMapping[$i] = $header;
+            $columnName = trim((string)$header);
+            if (self::isValidIdentifier($columnName) && in_array($columnName, $columns, true)) {
+                $columnMapping[$i] = $columnName;
             }
         }
 
@@ -94,9 +153,10 @@ class DatabaseImportHelper
             $pdo->exec("DELETE FROM `$tableName`");
         }
 
-        $mappedColumns = array_values($columnMapping);
+        $mappedColumns = array_values(array_unique($columnMapping));
         $placeholders = str_repeat('?,', count($mappedColumns) - 1) . '?';
-        $insertSQL = "INSERT INTO `$tableName` (" . implode(',', $mappedColumns) . ") VALUES ($placeholders)";
+        $quotedColumns = array_map(static fn($c) => "`$c`", $mappedColumns);
+        $insertSQL = "INSERT INTO `$tableName` (" . implode(',', $quotedColumns) . ") VALUES ($placeholders)";
         $insertStmt = $pdo->prepare($insertSQL);
 
         foreach ($lines as $line) {
@@ -134,15 +194,19 @@ class DatabaseImportHelper
         if (empty($tableName) || empty($jsonContent)) {
             throw new Exception('Table name and JSON content are required');
         }
+        if (!self::isValidIdentifier($tableName)) {
+            throw new Exception('Invalid table name');
+        }
+        if (!is_string($jsonContent) || strlen($jsonContent) > 5_000_000) {
+            throw new Exception('JSON payload is too large');
+        }
 
         $pdo = Database::getInstance();
-        $stmt = $pdo->query("SHOW TABLES LIKE " . $pdo->quote($tableName));
-        if ($stmt->rowCount() == 0) {
+        if (!self::tableExists($pdo, $tableName)) {
             throw new Exception("Table '$tableName' does not exist");
         }
 
-        $stmt = $pdo->query("DESCRIBE `$tableName`");
-        $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $columns = self::getTableColumns($pdo, $tableName);
 
         $jsonData = json_decode($jsonContent, true);
         if ($jsonData === null) throw new Exception('Invalid JSON format');
@@ -161,7 +225,7 @@ class DatabaseImportHelper
             $mappedFields = [];
             $values = [];
             foreach ($record as $field => $value) {
-                if (in_array($field, $columns)) {
+                if (self::isValidIdentifier($field) && in_array($field, $columns, true)) {
                     $mappedFields[] = "`$field`";
                     $values[] = $value;
                     $fieldsMapping[$field] = true;
@@ -202,7 +266,10 @@ class DatabaseImportHelper
             throw new Exception('No tables specified for export');
         }
 
-        $tableList = explode(',', $tables);
+        $tableList = array_filter(array_map('trim', explode(',', (string)$tables)));
+        if (count($tableList) === 0 || count($tableList) > 50) {
+            throw new Exception('Invalid table selection');
+        }
         $pdo = Database::getInstance();
         global $db;
 
@@ -218,7 +285,12 @@ class DatabaseImportHelper
         echo "-- Tables: " . implode(', ', $tableList) . "\n\n";
 
         foreach ($tableList as $table) {
-            $table = trim($table);
+            if (!self::isValidIdentifier($table)) {
+                throw new Exception('Invalid table name in export list');
+            }
+            if (!self::tableExists($pdo, $table)) {
+                throw new Exception("Table '$table' does not exist");
+            }
             $stmt = $pdo->query("SHOW CREATE TABLE `$table`");
             $createTable = $stmt->fetch(PDO::FETCH_ASSOC);
 

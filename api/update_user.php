@@ -43,6 +43,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 try {
     // Get POST data
     $data = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($data)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid JSON payload']);
+        exit;
+    }
 
     // Validate required fields
     if (!isset($data['user_id']) && !isset($data['id'])) {
@@ -54,6 +59,16 @@ try {
     // Get the user ID (support both user_id and id fields for compatibility)
     $user_id = $data['user_id'] ?? $data['id'];
     $targetUserId = (string) $user_id;
+    if ($targetUserId === '') {
+        http_response_code(400);
+        echo json_encode(['error' => 'User ID is required']);
+        exit;
+    }
+    if (isset($data['email']) && $data['email'] !== '' && !filter_var((string) $data['email'], FILTER_VALIDATE_EMAIL)) {
+        http_response_code(422);
+        echo json_encode(['error' => 'Invalid email format']);
+        exit;
+    }
 
     $currentUser = getCurrentUser();
     if (!$currentUser) {
@@ -109,6 +124,12 @@ try {
 
         foreach ($addressKeys as $key) {
             unset($data[$key]);
+        }
+    }
+
+    foreach (['first_name', 'last_name', 'phone_number', 'company', 'job_title'] as $stringField) {
+        if (array_key_exists($stringField, $data) && is_string($data[$stringField])) {
+            $data[$stringField] = trim($data[$stringField]);
         }
     }
 

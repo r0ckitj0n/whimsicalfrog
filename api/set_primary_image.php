@@ -5,10 +5,12 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Response::methodNotAllowed('Method not allowed');
 }
+requireAdmin(true);
 
 try {
     try {
@@ -28,7 +30,14 @@ try {
     }
 
     $imageId = $input['imageId'];
-    $sku = $input['sku'];
+    $sku = trim((string)$input['sku']);
+    if (!is_numeric($imageId) || (int)$imageId <= 0) {
+        Response::error('Invalid imageId', null, 422);
+    }
+    if (!preg_match('/^[A-Za-z0-9-]{3,64}$/', $sku)) {
+        Response::error('Invalid SKU format', null, 422);
+    }
+    $imageId = (int)$imageId;
 
     Database::beginTransaction();
 

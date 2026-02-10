@@ -4,11 +4,13 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/Constants.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Response::methodNotAllowed('Method not allowed');
 }
+requireAdmin(true);
 
 try {
     // Get POST data
@@ -23,7 +25,10 @@ try {
         Response::error('Order ID is required', null, 400);
     }
 
-    $order_id = $data['order_id'];
+    $order_id = trim((string) $data['order_id']);
+    if ($order_id === '') {
+        Response::error('Order ID is required', null, 400);
+    }
 
     // Optional fields to update
     $updateMap = [];
@@ -37,8 +42,8 @@ try {
             WF_Constants::PAYMENT_STATUS_REFUNDED,
             WF_Constants::PAYMENT_STATUS_FAILED
         ];
-        if (!in_array($data['newStatus'], $allowedStatuses)) {
-            Response::error('Invalid payment status', null, 400);
+        if (!in_array($data['newStatus'], $allowedStatuses, true)) {
+            Response::error('Invalid payment status', null, 422);
         }
         $updateMap[] = 'payment_status = :payment_status';
         $params[':payment_status'] = $data['newStatus'];
@@ -46,16 +51,27 @@ try {
 
     // Shipping address (blank means revert to account address)
     if (array_key_exists('shipping_address', $data)) {
-        if (trim($data['shipping_address']) === '') {
+        $shippingAddress = trim((string) $data['shipping_address']);
+        if ($shippingAddress === '') {
             $updateMap[] = 'shipping_address = NULL';
         } else {
             $updateMap[] = 'shipping_address = :shipping_address';
-            $params[':shipping_address'] = $data['shipping_address'];
+            $params[':shipping_address'] = substr($shippingAddress, 0, 1000);
         }
     }
 
     // Order status
     if (isset($data['status']) && $data['status'] !== '') {
+        $allowedOrderStatuses = [
+            WF_Constants::ORDER_STATUS_PENDING,
+            WF_Constants::ORDER_STATUS_PROCESSING,
+            WF_Constants::ORDER_STATUS_SHIPPED,
+            WF_Constants::ORDER_STATUS_DELIVERED,
+            WF_Constants::ORDER_STATUS_CANCELLED
+        ];
+        if (!in_array($data['status'], $allowedOrderStatuses, true)) {
+            Response::error('Invalid order status', null, 422);
+        }
         $updateMap[] = 'status = :status';
         $params[':status'] = $data['status'];
     }
@@ -63,11 +79,22 @@ try {
     // Tracking number
     if (array_key_exists('tracking_number', $data)) {
         $updateMap[] = 'tracking_number = :tracking_number';
-        $params[':tracking_number'] = $data['tracking_number'];
+        $params[':tracking_number'] = substr(trim((string) $data['tracking_number']), 0, 100);
     }
 
     // Payment method
     if (isset($data['payment_method']) && $data['payment_method'] !== '') {
+        $allowedPaymentMethods = [
+            WF_Constants::PAYMENT_METHOD_SQUARE,
+            WF_Constants::PAYMENT_METHOD_CASH,
+            WF_Constants::PAYMENT_METHOD_CHECK,
+            WF_Constants::PAYMENT_METHOD_PAYPAL,
+            WF_Constants::PAYMENT_METHOD_VENMO,
+            WF_Constants::PAYMENT_METHOD_OTHER
+        ];
+        if (!in_array($data['payment_method'], $allowedPaymentMethods, true)) {
+            Response::error('Invalid payment method', null, 422);
+        }
         $updateMap[] = 'payment_method = :payment_method';
         $params[':payment_method'] = $data['payment_method'];
     }
@@ -75,19 +102,23 @@ try {
     // Check number
     if (array_key_exists('check_number', $data)) {
         $updateMap[] = 'check_number = :check_number';
-        $params[':check_number'] = $data['check_number'];
+        $params[':check_number'] = substr(trim((string) $data['check_number']), 0, 64);
     }
 
     // Payment.created_at
     if (isset($data['payment_at']) && $data['payment_at'] !== '') {
+        $ts = strtotime((string) $data['payment_at']);
+        if ($ts === false) {
+            Response::error('Invalid payment date', null, 422);
+        }
         $updateMap[] = 'payment_at = :payment_at';
-        $params[':payment_at'] = $data['payment_at'];
+        $params[':payment_at'] = date('Y-m-d H:i:s', $ts);
     }
 
     // Payment notes
     if (array_key_exists('payment_notes', $data)) {
         $updateMap[] = 'payment_notes = :payment_notes';
-        $params[':payment_notes'] = $data['payment_notes'];
+        $params[':payment_notes'] = substr(trim((string) $data['payment_notes']), 0, 2000);
     }
 
     if (empty($updateMap)) {

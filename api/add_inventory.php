@@ -4,12 +4,14 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Response::methodNotAllowed('Method not allowed');
 }
 header('Content-Type: application/json');
+requireAdmin(true);
 
 function wf_generate_sku_for_category(string $category): string
 {
@@ -144,9 +146,14 @@ function wf_resolve_sku_prefix_for_category(string $category): string
 
 function wf_table_exists(string $tableName): bool
 {
-    $safe = str_replace("'", "''", $tableName);
-    $rows = Database::queryAll("SHOW TABLES LIKE '{$safe}'");
-    return !empty($rows);
+    if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $tableName)) {
+        return false;
+    }
+    $row = Database::queryOne(
+        "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?",
+        [$tableName]
+    );
+    return ((int)($row['c'] ?? 0)) > 0;
 }
 
 function wf_migrate_temp_sku_records(string $sourceSku, string $targetSku): void
@@ -270,18 +277,46 @@ try {
         if ($name === '') {
             Response::error('Both sku and name are required', null, 422);
         }
+        if (strlen($name) > 255) {
+            Response::error('Name is too long', null, 422);
+        }
         $category = $data['category'] ?? '';
         $resolvedCategory = trim((string)$category) !== '' ? trim((string)$category) : 'General';
+        if (strlen($resolvedCategory) > 100) {
+            Response::error('Category is too long', null, 422);
+        }
         $stock_quantity = intval($data['stock_quantity'] ?? 0);
         $reorder_point = intval($data['reorder_point'] ?? 5);
         $cost_price = floatval($data['cost_price'] ?? 0);
         $retail_price = floatval($data['retail_price'] ?? 0);
-        $description = $data['description'] ?? '';
+        $description = trim((string)($data['description'] ?? ''));
         $status = $data['status'] ?? WF_Constants::ITEM_STATUS_DRAFT;
         $weight_oz = floatval($data['weight_oz'] ?? 0);
         $package_length_in = floatval($data['package_length_in'] ?? 0);
         $package_width_in = floatval($data['package_width_in'] ?? 0);
         $package_height_in = floatval($data['package_height_in'] ?? 0);
+        $allowedStatuses = [
+            WF_Constants::ITEM_STATUS_ACTIVE,
+            WF_Constants::ITEM_STATUS_DRAFT,
+            WF_Constants::ITEM_STATUS_ARCHIVED
+        ];
+        if (!in_array($status, $allowedStatuses, true)) {
+            Response::error('Invalid status value', null, 422);
+        }
+        if (
+            $stock_quantity < 0 || $reorder_point < 0 ||
+            $cost_price < 0 || $retail_price < 0 ||
+            $weight_oz < 0 || $package_length_in < 0 ||
+            $package_width_in < 0 || $package_height_in < 0
+        ) {
+            Response::error('Numeric fields must be non-negative', null, 422);
+        }
+        if ($skuInput !== '' && stripos($skuInput, 'WF-TMP-') !== 0 && preg_match('/^[A-Za-z0-9-]{3,64}$/', $skuInput) !== 1) {
+            Response::error('Invalid SKU format', null, 422);
+        }
+        if ($sourceTempSku !== '' && preg_match('/^[A-Za-z0-9-]{3,64}$/', $sourceTempSku) !== 1) {
+            Response::error('Invalid source_temp_sku format', null, 422);
+        }
         $resolvedCategoryId = wf_resolve_category_id($resolvedCategory);
 
         $isTemporarySku = ($skuInput === '') || (stripos($skuInput, 'WF-TMP-') === 0);
@@ -373,6 +408,23 @@ try {
         $cost_price = floatval($data['costPerUnit'] ?? 0);
         $retail_price = $cost_price * 1.5; // Default markup
         $status = $data['status'] ?? WF_Constants::ITEM_STATUS_DRAFT;
+        $allowedStatuses = [
+            WF_Constants::ITEM_STATUS_ACTIVE,
+            WF_Constants::ITEM_STATUS_DRAFT,
+            WF_Constants::ITEM_STATUS_ARCHIVED
+        ];
+        if (!is_string($name) || trim($name) === '' || strlen(trim($name)) > 255) {
+            Response::error("Field 'item_name' is invalid", null, 422);
+        }
+        if (!is_string($sku) || preg_match('/^[A-Za-z0-9-]{3,64}$/', $sku) !== 1) {
+            Response::error("Field 'unit' is invalid", null, 422);
+        }
+        if (!in_array($status, $allowedStatuses, true)) {
+            Response::error('Invalid status value', null, 422);
+        }
+        if ($stock_quantity < 0 || $cost_price < 0 || $retail_price < 0) {
+            Response::error('Numeric fields must be non-negative', null, 422);
+        }
 
         // Insert using items table
         $affected = Database::execute('INSERT INTO items (sku, name, category, stock_quantity, reorder_point, cost_price, retail_price, description, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [$sku, $name, $category, $stock_quantity, $reorder_point, $cost_price, $retail_price, $description, $status]);

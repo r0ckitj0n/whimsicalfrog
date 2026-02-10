@@ -2,8 +2,14 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 try {
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+        Response::methodNotAllowed('Method not allowed');
+    }
+    requireAdmin(true);
+
     $normalizeFactorId = static function ($rawId): ?int {
         if ($rawId === null || $rawId === '') {
             return null;
@@ -37,9 +43,9 @@ try {
     $sku = $data['sku'] ?? '';
     $category = $data['category'] ?? '';
     $id = $normalizeFactorId($data['id'] ?? null);
-    $label = $data['label'] ?? null;
+    $label = isset($data['label']) ? trim((string)$data['label']) : null;
 
-    if (!$sku)
+    if (!preg_match('/^[A-Za-z0-9-]{3,64}$/', (string)$sku))
         Response::error('Missing SKU');
 
     if ($id !== null) {

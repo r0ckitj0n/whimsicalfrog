@@ -2,10 +2,12 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/database_logger.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Response::methodNotAllowed('Method not allowed');
 }
+requireAdmin(true);
 
 try {
     Database::getInstance();
@@ -22,6 +24,10 @@ $value = $_POST['value'] ?? '';
 if (!$sku || !$field) {
     Response::error('Missing SKU or field', null, 400);
 }
+$sku = trim((string)$sku);
+if (preg_match('/^[A-Za-z0-9-]{3,64}$/', $sku) !== 1) {
+    Response::error('Invalid SKU format', null, 422);
+}
 
 try {
     // Updated field validation to match current database structure
@@ -32,6 +38,12 @@ try {
 
     if ($value === '') {
         Response::error('Value cannot be empty', null, 400);
+    }
+    if (!in_array($field, ['description'], true) && is_string($value) && strlen($value) > 255) {
+        Response::error('Value too long', null, 422);
+    }
+    if ($field === 'description' && is_string($value) && strlen($value) > 4000) {
+        Response::error('Description too long', null, 422);
     }
 
     // Validate numeric fields

@@ -7,6 +7,7 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/business_settings_helper.php';
 require_once __DIR__ . '/ai_providers.php';
 
@@ -14,15 +15,13 @@ try {
     if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'])) {
         Response::methodNotAllowed('Method not allowed');
     }
-
-    // Optional: basic admin check (non-fatal in dev)
-    $isAdmin = isset($_SESSION['user']['role']) && strtolower((string) $_SESSION['user']['role']) === WF_Constants::ROLE_ADMIN;
-    $strict = isset($_GET['strict']) && $_GET['strict'] == '1';
-    if ($strict && !$isAdmin) {
-        Response::forbidden('Admin access required');
-    }
+    requireAdmin(true);
 
     $action = $_GET['action'] ?? $_POST['action'] ?? 'run_all';
+    $allowedActions = ['run_all', 'ensure_columns', 'backfill_missing'];
+    if (!in_array($action, $allowedActions, true)) {
+        Response::error('Invalid action', null, 400);
+    }
     $useAI = (isset($_GET['use_ai']) && $_GET['use_ai'] == '1') || (isset($_POST['use_ai']) && $_POST['use_ai'] == '1');
 
     // Ensure DB available

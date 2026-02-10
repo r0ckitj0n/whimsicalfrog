@@ -132,6 +132,16 @@ function getPdoForEnv(string $env = WF_Constants::ENV_LOCAL)
 
 $action = $_GET['action'] ?? '';
 $env = $_GET['env'] ?? WF_Constants::ENV_LOCAL;
+$allowedActions = ['csrf_token', 'test-css', 'generate-css', 'status', 'version', 'table_counts', 'db_size', 'list_tables', 'describe', 'query'];
+if (!in_array($action, $allowedActions, true)) {
+    Response::json(['success' => false, 'message' => 'Invalid action'], 400);
+    exit;
+}
+$allowedEnvs = [WF_Constants::ENV_LOCAL, WF_Constants::ENV_LIVE, 'current'];
+if (!in_array($env, $allowedEnvs, true)) {
+    Response::json(['success' => false, 'message' => 'Invalid env'], 400);
+    exit;
+}
 
 // Permission gate
 if (isset($ROLE_ALLOW[$action]) && !user_has_any_role($ROLE_ALLOW[$action])) {
@@ -141,6 +151,16 @@ if (isset($ROLE_ALLOW[$action]) && !user_has_any_role($ROLE_ALLOW[$action])) {
 
 // CSRF for mutating actions
 require_csrf_if_mutating($action);
+
+function ensurePdo($pdo)
+{
+    if (!($pdo instanceof PDO)) {
+        $message = is_array($pdo) ? ($pdo['error'] ?? 'Unknown error') : 'Connection failed';
+        Response::json(['success' => false, 'message' => 'Database connection failed: ' . $message], 503);
+        exit;
+    }
+    return $pdo;
+}
 
 switch ($action) {
     case 'csrf_token': {
@@ -262,45 +282,31 @@ switch ($action) {
 
     // --- Safe introspection endpoints ---
     case 'version': {
-        $pdo = getPdoForEnv($env);
-        if (!$pdo) {
-            Response::json(['success' => false, 'message' => 'Database connection failed']);
-            break;
-        }
+        $pdo = ensurePdo(getPdoForEnv($env));
         $row = $pdo->query('SELECT VERSION() AS version')->fetch(PDO::FETCH_ASSOC) ?: [];
         Response::json(['success' => true, 'data' => ['version' => $row['version'] ?? null]]);
         break;
     }
     case 'table_counts': {
-        $pdo = getPdoForEnv($env);
-        if (!$pdo) {
-            echo json_encode(['success' => false, 'message' => 'Database connection failed']);
-            break;
-        }
+        $pdo = ensurePdo(getPdoForEnv($env));
         $dbName = wf_get_db_config($env === WF_Constants::ENV_LIVE ? WF_Constants::ENV_LIVE : WF_Constants::ENV_LOCAL)['db'] ?? '';
-        $stmt = $pdo->query("SELECT COUNT(*) AS table_count FROM information_schema.tables WHERE table_schema = '" . addslashes($dbName) . "'");
+        $stmt = $pdo->prepare("SELECT COUNT(*) AS table_count FROM information_schema.tables WHERE table_schema = ?");
+        $stmt->execute([$dbName]);
         $row = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : [];
         Response::json(['success' => true, 'data' => ['table_count' => (int) ($row['table_count'] ?? 0)]]);
         break;
     }
     case 'db_size': {
-        $pdo = getPdoForEnv($env);
-        if (!$pdo) {
-            echo json_encode(['success' => false, 'message' => 'Database connection failed']);
-            break;
-        }
+        $pdo = ensurePdo(getPdoForEnv($env));
         $dbName = wf_get_db_config($env === WF_Constants::ENV_LIVE ? WF_Constants::ENV_LIVE : WF_Constants::ENV_LOCAL)['db'] ?? '';
-        $stmt = $pdo->query("SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size_mb FROM information_schema.tables WHERE table_schema = '" . addslashes($dbName) . "'");
+        $stmt = $pdo->prepare("SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size_mb FROM information_schema.tables WHERE table_schema = ?");
+        $stmt->execute([$dbName]);
         $row = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : [];
         Response::json(['success' => true, 'data' => ['size_mb' => (float) ($row['size_mb'] ?? 0)]]);
         break;
     }
     case 'list_tables': {
-        $pdo = getPdoForEnv($env);
-        if (!$pdo) {
-            echo json_encode(['success' => false, 'message' => 'Database connection failed']);
-            break;
-        }
+        $pdo = ensurePdo(getPdoForEnv($env));
         $tables = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_NUM);
         $names = array_slice(array_map(fn($r) => $r[0] ?? null, $tables), 0, 200);
         Response::json(['success' => true, 'data' => ['tables' => $names]]);
@@ -308,11 +314,7 @@ switch ($action) {
     }
     case 'describe': {
         // Describe table only for elevated roles
-        $pdo = getPdoForEnv($env);
-        if (!$pdo) {
-            echo json_encode(['success' => false, 'message' => 'Database connection failed']);
-            break;
-        }
+        $pdo = ensurePdo(getPdoForEnv($env));
         $table = $_GET['table'] ?? '';
         if (!$table || !preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
             Response::json(['success' => false, 'message' => 'Invalid table']);
@@ -324,15 +326,21 @@ switch ($action) {
         break;
     }
     case 'query': {
-        $pdo = getPdoForEnv($env);
-        if (!($pdo instanceof PDO)) {
-            Response::json(['success' => false, 'message' => 'Database connection failed: ' . (is_array($pdo) ? ($pdo['error'] ?? 'Unknown error') : 'Connection failed')]);
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
             break;
         }
+        $pdo = ensurePdo(getPdoForEnv($env));
 
-        $sql = $_REQUEST['sql'] ?? '';
+        $requestBody = json_decode(file_get_contents('php://input'), true);
+        $sql = is_array($requestBody) ? ($requestBody['sql'] ?? '') : '';
+        $sql = trim((string) $sql);
         if (empty($sql)) {
             Response::json(['success' => false, 'message' => 'SQL query is empty']);
+            break;
+        }
+        if (strlen($sql) > 20000) {
+            Response::json(['success' => false, 'message' => 'SQL query too large'], 422);
             break;
         }
 

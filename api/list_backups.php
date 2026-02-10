@@ -5,6 +5,12 @@ require_once __DIR__ . '/../includes/auth_helper.php';
 AuthHelper::requireAdmin(403, 'Admin access required');
 header('Content-Type: application/json');
 
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+  http_response_code(405);
+  echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+  exit;
+}
+
 $base = realpath(__DIR__ . '/../backups/sql');
 if (!$base || !is_dir($base)) {
   @mkdir($base, 0775, true);

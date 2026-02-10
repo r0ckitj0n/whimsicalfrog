@@ -3,14 +3,45 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/email_helper.php';
 require_once __DIR__ . '/../includes/business_settings_helper.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 header('Content-Type: application/json');
+requireAdmin(true);
 
 // Basic auth check placeholder (assumes admin context)
 // if (!is_admin()) { http_response_code(403); echo json_encode(['error'=>'Unauthorized']); exit; }
 
 $action = $_GET['action'] ?? 'list_campaigns';
 $method = $_SERVER['REQUEST_METHOD'];
+$allowedActions = [
+    'list',
+    'delete',
+    'add_subscriber',
+    'update_subscriber',
+    'list_groups',
+    'save_group',
+    'delete_group',
+    'list_campaigns',
+    'save_campaign',
+    'delete_campaign',
+    'send_campaign',
+    'get_customer_groups',
+    'toggle_membership'
+];
+if (!in_array($action, $allowedActions, true)) {
+    throw new Exception('Invalid action');
+}
+$getActions = ['list', 'list_groups', 'list_campaigns', 'get_customer_groups'];
+if (in_array($action, $getActions, true) && $method !== 'GET') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+    exit;
+}
+if (!in_array($action, $getActions, true) && $method !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+    exit;
+}
 
 function generateNewsletterHtml($subject, $content)
 {
@@ -74,7 +105,7 @@ try {
     if ($action === 'delete') {
         $input = json_decode(file_get_contents('php://input'), true);
         $id = $input['id'] ?? ($_POST['id'] ?? $_GET['id'] ?? null);
-        if (!$id)
+        if (!$id || !ctype_digit((string)$id))
             throw new Exception("Missing Subscriber ID");
         // Remove from all groups
         Database::execute("DELETE FROM newsletter_memberships WHERE user_id = ?", [$id]);
@@ -84,6 +115,9 @@ try {
 
     if ($action === 'add_subscriber') {
         $data = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($data)) {
+            throw new Exception('Invalid JSON');
+        }
         $email = trim($data['email'] ?? '');
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw new Exception("Invalid email address");
@@ -120,8 +154,11 @@ try {
 
     if ($action === 'update_subscriber') {
         $data = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($data)) {
+            throw new Exception('Invalid JSON');
+        }
         $id = $data['id'] ?? null;
-        if (!$id)
+        if (!$id || !ctype_digit((string)$id))
             throw new Exception("Missing Subscriber ID");
 
         $is_active = $data['is_active'] ?? null;
@@ -158,8 +195,14 @@ try {
     if ($action === 'save_group') {
         $data = json_decode(file_get_contents('php://input'), true);
         $id = $data['id'] ?? null;
-        $name = $data['name'] ?? 'Untitled Group';
-        $desc = $data['description'] ?? '';
+        $name = trim((string)($data['name'] ?? 'Untitled Group'));
+        $desc = trim((string)($data['description'] ?? ''));
+        if ($name === '' || strlen($name) > 120) {
+            throw new Exception('Invalid group name');
+        }
+        if (strlen($desc) > 1000) {
+            throw new Exception('Description too long');
+        }
 
         if ($id) {
             Database::execute("UPDATE newsletter_groups SET name=?, description=? WHERE id=?", [$name, $desc, $id]);
@@ -172,7 +215,7 @@ try {
 
     if ($action === 'delete_group') {
         $id = $_POST['id'] ?? $_GET['id'] ?? null;
-        if (!$id)
+        if (!$id || !ctype_digit((string)$id))
             throw new Exception("Missing ID");
         // Check if default
         $g = Database::queryOne("SELECT is_default FROM newsletter_groups WHERE id=?", [$id]);
@@ -199,11 +242,27 @@ try {
 
     if ($action === 'save_campaign') {
         $data = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($data)) {
+            throw new Exception('Invalid JSON');
+        }
         $id = $data['id'] ?? null;
-        $subject = $data['subject'] ?? '(No Subject)';
-        $content = $data['content'] ?? '';
+        $subject = trim((string)($data['subject'] ?? '(No Subject)'));
+        $content = trim((string)($data['content'] ?? ''));
         $groupId = $data['target_group_id'] ?? null;
         $status = $data['status'] ?? WF_Constants::NEWSLETTER_STATUS_DRAFT;
+        if ($subject === '' || strlen($subject) > 255) {
+            throw new Exception('Invalid subject');
+        }
+        if (strlen($content) > 100000) {
+            throw new Exception('Content too long');
+        }
+        if ($groupId !== null && !ctype_digit((string)$groupId)) {
+            throw new Exception('Invalid target group');
+        }
+        $allowedStatuses = [WF_Constants::NEWSLETTER_STATUS_DRAFT, WF_Constants::NEWSLETTER_STATUS_SENT];
+        if (!in_array($status, $allowedStatuses, true)) {
+            throw new Exception('Invalid status');
+        }
 
         if ($id) {
             Database::execute(
@@ -222,7 +281,7 @@ try {
 
     if ($action === 'delete_campaign') {
         $id = $_POST['id'] ?? $_GET['id'] ?? null;
-        if (!$id)
+        if (!$id || !ctype_digit((string)$id))
             throw new Exception("Missing ID");
         Database::execute("DELETE FROM newsletter_campaigns WHERE id=?", [$id]);
         echo json_encode(['success' => true]);
@@ -232,7 +291,7 @@ try {
     if ($action === 'send_campaign') {
         $data = json_decode(file_get_contents('php://input'), true);
         $id = $data['id'] ?? null;
-        if (!$id)
+        if (!$id || !ctype_digit((string)$id))
             throw new Exception("Missing Campaign ID");
 
         $campaign = Database::queryOne("SELECT * FROM newsletter_campaigns WHERE id=?", [$id]);
@@ -305,7 +364,7 @@ try {
     // --- MEMBERSHIPS (for customer editor) ---
     if ($action === 'get_customer_groups') {
         $user_id = $_GET['user_id'] ?? null;
-        if (!$user_id)
+        if (!$user_id || !ctype_digit((string)$user_id))
             throw new Exception("Missing User ID");
 
         // Get all groups and mark subscribed ones
@@ -327,7 +386,7 @@ try {
         $groupId = $data['group_id'] ?? null;
         $subscribed = $data['subscribed'] ?? false; // true = add, false = remove
 
-        if (!$user_id || !$groupId)
+        if (!$user_id || !$groupId || !ctype_digit((string)$user_id) || !ctype_digit((string)$groupId))
             throw new Exception("Missing params");
 
         if ($subscribed) {

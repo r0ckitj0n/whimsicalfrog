@@ -3,6 +3,7 @@
 // Include the configuration file (absolute path)
 require_once dirname(__DIR__) . '/api/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/response.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
@@ -26,6 +27,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 try {
     // Get POST data
     $data = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($data)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid JSON payload']);
+        exit;
+    }
 
     // Validate required fields
     if (!isset($data['user_id']) || !isset($data['email']) || !isset($data['currentPassword'])) {
@@ -37,7 +43,12 @@ try {
     // Extract data
     $user_id = $data['user_id'];
     $targetUserId = (string) $user_id;
-    $email = $data['email'];
+    $email = filter_var($data['email'], FILTER_VALIDATE_EMAIL);
+    if (!$email) {
+        http_response_code(422);
+        echo json_encode(['error' => 'Invalid email format']);
+        exit;
+    }
     $first_name = $data['first_name'] ?? '';
     $last_name = $data['last_name'] ?? '';
     $phone_number = $data['phone_number'] ?? '';
@@ -75,7 +86,7 @@ try {
     // Verify the user exists and the current password is correct
     $user = Database::queryOne('SELECT * FROM users WHERE id = ?', [$user_id]);
 
-    if (!$user || (!password_verify($currentPassword, $user['password']) && $currentPassword !== $user['password'])) {
+    if (!$user || !password_verify((string) $currentPassword, (string) ($user['password'] ?? ''))) {
         http_response_code(401);
         echo json_encode(['error' => 'Invalid user ID or current password']);
         exit;
@@ -107,6 +118,11 @@ try {
 
     // If a new password is provided, update it directly here
     if (!empty($newPassword)) {
+        if (strlen((string) $newPassword) < 8) {
+            http_response_code(422);
+            echo json_encode(['error' => 'New password must be at least 8 characters']);
+            exit;
+        }
         $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
         $affected = Database::execute('UPDATE users SET password = ? WHERE id = ?', [$hashedPassword, $targetUserId]);
         if ($affected === false) {

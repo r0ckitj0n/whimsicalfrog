@@ -51,7 +51,7 @@ function maintenance_log($event, array $data = []): void
     @file_put_contents(maintenance_log_file(), json_encode($entry, JSON_UNESCAPED_SLASHES) . PHP_EOL, FILE_APPEND | LOCK_EX);
 }
 
-$provided = $_REQUEST['admin_token'] ?? '';
+$provided = $_REQUEST['admin_token'] ?? ($_SERVER['HTTP_X_MAINTENANCE_TOKEN'] ?? '');
 $expected = maintenance_get_token();
 $legacy = 'whimsical_admin_2024'; // temporary backward-compatibility
 if (!hash_equals($expected, (string)$provided)) {
@@ -70,6 +70,11 @@ if (!hash_equals($expected, (string)$provided)) {
 }
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
+$allowedActions = ['prune_sessions'];
+if (!in_array($action, $allowedActions, true)) {
+    json_fail('Unknown or missing action', ['allowed' => $allowedActions], 400);
+    exit;
+}
 
 function json_ok(array $data = []): void
 {
@@ -84,7 +89,11 @@ function json_fail(string $message, array $data = [], int $code = 400): void
 
 switch ($action) {
     case 'prune_sessions':
-        $days = isset($_REQUEST['days']) ? max(0, (int)$_REQUEST['days']) : 2;
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            json_fail('Method not allowed', [], 405);
+            exit;
+        }
+        $days = isset($_POST['days']) ? max(0, min(30, (int)$_POST['days'])) : 2;
         $sessionDir = '/tmp/whimsicalfrog_sessions';
 
         if (!is_dir($sessionDir)) {
@@ -151,6 +160,6 @@ switch ($action) {
         break;
 
     default:
-        json_fail('Unknown or missing action', ['allowed' => ['prune_sessions']], 400);
+        json_fail('Unknown or missing action', ['allowed' => $allowedActions], 400);
         break;
 }

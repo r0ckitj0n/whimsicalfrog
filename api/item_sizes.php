@@ -9,35 +9,14 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/session_bootstrap.php';
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/../includes/item_sizes/manager.php';
 
 function wf_sizes_is_admin(): bool
 {
-    $host = $_SERVER['HTTP_HOST'] ?? '';
-    if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
-        return true;
-    }
-
-    $user = $_SESSION['user'] ?? null;
-    if (is_string($user)) {
-        $decoded = json_decode($user, true);
-        if (is_array($decoded)) {
-            $user = $decoded;
-            $_SESSION['user'] = $decoded; // normalize shape for subsequent calls
-        }
-    }
-
-    if (!is_array($user)) {
-        return false;
-    }
-
-    $role = strtolower(trim((string) ($user['role'] ?? '')));
-    return in_array($role, [
-        WF_Constants::ROLE_ADMIN,
-        WF_Constants::ROLE_SUPERADMIN,
-        WF_Constants::ROLE_DEVOPS,
-        'administrator'
-    ], true);
+    return AuthHelper::isAdmin()
+        || AuthHelper::hasRole(WF_Constants::ROLE_SUPERADMIN)
+        || AuthHelper::hasRole(WF_Constants::ROLE_DEVOPS);
 }
 
 $isAdmin = wf_sizes_is_admin();
@@ -50,6 +29,16 @@ try {
     Database::getInstance();
     $input = json_decode(file_get_contents('php://input'), true) ?? [];
     $action = $_GET['action'] ?? $_POST['action'] ?? ($input['action'] ?? '');
+    $allowedActions = [
+        WF_Constants::ACTION_GET_SIZES,
+        WF_Constants::ACTION_GET_ALL_SIZES,
+        WF_Constants::ACTION_ADD_SIZE,
+        WF_Constants::ACTION_UPDATE_SIZE,
+        WF_Constants::ACTION_DELETE_SIZE
+    ];
+    if (!in_array($action, $allowedActions, true)) {
+        Response::error('Invalid action', null, 400);
+    }
 
     switch ($action) {
         case WF_Constants::ACTION_GET_SIZES:

@@ -5,8 +5,8 @@ require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
 
-// Centralized admin check
-AuthHelper::requireAdmin();
+// Strict admin session check
+requireAdmin(true);
 
 // Check if the request method is DELETE
 if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
 }
 
 // Get order_id from query parameter
-$order_id = $_GET['order_id'] ?? null;
+$order_id = isset($_GET['order_id']) ? trim((string) $_GET['order_id']) : null;
 
 if (empty($order_id)) {
     Response::error('Order ID is required.', null, 400);

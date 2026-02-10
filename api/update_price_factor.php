@@ -3,13 +3,19 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 try {
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+        Response::methodNotAllowed('Method not allowed');
+    }
+    requireAdmin(true);
+
     $data = Response::getJsonInput();
     $id = $data['id'] ?? null;
     $amount = $data['amount'] ?? null;
 
-    if (!$id || $amount === null) {
+    if (!$id || !is_numeric($id) || $amount === null) {
         Response::error('Missing required fields (id, amount)');
     }
 

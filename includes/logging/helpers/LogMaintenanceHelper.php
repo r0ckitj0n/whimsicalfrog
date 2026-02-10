@@ -3,11 +3,20 @@
 
 class LogMaintenanceHelper
 {
+    private static function isValidIdentifier($value)
+    {
+        return is_string($value) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $value) === 1;
+    }
+
     /**
      * Create a log table if it doesn't exist
      */
     public static function createLogTable($tableName, $type)
     {
+        if (!self::isValidIdentifier($tableName)) {
+            error_log('createLogTable rejected invalid table identifier: ' . (string)$tableName);
+            return false;
+        }
         $sql = '';
         switch ($type) {
             case 'client_logs':
@@ -163,14 +172,17 @@ class LogMaintenanceHelper
             'client_logs'
         ];
 
-        if (!in_array($type, $validTables)) {
+        if (!in_array($type, $validTables, true)) {
             throw new Exception('Invalid log type');
+        }
+        if (!self::isValidIdentifier($type)) {
+            throw new Exception('Invalid log table');
         }
 
         try {
-            $affected = Database::execute("DELETE FROM $type");
+            $affected = Database::execute("DELETE FROM `$type`");
             if ($affected !== false) {
-                Database::execute("ALTER TABLE $type AUTO_INCREMENT = 1");
+                Database::execute("ALTER TABLE `$type` AUTO_INCREMENT = 1");
                 return true;
             }
         } catch (Exception $e) {
@@ -200,15 +212,24 @@ class LogMaintenanceHelper
 
         foreach ($logTables as $table => $timestampField) {
             try {
+                if (!self::isValidIdentifier($table) || !self::isValidIdentifier($timestampField)) {
+                    $results[$table] = ['deleted' => 0, 'status' => 'error', 'error' => 'Invalid table configuration'];
+                    continue;
+                }
                 // Check if table exists before trying to cleanup
-                $tableCheck = Database::queryAll("SHOW TABLES LIKE '$table'");
-                if (empty($tableCheck)) continue;
+                $tableCheck = Database::queryOne(
+                    "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?",
+                    [$table]
+                );
+                if (((int)($tableCheck['c'] ?? 0)) === 0) {
+                    continue;
+                }
 
-                $countRow = Database::queryOne("SELECT COUNT(*) as count FROM $table WHERE $timestampField < ?", [$cutoffDate]);
+                $countRow = Database::queryOne("SELECT COUNT(*) as count FROM `$table` WHERE `$timestampField` < ?", [$cutoffDate]);
                 $oldCount = $countRow ? (int)$countRow['count'] : 0;
 
                 if ($oldCount > 0) {
-                    $deleted = Database::execute("DELETE FROM $table WHERE $timestampField < ?", [$cutoffDate]);
+                    $deleted = Database::execute("DELETE FROM `$table` WHERE `$timestampField` < ?", [$cutoffDate]);
                     $results[$table] = [
                         'deleted' => $oldCount,
                         'status' => $deleted !== false ? 'success' : 'failed'

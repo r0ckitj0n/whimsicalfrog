@@ -14,6 +14,7 @@ import type { IBackgroundsHook, IBackground } from '../../../../../types/backgro
 import type { IRoomData } from '../../../../../types/room.js';
 import type { IRoomImageGenerationRequest } from '../../../../../types/room-generation.js';
 import {
+    AUTOGENERATE_LABEL,
     CUSTOM_WRITE_YOUR_OWN_LABEL,
     CUSTOM_WRITE_YOUR_OWN_VALUE
 } from '../../ai/roomPromptDropdownDefaults.js';
@@ -223,7 +224,7 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                                     const normalizedSelectedPreset = (selectedPreset === CUSTOM_WRITE_YOUR_OWN_VALUE || options.includes(selectedPreset))
                                         ? selectedPreset
                                         : (options[0] || '');
-                                    const showCustomInput = normalizedSelectedPreset === CUSTOM_WRITE_YOUR_OWN_VALUE || currentValue !== normalizedSelectedPreset;
+                                    const showCustomInput = normalizedSelectedPreset !== AUTOGENERATE_LABEL;
                                     return (
                                         <div key={field.key} className="space-y-1">
                                             <label className="text-[10px] font-bold text-slate-500">{field.label}</label>

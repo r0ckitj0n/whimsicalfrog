@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -14,6 +15,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 $action = $_GET['action'] ?? '';
+$allowedActions = [
+    WF_Constants::ACTION_GET_ALL,
+    WF_Constants::ACTION_GET_TYPES,
+    WF_Constants::ACTION_CREATE,
+    WF_Constants::ACTION_UPDATE,
+    WF_Constants::ACTION_DELETE,
+    WF_Constants::ACTION_TOGGLE_ACTIVE,
+    WF_Constants::ACTION_GET_STATS,
+    WF_Constants::ACTION_BULK_UPDATE_WEIGHTS
+];
+if (!in_array($action, $allowedActions, true)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Invalid action specified']);
+    exit;
+}
+$publicReadActions = [WF_Constants::ACTION_GET_ALL, WF_Constants::ACTION_GET_TYPES, WF_Constants::ACTION_GET_STATS];
+if (!in_array($action, $publicReadActions, true)) {
+    requireAdmin(true);
+}
 
 try {
     $db = Database::getInstance();

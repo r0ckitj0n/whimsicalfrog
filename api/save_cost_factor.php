@@ -2,8 +2,14 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 try {
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+        Response::methodNotAllowed('Method not allowed');
+    }
+    requireAdmin(true);
+
     $normalizeFactorId = static function ($rawId): ?int {
         if ($rawId === null || $rawId === '') {
             return null;
@@ -37,13 +43,19 @@ try {
     $sku = $data['sku'] ?? '';
     $category = $data['category'] ?? '';
     $cost = $data['cost'] ?? 0;
-    $label = $data['label'] ?? '';
+    $label = trim((string)($data['label'] ?? ''));
     $id = $normalizeFactorId($data['id'] ?? null);
     $originalLabel = $data['originalLabel'] ?? null;
     $createdBy = $data['created_by'] ?? null;
 
-    if (!$sku || !$category)
+    if (!preg_match('/^[A-Za-z0-9-]{3,64}$/', (string)$sku) || !$category)
         Response::error('Missing required fields');
+    if (!is_numeric($cost) || (float)$cost < 0) {
+        Response::error('Invalid cost value', null, 422);
+    }
+    if (strlen($label) > 255) {
+        Response::error('Label too long', null, 422);
+    }
 
     // Validate category
     $validCategories = ['materials', 'labor', 'energy', 'equipment'];

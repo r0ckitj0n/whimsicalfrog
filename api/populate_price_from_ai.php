@@ -3,6 +3,7 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 function ensureAiTierColumnsExist(): void
 {
@@ -26,12 +27,21 @@ function ensureAiTierColumnsExist(): void
 }
 
 try {
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+        Response::methodNotAllowed('Method not allowed');
+    }
+    requireAdmin(true);
+
     $data = Response::getJsonInput();
-    $sku = $data['sku'] ?? '';
+    $sku = trim((string)($data['sku'] ?? ''));
     $suggestion = $data['suggestion'] ?? null;
 
-    if (!$sku || !$suggestion)
+    if (!preg_match('/^[A-Za-z0-9-]{3,64}$/', $sku)) {
+        Response::error('Invalid SKU format', null, 422);
+    }
+    if (!$suggestion || !is_array($suggestion)) {
         Response::error('Missing required fields');
+    }
 
     ensureAiTierColumnsExist();
 
@@ -46,6 +56,9 @@ try {
     $confidenceRaw = $suggestion['confidence'] ?? null;
     $confidence = is_numeric($confidenceRaw) ? (float) $confidenceRaw : null;
     $qualityTier = $data['quality_tier'] ?? null;
+    if ($qualityTier !== null && !in_array($qualityTier, ['standard', 'premium', 'luxury'], true)) {
+        Response::error('Invalid quality_tier', null, 422);
+    }
 
     // Build dynamic SET clause to only update price-specific tier if provided
     $setClauses = ['ai_price_confidence = ?', 'ai_price_at = ?'];
@@ -68,15 +81,30 @@ try {
 
     if (is_array($components)) {
         foreach ($components as $comp) {
+            if (!is_array($comp)) {
+                continue;
+            }
+            $label = trim((string)($comp['label'] ?? 'AI Price Component'));
+            if ($label === '' || strlen($label) > 255) {
+                $label = 'AI Price Component';
+            }
+            $type = trim((string)($comp['type'] ?? 'analysis'));
+            if ($type === '' || strlen($type) > 60) {
+                $type = 'analysis';
+            }
+            $explanation = trim((string)($comp['explanation'] ?? ''));
+            if (strlen($explanation) > 2000) {
+                $explanation = substr($explanation, 0, 2000);
+            }
             Database::execute("
                 INSERT INTO price_factors (sku, label, amount, type, explanation, source)
                 VALUES (?, ?, ?, ?, ?, 'ai')
             ", [
                 $sku,
-                $comp['label'] ?? 'AI Price Component',
+                $label,
                 (float) ($comp['amount'] ?? 0),
-                $comp['type'] ?? 'analysis',
-                $comp['explanation'] ?? '',
+                $type,
+                $explanation,
             ]);
         }
     }

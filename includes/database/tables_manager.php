@@ -3,6 +3,20 @@
  * Database Tables Manager Logic
  */
 
+function wf_is_valid_sql_identifier($identifier)
+{
+    return is_string($identifier) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $identifier) === 1;
+}
+
+function wf_get_table_columns($tableName)
+{
+    if (!wf_is_valid_sql_identifier($tableName)) {
+        throw new Exception('Invalid table name');
+    }
+    $columns = Database::queryAll("SHOW COLUMNS FROM `" . $tableName . "`");
+    return array_column($columns, 'Field');
+}
+
 function getTableDocumentation()
 {
     return [
@@ -40,10 +54,27 @@ function handle_update_cell($input)
     if (empty($tableName) || empty($column) || empty($rowData)) {
         throw new Exception('Missing parameters');
     }
+    if (!wf_is_valid_sql_identifier($tableName) || !wf_is_valid_sql_identifier($column)) {
+        throw new Exception('Invalid table or column');
+    }
+    if (!is_array($rowData) || count($rowData) === 0) {
+        throw new Exception('Invalid row_data');
+    }
+
+    $tableColumns = wf_get_table_columns($tableName);
+    if (!in_array($column, $tableColumns, true)) {
+        throw new Exception('Unknown column');
+    }
 
     $where_conditions = [];
     $whereParams = [];
     foreach ($rowData as $col => $val) {
+        if (!wf_is_valid_sql_identifier($col)) {
+            throw new Exception('Invalid row identifier column');
+        }
+        if (!in_array($col, $tableColumns, true)) {
+            throw new Exception('Unknown row identifier column');
+        }
         if ($val === null || $val === '') {
             $where_conditions[] = "(`$col` IS NULL OR `$col` = '')";
         } else {
@@ -56,7 +87,7 @@ function handle_update_cell($input)
     if ($tableName === 'items' && $column === 'category') {
         $hasCategoryId = false;
         try {
-            $columns = Database::queryAll("SHOW COLUMNS FROM items");
+            $columns = Database::queryAll("SHOW COLUMNS FROM `items`");
             foreach ($columns as $columnInfo) {
                 if (($columnInfo['Field'] ?? '') === 'category_id') {
                     $hasCategoryId = true;

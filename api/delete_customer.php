@@ -2,10 +2,11 @@
 
 // Include the configuration file
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: DELETE, GET, OPTIONS');
+header('Access-Control-Allow-Methods: DELETE, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json');
 
@@ -15,25 +16,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// Allow both DELETE and GET methods (GET with a parameter for compatibility with browsers)
-if ($_SERVER['REQUEST_METHOD'] !== 'DELETE' && $_SERVER['REQUEST_METHOD'] !== 'GET') {
+// Allow only DELETE or POST to avoid destructive GET requests
+if ($_SERVER['REQUEST_METHOD'] !== 'DELETE' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['error' => 'Method not allowed']);
     exit;
 }
+requireAdmin(true);
 
 try {
     // Get customer ID from URL parameter
-    $user_id = $_GET['id'] ?? null;
+    $user_id = $_GET['id'] ?? $_POST['id'] ?? null;
 
     // If no ID provided, check request body (for DELETE requests with body)
-    if (!$user_id && $_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    if (!$user_id && ($_SERVER['REQUEST_METHOD'] === 'DELETE' || $_SERVER['REQUEST_METHOD'] === 'POST')) {
         $data = json_decode(file_get_contents('php://input'), true);
         $user_id = $data['id'] ?? null;
     }
 
     // Validate customer ID
-    if (!$user_id) {
+    if (!$user_id || !ctype_digit((string)$user_id)) {
         http_response_code(400);
         echo json_encode(['error' => 'Customer ID is required']);
         exit;

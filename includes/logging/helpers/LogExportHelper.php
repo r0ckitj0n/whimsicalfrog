@@ -3,6 +3,11 @@
 
 class LogExportHelper
 {
+    private static function isValidIdentifier($value)
+    {
+        return is_string($value) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $value) === 1;
+    }
+
     /**
      * Download a specific database log as CSV
      */
@@ -17,19 +22,24 @@ class LogExportHelper
 
         $table = $configs[$type]['table'];
         $timestampField = $configs[$type]['timestamp_field'];
+        if (!self::isValidIdentifier($table) || !self::isValidIdentifier($timestampField)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid log config']);
+            return;
+        }
 
         $where = [];
         $params = [];
         if (!empty($filters['from'])) {
             $from = $filters['from'];
             if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)) $from .= ' 00:00:00';
-            $where[] = "$timestampField >= ?";
+            $where[] = "`$timestampField` >= ?";
             $params[] = $from;
         }
         if (!empty($filters['to'])) {
             $to = $filters['to'];
             if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) $to .= ' 23:59:59';
-            $where[] = "$timestampField <= ?";
+            $where[] = "`$timestampField` <= ?";
             $params[] = $to;
         }
         if (!empty($filters['status']) && $type === 'email_logs') {
@@ -42,7 +52,7 @@ class LogExportHelper
         }
 
         $whereSql = !empty($where) ? ' WHERE ' . implode(' AND ', $where) : '';
-        $entries = Database::queryAll("SELECT * FROM $table$whereSql ORDER BY id DESC", $params);
+        $entries = Database::queryAll("SELECT * FROM `$table`$whereSql ORDER BY id DESC", $params);
 
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="' . $type . '_' . date('Y-m-d_H-i-s') . '.csv"');
@@ -111,6 +121,15 @@ class LogExportHelper
 
     private static function writeDatabaseLogToTempCsv($type)
     {
+        $configs = LogQueryHelper::getDatabaseLogDefinitions();
+        if (!isset($configs[$type])) {
+            throw new Exception('Invalid log type for export');
+        }
+        $table = $configs[$type]['table'];
+        if (!self::isValidIdentifier($table)) {
+            throw new Exception('Invalid table name for export');
+        }
+
         $tmp = tempnam(sys_get_temp_dir(), 'wf_log_');
         $fp = fopen($tmp, 'w');
         if (!$fp) {
@@ -123,7 +142,7 @@ class LogExportHelper
         $offset = 0;
 
         while (true) {
-            $rows = Database::queryAll("SELECT * FROM $type ORDER BY id DESC LIMIT ? OFFSET ?", [$limit, $offset]);
+            $rows = Database::queryAll("SELECT * FROM `$table` ORDER BY id DESC LIMIT ? OFFSET ?", [$limit, $offset]);
             if (!$rows) break;
 
             if (!$wroteHeader) {

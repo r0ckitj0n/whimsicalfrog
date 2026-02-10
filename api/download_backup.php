@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/auth.php';
+requireAdmin(true);
 
 // Change working directory to project root from api/ directory
 chdir(dirname(__DIR__));

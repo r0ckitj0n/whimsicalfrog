@@ -24,6 +24,29 @@ try {
 }
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$allowedActions = [
+    'ingest_client_logs',
+    'list_logs',
+    'get_log',
+    'search_logs',
+    'clear_log',
+    'download_log',
+    'get_status',
+    'download',
+    'cleanup_old_logs',
+    'distinct_email_types'
+];
+$postOnlyActions = ['ingest_client_logs', 'clear_log', 'cleanup_old_logs'];
+if (!in_array($action, $allowedActions, true)) {
+    Response::error('Invalid action', null, 400);
+}
+if (in_array($action, $postOnlyActions, true) && $method !== 'POST') {
+    Response::json(['success' => false, 'error' => 'Method not allowed'], 405);
+}
+if (!in_array($action, $postOnlyActions, true) && $method !== 'GET') {
+    Response::json(['success' => false, 'error' => 'Method not allowed'], 405);
+}
 
 try {
     Database::getInstance();
@@ -43,6 +66,8 @@ try {
             $type = $_GET['type'] ?? '';
             $page = (int) ($_GET['page'] ?? 1);
             $limit = (int) ($_GET['limit'] ?? 50);
+            $page = max(1, $page);
+            $limit = max(1, min($limit, 200));
             $filters = $_GET; // Pass all query params as filters
 
             if (strpos($type, 'file:') === 0) {
@@ -55,6 +80,9 @@ try {
         case 'search_logs':
             $query = $_GET['query'] ?? '';
             $type = $_GET['type'] ?? '';
+            if (strlen((string)$query) > 255) {
+                Response::error('Search query too long', null, 422);
+            }
             Response::success([
                 'results' => LogQueryHelper::searchLogs($query, $type, $_GET),
                 'query' => $query

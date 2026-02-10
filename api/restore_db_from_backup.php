@@ -45,6 +45,11 @@ if (!wf_restore_has_valid_token()) {
 }
 
 $filename = $_GET['file'] ?? $_POST['file'] ?? '';
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['ok' => false, 'error' => 'Method not allowed']);
+    exit;
+}
 if (!$filename) {
     http_response_code(400);
     echo json_encode(['ok' => false, 'error' => 'Missing file parameter']);
@@ -156,4 +161,9 @@ if ($importJson && ($data = json_decode($importJson, true))) {
       'message' => 'Import complete.',
       'filter_table' => $filterTable,
     ], JSON_UNESCAPED_SLASHES);
+}
+if (!preg_match('/^backups\/sql\/[a-zA-Z0-9._-]+\.(sql|sql\.gz)$/', $filename)) {
+    http_response_code(400);
+    echo json_encode(['ok' => false, 'error' => 'Invalid backup filename']);
+    exit;
 }

@@ -3,11 +3,13 @@
 // Include the configuration file
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Response::methodNotAllowed('Method not allowed');
 }
+requireAdmin(true);
 
 try {
     // Get POST data
@@ -23,7 +25,10 @@ try {
     }
 
     // Extract SKU
-    $sku = $data['sku'];
+    $sku = trim((string)$data['sku']);
+    if (!preg_match('/^[A-Za-z0-9-]{3,64}$/', $sku)) {
+        Response::error('Invalid SKU format', null, 422);
+    }
 
     // Create database connection using config
     try {

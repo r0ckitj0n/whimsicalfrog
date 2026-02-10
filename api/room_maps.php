@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers/RoomMapHelper.php';
 
 /**
@@ -86,7 +87,12 @@ try {
 
     switch ($method) {
         case 'POST':
+            requireAdmin(true);
             $action = $input['action'] ?? '';
+            $allowedActions = ['save', 'apply', 'activate', 'rename', 'delete', 'promote_active_to_original'];
+            if (!in_array($action, $allowedActions, true)) {
+                Response::error('Invalid action', null, 400);
+            }
             $rn = RoomMapHelper::normalizeRoomNumber($input['room'] ?? $input['room_number'] ?? '');
 
             if ($action === 'save') {
@@ -253,6 +259,7 @@ try {
             break;
 
         case 'DELETE':
+            requireAdmin(true);
             $id = (int)($input['map_id'] ?? 0);
             if ($id <= 0) {
                 Response::error('Invalid map id');

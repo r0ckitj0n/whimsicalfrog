@@ -7,6 +7,7 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/backgrounds/manager.php';
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -34,7 +35,11 @@ try {
             break;
 
         case 'POST':
+            requireAdmin(true);
             $action = $input['action'] ?? $_POST['action'] ?? '';
+            if (!in_array($action, ['save', 'apply', 'rename'], true)) {
+                Response::error('Invalid action', null, 400);
+            }
             if ($action === 'save') {
                 saveBackground($input);
                 Response::success(null, 'Saved');
@@ -45,17 +50,16 @@ try {
             } elseif ($action === 'rename') {
                 $id = $input['id'] ?? '';
                 $name = trim($input['name'] ?? '');
-                if (!$id || !$name) throw new Exception('Missing ID or name');
+                if (!ctype_digit((string)$id) || !$name) throw new Exception('Missing ID or name');
                 Database::execute("UPDATE backgrounds SET name = ? WHERE id = ?", [$name, $id]);
                 Response::success(null, 'Renamed');
-            } else {
-                Response::error('Invalid action');
             }
             break;
 
         case 'DELETE':
+            requireAdmin(true);
             $id = $input['background_id'] ?? $_GET['background_id'] ?? '';
-            if (!$id) throw new Exception('Missing ID');
+            if (!ctype_digit((string)$id)) throw new Exception('Missing ID');
             $bg = Database::queryOne("SELECT name FROM backgrounds WHERE id = ?", [$id]);
             if (!$bg) Response::notFound();
             if ($bg['name'] === 'Original') throw new Exception('Protected');

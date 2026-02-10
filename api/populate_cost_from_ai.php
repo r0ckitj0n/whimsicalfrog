@@ -2,6 +2,7 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 function ensureAiTierColumnsExist(): void
 {
@@ -25,16 +26,28 @@ function ensureAiTierColumnsExist(): void
 }
 
 try {
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+        Response::methodNotAllowed('Method not allowed');
+    }
+    requireAdmin(true);
+
     $data = Response::getJsonInput();
-    $sku = $data['sku'] ?? '';
+    $sku = trim((string)($data['sku'] ?? ''));
     $suggestion = $data['suggestion'] ?? null;
 
-    if (!$sku || !$suggestion)
+    if (!preg_match('/^[A-Za-z0-9-]{3,64}$/', $sku)) {
+        Response::error('Invalid SKU format', null, 422);
+    }
+    if (!$suggestion || !is_array($suggestion)) {
         Response::error('Missing required fields');
+    }
 
     ensureAiTierColumnsExist();
 
     $qualityTier = $data['quality_tier'] ?? null;
+    if ($qualityTier !== null && !in_array($qualityTier, ['standard', 'premium', 'luxury'], true)) {
+        Response::error('Invalid quality_tier', null, 422);
+    }
 
     // Build dynamic SET clause to only update cost-specific tier if provided
     $setClauses = ['ai_cost_confidence = ?', 'ai_cost_at = ?'];
@@ -72,6 +85,10 @@ try {
             foreach ($factors as $factor) {
                 // If AI provides { label: '...', cost: 10 } or { name: '...', cost: 10 }
                 $label = $factor['label'] ?? $factor['name'] ?? $factor['description'] ?? 'AI Estimated ' . ucfirst($key);
+                $label = trim((string)$label);
+                if ($label === '' || strlen($label) > 255) {
+                    $label = 'AI Estimated ' . ucfirst($key);
+                }
                 $cost = (float) ($factor['cost'] ?? 0);
                 if ($cost > 0) {
                     Database::execute("

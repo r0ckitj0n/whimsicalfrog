@@ -27,7 +27,6 @@ try {
     Database::getInstance();
     $input = json_decode(file_get_contents('php://input'), true) ?? [];
     $action = $_GET['action'] ?? $_POST['action'] ?? ($input['action'] ?? '');
-
     // Fallback detection for common patterns from hooks
     if (!$action) {
         if (isset($_GET['category']) || isset($_POST['category']) || isset($input['category'])) {
@@ -35,6 +34,29 @@ try {
         } elseif (isset($_GET['key']) || isset($_POST['key']) || isset($input['key']) || isset($_GET['setting_key'])) {
             $action = WF_Constants::ACTION_GET_SETTING;
         }
+    }
+    $allowedActions = [
+        WF_Constants::ACTION_GET_ALL_SETTINGS,
+        WF_Constants::ACTION_GET_SETTING,
+        WF_Constants::ACTION_UPDATE_SETTING,
+        WF_Constants::ACTION_UPSERT_SETTINGS,
+        WF_Constants::ACTION_GET_BY_CATEGORY,
+        WF_Constants::ACTION_GET_BUSINESS_INFO,
+        WF_Constants::ACTION_GET_SALES_VERBIAGE
+    ];
+    if (!in_array($action, $allowedActions, true)) {
+        Response::error('Invalid action: ' . $action, null, 400);
+    }
+    $publicReadActions = [
+        WF_Constants::ACTION_GET_BUSINESS_INFO,
+        WF_Constants::ACTION_GET_SALES_VERBIAGE
+    ];
+    if (!in_array($action, $publicReadActions, true)) {
+        AuthHelper::requireAdmin(403, 'Admin access required');
+    }
+    $mutatingActions = [WF_Constants::ACTION_UPDATE_SETTING, WF_Constants::ACTION_UPSERT_SETTINGS];
+    if (in_array($action, $mutatingActions, true) && ($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+        Response::methodNotAllowed('Method not allowed');
     }
 
     switch ($action) {

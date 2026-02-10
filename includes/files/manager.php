@@ -5,17 +5,33 @@
 
 function sanitizePath($path)
 {
-    $path = str_replace(['../', '..\\', '../\\'], '', $path);
-    $path = ltrim($path, '/\\');
-    return $path;
+    $path = (string) $path;
+    $path = str_replace("\0", '', $path);
+    $path = str_replace('\\', '/', $path);
+    $path = preg_replace('#/+#', '/', $path);
+    $path = ltrim($path, '/');
+    $parts = [];
+    foreach (explode('/', $path) as $segment) {
+        if ($segment === '' || $segment === '.') {
+            continue;
+        }
+        if ($segment === '..') {
+            continue;
+        }
+        $parts[] = $segment;
+    }
+    return implode('/', $parts);
 }
 
 function isPathAllowed($path)
 {
-    $allowedDirectories = ['api', 'components', 'css', 'images', 'includes', 'js', 'sections'];
+    $allowedDirectories = ['api', 'components', 'css', 'images', 'includes', 'js', 'sections', 'src', 'scripts'];
+    $allowedRootFiles = ['AGENTS.md', '.codexignore', 'README.md', 'package.json', 'tsconfig.json', 'vite.config.ts', 'vite.config.js', '.env'];
     if (empty($path) || $path === '.') return true;
     $pathParts = explode('/', $path);
-    if (count($pathParts) === 1) return true;
+    if (count($pathParts) === 1) {
+        return in_array($pathParts[0], $allowedRootFiles, true) || in_array($pathParts[0], $allowedDirectories, true);
+    }
     return in_array($pathParts[0], $allowedDirectories);
 }
 

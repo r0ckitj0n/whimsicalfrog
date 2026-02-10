@@ -5,18 +5,22 @@
  */
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/response.php';
 
 header('Content-Type: application/json');
 
 $method = $_SERVER['REQUEST_METHOD'];
+if ($method !== 'GET' && $method !== 'POST') {
+    Response::methodNotAllowed('Method not allowed');
+}
+requireAdmin(true);
 
 try {
     if ($method === 'GET') {
         $user_id = $_GET['user_id'] ?? null;
-        if (!$user_id) {
-            http_response_code(400);
-            echo json_encode(['error' => 'user_id is required']);
-            exit;
+        if (!$user_id || !ctype_digit((string)$user_id)) {
+            Response::error('user_id is required', null, 400);
         }
 
         try {
@@ -43,14 +47,21 @@ try {
         }
     } elseif ($method === 'POST') {
         $data = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($data)) {
+            Response::error('Invalid JSON', null, 400);
+        }
         $user_id = $data['user_id'] ?? null;
-        $note_text = $data['note_text'] ?? null;
-        $author = $data['author_username'] ?? 'Admin';
+        $note_text = trim((string)($data['note_text'] ?? ''));
+        $author = trim((string)($data['author_username'] ?? 'Admin'));
 
-        if (!$user_id || !$note_text) {
-            http_response_code(400);
-            echo json_encode(['error' => 'user_id and note_text are required']);
-            exit;
+        if (!$user_id || !ctype_digit((string)$user_id) || $note_text === '') {
+            Response::error('user_id and note_text are required', null, 400);
+        }
+        if (strlen($note_text) > 2000) {
+            Response::error('note_text too long', null, 422);
+        }
+        if ($author === '' || strlen($author) > 120) {
+            $author = 'Admin';
         }
 
         $sql = "INSERT INTO customer_notes (user_id, note_text, author_username) VALUES (?, ?, ?)";
@@ -61,8 +72,7 @@ try {
             'message' => 'Note added successfully'
         ]);
     } else {
-        http_response_code(405);
-        echo json_encode(['error' => 'Method not allowed']);
+        Response::methodNotAllowed('Method not allowed');
     }
 } catch (Exception $e) {
     http_response_code(500);

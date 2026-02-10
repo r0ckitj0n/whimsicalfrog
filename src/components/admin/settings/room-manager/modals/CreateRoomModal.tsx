@@ -301,7 +301,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         const normalizedSelectedPreset = (selectedPreset === CUSTOM_WRITE_YOUR_OWN_VALUE || options.includes(selectedPreset))
             ? selectedPreset
             : (options[0] || '');
-        const showCustomInput = normalizedSelectedPreset === CUSTOM_WRITE_YOUR_OWN_VALUE || value !== normalizedSelectedPreset;
+        const showCustomInput = normalizedSelectedPreset !== AUTOGENERATE_LABEL;
         return (
             <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</label>

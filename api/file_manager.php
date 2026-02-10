@@ -8,22 +8,32 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/files/manager.php';
 
 // Change working directory to project root
 chdir(dirname(__DIR__));
-
-$isAdmin = (isset($_SESSION['user']['role']) && strtolower($_SESSION['user']['role']) === WF_Constants::ROLE_ADMIN) || 
-           (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false);
-
-if (!$isAdmin) {
-    Response::forbidden('Admin access required');
-}
+requireAdmin(true);
 
 try {
     $method = $_SERVER['REQUEST_METHOD'];
-    $input = json_decode(file_get_contents('php://input'), true) ?? [];
+    $input = [];
+    if ($method !== 'GET') {
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($input)) {
+            Response::error('Invalid JSON body', null, 400);
+        }
+    }
     $action = $_GET['action'] ?? ($input['action'] ?? '');
+    $allowedActions = [
+        WF_Constants::ACTION_LIST,
+        WF_Constants::ACTION_READ,
+        WF_Constants::ACTION_WRITE,
+        WF_Constants::ACTION_DELETE
+    ];
+    if (!in_array($action, $allowedActions, true)) {
+        Response::error('Invalid action', null, 400);
+    }
 
     switch ("$method:$action") {
         case "GET:" . WF_Constants::ACTION_LIST:
@@ -45,8 +55,18 @@ try {
         case "DELETE:" . WF_Constants::ACTION_DELETE:
             $path = sanitizePath($_GET['path'] ?? '');
             if (!isPathAllowed($path)) throw new Exception('Access denied');
-            if (is_dir($path)) rmdir($path);
-            else unlink($path);
+            if ($path === '' || $path === '.') {
+                throw new Exception('Invalid path');
+            }
+            if (is_dir($path)) {
+                if (!@rmdir($path)) {
+                    throw new Exception('Unable to delete directory');
+                }
+            } else {
+                if (!@unlink($path)) {
+                    throw new Exception('Unable to delete file');
+                }
+            }
             Response::success(['message' => 'Deleted']);
             break;
 

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 // Enable CORS for development
 header('Access-Control-Allow-Origin: *');
@@ -12,6 +13,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+    exit();
+}
+requireAdmin(true);
 
 // Change working directory to parent directory (project root)
 chdir(dirname(__DIR__));
@@ -186,31 +193,36 @@ function cleanupOldDatabaseBackups()
 try {
     $method = $_SERVER['REQUEST_METHOD'];
 
-    if ($method === 'POST') {
-        // Get request parameters
-        $input = json_decode(file_get_contents('php://input'), true);
-        $downloadToComputer = isset($input['download_to_computer']) ? $input['download_to_computer'] : true;
-        $keepOnServer = isset($input['keep_on_server']) ? $input['keep_on_server'] : true;
+    // Get request parameters
+    $input = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($input)) {
+        $input = [];
+    }
+    $downloadToComputer = !empty($input['download_to_computer']);
+    $keepOnServer = !empty($input['keep_on_server']);
+    if (!array_key_exists('download_to_computer', $input)) {
+        $downloadToComputer = true;
+    }
+    if (!array_key_exists('keep_on_server', $input)) {
+        $keepOnServer = true;
+    }
 
-        // Validate that at least one destination is selected
-        if (!$downloadToComputer && !$keepOnServer) {
-            $result = ['success' => false, 'error' => 'At least one backup destination must be selected'];
-        } else {
-            $result = createDatabaseBackup($downloadToComputer, $keepOnServer);
-
-            // If successful and we need to delete after download
-            if ($result['success'] && isset($result['delete_after_download']) && $result['delete_after_download']) {
-                // Register shutdown function to delete file after response is sent
-                register_shutdown_function(function () use ($result) {
-                    if (file_exists($result['path'])) {
-                        unlink($result['path']);
-                        error_log("Database backup file deleted after download: " . $result['filename']);
-                    }
-                });
-            }
-        }
+    // Validate that at least one destination is selected
+    if (!$downloadToComputer && !$keepOnServer) {
+        $result = ['success' => false, 'error' => 'At least one backup destination must be selected'];
     } else {
-        $result = ['success' => false, 'error' => 'Method not allowed'];
+        $result = createDatabaseBackup($downloadToComputer, $keepOnServer);
+
+        // If successful and we need to delete after download
+        if ($result['success'] && isset($result['delete_after_download']) && $result['delete_after_download']) {
+            // Register shutdown function to delete file after response is sent
+            register_shutdown_function(function () use ($result) {
+                if (file_exists($result['path'])) {
+                    unlink($result['path']);
+                    error_log("Database backup file deleted after download: " . $result['filename']);
+                }
+            });
+        }
     }
 
     echo json_encode($result);

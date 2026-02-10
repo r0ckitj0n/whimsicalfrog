@@ -8,6 +8,7 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/../includes/database/helpers/DatabaseConfigHelper.php';
 require_once __DIR__ . '/../includes/database/helpers/DatabaseStatsHelper.php';
@@ -25,13 +26,56 @@ function wf_is_token_valid(): bool {
 }
 
 if (!wf_is_token_valid()) {
-    AuthHelper::requireAdmin();
+    requireAdmin(true);
 }
 
 header('Content-Type: application/json');
 
 $input = json_decode(file_get_contents('php://input'), true) ?? [];
 $action = $_GET['action'] ?? $_POST['action'] ?? $input['action'] ?? '';
+$allowedActions = [
+    'get_config',
+    'test_connection',
+    'update_config',
+    'get_connection_stats',
+    'analyze_size',
+    'performance_monitor',
+    'optimize_tables',
+    'analyze_indexes',
+    'cleanup_database',
+    'repair_tables',
+    'check_foreign_keys',
+    'list_backups',
+    'create_backup',
+    'drop_all_tables',
+    'restore_database',
+    'get_schema',
+    'initialize_database',
+    'import_sql',
+    'import_csv',
+    'import_json',
+    'export_tables'
+];
+if (!in_array($action, $allowedActions, true)) {
+    Response::error('Invalid action', null, 400);
+}
+$mutatingActions = [
+    'update_config',
+    'optimize_tables',
+    'analyze_indexes',
+    'cleanup_database',
+    'repair_tables',
+    'create_backup',
+    'drop_all_tables',
+    'restore_database',
+    'initialize_database',
+    'import_sql',
+    'import_csv',
+    'import_json'
+];
+if (in_array($action, $mutatingActions, true) && ($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+    Response::methodNotAllowed('Method not allowed');
+}
 
 try {
     switch ($action) {

@@ -4,11 +4,14 @@
 require_once __DIR__ . '/api_bootstrap.php';
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/business_settings_helper.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Response::methodNotAllowed('Method not allowed');
 }
+requireAdmin(true);
 
 $raw = file_get_contents('php://input');
 $input = json_decode($raw, true);
@@ -19,7 +22,10 @@ if (!is_array($input)) {
 if (empty($input['order_id'])) {
     Response::error('order_id required', null, 400);
 }
-$order_id = $input['order_id'];
+$order_id = trim((string) $input['order_id']);
+if ($order_id === '') {
+    Response::error('order_id required', null, 400);
+}
 
 try {
     try {
@@ -103,8 +109,45 @@ try {
                 }
 
                 $allowed = ['pending', 'paid', 'failed', 'refunded'];
-                if (!in_array($val, $allowed)) {
-                    continue;
+                if (!in_array($val, $allowed, true)) {
+                    Response::error('Invalid payment_status value', null, 422);
+                }
+            }
+            if ($k === 'status' && $val !== null) {
+                $allowedOrderStatuses = [
+                    WF_Constants::ORDER_STATUS_PENDING,
+                    WF_Constants::ORDER_STATUS_PROCESSING,
+                    WF_Constants::ORDER_STATUS_SHIPPED,
+                    WF_Constants::ORDER_STATUS_DELIVERED,
+                    WF_Constants::ORDER_STATUS_CANCELLED
+                ];
+                if (!in_array((string) $val, $allowedOrderStatuses, true)) {
+                    Response::error('Invalid status value', null, 422);
+                }
+            }
+            if ($k === 'payment_method' && $val !== null && trim((string) $val) !== '') {
+                $allowedPaymentMethods = [
+                    WF_Constants::PAYMENT_METHOD_SQUARE,
+                    WF_Constants::PAYMENT_METHOD_CASH,
+                    WF_Constants::PAYMENT_METHOD_CHECK,
+                    WF_Constants::PAYMENT_METHOD_PAYPAL,
+                    WF_Constants::PAYMENT_METHOD_VENMO,
+                    WF_Constants::PAYMENT_METHOD_OTHER
+                ];
+                if (!in_array((string) $val, $allowedPaymentMethods, true)) {
+                    Response::error('Invalid payment_method value', null, 422);
+                }
+            }
+            if ($k === 'shipping_method' && $val !== null && trim((string) $val) !== '') {
+                $allowedShippingMethods = [
+                    WF_Constants::SHIPPING_METHOD_PICKUP,
+                    WF_Constants::SHIPPING_METHOD_LOCAL,
+                    WF_Constants::SHIPPING_METHOD_USPS,
+                    WF_Constants::SHIPPING_METHOD_FEDEX,
+                    WF_Constants::SHIPPING_METHOD_UPS
+                ];
+                if (!in_array((string) $val, $allowedShippingMethods, true)) {
+                    Response::error('Invalid shipping_method value', null, 422);
                 }
             }
 
@@ -192,7 +235,7 @@ try {
 
         $itemIndex = 0;
         foreach ($input['items'] as $row) {
-            if (empty($row['sku']) || empty($row['quantity'])) {
+            if (!is_array($row) || empty($row['sku']) || empty($row['quantity'])) {
                 continue;
             }
 
@@ -201,7 +244,13 @@ try {
             $itemIndex++;
 
             $qty = (int) $row['quantity'];
-            $sku = $row['sku'];
+            $sku = trim((string) $row['sku']);
+            if ($qty <= 0 || $qty > 100000) {
+                Response::error('Invalid item quantity', null, 422);
+            }
+            if ($sku === '' || strlen($sku) > 64) {
+                Response::error('Invalid item sku', null, 422);
+            }
 
             error_log("[OrderUpdate] Inserting item: $id, SKU: $sku, Qty: $qty");
 
@@ -245,15 +294,17 @@ try {
 
     // -- Update notes --
     if (isset($input['new_fulfillment_note']) && !empty(trim($input['new_fulfillment_note']))) {
+        $author = (string) (getCurrentUser()['username'] ?? 'Admin');
         Database::execute(
             'INSERT INTO order_notes (order_id, note_type, note_text, author_username) VALUES (?, "fulfillment", ?, ?)',
-            [$order_id, trim($input['new_fulfillment_note']), $input['author_username'] ?? 'Admin']
+            [$order_id, substr(trim((string) $input['new_fulfillment_note']), 0, 4000), $author]
         );
     }
     if (isset($input['new_payment_note']) && !empty(trim($input['new_payment_note']))) {
+        $author = (string) (getCurrentUser()['username'] ?? 'Admin');
         Database::execute(
             'INSERT INTO order_notes (order_id, note_type, note_text, author_username) VALUES (?, "payment", ?, ?)',
-            [$order_id, trim($input['new_payment_note']), $input['author_username'] ?? 'Admin']
+            [$order_id, substr(trim((string) $input['new_payment_note']), 0, 4000), $author]
         );
     }
 

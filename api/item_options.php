@@ -3,6 +3,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/session_bootstrap.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/Constants.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -14,17 +15,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// Auth with local dev bypass similar to other endpoints
-$isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']);
-$isAdmin = $isLoggedIn && isset($_SESSION['user']['role']) && strtolower($_SESSION['user']['role']) === WF_Constants::ROLE_ADMIN;
-$hostHeader = $_SERVER['HTTP_HOST'] ?? '';
-$devBypassHeader = isset($_SERVER['HTTP_X_WF_DEV_ADMIN']) && $_SERVER['HTTP_X_WF_DEV_ADMIN'] === '1';
-$devBypassQuery = isset($_GET['wf_dev_admin']) && $_GET['wf_dev_admin'] === '1';
-$referer = $_SERVER['HTTP_REFERER'] ?? '';
-$isLocalHost = is_string($hostHeader) && (strpos($hostHeader, 'localhost') !== false || strpos($hostHeader, '127.0.0.1') !== false);
-if (!$isAdmin && ($isLocalHost || $devBypassHeader || $devBypassQuery || strpos($referer, '/admin/') !== false)) {
-    $isAdmin = true;
-}
+$isAdmin = AuthHelper::isAdmin()
+    || AuthHelper::hasRole(WF_Constants::ROLE_SUPERADMIN)
+    || AuthHelper::hasRole(WF_Constants::ROLE_DEVOPS);
 
 if (session_status() === PHP_SESSION_ACTIVE) {
     session_write_close();
@@ -43,6 +36,23 @@ if ($action === '') {
             }
         }
     }
+}
+$allowedActions = ['get_settings', 'update_settings', 'get_aggregates'];
+if (!in_array($action, $allowedActions, true)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Invalid action']);
+    exit;
+}
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+if ($action === 'update_settings' && $method !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    exit;
+}
+if ($action !== 'update_settings' && $method !== 'GET') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    exit;
 }
 
 function ensure_settings_table()

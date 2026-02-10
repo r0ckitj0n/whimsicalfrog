@@ -27,18 +27,8 @@ class AuthHelper
         if (class_exists('SessionManager')) {
             SessionManager::init();
         }
-        
-        // Check for localhost/dev environment bypass
-        $host = $_SERVER['HTTP_HOST'] ?? '';
-        $isLocal = (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false || strpos($host, '192.168.') !== false);
-        
-        if (isAdmin() || $isLocal) {
-            return true;
-        }
 
-        // Dev bypass: allow any logged-in user to act as admin in local environment
-        $env = getenv('WHF_ENV') ?: $_ENV['WHF_ENV'] ?? $_SERVER['WHF_ENV'] ?? 'prod';
-        if ($env === 'local' && isLoggedIn()) {
+        if (isAdmin()) {
             return true;
         }
 

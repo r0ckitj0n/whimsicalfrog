@@ -14,6 +14,7 @@ require_once __DIR__ . '/../includes/stock_manager.php';
 require_once __DIR__ . '/../includes/tax_service.php';
 require_once __DIR__ . '/../includes/business_settings_helper.php';
 require_once __DIR__ . '/../includes/Constants.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/email_notifications.php';
 
 // Conductor Helpers
@@ -64,6 +65,47 @@ try {
             Response::error('Missing required field: ' . $field, null, 400);
         }
     }
+    $sessionUser = getCurrentUser();
+    if (!$sessionUser) {
+        Response::error('Authentication required', null, 401);
+    }
+    $sessionUserId = (string) ($sessionUser['user_id'] ?? ($sessionUser['id'] ?? ''));
+    $targetUserId = trim((string) $input['user_id']);
+    if ($targetUserId === '') {
+        Response::error('Invalid user_id', null, 422);
+    }
+    if (!isAdmin() && $sessionUserId !== $targetUserId) {
+        Response::error('Forbidden: cannot create order for another user', null, 403);
+    }
+    if (!is_array($input['item_ids']) || !is_array($input['quantities'])) {
+        Response::error('item_ids and quantities must be arrays', null, 422);
+    }
+    if (count($input['item_ids']) === 0 || count($input['item_ids']) !== count($input['quantities'])) {
+        Response::error('item_ids and quantities must be non-empty and same length', null, 422);
+    }
+    $allowedPaymentMethods = [
+        WF_Constants::PAYMENT_METHOD_SQUARE,
+        WF_Constants::PAYMENT_METHOD_CASH,
+        WF_Constants::PAYMENT_METHOD_CHECK,
+        WF_Constants::PAYMENT_METHOD_PAYPAL,
+        WF_Constants::PAYMENT_METHOD_VENMO,
+        WF_Constants::PAYMENT_METHOD_OTHER
+    ];
+    if (!in_array((string) $input['payment_method'], $allowedPaymentMethods, true)) {
+        Response::error('Invalid payment_method', null, 422);
+    }
+    if (isset($input['shipping_method'])) {
+        $allowedShippingMethods = [
+            WF_Constants::SHIPPING_METHOD_PICKUP,
+            WF_Constants::SHIPPING_METHOD_LOCAL,
+            WF_Constants::SHIPPING_METHOD_USPS,
+            WF_Constants::SHIPPING_METHOD_FEDEX,
+            WF_Constants::SHIPPING_METHOD_UPS
+        ];
+        if (!in_array((string) $input['shipping_method'], $allowedShippingMethods, true)) {
+            Response::error('Invalid shipping_method', null, 422);
+        }
+    }
 
     // 3. Compute Pricing (Server-side validation)
     $pricing = OrderPricingHelper::computePricing(
@@ -73,7 +115,7 @@ try {
         $input['shipping_address'] ?? null,
         $input['coupon_code'] ?? null,
         $debug,
-        $input['user_id']
+        $targetUserId
     );
     if ($debug)
         $debugData['pricing'] = $pricing;
@@ -85,11 +127,14 @@ try {
     $sizes = array_pad($input['sizes'] ?? [], count($item_ids), null);
 
     for ($i = 0; $i < count($item_ids); $i++) {
-        $sku = $item_ids[$i];
+        $sku = trim((string) $item_ids[$i]);
         $qty = (int) $quantities[$i];
         $color = $colors[$i];
         $size = $sizes[$i];
 
+        if ($sku === '' || strlen($sku) > 64 || $qty <= 0 || $qty > 100000) {
+            Response::error('Invalid item payload', null, 422);
+        }
         $currentStock = getStockLevel(Database::getInstance(), $sku, $color, $size);
         if ($currentStock === false || $qty > $currentStock) {
             // Fetch name and price for better error UX
@@ -133,7 +178,7 @@ try {
     }
 
     // 6. Generate Unique Order ID
-    $order_id = OrderSchemaHelper::generateOrderId($input['user_id'], $input['shipping_method'] ?? WF_Constants::SHIPPING_METHOD_USPS);
+    $order_id = OrderSchemaHelper::generateOrderId($targetUserId, $input['shipping_method'] ?? WF_Constants::SHIPPING_METHOD_USPS);
 
     // 7. Execute Order Creation Transaction
     OrderActionHelper::processOrder($order_id, $input, $pricing, $schemaInfo);

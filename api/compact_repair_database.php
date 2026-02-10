@@ -13,6 +13,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+    http_response_code(405);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Method not allowed'
+    ]);
+    exit();
+}
+
 // Centralized admin check
 AuthHelper::requireAdmin();
 
@@ -29,6 +38,14 @@ try {
     $errors = [];
 
     foreach ($tables as $table) {
+        if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', (string)$table)) {
+            $results[$table] = [
+                'status' => 'error',
+                'error' => 'Invalid table identifier'
+            ];
+            $errors[] = "Table $table: Invalid table identifier";
+            continue;
+        }
         try {
             // Run OPTIMIZE TABLE
             $optimize_result = Database::queryOne("OPTIMIZE TABLE `$table`");

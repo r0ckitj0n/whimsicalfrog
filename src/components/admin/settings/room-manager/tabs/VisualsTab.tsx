@@ -43,7 +43,15 @@ const initialAestheticValues: Record<RoomImageAestheticFieldKey, string> = {
     image_style_declaration: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.image_style_declaration,
     location_phrase: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.location_phrase,
     character_statement: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.character_statement,
-    aesthetic_statement: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.aesthetic_statement
+    aesthetic_statement: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.aesthetic_statement,
+    critical_constraint_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.critical_constraint_line,
+    no_props_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.no_props_line,
+    decorative_elements_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.decorative_elements_line,
+    open_display_zones_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.open_display_zones_line,
+    art_style_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.art_style_line,
+    surfaces_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.surfaces_line,
+    text_constraint_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.text_constraint_line,
+    lighting_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.lighting_line
 };
 
 const parsePlaceholderKeys = (prompt: string): string[] => {
@@ -73,15 +81,17 @@ const resolveTemplateText = (template: string, values: Record<string, string>): 
 };
 
 const buildPriorityInstructionBlock = (values: Record<string, string>): string => {
-    const get = (key: string, fallback: string): string => String(values[key] || fallback).trim();
+    const resolveInline = (input: string): string =>
+        input.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, token: string) => String(values[token] || '').trim());
+    const get = (key: string, fallback: string): string => resolveInline(String(values[key] || fallback).trim());
     return [
         'PRIORITY INSTRUCTIONS (MUST FOLLOW):',
         '- Treat user-provided variable content as highest priority over generic defaults.',
-        '- Preserve explicit character count/roles and concrete actions when provided (for example husband/wife pair).',
+        '- Preserve explicit subject count/roles and concrete actions when provided.',
         `- Ensure this scene direction appears clearly in composition: ${get('room_theme', 'themed room')}`,
         `- Ensure location framing includes: ${get('location_phrase', 'room setting')}`,
-        `- Ensure frog action is visibly represented: ${get('frog_action', 'frog proprietor action')}`,
-        `- Ensure character details are visibly represented: ${get('character_statement', 'character statement')}`,
+        `- Ensure subject action is visibly represented: ${get('frog_action', 'subject action')}`,
+        `- Ensure subject details are visibly represented: ${get('character_statement', 'subject statement')}`,
         `- Ensure accent decorations include: ${get('thematic_accent_decorations', 'contextual accents')}`,
         `- Ensure background thematic elements include: ${get('background_thematic_elements', 'thematic background elements')}`,
         `- Ensure final aesthetic intent is represented: ${get('aesthetic_statement', 'cohesive aesthetic statement')}`,

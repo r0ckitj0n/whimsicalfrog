@@ -543,7 +543,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                                 {renderEditableDropdown('Room Theme', 'room_theme', form.room_theme)}
                                 {renderEditableDropdown('Furniture Style', 'display_furniture_style', form.display_furniture_style)}
                                 {renderEditableDropdown('Accent Decor', 'thematic_accent_decorations', form.thematic_accent_decorations)}
-                                {renderEditableDropdown('Frog Action', 'frog_action', form.frog_action)}
+                                {renderEditableDropdown('Subject Action', 'frog_action', form.frog_action)}
                                 {renderEditableDropdown('Vibe Adjectives', 'vibe_adjectives', form.vibe_adjectives)}
                                 {renderEditableDropdown('Color Scheme', 'color_scheme', form.color_scheme)}
                                 {renderEditableDropdown('Background Elements', 'background_thematic_elements', form.background_thematic_elements)}

@@ -40,20 +40,36 @@ export type RoomImageAestheticFieldKey =
     | 'image_style_declaration'
     | 'location_phrase'
     | 'character_statement'
-    | 'aesthetic_statement';
+    | 'aesthetic_statement'
+    | 'critical_constraint_line'
+    | 'no_props_line'
+    | 'decorative_elements_line'
+    | 'open_display_zones_line'
+    | 'art_style_line'
+    | 'surfaces_line'
+    | 'text_constraint_line'
+    | 'lighting_line';
 
 export const ROOM_IMAGE_AESTHETIC_FIELDS: Array<{ key: RoomImageAestheticFieldKey; label: string }> = [
     { key: 'room_theme', label: 'Room Theme' },
     { key: 'display_furniture_style', label: 'Furniture Style' },
     { key: 'thematic_accent_decorations', label: 'Accent Decor' },
-    { key: 'frog_action', label: 'Frog Action' },
+    { key: 'frog_action', label: 'Subject Action' },
     { key: 'vibe_adjectives', label: 'Vibe Adjectives' },
     { key: 'color_scheme', label: 'Color Scheme' },
     { key: 'background_thematic_elements', label: 'Background Elements' },
     { key: 'image_style_declaration', label: 'Image Style Declaration' },
     { key: 'location_phrase', label: 'Location Phrase' },
     { key: 'character_statement', label: 'Character Statement' },
-    { key: 'aesthetic_statement', label: 'Aesthetic Statement' }
+    { key: 'aesthetic_statement', label: 'Aesthetic Statement' },
+    { key: 'art_style_line', label: 'Art Style Line' },
+    { key: 'surfaces_line', label: 'Surface Treatment Line' },
+    { key: 'lighting_line', label: 'Lighting Line' },
+    { key: 'text_constraint_line', label: 'Text Constraint Line' },
+    { key: 'critical_constraint_line', label: 'Critical Constraint Line' },
+    { key: 'no_props_line', label: 'No Props Line' },
+    { key: 'decorative_elements_line', label: 'Decorative Elements Line' },
+    { key: 'open_display_zones_line', label: 'Open Display Zones Line' }
 ];
 
 export const DEFAULT_ROOM_IMAGE_VARIABLE_VALUES: Record<RoomImagePromptVariableKey, string> = {
@@ -68,14 +84,14 @@ export const DEFAULT_ROOM_IMAGE_VARIABLE_VALUES: Record<RoomImagePromptVariableK
     location_phrase: AUTOGENERATE_LABEL,
     character_statement: AUTOGENERATE_LABEL,
     aesthetic_statement: AUTOGENERATE_LABEL,
-    critical_constraint_line: 'CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.',
-    no_props_line: 'Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.',
-    decorative_elements_line: 'Keep decorative elements strictly on walls, ceiling, floor edges, corners, or perimeter zones away from display surfaces.',
-    open_display_zones_line: 'Maintain large uninterrupted open display zones for future item placement.',
-    art_style_line: "Art style: modern 3D children's cartoon animation (Pixar-esque).",
-    surfaces_line: 'Surfaces: smooth, vibrant, saturated colors, clean presentation.',
-    text_constraint_line: 'Text constraint: strictly NO TEXT anywhere in the image.',
-    lighting_line: 'Lighting: bright and inviting, highlighting empty display surface textures for product insertion.'
+    critical_constraint_line: AUTOGENERATE_LABEL,
+    no_props_line: AUTOGENERATE_LABEL,
+    decorative_elements_line: AUTOGENERATE_LABEL,
+    open_display_zones_line: AUTOGENERATE_LABEL,
+    art_style_line: AUTOGENERATE_LABEL,
+    surfaces_line: AUTOGENERATE_LABEL,
+    text_constraint_line: AUTOGENERATE_LABEL,
+    lighting_line: AUTOGENERATE_LABEL
 };
 
 export const imageSizeForScaleMode: Record<RoomImageScaleMode, IRoomImageGenerationRequest['size']> = {
@@ -94,22 +110,22 @@ const ROOM_IMAGE_VARIABLE_FALLBACKS: Record<RoomImagePromptVariableKey, string> 
     room_theme: 'Invent a custom room theme that fits the room name and description; do not pick from preset dropdown examples',
     display_furniture_style: 'Invent a custom display furniture style specifically for this room context; do not pick from preset dropdown examples',
     thematic_accent_decorations: 'Invent custom accent decorations that fit this room context and keep staging surfaces open; do not pick from preset dropdown examples',
-    frog_action: 'Invent a custom frog proprietor action that matches this room concept; do not pick from preset dropdown examples',
+    frog_action: 'Describe the primary subject action for this room scene; if no character should appear, state "no characters present".',
     vibe_adjectives: 'Invent custom vibe adjectives that best fit this room concept; do not pick from preset dropdown examples',
     color_scheme: 'Invent a custom color scheme suitable for this room concept and product presentation; do not pick from preset dropdown examples',
     background_thematic_elements: 'Invent custom oversized thematic background elements for this room context; do not pick from preset dropdown examples',
-    image_style_declaration: 'A high-quality 3D cartoon render for room',
-    location_phrase: 'corner inside the whimsical frog’s cottage',
-    character_statement: 'The signature fedora-wearing 3D cartoon frog is present as the proprietor. He is depicted {{frog_action}}, surveying his shop with pride.',
-    aesthetic_statement: "Background walls/ceiling include decorative oversized 3D {{background_thematic_elements}} that reinforce the room's function.",
+    image_style_declaration: 'A high-quality render for room',
+    location_phrase: 'inside a themed retail environment',
+    character_statement: 'Primary subject(s): {{frog_action}}.',
+    aesthetic_statement: "Background walls/ceiling include decorative {{background_thematic_elements}} that reinforce the room's function.",
     critical_constraint_line: 'CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.',
     no_props_line: 'Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.',
     decorative_elements_line: 'Keep decorative elements strictly on walls, ceiling, floor edges, corners, or perimeter zones away from display surfaces.',
     open_display_zones_line: 'Maintain large uninterrupted open display zones for future item placement.',
-    art_style_line: "Art style: modern 3D children's cartoon animation (Pixar-esque).",
-    surfaces_line: 'Surfaces: smooth, vibrant, saturated colors, clean presentation.',
+    art_style_line: 'Art style: use the selected style direction and keep it consistent across the full scene.',
+    surfaces_line: 'Surfaces: clear, well-defined materials with clean presentation and production-ready composition.',
     text_constraint_line: 'Text constraint: strictly NO TEXT anywhere in the image.',
-    lighting_line: 'Lighting: bright and inviting, highlighting empty display surface textures for product insertion.'
+    lighting_line: 'Lighting: balanced and production-ready, keeping empty display surfaces clearly readable for later product insertion.'
 };
 
 export const mapRenderContextToScaleMode = (renderContext?: string | null): RoomImageScaleMode => {

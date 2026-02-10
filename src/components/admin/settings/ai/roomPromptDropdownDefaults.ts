@@ -82,15 +82,15 @@ export const ROOM_PROMPT_DROPDOWN_DEFAULTS: Record<string, string[]> = {
     ],
     frog_action: [
         AUTOGENERATE_LABEL,
-        'wiping down the empty counter with a cloth',
-        'adjusting shelf spacing with a tape measure',
-        'reviewing a clipboard checklist',
-        'arranging decorative props near displays',
-        'welcoming visitors with a cheerful wave',
-        'pointing toward featured display zones',
-        'inspecting lighting over the shelving',
-        'sweeping the floor with a tiny broom',
-        'Give me 2 frogs, husband and wife, just chilling on the porch.'
+        'no characters present',
+        'one subject casually reviewing the space layout',
+        'two subjects relaxed in the scene foreground',
+        'one mascot welcoming visitors with a friendly wave',
+        'a proprietor adjusting display spacing with a tape measure',
+        'the subject inspecting lighting over the shelving',
+        'the subject reviewing a clipboard checklist',
+        'the subject sweeping the floor with a small broom',
+        'two frog partners relaxing together on the porch'
     ],
     vibe_adjectives: [
         AUTOGENERATE_LABEL,
@@ -127,38 +127,38 @@ export const ROOM_PROMPT_DROPDOWN_DEFAULTS: Record<string, string[]> = {
     ],
     image_style_declaration: [
         AUTOGENERATE_LABEL,
-        'A high-quality 3D cartoon render for room',
-        'A premium cinematic 3D cartoon render for room',
-        'A whimsical storybook 3D cartoon render for room',
-        'A polished boutique-style 3D cartoon render for room',
-        'A bright family-friendly 3D cartoon render for room',
-        'A whimsical storybook 3D cartoon render for cabin'
+        'A high-quality render for room',
+        'A photorealistic render for room',
+        'A stylized illustration render for room',
+        'A 3D cartoon render for room',
+        'A painterly concept-art render for room'
     ],
     location_phrase: [
         AUTOGENERATE_LABEL,
-        "corner inside the whimsical frog’s cottage",
-        "feature nook inside the whimsical frog’s cottage",
-        "showcase alcove inside the whimsical frog’s cottage",
-        "merchandising corner inside the whimsical frog’s cottage",
-        "themed room vignette inside the whimsical frog’s cottage",
+        'inside a themed retail environment',
+        'inside a cozy boutique interior',
+        'inside a clean modern storefront',
+        'inside a handcrafted market room',
+        'at the front porch of a small cabin with yard crafts around',
+        "inside the whimsical frog’s cottage",
         'front of the cabin with yard crafts all around'
     ],
     character_statement: [
         AUTOGENERATE_LABEL,
-        'The signature fedora-wearing 3D cartoon frog is present as the proprietor. He is depicted {{frog_action}}, surveying his shop with pride.',
-        'The iconic fedora-wearing frog shopkeeper appears in scene. He is shown {{frog_action}}, welcoming guests with confidence.',
-        'A charismatic frog proprietor in a signature fedora anchors the scene. He is depicted {{frog_action}}, guiding the boutique mood.',
-        'The whimsical frog owner is clearly visible as the host. He is portrayed {{frog_action}}, keeping the space lively and inviting.',
-        'A polished frog merchant in a fedora is featured as proprietor. He is depicted {{frog_action}}, overseeing the display floor.',
-        'The husband frog is wearing a fedora and the wife is wearing a crafty looking hat.'
+        'No characters are visible in this scene.',
+        'Primary subject(s): {{frog_action}}.',
+        'One proprietor is present and clearly visible: {{frog_action}}.',
+        'Two partner characters are present and clearly visible: {{frog_action}}.',
+        'A fedora-wearing frog proprietor is present: {{frog_action}}.',
+        'Two frog partners are present; one in a fedora and one in a crafty hat: {{frog_action}}.'
     ],
     aesthetic_statement: [
         AUTOGENERATE_LABEL,
-        "Background walls/ceiling include decorative oversized 3D {{background_thematic_elements}} that reinforce the room's function.",
-        'Walls and ceiling feature oversized 3D {{background_thematic_elements}} that strengthen the room story.',
-        'Decorative large-scale 3D {{background_thematic_elements}} frame the walls and ceiling to support the concept.',
-        'The backdrops use oversized 3D {{background_thematic_elements}} across walls and ceiling for visual identity.',
-        'Background architecture incorporates prominent 3D {{background_thematic_elements}} to anchor the theme.'
+        "Background walls/ceiling include decorative {{background_thematic_elements}} that reinforce the room's function.",
+        'Walls and ceiling feature large-scale {{background_thematic_elements}} that strengthen the room story.',
+        'Decorative {{background_thematic_elements}} frame the walls and ceiling to support the concept.',
+        'The backdrops use prominent {{background_thematic_elements}} for visual identity.',
+        'Background architecture incorporates thematic {{background_thematic_elements}} to anchor the scene.'
     ],
     critical_constraint_line: [
         AUTOGENERATE_LABEL,
@@ -194,11 +194,11 @@ export const ROOM_PROMPT_DROPDOWN_DEFAULTS: Record<string, string[]> = {
     ],
     art_style_line: [
         AUTOGENERATE_LABEL,
-        "Art style: modern 3D children's cartoon animation (Pixar-esque).",
-        'Art style: polished 3D storybook cartoon with cinematic lighting.',
-        'Art style: high-end stylized 3D animation with playful boutique charm.',
-        'Art style: premium whimsical 3D cartoon with expressive forms and clean shading.',
-        'Art style: contemporary animated 3D illustration with family-friendly tone.'
+        'Art style: neutral production concept render with clean composition.',
+        'Art style: photorealistic architectural visualization.',
+        'Art style: painterly concept art illustration.',
+        "Art style: modern 3D children's cartoon animation (Pixar-like).",
+        'Art style: stylized cel-shaded illustration.'
     ],
     surfaces_line: [
         AUTOGENERATE_LABEL,

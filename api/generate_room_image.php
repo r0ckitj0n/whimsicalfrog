@@ -96,28 +96,33 @@ PROMPT;
         ['room_theme', 'Room Theme / Business Type', 'General room purpose (cozy cafe, magical apothecary, artisan bakery).', 'cozy cafe'],
         ['display_furniture_style', 'Display Furniture Style', 'Type of empty display structures used in the room.', 'tiered light-wood shelving units'],
         ['thematic_accent_decorations', 'Thematic Accent Decorations', 'Small non-product separators/bookends placed intermittently.', 'tiny potted succulents and miniature ceramic milk jugs'],
-        ['frog_action', 'Generic Thematic Action', 'What the frog proprietor is doing in-scene.', 'wiping down the empty counter with a cloth'],
+        ['frog_action', 'Subject Action', 'Primary subject action for the scene. Use "no characters present" if none.', 'no characters present'],
         ['vibe_adjectives', 'Vibe Adjectives', 'Atmosphere mood words.', 'refreshing and bright'],
         ['color_scheme', 'Color Scheme Combinations', 'Dominant color pairings for the scene.', "robin's egg blue and soft orange"],
         ['background_thematic_elements', 'Background Thematic Elements', 'Large decor elements on walls/ceiling to establish context.', 'giant floating fruit shapes'],
-        ['image_style_declaration', 'Image Style Declaration', 'Lead-in phrase used before the room number.', 'A high-quality 3D cartoon render for room'],
-        ['location_phrase', 'Location', 'Location phrase used in the themed-scene sentence.', "corner inside the whimsical frog’s cottage"],
-        ['character_statement', 'Character', 'Primary character statement for the frog proprietor.', 'The signature fedora-wearing 3D cartoon frog is present as the proprietor. He is depicted {{frog_action}}, surveying his shop with pride.'],
-        ['aesthetic_statement', 'Aesthetic', 'Aesthetic statement describing background thematic elements.', "Background walls/ceiling include decorative oversized 3D {{background_thematic_elements}} that reinforce the room's function."],
+        ['image_style_declaration', 'Image Style Declaration', 'Lead-in phrase used before the room number.', 'A high-quality render for room'],
+        ['location_phrase', 'Location', 'Location phrase used in the themed-scene sentence.', 'inside a themed retail environment'],
+        ['character_statement', 'Character / Subject', 'Primary subject statement for the scene.', 'Primary subject(s): {{frog_action}}.'],
+        ['aesthetic_statement', 'Aesthetic', 'Aesthetic statement describing background thematic elements.', "Background walls/ceiling include decorative {{background_thematic_elements}} that reinforce the room's function."],
         ['critical_constraint_line', 'Critical Constraint', 'Constraint line for keeping display surfaces empty.', 'CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.'],
         ['no_props_line', 'No Props Line', 'Explicit ban on props and products on display surfaces.', 'Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.'],
         ['decorative_elements_line', 'Decorative Elements Line', 'Placement rule for decorative elements.', 'Keep decorative elements strictly on walls, ceiling, floor edges, corners, or perimeter zones away from display surfaces.'],
         ['open_display_zones_line', 'Open Display Zones Line', 'Rule to preserve large empty display zones.', 'Maintain large uninterrupted open display zones for future item placement.'],
-        ['art_style_line', 'Art Style', 'Art-style declaration line.', "Art style: modern 3D children's cartoon animation (Pixar-esque)."],
-        ['surfaces_line', 'Surfaces', 'Surface treatment declaration line.', 'Surfaces: smooth, vibrant, saturated colors, clean presentation.'],
+        ['art_style_line', 'Art Style', 'Art-style declaration line.', 'Art style: use the selected style direction and keep it consistent across the full scene.'],
+        ['surfaces_line', 'Surfaces', 'Surface treatment declaration line.', 'Surfaces: clear, well-defined materials with clean presentation and production-ready composition.'],
         ['text_constraint_line', 'Text Constraint', 'Constraint line prohibiting text in generated image.', 'Text constraint: strictly NO TEXT anywhere in the image.'],
-        ['lighting_line', 'Lighting', 'Lighting declaration line.', 'Lighting: bright and inviting, highlighting empty display surface textures for product insertion.'],
+        ['lighting_line', 'Lighting', 'Lighting declaration line.', 'Lighting: balanced and production-ready, keeping empty display surfaces clearly readable for later product insertion.'],
     ];
 
     foreach ($variables as $v) {
         Database::execute(
-            "INSERT IGNORE INTO ai_prompt_variables (variable_key, display_name, description, sample_value, is_active)
-             VALUES (?, ?, ?, ?, 1)",
+            "INSERT INTO ai_prompt_variables (variable_key, display_name, description, sample_value, is_active)
+             VALUES (?, ?, ?, ?, 1)
+             ON DUPLICATE KEY UPDATE
+                display_name = VALUES(display_name),
+                description = VALUES(description),
+                sample_value = VALUES(sample_value),
+                is_active = 1",
             [$v[0], $v[1], $v[2], $v[3]]
         );
     }
@@ -141,26 +146,33 @@ function wf_resolve_prompt_text(string $template, array $resolvedVariables): str
 
 function wf_build_priority_instruction_block(array $resolvedVariables): string
 {
+    $resolveInline = static function (string $text) use ($resolvedVariables): string {
+        return (string) preg_replace_callback('/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/', static function (array $matches) use ($resolvedVariables): string {
+            $token = (string) ($matches[1] ?? '');
+            return trim((string) ($resolvedVariables[$token] ?? ''));
+        }, $text);
+    };
+
     $safe = static function (string $key, string $fallback = '') use ($resolvedVariables): string {
         return trim((string) ($resolvedVariables[$key] ?? $fallback));
     };
 
-    $roomTheme = $safe('room_theme');
-    $locationPhrase = $safe('location_phrase');
-    $frogAction = $safe('frog_action');
-    $characterStatement = $safe('character_statement');
-    $accentDecor = $safe('thematic_accent_decorations');
-    $aestheticStatement = $safe('aesthetic_statement');
-    $backgroundElements = $safe('background_thematic_elements');
+    $roomTheme = $resolveInline($safe('room_theme'));
+    $locationPhrase = $resolveInline($safe('location_phrase'));
+    $subjectAction = $resolveInline($safe('frog_action'));
+    $characterStatement = $resolveInline($safe('character_statement'));
+    $accentDecor = $resolveInline($safe('thematic_accent_decorations'));
+    $aestheticStatement = $resolveInline($safe('aesthetic_statement'));
+    $backgroundElements = $resolveInline($safe('background_thematic_elements'));
 
     return implode("\n", [
         'PRIORITY INSTRUCTIONS (MUST FOLLOW):',
         '- Treat user-provided variable content as highest priority over generic defaults.',
-        '- Preserve explicit character count/roles and concrete actions when provided (for example husband/wife pair).',
+        '- Preserve explicit subject count/roles and concrete actions when provided.',
         '- Ensure this scene direction appears clearly in composition: ' . ($roomTheme !== '' ? $roomTheme : 'themed room'),
         '- Ensure location framing includes: ' . ($locationPhrase !== '' ? $locationPhrase : 'room setting'),
-        '- Ensure frog action is visibly represented: ' . ($frogAction !== '' ? $frogAction : 'frog proprietor action'),
-        '- Ensure character details are visibly represented: ' . ($characterStatement !== '' ? $characterStatement : 'character statement'),
+        '- Ensure subject action is visibly represented: ' . ($subjectAction !== '' ? $subjectAction : 'subject action'),
+        '- Ensure subject details are visibly represented: ' . ($characterStatement !== '' ? $characterStatement : 'subject statement'),
         '- Ensure accent decorations include: ' . ($accentDecor !== '' ? $accentDecor : 'contextual accents'),
         '- Ensure background thematic elements include: ' . ($backgroundElements !== '' ? $backgroundElements : 'thematic background elements'),
         '- Ensure final aesthetic intent is represented: ' . ($aestheticStatement !== '' ? $aestheticStatement : 'cohesive aesthetic statement'),

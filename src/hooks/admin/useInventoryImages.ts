@@ -29,7 +29,7 @@ export const useInventoryImages = (sku: string) => {
         }
     }, [sku]);
 
-    const uploadImages = useCallback(async (files: FileList | File[], altText: string = '', useAI: boolean = false) => {
+    const uploadImages = useCallback(async (files: FileList | File[], altText: string = '', useAI: boolean = true) => {
         if (!sku) return null;
         setIsLoading(true);
         setUploadProgress(0);

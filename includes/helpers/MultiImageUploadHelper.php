@@ -16,13 +16,13 @@ class MultiImageUploadHelper {
         return null;
     }
 
-    public static function processImageWithAI($absPath, $sku, $suffix, $itemsDir, $projectRoot) {
+    public static function processImageForDualFormat($absPath, $sku, $suffix, $itemsDir, $projectRoot, $useAI = true) {
         $processor = new AIImageProcessor();
         $aiResult = $processor->processImage($absPath, [
             'convertToWebP' => false,
             'quality' => 90,
             'preserveTransparency' => true,
-            'useAI' => true,
+            'useAI' => (bool) $useAI,
             'fallbackTrimPercent' => 0.05
         ]);
 
@@ -47,6 +47,10 @@ class MultiImageUploadHelper {
             return ['success' => true, 'path' => $finalPath];
         }
         return ['success' => false];
+    }
+
+    public static function processImageWithAI($absPath, $sku, $suffix, $itemsDir, $projectRoot) {
+        return self::processImageForDualFormat($absPath, $sku, $suffix, $itemsDir, $projectRoot, true);
     }
 
     public static function convertToDualFormatOnly($absPath, $sku, $suffix, $itemsDir, $projectRoot) {

@@ -6,7 +6,7 @@ interface AssignmentsPanelProps {
     categories: ICategory[];
     onAdd: (roomNumber: number, categoryId: number) => Promise<unknown>;
     onDelete: (id: number) => Promise<unknown>;
-    onUpdate: (id: number, data: { category_id: number }) => Promise<unknown>;
+    onUpdate: (id: number, data: { category_id?: number; is_primary?: number }) => Promise<unknown>;
 }
 
 export const AssignmentsPanel: React.FC<AssignmentsPanelProps> = ({
@@ -19,6 +19,7 @@ export const AssignmentsPanel: React.FC<AssignmentsPanelProps> = ({
     const [roomNumber, setRoomNumber] = useState('');
     const [categoryId, setCategoryId] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [promotingId, setPromotingId] = useState<number | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -37,6 +38,23 @@ export const AssignmentsPanel: React.FC<AssignmentsPanelProps> = ({
             await onDelete(id);
         } else {
             await onUpdate(id, { category_id: parseInt(newCategoryId) });
+        }
+    };
+
+    const handleSetPrimary = async (assignment: IRoomAssignment) => {
+        if (assignment.is_primary || promotingId !== null) return;
+
+        setPromotingId(assignment.id);
+        try {
+            const result = await onUpdate(assignment.id, { is_primary: 1 });
+            const failed = !!(result && typeof result === 'object' && 'success' in result && (result as { success?: boolean }).success === false);
+            if (failed) {
+                if (window.WFToast) window.WFToast.error('Failed to set primary category');
+                return;
+            }
+            if (window.WFToast) window.WFToast.success(`Room ${assignment.room_number} primary updated`);
+        } finally {
+            setPromotingId(null);
         }
     };
 
@@ -109,9 +127,20 @@ export const AssignmentsPanel: React.FC<AssignmentsPanelProps> = ({
                                         </select>
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        {asgn.is_primary ? (
-                                            <span className="inline-block w-2 h-2 rounded-full bg-[var(--brand-primary)]"></span>
-                                        ) : '—'}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSetPrimary(asgn)}
+                                            disabled={Boolean(asgn.is_primary) || promotingId !== null}
+                                            title={asgn.is_primary ? 'Primary category' : 'Set as primary category'}
+                                            className={`inline-flex items-center justify-center w-6 h-6 rounded-full border transition-colors ${
+                                                asgn.is_primary
+                                                    ? 'bg-[var(--brand-primary)] border-[var(--brand-primary)] text-white cursor-default'
+                                                    : 'bg-white border-gray-300 text-gray-400 hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]'
+                                            } disabled:opacity-60`}
+                                            data-help-id="categories-assignment-set-primary"
+                                        >
+                                            <span className="inline-block w-2 h-2 rounded-full bg-current"></span>
+                                        </button>
                                     </td>
                                     <td className="px-4 py-3 text-right">
                                         <button

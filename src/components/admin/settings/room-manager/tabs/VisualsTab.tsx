@@ -57,6 +57,14 @@ const initialAestheticValues: Record<RoomImageAestheticFieldKey, string> = {
     lighting_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.lighting_line
 };
 
+const ROOM_IMAGE_FIELD_GROUPS: Array<{ title: string; fields: RoomImageAestheticFieldKey[] }> = [
+    { title: 'Scene Setup', fields: ['scene_type', 'room_theme', 'location_phrase'] },
+    { title: 'Subject', fields: ['subject_species', 'subject_headwear', 'frog_action', 'character_statement'] },
+    { title: 'Environment', fields: ['display_furniture_style', 'thematic_accent_decorations', 'background_thematic_elements', 'aesthetic_statement'] },
+    { title: 'Style & Rendering', fields: ['image_style_declaration', 'vibe_adjectives', 'color_scheme', 'art_style_line', 'surfaces_line', 'lighting_line'] },
+    { title: 'Constraints', fields: ['critical_constraint_line', 'no_props_line', 'decorative_elements_line', 'open_display_zones_line', 'text_constraint_line'] }
+];
+
 const parsePlaceholderKeys = (prompt: string): string[] => {
     const out = new Set<string>();
     const regex = /\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g;
@@ -80,30 +88,55 @@ const resolveTemplateText = (template: string, values: Record<string, string>): 
         }
         if (prompt === prev) break;
     }
-    return prompt;
+    const noCharacterSelected = String(values.subject_species || '').trim().toLowerCase() === 'no character (environment only)';
+    if (!noCharacterSelected) return prompt;
+
+    // Remove character-specific lines entirely when scene is environment-only.
+    return prompt
+        .split('\n')
+        .filter((line) => {
+            const lower = line.trim().toLowerCase();
+            if (!lower) return true;
+            if (lower.includes('character')) return false;
+            if (lower.includes('subject profile')) return false;
+            if (lower.includes('subject action')) return false;
+            if (lower.includes('frog')) return false;
+            if (lower.includes('proprietor')) return false;
+            return true;
+        })
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n');
 };
 
 const buildPriorityInstructionBlock = (values: Record<string, string>): string => {
     const resolveInline = (input: string): string =>
         input.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, token: string) => String(values[token] || '').trim());
     const get = (key: string, fallback: string): string => resolveInline(String(values[key] || fallback).trim());
-    return [
+    const noCharacterSelected = String(values.subject_species || '').trim().toLowerCase() === 'no character (environment only)';
+    const baseLines = [
         'PRIORITY INSTRUCTIONS (MUST FOLLOW):',
         '- Treat user-provided variable content as highest priority over generic defaults.',
         '- Preserve explicit subject count/roles and concrete actions when provided.',
         `- Ensure target page/container type is: ${get('scene_type', 'general page or environment')}`,
         `- Ensure this scene direction appears clearly in composition: ${get('room_theme', 'themed room')}`,
         `- Ensure location framing includes: ${get('location_phrase', 'room setting')}`,
-        `- Ensure subject species is: ${get('subject_species', 'generic character')}`,
-        `- Ensure subject headwear/wardrobe detail is: ${get('subject_headwear', 'no headwear')}`,
-        `- Ensure subject action is visibly represented: ${get('frog_action', 'subject action')}`,
-        `- Ensure subject details are visibly represented: ${get('character_statement', 'subject statement')}`,
         `- Ensure accent decorations include: ${get('thematic_accent_decorations', 'contextual accents')}`,
         `- Ensure background thematic elements include: ${get('background_thematic_elements', 'thematic background elements')}`,
         `- Ensure final aesthetic intent is represented: ${get('aesthetic_statement', 'cohesive aesthetic statement')}`,
         '- Do not ignore these constraints unless they conflict with safety policy.',
         ''
-    ].join('\n');
+    ];
+
+    const subjectLines = noCharacterSelected
+        ? []
+        : [
+            `- Ensure subject species is: ${get('subject_species', 'no character (environment only)')}`,
+            `- Ensure subject headwear/wardrobe detail is: ${get('subject_headwear', 'no headwear')}`,
+            `- Ensure subject action is visibly represented: ${get('frog_action', 'no characters present')}`,
+            `- Ensure subject details are visibly represented: ${get('character_statement', 'no characters unless explicitly selected')}`
+        ];
+
+    return [...baseLines.slice(0, 6), ...subjectLines, ...baseLines.slice(6)].join('\n');
 };
 
 export const VisualsTab: React.FC<VisualsTabProps> = ({
@@ -119,6 +152,7 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
     getImageUrl
 }) => {
     const [selectedTemplateKey, setSelectedTemplateKey] = useState<string>('');
+    const [selectedScaleMode, setSelectedScaleMode] = useState<'modal' | 'fullscreen' | 'fixed'>('modal');
     const [aestheticValues, setAestheticValues] = useState<Record<RoomImageAestheticFieldKey, string>>(initialAestheticValues);
     const [selectedAestheticPresets, setSelectedAestheticPresets] = useState<Record<RoomImageAestheticFieldKey, string>>(() => {
         return ROOM_IMAGE_AESTHETIC_FIELDS.reduce((acc, field) => {
@@ -177,6 +211,14 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
 
     const roomNumber = useMemo(() => String(selectedRoomData?.room_number || selectedRoom || '').trim(), [selectedRoom, selectedRoomData?.room_number]);
     const roomName = useMemo(() => String(selectedRoomData?.room_name || '').trim(), [selectedRoomData?.room_name]);
+    const inferredScaleMode = useMemo(
+        () => mapRenderContextToScaleMode(String(selectedRoomData?.render_context || 'modal')),
+        [selectedRoomData?.render_context]
+    );
+
+    useEffect(() => {
+        setSelectedScaleMode(inferredScaleMode);
+    }, [inferredScaleMode, roomNumber]);
 
     const resolvedVariables = useMemo(() => resolveRoomGenerationVariables({
         roomNumber,
@@ -188,10 +230,7 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
         values: aestheticValues
     }), [aestheticValues, roomName, roomNumber, selectedRoomData?.description, selectedRoomData?.display_order, selectedRoomData?.door_label, variableDefaults]);
 
-    const imageSize = useMemo(() => {
-        const scaleMode = mapRenderContextToScaleMode(String(selectedRoomData?.render_context || 'modal'));
-        return imageSizeForScaleMode[scaleMode];
-    }, [selectedRoomData?.render_context]);
+    const imageSize = useMemo(() => imageSizeForScaleMode[selectedScaleMode], [selectedScaleMode]);
     const selectedTemplate = useMemo(
         () => roomTemplates.find((template) => template.template_key === selectedTemplateKey) || null,
         [roomTemplates, selectedTemplateKey]
@@ -298,6 +337,22 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                                 ))}
                             </select>
                         </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Scale Mode</label>
+                            <select
+                                value={selectedScaleMode}
+                                onChange={(e) => setSelectedScaleMode(e.target.value as 'modal' | 'fullscreen' | 'fixed')}
+                                className="w-full text-xs font-bold p-2.5 border border-slate-200 rounded-lg bg-white"
+                                disabled={isGenerating}
+                            >
+                                <option value="modal">Modal (4:3)</option>
+                                <option value="fullscreen">Full Page (wide)</option>
+                                <option value="fixed">Fixed (portrait)</option>
+                            </select>
+                            <p className="text-[10px] text-slate-500">
+                                Image size follows mode: <span className="font-bold">{imageSize}</span>
+                            </p>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 items-start gap-2">
                             <p className="text-[11px] text-slate-500">
                                 Pick a preset from each dropdown, then edit the text below for this generation only.
@@ -314,62 +369,69 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                             </div>
                         </div>
                         <div className="max-h-56 overflow-auto pr-1">
-                            <div className="grid grid-cols-1 gap-2">
-                                {ROOM_IMAGE_AESTHETIC_FIELDS.map((field) => {
-                                    const options = getRoomImageVariableOptions(field.key, dropdownOptionsByVariable);
-                                    const currentValue = aestheticValues[field.key] || '';
-                                    const selectedPreset = selectedAestheticPresets[field.key] || options[0] || '';
-                                    const normalizedSelectedPreset = (selectedPreset === CUSTOM_WRITE_YOUR_OWN_VALUE || options.includes(selectedPreset))
-                                        ? selectedPreset
-                                        : (options[0] || '');
-                                    const normalizedPresetValue = normalizedSelectedPreset.trim().toLowerCase();
-                                    const normalizedCurrentValue = currentValue.trim().toLowerCase();
-                                    const autogeneratedLabel = AUTOGENERATE_LABEL.toLowerCase();
-                                    const isAutoPreset = normalizedPresetValue === autogeneratedLabel
-                                        || normalizedPresetValue === '(autogenerate)';
-                                    const isAutoText = normalizedCurrentValue === autogeneratedLabel
-                                        || normalizedCurrentValue === '(autogenerate)';
-                                    const showCustomInput = !isAutoPreset && !isAutoText;
-                                    return (
-                                        <div key={field.key} className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-500">{field.label}</label>
-                                            <select
-                                                value={normalizedSelectedPreset}
-                                                onChange={(e) => {
-                                                    const nextPreset = e.target.value;
-                                                    setSelectedAestheticPresets(prev => ({ ...prev, [field.key]: nextPreset }));
-                                                    setAestheticValues(prev => ({
-                                                        ...prev,
-                                                        [field.key]: nextPreset === CUSTOM_WRITE_YOUR_OWN_VALUE ? '' : nextPreset
-                                                    }));
-                                                }}
-                                                className="w-full text-[11px] p-2 border border-slate-200 rounded-lg bg-white"
-                                                disabled={isGenerating}
-                                            >
-                                                {options.map((option) => (
-                                                    <option key={`visuals-room-${field.key}-${option}`} value={option}>
-                                                        {option}
-                                                    </option>
-                                                ))}
-                                                <option value={CUSTOM_WRITE_YOUR_OWN_VALUE}>{CUSTOM_WRITE_YOUR_OWN_LABEL}</option>
-                                            </select>
-                                            {showCustomInput && (
-                                                <textarea
-                                                    value={currentValue}
-                                                    onChange={(e) => setAestheticValues(prev => ({ ...prev, [field.key]: e.target.value }))}
-                                                    rows={2}
-                                                    className="w-full text-[11px] p-2 border border-slate-200 rounded-lg bg-white resize-y"
-                                                    disabled={isGenerating}
-                                                />
-                                            )}
+                            <div className="space-y-4">
+                                {ROOM_IMAGE_FIELD_GROUPS.map((group) => (
+                                    <section key={group.title} className="rounded-xl border border-slate-200 p-3 bg-slate-50/40">
+                                        <h5 className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2">{group.title}</h5>
+                                        <div className="grid grid-cols-1 gap-2">
+                                            {group.fields.map((fieldKey) => {
+                                                const field = ROOM_IMAGE_AESTHETIC_FIELDS.find((f) => f.key === fieldKey);
+                                                if (!field) return null;
+                                                const options = getRoomImageVariableOptions(field.key, dropdownOptionsByVariable);
+                                                const currentValue = aestheticValues[field.key] || '';
+                                                const selectedPreset = selectedAestheticPresets[field.key] || options[0] || '';
+                                                const normalizedSelectedPreset = (selectedPreset === CUSTOM_WRITE_YOUR_OWN_VALUE || options.includes(selectedPreset))
+                                                    ? selectedPreset
+                                                    : (options[0] || '');
+                                                const normalizedPresetValue = normalizedSelectedPreset.trim().toLowerCase();
+                                                const normalizedCurrentValue = currentValue.trim().toLowerCase();
+                                                const autogeneratedLabel = AUTOGENERATE_LABEL.toLowerCase();
+                                                const isAutoPreset = normalizedPresetValue === autogeneratedLabel
+                                                    || normalizedPresetValue === '(autogenerate)';
+                                                const isAutoText = normalizedCurrentValue === autogeneratedLabel
+                                                    || normalizedCurrentValue === '(autogenerate)';
+                                                const showCustomInput = !isAutoPreset && !isAutoText;
+
+                                                return (
+                                                    <div key={field.key} className="space-y-1">
+                                                        <label className="text-[10px] font-bold text-slate-500">{field.label}</label>
+                                                        <select
+                                                            value={normalizedSelectedPreset}
+                                                            onChange={(e) => {
+                                                                const nextPreset = e.target.value;
+                                                                setSelectedAestheticPresets(prev => ({ ...prev, [field.key]: nextPreset }));
+                                                                setAestheticValues(prev => ({
+                                                                    ...prev,
+                                                                    [field.key]: nextPreset === CUSTOM_WRITE_YOUR_OWN_VALUE ? '' : nextPreset
+                                                                }));
+                                                            }}
+                                                            className="w-full text-[11px] p-2 border border-slate-200 rounded-lg bg-white"
+                                                            disabled={isGenerating}
+                                                        >
+                                                            {options.map((option) => (
+                                                                <option key={`visuals-room-${field.key}-${option}`} value={option}>
+                                                                    {option}
+                                                                </option>
+                                                            ))}
+                                                            <option value={CUSTOM_WRITE_YOUR_OWN_VALUE}>{CUSTOM_WRITE_YOUR_OWN_LABEL}</option>
+                                                        </select>
+                                                        {showCustomInput && (
+                                                            <textarea
+                                                                value={currentValue}
+                                                                onChange={(e) => setAestheticValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                                                rows={2}
+                                                                className="w-full text-[11px] p-2 border border-slate-200 rounded-lg bg-white resize-y"
+                                                                disabled={isGenerating}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
-                                    );
-                                })}
+                                    </section>
+                                ))}
                             </div>
                         </div>
-                        <p className="text-[10px] text-slate-500">
-                            Size: <span className="font-bold">{imageSize}</span>
-                        </p>
                         <button
                             type="button"
                             onClick={() => void handleGenerate()}

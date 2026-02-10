@@ -145,7 +145,24 @@ const resolveTemplateText = (template: string, values: Record<string, string>): 
         }
         if (prompt === prev) break;
     }
-    return prompt;
+    const noCharacterSelected = String(values.subject_species || '').trim().toLowerCase() === 'no character (environment only)';
+    if (!noCharacterSelected) return prompt;
+
+    // Remove character-specific lines entirely when scene is environment-only.
+    return prompt
+        .split('\n')
+        .filter((line) => {
+            const lower = line.trim().toLowerCase();
+            if (!lower) return true;
+            if (lower.includes('character')) return false;
+            if (lower.includes('subject profile')) return false;
+            if (lower.includes('subject action')) return false;
+            if (lower.includes('frog')) return false;
+            if (lower.includes('proprietor')) return false;
+            return true;
+        })
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n');
 };
 
 export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({

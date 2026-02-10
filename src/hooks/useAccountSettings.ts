@@ -87,6 +87,10 @@ export const useAccountSettings = () => {
         setFormData(prev => ({ ...prev, [target.name]: value }));
     };
 
+    const handleMarketingOptInChange = (checked: boolean) => {
+        setFormData(prev => ({ ...prev, marketing_opt_in: checked }));
+    };
+
     const handleSaveProfile = async (e?: React.FormEvent): Promise<boolean> => {
         e?.preventDefault();
         if (!user) return false;
@@ -250,6 +254,7 @@ export const useAccountSettings = () => {
         setIsEditing,
         setEditingAddress,
         handleInputChange,
+        handleMarketingOptInChange,
         handleSaveProfile,
         handleSaveAddress,
         handleDeleteAddress,

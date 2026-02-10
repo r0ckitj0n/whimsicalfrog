@@ -150,7 +150,32 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
 
     return (
         <div className="p-8 lg:p-10 flex-1 min-h-0 overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 h-full min-h-0">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 h-full min-h-0">
+                {/* Active Look */}
+                <div className="space-y-6 h-full min-h-0 flex flex-col">
+                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2">Active Look</h4>
+                    {backgrounds.activeBackground ? (
+                        <div className="relative group rounded-3xl overflow-hidden border-4 border-white shadow-xl bg-white">
+                            <div className="aspect-video relative overflow-hidden">
+                                <img
+                                    src={getImageUrl(backgrounds.activeBackground)}
+                                    alt="Active background"
+                                    className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+                                <div className="absolute bottom-4 left-4 right-4 text-white">
+                                    <p className="text-sm font-black truncate">{backgrounds.activeBackground.name}</p>
+                                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">Deployed</p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="aspect-video rounded-3xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center text-center p-6 bg-slate-50/50 italic text-slate-400 text-xs">
+                            No active background
+                        </div>
+                    )}
+                </div>
+
                 {/* Create New Background */}
                 <div className="space-y-6 h-full min-h-0 flex flex-col">
                     <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2">Create New Background</h4>

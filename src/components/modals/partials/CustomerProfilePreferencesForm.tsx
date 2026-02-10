@@ -4,6 +4,7 @@ import { IAccountSettingsFormData } from '../../../types/account.js';
 interface CustomerProfilePreferencesFormProps {
     formData: IAccountSettingsFormData;
     handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+    handleMarketingOptInChange: (checked: boolean) => void;
     isEditing: boolean;
     isSaving: boolean;
 }
@@ -11,6 +12,7 @@ interface CustomerProfilePreferencesFormProps {
 export const CustomerProfilePreferencesForm: React.FC<CustomerProfilePreferencesFormProps> = ({
     formData,
     handleInputChange,
+    handleMarketingOptInChange,
     isEditing,
     isSaving
 }) => {
@@ -79,17 +81,25 @@ export const CustomerProfilePreferencesForm: React.FC<CustomerProfilePreferences
                     />
                 </div>
 
-                <label className="inline-flex items-center gap-2 pt-1 cursor-pointer">
-                    <input
-                        type="checkbox"
-                        name="marketing_opt_in"
-                        checked={formData.marketing_opt_in}
-                        onChange={handleInputChange}
-                        disabled={!isEditing || isSaving}
-                        className="rounded text-[var(--brand-primary)]"
-                    />
-                    <span className="text-sm text-gray-700 font-semibold">Marketing Opt-in</span>
-                </label>
+                {!isEditing ? (
+                    <div className="flex items-center gap-2 pt-1">
+                        <span className="text-sm text-gray-700 font-semibold">Marketing Opt-in:</span>
+                        <span className="text-sm text-gray-900">{formData.marketing_opt_in ? 'Yes' : 'No'}</span>
+                    </div>
+                ) : (
+                    <label className="inline-flex items-center gap-2 pt-1 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            name="marketing_opt_in"
+                            checked={formData.marketing_opt_in}
+                            onChange={(e) => handleMarketingOptInChange(e.target.checked)}
+                            disabled={isSaving}
+                            className="rounded"
+                            style={{ accentColor: 'var(--brand-primary)' }}
+                        />
+                        <span className="text-sm text-gray-700 font-semibold">Marketing Opt-in</span>
+                    </label>
+                )}
             </div>
         </section>
     );

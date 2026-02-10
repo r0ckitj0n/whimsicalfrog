@@ -32,6 +32,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
         setIsEditing,
         setEditingAddress,
         handleInputChange,
+        handleMarketingOptInChange,
         handleSaveProfile,
         handleSaveAddress,
         handleDeleteAddress,
@@ -144,6 +145,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
                         <CustomerProfilePreferencesForm
                             formData={formData}
                             handleInputChange={handleInputChange}
+                            handleMarketingOptInChange={handleMarketingOptInChange}
                             isEditing={isEditing}
                             isSaving={isSaving}
                         />

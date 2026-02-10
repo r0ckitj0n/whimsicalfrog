@@ -147,7 +147,7 @@ export const useSquareSettings = () => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await ApiClient.get<{ success: boolean; message: string }>('/api/square_settings.php?action=test_connection');
+            const res = await ApiClient.post<{ success: boolean; message: string }>('/api/square_settings.php?action=test_connection', {});
             return res;
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Unknown error';

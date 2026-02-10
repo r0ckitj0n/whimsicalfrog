@@ -222,6 +222,7 @@ export const SquareSettings: React.FC<SquareSettingsProps> = ({ onClose, title }
                                 <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Access Token</label>
                                 <input
                                     type="password"
+                                    autoComplete="new-password"
                                     value={editSettings?.square_access_token || ''}
                                     onChange={e => handleChange('square_access_token', e.target.value)}
                                     className="form-input w-full p-2.5 bg-gray-50 border-transparent rounded-lg text-sm font-mono"

@@ -12,6 +12,42 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
     categoriesHook,
     selectedRoom
 }) => {
+    const [isCreating, setIsCreating] = React.useState(false);
+
+    const handleCreateCategory = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (isCreating) return;
+
+        const form = e.currentTarget;
+        const input = form.elements.namedItem('categoryName') as HTMLInputElement | null;
+        const name = input?.value.trim() || '';
+        if (!name) return;
+
+        setIsCreating(true);
+        try {
+            const res = await categoriesHook.createCategory(name);
+            if (res.success) {
+                if (input) input.value = '';
+                const message = res.message || 'Label created successfully.';
+                const isNoChange = /no changes/i.test(message);
+                if (window.WFToast) {
+                    if (isNoChange) {
+                        window.WFToast.info('That label already exists.');
+                    } else {
+                        window.WFToast.success(message);
+                    }
+                }
+                return;
+            }
+
+            if (window.WFToast) {
+                window.WFToast.error(res.error || 'Failed to create label.');
+            }
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
     return (
         <div className="h-full flex flex-col min-h-0 overflow-hidden">
             <div className="p-6 flex-1 min-h-0">
@@ -28,27 +64,20 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
 
                         {/* Create New Category Form */}
                         <div className="mb-6 bg-slate-50 border border-slate-100 rounded-2xl p-6 shadow-sm flex-shrink-0">
-                            <form onSubmit={async (e) => {
-                                e.preventDefault();
-                                const input = (e.target as HTMLFormElement).categoryName as HTMLInputElement;
-                                const name = input.value.trim();
-                                if (!name) return;
-                                const res = await categoriesHook.createCategory(name);
-                                if (res.success) {
-                                    input.value = '';
-                                }
-                            }} className="flex gap-4">
+                            <form onSubmit={handleCreateCategory} className="flex gap-4">
                                 <input
                                     type="text"
                                     name="categoryName"
                                     placeholder="e.g. Outerwear"
+                                    disabled={isCreating}
                                     className="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-200 font-bold text-slate-700 text-xs"
                                 />
                                 <button
                                     type="submit"
+                                    disabled={isCreating}
                                     className="px-6 py-2 bg-blue-500 text-white rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-blue-600 transition-all font-inter"
                                 >
-                                    Create Label
+                                    {isCreating ? 'Creating...' : 'Create Label'}
                                 </button>
                             </form>
                         </div>

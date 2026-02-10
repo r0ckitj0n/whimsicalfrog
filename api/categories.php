@@ -65,6 +65,39 @@ function category_default_sku_rules(string $name): string
     return $prefix !== '' ? $prefix : 'CA';
 }
 
+function category_normalize_sku_rules(string $value): string
+{
+    $clean = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $value) ?? '');
+    if ($clean === '') {
+        return '';
+    }
+    return substr($clean, 0, 16);
+}
+
+function category_unique_sku_rules(PDO $db, string $name): string
+{
+    $base = category_normalize_sku_rules(category_default_sku_rules($name));
+    if ($base === '') {
+        $base = 'CA';
+    }
+
+    $candidate = $base;
+    $suffix = 2;
+    while ($suffix <= 999) {
+        $exists = Database::queryOne('SELECT id FROM categories WHERE UPPER(sku_rules) = UPPER(?) LIMIT 1', [$candidate]);
+        if (!$exists) {
+            return $candidate;
+        }
+
+        $suffixText = (string) $suffix;
+        $maxBaseLen = max(1, 16 - strlen($suffixText));
+        $candidate = substr($base, 0, $maxBaseLen) . $suffixText;
+        $suffix++;
+    }
+
+    return substr($base, 0, 13) . substr((string) time(), -3);
+}
+
 function category_table_columns(PDO $db): array
 {
     static $cache = null;
@@ -161,7 +194,7 @@ try {
             }
             if (isset($cols['sku_rules'])) {
                 $fields[] = 'sku_rules';
-                $values[] = category_default_sku_rules($name);
+                $values[] = category_unique_sku_rules($db, $name);
             }
             if (isset($cols['slug'])) {
                 $fields[] = 'slug';

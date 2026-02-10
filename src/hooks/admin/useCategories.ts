@@ -22,6 +22,7 @@ export type {
 } from '../../types/room.js';
 export type { IActionResponse } from '../../types/api.js';
 
+type ICategoryActionResponse = IActionResponse & { message?: string };
 
 export const useCategories = () => {
     const [categories, setCategories] = useState<ICategory[]>([]);
@@ -103,18 +104,19 @@ export const useCategories = () => {
 
     const createCategory = async (name: string) => {
         try {
-            const res = await ApiClient.post<IActionResponse>('/api/categories.php', {
+            const res = await ApiClient.post<ICategoryActionResponse>('/api/categories.php', {
                 action: 'add',
                 name: name
             });
             if (res?.success) {
                 await fetchCategories();
-                return { success: true };
+                return { success: true, message: res.message || 'Category created successfully.' };
             }
-            return { success: false, error: 'Failed to create category' };
+            return { success: false, error: res?.error || res?.message || 'Failed to create category' };
         } catch (err) {
             logger.error('[useCategories] createCategory failed', err);
-            return { success: false, error: 'Network error' };
+            const errorMessage = err instanceof Error ? err.message : 'Network error';
+            return { success: false, error: errorMessage };
         }
     };
 

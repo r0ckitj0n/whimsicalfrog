@@ -356,12 +356,12 @@ export interface ICategoriesHook {
     overview: IRoomOverview[];
     isLoading: boolean;
     error: string | null;
-    createCategory: (name: string) => Promise<{ success: boolean; error?: string }>;
-    renameCategory: (oldName: string, newName: string) => Promise<{ success: boolean; error?: string }>;
-    deleteCategory: (name: string) => Promise<{ success: boolean; error?: string }>;
-    addAssignment: (roomNumber: number, categoryId: number) => Promise<{ success: boolean; error?: string }>;
-    deleteAssignment: (id: number) => Promise<{ success: boolean; error?: string }>;
-    updateAssignment: (id: number, data: { room_number?: number; category_id?: number; is_primary?: number }) => Promise<{ success: boolean; error?: string }>;
+    createCategory: (name: string) => Promise<{ success: boolean; error?: string; message?: string }>;
+    renameCategory: (oldName: string, newName: string) => Promise<{ success: boolean; error?: string; message?: string }>;
+    deleteCategory: (name: string) => Promise<{ success: boolean; error?: string; message?: string }>;
+    addAssignment: (roomNumber: number, categoryId: number) => Promise<{ success: boolean; error?: string; message?: string }>;
+    deleteAssignment: (id: number) => Promise<{ success: boolean; error?: string; message?: string }>;
+    updateAssignment: (id: number, data: { room_number?: number; category_id?: number; is_primary?: number }) => Promise<{ success: boolean; error?: string; message?: string }>;
     refresh: () => Promise<any[]>;
 }
 

@@ -16,7 +16,7 @@ class MultiImageUploadHelper {
         return null;
     }
 
-    public static function processImageForDualFormat($absPath, $sku, $suffix, $itemsDir, $projectRoot, $useAI = true) {
+    public static function processImageAtPathForDualFormat($absPath, $projectRoot, $useAI = true) {
         $processor = new AIImageProcessor();
         $aiResult = $processor->processImage($absPath, [
             'convertToWebP' => false,
@@ -28,7 +28,7 @@ class MultiImageUploadHelper {
 
         $processedPath = $aiResult['success'] ? $aiResult['processed_path'] : $absPath;
         $formatResult = $processor->convertToDualFormat($processedPath, [
-            'webp_quality' => 90,
+            'webp_quality' => 92,
             'png_compression' => 1,
             'preserve_transparency' => true,
             'force_png' => true
@@ -36,17 +36,33 @@ class MultiImageUploadHelper {
 
         if ($formatResult['success']) {
             $finalPath = ltrim(str_replace($projectRoot . '/', '', $formatResult['webp_path']), '/');
-            $pngPath = $itemsDir . $sku . $suffix . '.png';
-            if ($formatResult['png_path'] && file_exists($formatResult['png_path'])) {
-                copy($formatResult['png_path'], $pngPath);
-                chmod($pngPath, 0644);
-            }
             if ($processedPath !== $absPath && file_exists($processedPath)) {
                 unlink($processedPath);
             }
-            return ['success' => true, 'path' => $finalPath];
+            return [
+                'success' => true,
+                'path' => $finalPath,
+                'webp_path' => $formatResult['webp_path'] ?? null,
+                'png_path' => $formatResult['png_path'] ?? null
+            ];
         }
         return ['success' => false];
+    }
+
+    public static function processImageForDualFormat($absPath, $sku, $suffix, $itemsDir, $projectRoot, $useAI = true) {
+        $result = self::processImageAtPathForDualFormat($absPath, $projectRoot, $useAI);
+        if (!$result['success']) {
+            return ['success' => false];
+        }
+
+        $pngPath = $itemsDir . $sku . $suffix . '.png';
+        $generatedPngPath = $result['png_path'] ?? null;
+        if ($generatedPngPath && file_exists($generatedPngPath)) {
+            copy($generatedPngPath, $pngPath);
+            chmod($pngPath, 0644);
+        }
+
+        return ['success' => true, 'path' => $result['path']];
     }
 
     public static function processImageWithAI($absPath, $sku, $suffix, $itemsDir, $projectRoot) {

@@ -121,6 +121,17 @@ class AIImageProcessor
                 $result['processing_steps'][] = 'Saving processed image...';
                 if ($imageInfo[2] === IMAGETYPE_PNG) {
                     GDImageHelper::saveToPNG($croppedImage, $imagePath);
+                } elseif ($imageInfo[2] === IMAGETYPE_WEBP) {
+                    GDImageHelper::saveToWebP($croppedImage, $imagePath, $opts['quality']);
+                } elseif ($imageInfo[2] === IMAGETYPE_GIF && $opts['preserveTransparency']) {
+                    $pathInfo = pathinfo($imagePath);
+                    $gifSafePngPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '__wf_proc.png';
+                    GDImageHelper::saveToPNG($croppedImage, $gifSafePngPath, 1);
+                    $result['processed_path'] = $gifSafePngPath;
+                    imagedestroy($croppedImage);
+                    $result['processing_steps'][] = 'Processing completed successfully';
+                    $result['success'] = true;
+                    return $result;
                 } else {
                     imagejpeg($croppedImage, $imagePath, $opts['quality']);
                 }

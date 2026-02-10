@@ -194,29 +194,138 @@ function wf_compose_ai_failure_details($aiProviders, $baseMessage, $exceptionMes
     ];
 }
 
+function wf_normalize_confidence_score($confidence)
+{
+    if (is_numeric($confidence)) {
+        $value = (float) $confidence;
+        if ($value <= 1.0) {
+            return max(0.0, min(1.0, $value));
+        }
+        return max(0.0, min(1.0, $value / 100.0));
+    }
+
+    $normalized = strtolower(trim((string) $confidence));
+    if ($normalized === 'very high') {
+        return 0.95;
+    }
+    if ($normalized === 'high') {
+        return 0.85;
+    }
+    if ($normalized === 'medium') {
+        return 0.65;
+    }
+    if ($normalized === 'low') {
+        return 0.40;
+    }
+
+    return 0.50;
+}
+
+function wf_pick_consensus_category($analyses, $fallbackCategory)
+{
+    if (!is_array($analyses) || count($analyses) === 0) {
+        return $fallbackCategory;
+    }
+
+    $votes = [];
+    foreach ($analyses as $entry) {
+        $candidate = trim((string) ($entry['analysis']['category'] ?? ''));
+        if ($candidate === '') {
+            continue;
+        }
+        $key = strtolower($candidate);
+        if (!isset($votes[$key])) {
+            $votes[$key] = ['label' => $candidate, 'count' => 0];
+        }
+        $votes[$key]['count'] += 1;
+    }
+
+    if (count($votes) === 0) {
+        return $fallbackCategory;
+    }
+
+    usort($votes, function ($a, $b) {
+        return ($b['count'] <=> $a['count']);
+    });
+
+    return (string) ($votes[0]['label'] ?? $fallbackCategory);
+}
+
+function wf_resolve_png_analysis_image($imagePath)
+{
+    $imagePath = trim((string) $imagePath);
+    if ($imagePath === '') {
+        return null;
+    }
+
+    if (strpos($imagePath, 'data:') === 0) {
+        return (stripos($imagePath, 'data:image/png') === 0) ? $imagePath : null;
+    }
+
+    $pathInfo = pathinfo($imagePath);
+    $extension = strtolower((string) ($pathInfo['extension'] ?? ''));
+    if ($extension === 'png') {
+        return $imagePath;
+    }
+
+    $dirname = (string) ($pathInfo['dirname'] ?? '');
+    $filename = (string) ($pathInfo['filename'] ?? '');
+    if ($dirname === '' || $filename === '') {
+        return null;
+    }
+
+    $pngCandidate = $dirname . DIRECTORY_SEPARATOR . $filename . '.png';
+    if (file_exists($pngCandidate)) {
+        return $pngCandidate;
+    }
+
+    return null;
+}
+
 try {
     $aiProviders = getAIProviders();
     $images = [];
 
-    // Prioritize passed imageData
+    // Prioritize passed imageData (string or array of image paths)
     if ($imageData) {
-        // If imageData is a relative web path (starts with /), convert to absolute filesystem path
-        if (is_string($imageData) && strpos($imageData, '/') === 0 && strpos($imageData, 'data:') !== 0) {
-            // Convert web path to absolute filesystem path
-            $basePath = dirname(__DIR__); // One level up from /api to get project root
-            $absolutePath = $basePath . $imageData;
-            if (file_exists($absolutePath)) {
-                $images = [$absolutePath];
-                error_log("suggest_all.php: Converted web path to filesystem path: $absolutePath");
-            } else {
-                error_log("suggest_all.php: Image not found at converted path: $absolutePath");
+        $basePath = dirname(__DIR__); // One level up from /api to get project root
+        $rawImages = is_array($imageData) ? $imageData : [$imageData];
+
+        foreach ($rawImages as $rawImage) {
+            if (!is_string($rawImage)) {
+                continue;
             }
-        } else {
-            // It's either a data URI or some other format - use as-is
-            $images = [$imageData];
+            $rawImage = trim($rawImage);
+            if ($rawImage === '') {
+                continue;
+            }
+
+            // If imageData is a relative web path (starts with /), convert to absolute filesystem path
+            if (strpos($rawImage, '/') === 0 && strpos($rawImage, 'data:') !== 0) {
+                $absolutePath = $basePath . $rawImage;
+                $pngPath = wf_resolve_png_analysis_image($absolutePath);
+                if ($pngPath !== null) {
+                    $images[] = $pngPath;
+                    error_log("suggest_all.php: Converted web path to PNG analysis path: $pngPath");
+                } else {
+                    error_log("suggest_all.php: PNG analysis image not found for converted path: $absolutePath");
+                }
+            } else {
+                // It's either a data URI, pre-resolved path, or other supported format.
+                $pngPath = wf_resolve_png_analysis_image($rawImage);
+                if ($pngPath !== null) {
+                    $images[] = $pngPath;
+                }
+            }
         }
     } else if ($useImages && !empty($sku)) {
-        $images = AIProviders::getItemImages($sku, 3);
+        $storedImages = AIProviders::getItemImages($sku, 3);
+        foreach ($storedImages as $storedImage) {
+            $pngPath = wf_resolve_png_analysis_image($storedImage);
+            if ($pngPath !== null) {
+                $images[] = $pngPath;
+            }
+        }
     }
 
     $results = [
@@ -276,7 +385,7 @@ try {
             Response::error($unsupported['message'], $unsupported['details'], 400);
         }
         if (empty($images)) {
-            Response::error('Image analysis is required, but no usable image was found for this item. Add a primary image and try again.', null, 400);
+            Response::error('Image analysis is required, but no PNG image was found for this item. Upload at least one PNG image and try again.', null, 400);
         }
 
         // Debug logging for info step
@@ -292,30 +401,60 @@ try {
                     }, $rows);
                 }
 
-                error_log("suggest_all.php [info step]: Calling analyzeItemImage with image data length=" . strlen($images[0]));
-                $analysis = $aiProviders->analyzeItemImage($images[0], $existingCategories);
-                error_log("suggest_all.php [info step]: analyzeItemImage returned: " . json_encode($analysis));
+                $analysisCandidates = [];
+                $analysisErrors = [];
 
-                $analysisLooksValid = is_array($analysis)
-                    && !empty(trim((string) ($analysis['title'] ?? '')))
-                    && !empty(trim((string) ($analysis['category'] ?? '')))
-                    && empty($analysis['error']);
+                foreach ($images as $index => $imagePath) {
+                    try {
+                        error_log("suggest_all.php [info step]: Calling analyzeItemImage for image index {$index}");
+                        $analysis = $aiProviders->analyzeItemImage($imagePath, $existingCategories);
+                        error_log("suggest_all.php [info step]: analyzeItemImage returned for image index {$index}: " . json_encode($analysis));
 
-                if ($analysisLooksValid) {
+                        $analysisLooksValid = is_array($analysis)
+                            && !empty(trim((string) ($analysis['title'] ?? '')))
+                            && !empty(trim((string) ($analysis['category'] ?? '')))
+                            && empty($analysis['error']);
+
+                        if (!$analysisLooksValid) {
+                            $parseError = is_array($analysis) ? trim((string) ($analysis['error'] ?? '')) : '';
+                            $analysisErrors[] = $parseError !== '' ? $parseError : "Image index {$index} returned incomplete analysis payload";
+                            continue;
+                        }
+
+                        $analysisCandidates[] = [
+                            'analysis' => $analysis,
+                            'score' => wf_normalize_confidence_score($analysis['confidence'] ?? null),
+                        ];
+                    } catch (Exception $perImageError) {
+                        $analysisErrors[] = "Image index {$index} failed: " . $perImageError->getMessage();
+                    }
+                }
+
+                if (!empty($analysisCandidates)) {
+                    usort($analysisCandidates, function ($a, $b) {
+                        return (($b['score'] ?? 0) <=> ($a['score'] ?? 0));
+                    });
+
+                    $bestAnalysis = $analysisCandidates[0]['analysis'];
+                    $consensusCategory = wf_pick_consensus_category($analysisCandidates, (string) ($bestAnalysis['category'] ?? ''));
                     $resolvedCategory = wf_resolve_category_from_analysis(
-                        $analysis['category'] ?? '',
-                        $analysis['title'] ?? '',
-                        $analysis['description'] ?? '',
+                        $consensusCategory,
+                        $bestAnalysis['title'] ?? '',
+                        $bestAnalysis['description'] ?? '',
                         $existingCategories
                     );
+                    $reasoningSuffix = " (Analyzed " . count($analysisCandidates) . " image(s) before generating info.)";
+                    if (!empty($analysisErrors)) {
+                        $reasoningSuffix .= " Some images were skipped: " . implode(' | ', $analysisErrors) . ".";
+                    }
 
                     $results['info_suggestion'] = [
                         'success' => true,
-                        'name' => wf_apply_locked_words($analysis['title'] ?? '', $lockedWords['name'] ?? ''),
-                        'description' => wf_apply_locked_words($analysis['description'] ?? '', $lockedWords['description'] ?? ''),
+                        'name' => wf_apply_locked_words($bestAnalysis['title'] ?? '', $lockedWords['name'] ?? ''),
+                        'description' => wf_apply_locked_words($bestAnalysis['description'] ?? '', $lockedWords['description'] ?? ''),
                         'category' => wf_apply_locked_words($resolvedCategory, $lockedWords['category'] ?? ''),
-                        'confidence' => $analysis['confidence'] ?? 'medium',
-                        'reasoning' => ($analysis['reasoning'] ?? '') . " (Image-first analysis applied.)"
+                        'confidence' => $bestAnalysis['confidence'] ?? 'medium',
+                        'reasoning' => ($bestAnalysis['reasoning'] ?? '') . $reasoningSuffix
                     ];
                     // Update local variables for subsequent suggestions (image-first chain).
                     $name = $results['info_suggestion']['name'];
@@ -323,11 +462,10 @@ try {
                     $category = $results['info_suggestion']['category'];
                 } else {
                     error_log("suggest_all.php [info step]: analyzeItemImage returned null/empty");
-                    $parseError = is_array($analysis) ? trim((string) ($analysis['error'] ?? '')) : '';
                     $failure = wf_compose_ai_failure_details(
                         $aiProviders,
                         'Image analysis failed',
-                        $parseError !== '' ? $parseError : 'Provider returned incomplete analysis payload'
+                        !empty($analysisErrors) ? implode(' | ', $analysisErrors) : 'Provider returned incomplete analysis payload'
                     );
                     Response::error($failure['message'], $failure['details'], 400);
                 }

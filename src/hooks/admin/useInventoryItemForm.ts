@@ -32,6 +32,7 @@ interface UseInventoryItemFormProps {
     onClose: () => void;
     refresh: () => void;
     primaryImage?: string;
+    imageUrls?: string[];
     hasUploadedImage?: boolean;
 }
 
@@ -48,6 +49,7 @@ export const useInventoryItemForm = ({
     onClose,
     refresh,
     primaryImage,
+    imageUrls = [],
     hasUploadedImage = false
 }: UseInventoryItemFormProps) => {
     const makeFallbackSku = (): string => {
@@ -343,6 +345,7 @@ export const useInventoryItemForm = ({
         const result = await orchestrateFullGeneration({
             sku: localSku,
             primaryImageUrl: primaryImage,
+            imageUrls,
             initialName: formData.name,
             initialDescription: formData.description,
             initialCategory: formData.category,
@@ -465,6 +468,7 @@ export const useInventoryItemForm = ({
         const result = await generateInfoOnly({
             sku: localSku,
             primaryImageUrl: primaryImage,
+            imageUrls,
             previousName: formData.name,
             lockedFields,
             lockedWords,
@@ -642,7 +646,8 @@ export const useInventoryItemForm = ({
         refresh,
         onClose,
         lockedFields,
-        lockedWords
+        lockedWords,
+        imageUrls
     ]);
 
     const handleApplyCost = (cost: number) => {

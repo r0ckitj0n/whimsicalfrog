@@ -68,13 +68,27 @@ try {
             chmod($absPath, 0644);
             $finalPath = 'images/items/' . $filename;
             $aiProcessed = false;
+            $isJpegSource = in_array($ext, ['jpg', 'jpeg', 'jfif'], true);
 
             if ($useAI) {
                 $res = MultiImageUploadHelper::processImageWithAI($absPath, $sku, $suffix, $itemsDir, $projectRoot);
-                if ($res['success']) { $finalPath = $res['path']; $aiProcessed = true; }
+                if ($res['success']) {
+                    $finalPath = $res['path'];
+                    $aiProcessed = true;
+                } else if ($isJpegSource) {
+                    @unlink($absPath);
+                    $errors[] = "Failed to convert JPEG source to PNG/WebP for file " . ($i + 1);
+                    continue;
+                }
             } else {
                 $res = MultiImageUploadHelper::convertToDualFormatOnly($absPath, $sku, $suffix, $itemsDir, $projectRoot);
-                if ($res['success']) $finalPath = $res['path'];
+                if ($res['success']) {
+                    $finalPath = $res['path'];
+                } else if ($isJpegSource) {
+                    @unlink($absPath);
+                    $errors[] = "Failed to convert JPEG source to PNG/WebP for file " . ($i + 1);
+                    continue;
+                }
             }
 
             $isThisPrimary = ($isPrimary && $i === 0) ? 1 : 0;

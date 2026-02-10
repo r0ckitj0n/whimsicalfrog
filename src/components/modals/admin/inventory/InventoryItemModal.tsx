@@ -119,6 +119,11 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                 ? `/${(workingImages.find(img => img.is_primary)?.image_path || '').replace(/^\/+/, '')}`
                 : (workingImages[0]?.image_path ? `/${workingImages[0].image_path.replace(/^\/+/, '')}` : '/images/placeholder.webp'))
             : primaryImage,
+        imageUrls: isAdding
+            ? workingImages
+                .map((img) => `/${String(img.image_path || '').replace(/^\/+/, '')}`)
+                .filter((url) => url !== '/')
+            : [],
         hasUploadedImage: isAdding ? workingImages.length > 0 : true
     });
 

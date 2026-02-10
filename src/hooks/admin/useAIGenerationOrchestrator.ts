@@ -23,6 +23,7 @@ import type { MarketingData } from './inventory-ai/useMarketingManager.js';
 export interface GenerationContext {
     sku: string;
     primaryImageUrl: string;
+    imageUrls: string[];
     name: string;
     description: string;
     category: string;
@@ -58,6 +59,7 @@ interface UseAIGenerationOrchestratorReturn {
     orchestrateFullGeneration: (params: {
         sku: string;
         primaryImageUrl: string;
+        imageUrls?: string[];
         initialName?: string;
         initialDescription?: string;
         initialCategory?: string;
@@ -69,6 +71,7 @@ interface UseAIGenerationOrchestratorReturn {
     generateInfoOnly: (params: {
         sku: string;
         primaryImageUrl: string;
+        imageUrls?: string[];
         previousName?: string;
         lockedFields?: Record<string, boolean>;
         lockedWords?: Record<string, string>;
@@ -212,6 +215,7 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
     const executeInfoStep = useCallback(async (
         sku: string,
         primaryImageUrl: string,
+        imageUrls: string[] = [],
         lockedWords?: Record<string, string>
     ): Promise<GenerationStepResult> => {
         const mapInfoResponse = (response: {
@@ -251,7 +255,18 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
         };
 
         try {
-            console.log('[AI Orchestrator] executeInfoStep called with:', { sku, primaryImageUrl: primaryImageUrl?.substring(0, 100) });
+            const normalizedImageUrls = imageUrls
+                .map((url) => (typeof url === 'string' ? url.trim() : ''))
+                .filter((url) => url.length > 0);
+            const imagePayload: string | string[] = normalizedImageUrls.length > 0
+                ? normalizedImageUrls
+                : primaryImageUrl;
+
+            console.log('[AI Orchestrator] executeInfoStep called with:', {
+                sku,
+                primaryImageUrl: primaryImageUrl?.substring(0, 100),
+                imageCount: Array.isArray(imagePayload) ? imagePayload.length : 1
+            });
 
             const response = await ApiClient.post<{
                 success: boolean;
@@ -269,7 +284,7 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                 error?: string;
             }>('/api/suggest_all.php', {
                 sku,
-                imageData: primaryImageUrl,
+                imageData: imagePayload,
                 useImages: true,
                 step: 'info',
                 locked_words: lockedWords || {},
@@ -331,9 +346,17 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
         description: string,
         category: string,
         tier: string = 'standard',
+        imageUrls: string[] = [],
         primaryImageUrl?: string
     ): Promise<GenerationStepResult> => {
         try {
+            const normalizedImageUrls = imageUrls
+                .map((url) => (typeof url === 'string' ? url.trim() : ''))
+                .filter((url) => url.length > 0);
+            const imagePayload: string | string[] | undefined = normalizedImageUrls.length > 0
+                ? normalizedImageUrls
+                : primaryImageUrl;
+
             const response = await ApiClient.post<{
                 success: boolean;
                 cost_suggestion?: {
@@ -351,8 +374,8 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                 category,
                 quality_tier: tier,
                 step: 'cost',
-                useImages: Boolean(primaryImageUrl),
-                imageData: primaryImageUrl
+                useImages: Boolean(imagePayload),
+                imageData: imagePayload
             });
 
             if (response && response.success && response.cost_suggestion) {
@@ -601,6 +624,7 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
     const orchestrateFullGeneration = useCallback(async (params: {
         sku: string;
         primaryImageUrl: string;
+        imageUrls?: string[];
         initialName?: string;
         initialDescription?: string;
         initialCategory?: string;
@@ -609,7 +633,7 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
         lockedWords?: Record<string, string>;
         onStepComplete?: (step: GenerationStep, context: GenerationContext, skippedFields?: string[]) => void;
     }): Promise<GenerationContext | null> => {
-        const { sku, primaryImageUrl, tier = 'standard', lockedFields = {}, lockedWords = {}, onStepComplete } = params;
+        const { sku, primaryImageUrl, imageUrls = [], tier = 'standard', lockedFields = {}, lockedWords = {}, onStepComplete } = params;
 
         if (!sku) {
             toastError('SKU is required for AI generation');
@@ -622,6 +646,7 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
         const context: GenerationContext = {
             sku,
             primaryImageUrl,
+            imageUrls,
             name: '',
             description: '',
             category: '',
@@ -646,7 +671,7 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
             setCurrentStep('info');
             window.WFToast?.info?.('🖼️ Analyzing image for item details...');
 
-            const infoResult = await executeInfoStep(sku, primaryImageUrl, lockedWords);
+            const infoResult = await executeInfoStep(sku, primaryImageUrl, imageUrls, lockedWords);
             setProgress(25);
 
             if (infoResult.success) {
@@ -695,6 +720,7 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                 context.description,
                 context.category,
                 tier,
+                imageUrls,
                 primaryImageUrl
             );
             setProgress(50);
@@ -813,6 +839,7 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
     const generateInfoOnly = useCallback(async (params: {
         sku: string;
         primaryImageUrl: string;
+        imageUrls?: string[];
         previousName?: string;
         lockedFields?: Record<string, boolean>;
         lockedWords?: Record<string, string>;
@@ -821,7 +848,12 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
         setIsGenerating(true);
         setCurrentStep('info');
         try {
-            const result = await executeInfoStep(params.sku, params.primaryImageUrl, params.lockedWords || {});
+            const result = await executeInfoStep(
+                params.sku,
+                params.primaryImageUrl,
+                params.imageUrls || [],
+                params.lockedWords || {}
+            );
             if (!result.success) return null;
             const lockedWords = params.lockedWords || {};
             const lockedFields = params.lockedFields || {};

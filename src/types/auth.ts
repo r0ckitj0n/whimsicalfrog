@@ -10,6 +10,11 @@ export interface IUserProfile {
     city?: string;
     state?: string;
     zip_code?: string;
+    company?: string;
+    job_title?: string;
+    preferred_contact?: string;
+    preferred_language?: string;
+    marketing_opt_in?: string | number | boolean;
     profile_completion_required?: boolean;
 }
 
@@ -33,6 +38,11 @@ export interface IWhoAmIResponse {
     city?: string;
     state?: string;
     zip_code?: string;
+    company?: string;
+    job_title?: string;
+    preferred_contact?: string;
+    preferred_language?: string;
+    marketing_opt_in?: string | number | boolean;
     profile_completion_required?: boolean;
 }
 

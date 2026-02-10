@@ -116,6 +116,11 @@ try {
     $city = null;
     $state = null;
     $zip_code = null;
+    $company = null;
+    $job_title = null;
+    $preferred_contact = null;
+    $preferred_language = null;
+    $marketing_opt_in = null;
     $profile_completion_required = false;
 
     if (!empty($_SESSION['user'])) {
@@ -147,6 +152,11 @@ try {
         try {
             $meta = get_user_meta_bulk($user_id_raw);
             $profile_completion_required = isset($meta['profile_completion_required']) && (string) $meta['profile_completion_required'] === '1';
+            $company = isset($meta['company']) ? (string) $meta['company'] : null;
+            $job_title = isset($meta['job_title']) ? (string) $meta['job_title'] : null;
+            $preferred_contact = isset($meta['preferred_contact']) ? (string) $meta['preferred_contact'] : null;
+            $preferred_language = isset($meta['preferred_language']) ? (string) $meta['preferred_language'] : null;
+            $marketing_opt_in = isset($meta['marketing_opt_in']) ? (string) $meta['marketing_opt_in'] : null;
         } catch (\Throwable $e) {
             error_log('[whoami] users_meta lookup failed: ' . $e->getMessage());
         }
@@ -219,6 +229,21 @@ try {
     }
     if ($zip_code !== null) {
         $payload['zip_code'] = (string) $zip_code;
+    }
+    if ($company !== null) {
+        $payload['company'] = $company;
+    }
+    if ($job_title !== null) {
+        $payload['job_title'] = $job_title;
+    }
+    if ($preferred_contact !== null) {
+        $payload['preferred_contact'] = $preferred_contact;
+    }
+    if ($preferred_language !== null) {
+        $payload['preferred_language'] = $preferred_language;
+    }
+    if ($marketing_opt_in !== null) {
+        $payload['marketing_opt_in'] = $marketing_opt_in;
     }
     $payload['profile_completion_required'] = $profile_completion_required;
 

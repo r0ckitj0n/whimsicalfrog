@@ -201,6 +201,9 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                         <p className="text-[11px] text-slate-500">
                             Aesthetic variables use the same room-image generation flow as room creation.
                         </p>
+                        <p className="text-[11px] text-slate-500">
+                            Pick a preset from each dropdown, then edit the text below for this generation only.
+                        </p>
                         <div className="max-h-56 overflow-auto pr-1">
                             <div className="grid grid-cols-1 gap-2">
                                 {ROOM_IMAGE_AESTHETIC_FIELDS.map((field) => {
@@ -222,6 +225,13 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                                                     </option>
                                                 ))}
                                             </select>
+                                            <textarea
+                                                value={currentValue}
+                                                onChange={(e) => setAestheticValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                                rows={2}
+                                                className="w-full text-[11px] p-2 border border-slate-200 rounded-lg bg-white resize-y"
+                                                disabled={isGenerating}
+                                            />
                                         </div>
                                     );
                                 })}

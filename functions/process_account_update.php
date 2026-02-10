@@ -2,6 +2,7 @@
 
 // Include the configuration file (absolute path)
 require_once dirname(__DIR__) . '/api/config.php';
+require_once dirname(__DIR__) . '/includes/auth.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
@@ -35,11 +36,33 @@ try {
 
     // Extract data
     $user_id = $data['user_id'];
+    $targetUserId = (string) $user_id;
     $email = $data['email'];
     $first_name = $data['first_name'] ?? '';
     $last_name = $data['last_name'] ?? '';
+    $phone_number = $data['phone_number'] ?? '';
+    $company = $data['company'] ?? '';
+    $job_title = $data['job_title'] ?? '';
+    $preferred_contact = $data['preferred_contact'] ?? '';
+    $preferred_language = $data['preferred_language'] ?? '';
+    $marketing_opt_in = $data['marketing_opt_in'] ?? null;
     $currentPassword = $data['currentPassword'];
     $newPassword = $data['newPassword'] ?? '';
+
+    $currentUser = getCurrentUser();
+    if (!$currentUser) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Authentication required']);
+        exit;
+    }
+
+    $currentUserId = (string) ($currentUser['user_id'] ?? ($currentUser['id'] ?? ''));
+    $currentIsAdmin = isAdmin();
+    if (!$currentIsAdmin && $currentUserId !== $targetUserId) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Forbidden: users may only update their own account']);
+        exit;
+    }
 
     // Create database connection using config
     try {
@@ -61,9 +84,17 @@ try {
     // First, delegate profile field updates (email, names, etc.) to the UserUpdateHelper
     // so we reuse the dynamic field mapping there and avoid hard-coding column names.
     $profilePayload = [
-        'user_id' => $user_id,
+        'user_id' => $targetUserId,
         'email' => $email,
+        'phone_number' => $phone_number,
+        'company' => $company,
+        'job_title' => $job_title,
+        'preferred_contact' => $preferred_contact,
+        'preferred_language' => $preferred_language,
     ];
+    if ($marketing_opt_in !== null) {
+        $profilePayload['marketing_opt_in'] = $marketing_opt_in;
+    }
     if ($first_name !== '') {
         $profilePayload['first_name'] = $first_name;
     }
@@ -72,12 +103,12 @@ try {
     }
 
     require_once __DIR__ . '/../includes/helpers/UserUpdateHelper.php';
-    UserUpdateHelper::update($user_id, $profilePayload);
+    UserUpdateHelper::update($targetUserId, $profilePayload);
 
     // If a new password is provided, update it directly here
     if (!empty($newPassword)) {
         $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-        $affected = Database::execute('UPDATE users SET password = ? WHERE id = ?', [$hashedPassword, $user_id]);
+        $affected = Database::execute('UPDATE users SET password = ? WHERE id = ?', [$hashedPassword, $targetUserId]);
         if ($affected === false) {
             throw new Exception('Failed to change password');
         }

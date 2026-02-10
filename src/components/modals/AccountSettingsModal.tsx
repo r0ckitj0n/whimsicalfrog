@@ -26,6 +26,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
         addresses,
         editingAddress,
         isSaving,
+        isProfileLoading,
         isEditing,
         isProfileDirty,
         isAddressLoading,
@@ -45,11 +46,13 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
 
     const attemptClose = useUnsavedChangesCloseGuard({
         isDirty: isProfileDirty,
-        isBlocked: isSaving,
+        isBlocked: isSaving || isProfileLoading,
         onClose,
         onSave: () => handleSaveProfile(),
         closeAfterSave: true
     });
+
+    const isFormBusy = isSaving || isProfileLoading;
 
     if (!isOpen || !user) return null;
 
@@ -113,14 +116,15 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
                             <button
                                 onClick={() => setIsEditing(true)}
                                 className="admin-action-btn btn-icon--edit"
+                                disabled={isFormBusy}
                                 aria-label="Edit Profile"
                             />
                         )}
                         {isProfileDirty && (
                             <button
                                 onClick={handleSaveProfile}
-                                disabled={isSaving}
-                                className={`admin-action-btn btn-icon--save ${isSaving ? 'is-loading' : ''} is-dirty`}
+                                disabled={isFormBusy}
+                                className={`admin-action-btn btn-icon--save ${isFormBusy ? 'is-loading' : ''} is-dirty`}
                                 aria-label="Save Profile"
                             />
                         )}
@@ -138,7 +142,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
                             formData={formData}
                             handleInputChange={handleInputChange}
                             handleSaveProfile={handleSaveProfile}
-                            isSaving={isSaving}
+                            isSaving={isFormBusy}
                             isEditing={isEditing}
                         />
 
@@ -147,7 +151,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
                             handleInputChange={handleInputChange}
                             handleMarketingOptInChange={handleMarketingOptInChange}
                             isEditing={isEditing}
-                            isSaving={isSaving}
+                            isSaving={isFormBusy}
                         />
 
                         <AddressSection

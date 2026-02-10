@@ -40,6 +40,7 @@ export const useAccountSettings = () => {
     const [addresses, setAddresses] = useState<ICustomerAddress[]>([]);
     const [editingAddress, setEditingAddress] = useState<Partial<ICustomerAddress> | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [isProfileLoading, setIsProfileLoading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [isInitialized, setIsInitialized] = useState(false);
     const isPasswordDirty = Boolean(formData.newPassword);
@@ -65,11 +66,11 @@ export const useAccountSettings = () => {
             first_name: user.first_name || '',
             last_name: user.last_name || '',
             phone_number: user.phone_number || '',
-            company: '',
-            job_title: '',
-            preferred_contact: '',
-            preferred_language: '',
-            marketing_opt_in: false,
+            company: user.company || '',
+            job_title: user.job_title || '',
+            preferred_contact: user.preferred_contact || '',
+            preferred_language: user.preferred_language || '',
+            marketing_opt_in: String(user.marketing_opt_in ?? '0') === '1',
             currentPassword: '',
             newPassword: ''
         };
@@ -201,44 +202,50 @@ export const useAccountSettings = () => {
                 first_name: user.first_name || '',
                 last_name: user.last_name || '',
                 phone_number: user.phone_number || '',
-                company: '',
-                job_title: '',
-                preferred_contact: '',
-                preferred_language: '',
-                marketing_opt_in: false,
+                company: user.company || '',
+                job_title: user.job_title || '',
+                preferred_contact: user.preferred_contact || '',
+                preferred_language: user.preferred_language || '',
+                marketing_opt_in: String(user.marketing_opt_in ?? '0') === '1',
                 currentPassword: '',
                 newPassword: ''
             };
             setFormData(resetFormData);
             setInitialFormData(resetFormData);
             setIsInitialized(true);
+            setIsProfileLoading(true);
 
             void (async () => {
-                const [detail, addr] = await Promise.all([
-                    fetchCustomerDetails(user.id),
-                    fetchCustomerAddresses(user.id)
-                ]);
+                try {
+                    const [detail, addr] = await Promise.all([
+                        fetchCustomerDetails(user.id),
+                        fetchCustomerAddresses(user.id)
+                    ]);
 
-                if (detail) {
-                    const enrichedFormData: IAccountSettingsFormData = {
-                        ...resetFormData,
-                        company: detail.company || '',
-                        job_title: detail.job_title || '',
-                        preferred_contact: detail.preferred_contact || '',
-                        preferred_language: detail.preferred_language || '',
-                        marketing_opt_in: String(detail.marketing_opt_in ?? '0') === '1'
-                    };
-                    setFormData(enrichedFormData);
-                    setInitialFormData(enrichedFormData);
-                } else if (window.WFToast) {
-                    window.WFToast.error('Failed to load customer profile details');
+                    if (detail) {
+                        const enrichedFormData: IAccountSettingsFormData = {
+                            ...resetFormData,
+                            company: detail.company || '',
+                            job_title: detail.job_title || '',
+                            preferred_contact: detail.preferred_contact || '',
+                            preferred_language: detail.preferred_language || '',
+                            marketing_opt_in: String(detail.marketing_opt_in ?? '0') === '1'
+                        };
+                        setFormData(enrichedFormData);
+                        setInitialFormData(enrichedFormData);
+                    } else if (window.WFToast) {
+                        window.WFToast.error('Failed to load customer profile details');
+                    }
+
+                    setAddresses(addr);
+                } finally {
+                    setIsProfileLoading(false);
                 }
-
-                setAddresses(addr);
             })();
         } else {
             setIsInitialized(false);
             setInitialFormData(null);
+            setIsProfileLoading(false);
         }
     };
 
@@ -248,6 +255,7 @@ export const useAccountSettings = () => {
         addresses,
         editingAddress,
         isSaving,
+        isProfileLoading,
         isEditing,
         isProfileDirty,
         isAddressLoading,

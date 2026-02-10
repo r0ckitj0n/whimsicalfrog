@@ -34,6 +34,11 @@ export const useAuth = () => {
                     city: res.city,
                     state: res.state,
                     zip_code: res.zip_code,
+                    company: res.company,
+                    job_title: res.job_title,
+                    preferred_contact: res.preferred_contact,
+                    preferred_language: res.preferred_language,
+                    marketing_opt_in: res.marketing_opt_in,
                     profile_completion_required: Boolean(res.profile_completion_required)
                 };
                 setState({

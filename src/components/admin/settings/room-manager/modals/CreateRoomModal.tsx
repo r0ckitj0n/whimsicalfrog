@@ -279,6 +279,12 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                         </option>
                     ))}
                 </select>
+                <textarea
+                    value={value}
+                    onChange={(e) => updateForm(field, e.target.value as CreateRoomFormState[typeof field])}
+                    rows={2}
+                    className="mt-2 w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white resize-y"
+                />
             </div>
         );
     };
@@ -484,6 +490,9 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
 
                             <p className="text-[11px] text-slate-500">
                                 Prompt variable fields default to <span className="font-mono">{AUTOGENERATE_LABEL}</span> for new rooms.
+                            </p>
+                            <p className="text-[11px] text-slate-500">
+                                Use the dropdown to choose a preset and edit the text box below it to customize this room generation.
                             </p>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

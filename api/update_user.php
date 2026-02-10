@@ -5,6 +5,7 @@ require_once __DIR__ . '/config.php';
 require_once dirname(__DIR__) . '/includes/user_meta.php';
 require_once dirname(__DIR__) . '/includes/session.php';
 require_once dirname(__DIR__) . '/includes/helpers/AuthSessionHelper.php';
+require_once dirname(__DIR__) . '/includes/auth.php';
 
 // Standardize session initialization
 if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -51,9 +52,41 @@ try {
 
     // Get the user ID (support both user_id and id fields for compatibility)
     $user_id = $data['user_id'] ?? $data['id'];
+    $targetUserId = (string) $user_id;
+
+    $currentUser = getCurrentUser();
+    if (!$currentUser) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Authentication required']);
+        exit;
+    }
+
+    $currentUserId = (string) ($currentUser['user_id'] ?? ($currentUser['id'] ?? ''));
+    $currentIsAdmin = isAdmin();
+    if (!$currentIsAdmin && $currentUserId !== $targetUserId) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Forbidden: users may only update their own account']);
+        exit;
+    }
+
+    if (!$currentIsAdmin) {
+        foreach ([
+            'role',
+            'status',
+            'vip',
+            'tax_exempt',
+            'referral_source',
+            'birthdate',
+            'tags',
+            'admin_notes',
+            'password'
+        ] as $restrictedKey) {
+            unset($data[$restrictedKey]);
+        }
+    }
 
     require_once dirname(__DIR__) . '/includes/helpers/UserUpdateHelper.php';
-    UserUpdateHelper::update($user_id, $data);
+    UserUpdateHelper::update($targetUserId, $data);
 
     echo json_encode([
         'success' => true,

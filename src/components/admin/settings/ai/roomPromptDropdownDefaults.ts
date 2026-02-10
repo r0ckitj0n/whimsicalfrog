@@ -48,6 +48,42 @@ export const ROOM_PROMPT_DROPDOWN_DEFAULTS: Record<string, string[]> = {
         'A playful studio featuring themed product staging zones.',
         'A calm premium display room with clean merchandising lines.'
     ],
+    scene_type: [
+        AUTOGENERATE_LABEL,
+        'room',
+        'house exterior',
+        'house interior',
+        'landing page',
+        'shop page',
+        'about page',
+        'contact page',
+        'info page',
+        'modal',
+        'dashboard page'
+    ],
+    subject_species: [
+        AUTOGENERATE_LABEL,
+        'no character (environment only)',
+        'frog',
+        'toad',
+        'cat',
+        'dog',
+        'bird',
+        'rabbit',
+        'fox',
+        'bear'
+    ],
+    subject_headwear: [
+        AUTOGENERATE_LABEL,
+        'no headwear',
+        'fedora',
+        'crafty hat',
+        'beanie',
+        'straw hat',
+        'cowboy hat',
+        'wizard hat',
+        'sunhat'
+    ],
     room_theme: [
         AUTOGENERATE_LABEL,
         'cozy cafe',

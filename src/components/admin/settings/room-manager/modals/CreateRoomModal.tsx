@@ -32,6 +32,9 @@ interface CreateRoomFormState {
     door_label: string;
     display_order: number;
     description: string;
+    scene_type: string;
+    subject_species: string;
+    subject_headwear: string;
     room_theme: string;
     display_furniture_style: string;
     thematic_accent_decorations: string;
@@ -61,6 +64,9 @@ const defaultFormState: CreateRoomFormState = {
     door_label: '',
     display_order: 0,
     description: '',
+    scene_type: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.scene_type,
+    subject_species: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.subject_species,
+    subject_headwear: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.subject_headwear,
     room_theme: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.room_theme,
     display_furniture_style: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.display_furniture_style,
     thematic_accent_decorations: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.thematic_accent_decorations,
@@ -85,6 +91,9 @@ const defaultFormState: CreateRoomFormState = {
 };
 
 const promptVariableFields: Array<keyof CreateRoomFormState> = [
+    'scene_type',
+    'subject_species',
+    'subject_headwear',
     'room_theme',
     'display_furniture_style',
     'thematic_accent_decorations',
@@ -188,6 +197,9 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         description: form.description,
         variableDefaults,
         values: {
+            scene_type: form.scene_type,
+            subject_species: form.subject_species,
+            subject_headwear: form.subject_headwear,
             room_theme: form.room_theme,
             display_furniture_style: form.display_furniture_style,
             thematic_accent_decorations: form.thematic_accent_decorations,
@@ -277,9 +289,9 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
 
     useEffect(() => {
         if (!isOpen || roomTemplates.length === 0) return;
-        const preferred = settingsTemplateKey || 'room_staging_empty_shelves_v1';
-        const foundPreferred = roomTemplates.find((t) => t.template_key === preferred);
-        setSelectedTemplateKey(foundPreferred?.template_key || roomTemplates[0].template_key);
+        const genericDefault = roomTemplates.find((t) => t.template_key === 'room_staging_empty_shelves_v1');
+        const userPreferred = roomTemplates.find((t) => t.template_key === settingsTemplateKey);
+        setSelectedTemplateKey(genericDefault?.template_key || userPreferred?.template_key || roomTemplates[0].template_key);
     }, [isOpen, roomTemplates, settingsTemplateKey]);
 
     const updateForm = <K extends keyof CreateRoomFormState>(key: K, value: CreateRoomFormState[K]) => {
@@ -540,6 +552,9 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                             </p>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {renderEditableDropdown('Scene Type', 'scene_type', form.scene_type)}
+                                {renderEditableDropdown('Subject Species', 'subject_species', form.subject_species)}
+                                {renderEditableDropdown('Subject Headwear', 'subject_headwear', form.subject_headwear)}
                                 {renderEditableDropdown('Room Theme', 'room_theme', form.room_theme)}
                                 {renderEditableDropdown('Furniture Style', 'display_furniture_style', form.display_furniture_style)}
                                 {renderEditableDropdown('Accent Decor', 'thematic_accent_decorations', form.thematic_accent_decorations)}

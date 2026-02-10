@@ -37,6 +37,42 @@ const AI_PROMPT_DROPDOWN_DEFAULTS = [
         'A playful studio featuring themed product staging zones.',
         'A calm premium display room with clean merchandising lines.',
     ],
+    'scene_type' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'room',
+        'house exterior',
+        'house interior',
+        'landing page',
+        'shop page',
+        'about page',
+        'contact page',
+        'info page',
+        'modal',
+        'dashboard page',
+    ],
+    'subject_species' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'no character (environment only)',
+        'frog',
+        'toad',
+        'cat',
+        'dog',
+        'bird',
+        'rabbit',
+        'fox',
+        'bear',
+    ],
+    'subject_headwear' => [
+        AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
+        'no headwear',
+        'fedora',
+        'crafty hat',
+        'beanie',
+        'straw hat',
+        'cowboy hat',
+        'wizard hat',
+        'sunhat',
+    ],
     'room_theme' => [
         AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,
         'cozy cafe',
@@ -333,7 +369,7 @@ Door label: {{door_label}}.
 Display order: {{display_order}}.
 Room description/context: {{room_description}}.
 
-Create a themed {{room_theme}} {{location_phrase}}.
+Create a themed {{scene_type}} with a {{room_theme}} direction {{location_phrase}}.
 
 The area features prominent {{display_furniture_style}} intended for future product placement.
 {{critical_constraint_line}}
@@ -341,6 +377,7 @@ The area features prominent {{display_furniture_style}} intended for future prod
 {{decorative_elements_line}}
 {{open_display_zones_line}}
 
+Subject profile defaults: species {{subject_species}}, headwear {{subject_headwear}}.
 {{character_statement}}
 
 Atmosphere: {{vibe_adjectives}}.
@@ -359,6 +396,9 @@ PROMPT;
         ['door_label', 'Door Label', 'Short label displayed on the room door.', 'Holidays'],
         ['display_order', 'Display Order', 'Room order index in navigation.', '10'],
         ['room_description', 'Room Description', 'Freeform room description from room setup.', 'A cozy holiday gift room with warm seasonal accents.'],
+        ['scene_type', 'Scene Type', 'Target page/container type (room, house, page, modal, etc.).', 'general page or environment'],
+        ['subject_species', 'Subject Species', 'Primary subject species for character-driven scenes.', 'generic mascot or character'],
+        ['subject_headwear', 'Subject Headwear', 'Headwear style for subject(s), if applicable.', 'no headwear'],
         ['room_theme', 'Room Theme / Business Type', 'General room purpose (cozy cafe, magical apothecary, artisan bakery).', 'cozy cafe'],
         ['display_furniture_style', 'Display Furniture Style', 'Type of empty display structures used in the room.', 'tiered light-wood shelving units'],
         ['thematic_accent_decorations', 'Thematic Accent Decorations', 'Small non-product separators/bookends placed intermittently.', 'tiny potted succulents and miniature ceramic milk jugs'],
@@ -368,7 +408,7 @@ PROMPT;
         ['background_thematic_elements', 'Background Thematic Elements', 'Large decor elements on walls/ceiling to establish context.', 'giant floating fruit shapes'],
         ['image_style_declaration', 'Image Style Declaration', 'Lead-in phrase used before the room number.', 'A high-quality render for room'],
         ['location_phrase', 'Location', 'Location phrase used in the themed-scene sentence.', 'inside a themed retail environment'],
-        ['character_statement', 'Character / Subject', 'Primary subject statement for the scene.', 'Primary subject(s): {{frog_action}}.'],
+        ['character_statement', 'Character / Subject', 'Primary subject statement for the scene.', 'Character guidance: if characters are present, use {{subject_species}} with {{subject_headwear}} while performing {{frog_action}}. If no characters are desired, set action to "no characters present".'],
         ['aesthetic_statement', 'Aesthetic', 'Aesthetic statement describing background thematic elements.', "Background walls/ceiling include decorative {{background_thematic_elements}} that reinforce the room's function."],
         ['critical_constraint_line', 'Critical Constraint', 'Constraint line for keeping display surfaces empty.', 'CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.'],
         ['no_props_line', 'No Props Line', 'Explicit ban on props and products on display surfaces.', 'Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.'],
@@ -392,6 +432,24 @@ PROMPT;
             [$v[0], $v[1], $v[2], $v[3]]
         );
     }
+
+    Database::execute(
+        "INSERT INTO ai_prompt_templates (template_key, template_name, description, context_type, prompt_text, is_active)
+         VALUES (?, ?, ?, ?, ?, 1)
+         ON DUPLICATE KEY UPDATE
+            template_name = VALUES(template_name),
+            description = VALUES(description),
+            context_type = VALUES(context_type),
+            prompt_text = VALUES(prompt_text),
+            is_active = 1",
+        [
+            'room_staging_empty_shelves_v1',
+            'Room Staging (Generic Baseline)',
+            'Generic room/page/modal scene builder with optional subject and style controls.',
+            'room_generation',
+            $defaultTemplate
+        ]
+    );
 
     // Remove legacy autogenerated variant so only the canonical label remains.
     Database::execute(

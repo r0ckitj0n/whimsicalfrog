@@ -9,7 +9,10 @@ import type { IRoomImageGenerationRequest } from '../../../types/room-generation
 export type RoomImageScaleMode = 'modal' | 'fullscreen' | 'fixed';
 
 export type RoomImagePromptVariableKey =
+    | 'scene_type'
     | 'room_theme'
+    | 'subject_species'
+    | 'subject_headwear'
     | 'display_furniture_style'
     | 'thematic_accent_decorations'
     | 'frog_action'
@@ -30,7 +33,10 @@ export type RoomImagePromptVariableKey =
     | 'lighting_line';
 
 export type RoomImageAestheticFieldKey =
+    | 'scene_type'
     | 'room_theme'
+    | 'subject_species'
+    | 'subject_headwear'
     | 'display_furniture_style'
     | 'thematic_accent_decorations'
     | 'frog_action'
@@ -51,6 +57,9 @@ export type RoomImageAestheticFieldKey =
     | 'lighting_line';
 
 export const ROOM_IMAGE_AESTHETIC_FIELDS: Array<{ key: RoomImageAestheticFieldKey; label: string }> = [
+    { key: 'scene_type', label: 'Scene Type' },
+    { key: 'subject_species', label: 'Subject Species' },
+    { key: 'subject_headwear', label: 'Subject Headwear' },
     { key: 'room_theme', label: 'Room Theme' },
     { key: 'display_furniture_style', label: 'Furniture Style' },
     { key: 'thematic_accent_decorations', label: 'Accent Decor' },
@@ -73,7 +82,10 @@ export const ROOM_IMAGE_AESTHETIC_FIELDS: Array<{ key: RoomImageAestheticFieldKe
 ];
 
 export const DEFAULT_ROOM_IMAGE_VARIABLE_VALUES: Record<RoomImagePromptVariableKey, string> = {
+    scene_type: AUTOGENERATE_LABEL,
     room_theme: AUTOGENERATE_LABEL,
+    subject_species: AUTOGENERATE_LABEL,
+    subject_headwear: AUTOGENERATE_LABEL,
     display_furniture_style: AUTOGENERATE_LABEL,
     thematic_accent_decorations: AUTOGENERATE_LABEL,
     frog_action: AUTOGENERATE_LABEL,
@@ -107,7 +119,10 @@ export const targetAspectRatioForScaleMode: Record<RoomImageScaleMode, number> =
 };
 
 const ROOM_IMAGE_VARIABLE_FALLBACKS: Record<RoomImagePromptVariableKey, string> = {
+    scene_type: 'general page or environment',
     room_theme: 'Invent a custom room theme that fits the room name and description; do not pick from preset dropdown examples',
+    subject_species: 'generic mascot or character',
+    subject_headwear: 'no headwear',
     display_furniture_style: 'Invent a custom display furniture style specifically for this room context; do not pick from preset dropdown examples',
     thematic_accent_decorations: 'Invent custom accent decorations that fit this room context and keep staging surfaces open; do not pick from preset dropdown examples',
     frog_action: 'Describe the primary subject action for this room scene; if no character should appear, state "no characters present".',
@@ -116,7 +131,7 @@ const ROOM_IMAGE_VARIABLE_FALLBACKS: Record<RoomImagePromptVariableKey, string> 
     background_thematic_elements: 'Invent custom oversized thematic background elements for this room context; do not pick from preset dropdown examples',
     image_style_declaration: 'A high-quality render for room',
     location_phrase: 'inside a themed retail environment',
-    character_statement: 'Primary subject(s): {{frog_action}}.',
+    character_statement: 'Character guidance: if characters are present, use {{subject_species}} with {{subject_headwear}} while performing {{frog_action}}. If no characters are desired, set action to "no characters present".',
     aesthetic_statement: "Background walls/ceiling include decorative {{background_thematic_elements}} that reinforce the room's function.",
     critical_constraint_line: 'CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.',
     no_props_line: 'Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.',
@@ -219,7 +234,10 @@ export const resolveRoomGenerationVariables = ({
         door_label: doorLabel.trim(),
         display_order: String(displayOrder || 0),
         room_description: String(description || '').trim(),
+        scene_type: normalizeAutoValue(mergedValues.scene_type, ROOM_IMAGE_VARIABLE_FALLBACKS.scene_type),
         room_theme: normalizeAutoValue(mergedValues.room_theme, ROOM_IMAGE_VARIABLE_FALLBACKS.room_theme),
+        subject_species: normalizeAutoValue(mergedValues.subject_species, ROOM_IMAGE_VARIABLE_FALLBACKS.subject_species),
+        subject_headwear: normalizeAutoValue(mergedValues.subject_headwear, ROOM_IMAGE_VARIABLE_FALLBACKS.subject_headwear),
         display_furniture_style: normalizeAutoValue(mergedValues.display_furniture_style, ROOM_IMAGE_VARIABLE_FALLBACKS.display_furniture_style),
         thematic_accent_decorations: normalizeAutoValue(mergedValues.thematic_accent_decorations, ROOM_IMAGE_VARIABLE_FALLBACKS.thematic_accent_decorations),
         frog_action: normalizeAutoValue(mergedValues.frog_action, ROOM_IMAGE_VARIABLE_FALLBACKS.frog_action),

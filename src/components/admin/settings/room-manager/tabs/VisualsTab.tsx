@@ -33,6 +33,9 @@ interface VisualsTabProps {
 }
 
 const initialAestheticValues: Record<RoomImageAestheticFieldKey, string> = {
+    scene_type: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.scene_type,
+    subject_species: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.subject_species,
+    subject_headwear: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.subject_headwear,
     room_theme: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.room_theme,
     display_furniture_style: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.display_furniture_style,
     thematic_accent_decorations: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.thematic_accent_decorations,
@@ -88,8 +91,11 @@ const buildPriorityInstructionBlock = (values: Record<string, string>): string =
         'PRIORITY INSTRUCTIONS (MUST FOLLOW):',
         '- Treat user-provided variable content as highest priority over generic defaults.',
         '- Preserve explicit subject count/roles and concrete actions when provided.',
+        `- Ensure target page/container type is: ${get('scene_type', 'general page or environment')}`,
         `- Ensure this scene direction appears clearly in composition: ${get('room_theme', 'themed room')}`,
         `- Ensure location framing includes: ${get('location_phrase', 'room setting')}`,
+        `- Ensure subject species is: ${get('subject_species', 'generic character')}`,
+        `- Ensure subject headwear/wardrobe detail is: ${get('subject_headwear', 'no headwear')}`,
         `- Ensure subject action is visibly represented: ${get('frog_action', 'subject action')}`,
         `- Ensure subject details are visibly represented: ${get('character_statement', 'subject statement')}`,
         `- Ensure accent decorations include: ${get('thematic_accent_decorations', 'contextual accents')}`,
@@ -156,9 +162,9 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
 
     useEffect(() => {
         if (roomTemplates.length === 0) return;
-        const preferred = settingsTemplateKey || 'room_staging_empty_shelves_v1';
-        const foundPreferred = roomTemplates.find((t) => t.template_key === preferred);
-        setSelectedTemplateKey(foundPreferred?.template_key || roomTemplates[0].template_key);
+        const genericDefault = roomTemplates.find((t) => t.template_key === 'room_staging_empty_shelves_v1');
+        const userPreferred = roomTemplates.find((t) => t.template_key === settingsTemplateKey);
+        setSelectedTemplateKey(genericDefault?.template_key || userPreferred?.template_key || roomTemplates[0].template_key);
     }, [roomTemplates, settingsTemplateKey]);
 
     const variableDefaults = useMemo(() => {

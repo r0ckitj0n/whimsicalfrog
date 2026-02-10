@@ -118,12 +118,14 @@ export const usePaymentModal = (isOpen: boolean, onClose: () => void) => {
                 const square_token = await tokenize(
                     billingPostal
                         ? {
-                            billing: {
-                                addressLines: [selectedAddress?.address_line_1, selectedAddress?.address_line_2].filter(Boolean) as string[],
-                                city: selectedAddress?.city || '',
-                                state: selectedAddress?.state || '',
-                                postalCode: billingPostal,
-                                countryCode: 'US'
+                            verificationDetails: {
+                                billingContact: {
+                                    addressLines: [selectedAddress?.address_line_1, selectedAddress?.address_line_2].filter(Boolean) as string[],
+                                    city: selectedAddress?.city || '',
+                                    state: selectedAddress?.state || '',
+                                    postalCode: billingPostal,
+                                    countryCode: 'US'
+                                }
                             }
                         }
                         : undefined

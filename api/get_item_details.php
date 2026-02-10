@@ -12,27 +12,6 @@ require_once __DIR__ . '/../includes/business_settings_helper.php';
 ini_set('display_errors', 0);
 ob_start();
 
-function ensureAiTierColumnsExistForItemDetails(): void
-{
-    try {
-        $cols = Database::queryAll("SHOW COLUMNS FROM items");
-        $existing = [];
-        foreach ($cols as $c) {
-            if (!empty($c['Field'])) {
-                $existing[$c['Field']] = true;
-            }
-        }
-        if (!isset($existing['cost_quality_tier'])) {
-            Database::execute("ALTER TABLE items ADD COLUMN cost_quality_tier VARCHAR(20) DEFAULT 'standard'");
-        }
-        if (!isset($existing['price_quality_tier'])) {
-            Database::execute("ALTER TABLE items ADD COLUMN price_quality_tier VARCHAR(20) DEFAULT 'standard'");
-        }
-    } catch (Throwable $e) {
-        error_log('Failed to ensure AI tier columns in get_item_details: ' . $e->getMessage());
-    }
-}
-
 try {
     try {
         $pdo = Database::getInstance();
@@ -47,8 +26,12 @@ try {
         exit;
     }
 
-    $sku = $_GET['sku'];
-    ensureAiTierColumnsExistForItemDetails();
+    $sku = trim((string)$_GET['sku']);
+    if (!preg_match('/^[A-Za-z0-9-]{3,64}$/', $sku)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid SKU format']);
+        exit;
+    }
 
     // Get item details with necessary fields - include saved AI suggestions
     $item = Database::queryOne("

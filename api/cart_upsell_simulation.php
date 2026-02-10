@@ -8,10 +8,12 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/upsell_rules_helper.php';
 require_once __DIR__ . '/../includes/upsell/simulator.php';
 
 try {
+    requireAdmin(true);
     Database::getInstance();
     
     // Ensure table exists
@@ -29,7 +31,7 @@ try {
     Response::validateMethod(['POST']);
     $input = Response::getJsonInput() ?? [];
     
-    $limit = isset($input['limit']) ? max(1, (int)$input['limit']) : 4;
+    $limit = isset($input['limit']) ? max(1, min(20, (int)$input['limit'])) : 4;
     $res = simulate_shopper_upsells($input['profile'] ?? [], $limit);
 
     // Persist to DB

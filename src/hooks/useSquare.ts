@@ -91,6 +91,13 @@ export const useSquare = (applicationId: string | null | undefined, locationId: 
     }, [applicationId, locationId]);
 
     const tokenize = useCallback(async (options?: {
+        billingContact?: {
+            addressLines?: string[];
+            city?: string;
+            state?: string;
+            postalCode?: string;
+            countryCode?: string;
+        };
         verificationDetails?: {
             billingContact?: {
                 addressLines?: string[];

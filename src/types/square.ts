@@ -38,6 +38,13 @@ export type { Environment } from '../core/constants.js';
 export interface ISquareCard {
     attach: (elementId: string) => Promise<void>;
     tokenize: (options?: {
+        billingContact?: {
+            addressLines?: string[];
+            city?: string;
+            state?: string;
+            postalCode?: string;
+            countryCode?: string;
+        };
         verificationDetails?: {
             billingContact?: {
                 addressLines?: string[];

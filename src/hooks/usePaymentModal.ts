@@ -115,16 +115,16 @@ export const usePaymentModal = (isOpen: boolean, onClose: () => void) => {
             try {
                 const selectedAddress = addresses.find(a => String(a.id) === String(selected_address_id ?? ''));
                 const billingPostal = (selectedAddress?.zip_code || user?.zip_code || '').trim();
+                const billingContact = {
+                    addressLines: [selectedAddress?.address_line_1, selectedAddress?.address_line_2].filter(Boolean) as string[],
+                    city: selectedAddress?.city || user?.city || '',
+                    state: selectedAddress?.state || user?.state || '',
+                    postalCode: billingPostal,
+                    countryCode: 'US' as const
+                };
                 const square_token = await tokenize({
-                    verificationDetails: {
-                        billingContact: {
-                            addressLines: [selectedAddress?.address_line_1, selectedAddress?.address_line_2].filter(Boolean) as string[],
-                            city: selectedAddress?.city || user?.city || '',
-                            state: selectedAddress?.state || user?.state || '',
-                            postalCode: billingPostal,
-                            countryCode: 'US'
-                        }
-                    }
+                    billingContact,
+                    verificationDetails: { billingContact }
                 });
                 token = square_token ?? undefined;
             } catch (err: unknown) {

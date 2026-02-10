@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useOrders } from './useOrders.js';
-import { ORDER_STATUS } from '../../core/constants.js';
 
 export const useOrderFulfillment = () => {
     const {
@@ -14,9 +13,7 @@ export const useOrderFulfillment = () => {
         payment_method_options
     } = useOrders();
 
-    const [filters, setFilters] = useState<Record<string, string>>({
-        filter_status: ORDER_STATUS.PROCESSING
-    });
+    const [filters, setFilters] = useState<Record<string, string>>({});
     const [showFilters, setShowFilters] = useState(false);
     const [editingCell, setEditingCell] = useState<{ id: string | number, field: string } | null>(null);
     const [editValue, setEditValue] = useState<string>('');
@@ -85,9 +82,9 @@ export const useOrderFulfillment = () => {
     }, []);
 
     const handleClearFilters = useCallback(() => {
-        const defaultFilters = { filter_status: ORDER_STATUS.PROCESSING };
-        setFilters(defaultFilters);
-        fetchOrders(defaultFilters);
+        const clearedFilters = {};
+        setFilters(clearedFilters);
+        fetchOrders(clearedFilters);
     }, [fetchOrders]);
 
     const toggleFilters = useCallback(() => setShowFilters(prev => !prev), []);

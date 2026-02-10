@@ -34,22 +34,22 @@ try {
 
     // Apply status filter only when explicitly provided
     if (!empty($filter_status)) {
-        $where_conditions[] = "o.status = ?";
+        $where_conditions[] = "LOWER(o.status) = LOWER(?)";
         $params[] = $filter_status;
     }
 
     if (!empty($filter_payment_method)) {
-        $where_conditions[] = "o.payment_method = ?";
+        $where_conditions[] = "LOWER(o.payment_method) = LOWER(?)";
         $params[] = $filter_payment_method;
     }
 
     if (!empty($filter_shipping_method)) {
-        $where_conditions[] = "o.shipping_method = ?";
+        $where_conditions[] = "LOWER(o.shipping_method) = LOWER(?)";
         $params[] = $filter_shipping_method;
     }
 
     if (!empty($filter_payment_status)) {
-        $where_conditions[] = "o.payment_status = ?";
+        $where_conditions[] = "LOWER(o.payment_status) = LOWER(?)";
         $params[] = $filter_payment_status;
     }
 

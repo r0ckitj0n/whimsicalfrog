@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useOrders } from '../../../hooks/admin/useOrders.js';
 import { useModalContext } from '../../../context/ModalContext.js';
 import { IOrder } from '../../../types/admin/orders.js';
@@ -60,6 +60,29 @@ export const OrdersManager: React.FC = () => {
     useEffect(() => {
         fetchDropdownOptions();
     }, [fetchDropdownOptions]);
+
+    const refreshOrders = useCallback(() => {
+        fetchOrders(filters);
+    }, [fetchOrders, filters]);
+
+    useEffect(() => {
+        const handleWindowFocus = () => refreshOrders();
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                refreshOrders();
+            }
+        };
+
+        window.addEventListener('focus', handleWindowFocus);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        const intervalId = window.setInterval(refreshOrders, 30000);
+
+        return () => {
+            window.removeEventListener('focus', handleWindowFocus);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.clearInterval(intervalId);
+        };
+    }, [refreshOrders]);
 
     const handleFilterChange = (newFilters: Record<string, string>) => {
         setFilters(newFilters);

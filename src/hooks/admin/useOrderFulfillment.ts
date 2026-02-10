@@ -23,6 +23,26 @@ export const useOrderFulfillment = () => {
         fetchOrders(filters);
     }, [filters, fetchOrders]);
 
+    useEffect(() => {
+        const refresh = () => fetchOrders(filters);
+        const handleWindowFocus = () => refresh();
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                refresh();
+            }
+        };
+
+        window.addEventListener('focus', handleWindowFocus);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        const intervalId = window.setInterval(refresh, 30000);
+
+        return () => {
+            window.removeEventListener('focus', handleWindowFocus);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.clearInterval(intervalId);
+        };
+    }, [fetchOrders, filters]);
+
     const handleCellClick = useCallback((orderId: string | number, field: string, currentValue: string) => {
         setEditingCell({ id: orderId, field });
         setEditValue(currentValue || '');

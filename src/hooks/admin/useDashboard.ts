@@ -31,7 +31,7 @@ export const useDashboard = () => {
                 ApiClient.get<IDashboardMetrics>(`/api/get_dashboard_metrics.php?_t=${timestamp}`),
                 ApiClient.get<IOrdersResponse>(`/api/orders.php?limit=5&_t=${timestamp}`),
                 ApiClient.get<IInventoryResponse>(`/api/inventory.php?filter=low_stock&_t=${timestamp}`),
-                ApiClient.get<{ success: boolean; data?: { sections: IDashboardSection[] } }>(`/api/dashboard_sections.php?action=get_sections&_t=${timestamp}`)
+                ApiClient.get<{ success?: boolean; sections?: IDashboardSectionRaw[]; data?: { sections?: IDashboardSectionRaw[] } }>(`/api/dashboard_sections.php?action=get_sections&_t=${timestamp}`)
             ]);
 
             if (metricsRes) {
@@ -53,7 +53,7 @@ export const useDashboard = () => {
                 is_active?: string | number;
                 display_order?: string | number;
             }
-            const configData = (configRes?.data?.sections || []) as unknown as IDashboardSectionRaw[];
+            const configData = (configRes?.sections || configRes?.data?.sections || []) as IDashboardSectionRaw[];
             const mappedSections: IDashboardSection[] = configData.map((s: IDashboardSectionRaw) => ({
                 key: s.section_key,
                 title: s.display_title || s.section_key,
@@ -63,7 +63,12 @@ export const useDashboard = () => {
                 order: parseInt(String(s.display_order || 0))
             }));
 
-            if (mappedSections.length > 0) setConfig(mappedSections);
+            if (mappedSections.length > 0) {
+                const visibleSections = mappedSections
+                    .filter((section) => section.is_visible)
+                    .sort((a, b) => a.order - b.order);
+                setConfig(visibleSections);
+            }
 
         } catch (err) {
             logger.error('[useDashboard] Failed to fetch dashboard data', err);

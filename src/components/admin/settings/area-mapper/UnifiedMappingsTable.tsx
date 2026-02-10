@@ -136,7 +136,7 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                 area: m.area_selector,
                 status: 'explicit',
                 explicit: m,
-                live: m // Explicit mappings are also the live view
+                live: undefined
             });
         }
 
@@ -155,7 +155,7 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                     live: m
                 });
             } else {
-                // Explicit from live view (fallback)
+                // Explicit mapping present in live view but not in list_room_raw
                 slotMap.set(m.area_selector, {
                     area: m.area_selector,
                     status: 'explicit',

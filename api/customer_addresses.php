@@ -1,6 +1,8 @@
 <?php
 // Customer Addresses API
 require_once __DIR__ . '/config.php';
+require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/helpers/AddressValidationHelper.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
@@ -50,10 +52,24 @@ try {
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
     $user_id = $_GET['user_id'] ?? $_POST['user_id'] ?? '';
 
+    if (!isLoggedIn()) {
+        http_response_code(401);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Authentication required'
+        ]);
+        exit;
+    }
+
     switch ($action) {
         case 'get_addresses':
             if (empty($user_id)) {
                 throw new Exception('User ID is required');
+            }
+            if (!AddressValidationHelper::canMutateCustomerOwner((string) $user_id)) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'error' => 'Forbidden']);
+                exit;
             }
 
             $addresses = Database::queryAll("SELECT * FROM addresses WHERE owner_type = ? AND owner_id = ? ORDER BY is_default DESC, address_name ASC", ['customer', $user_id]);
@@ -67,29 +83,31 @@ try {
 
         case 'add_address':
             $data = wf_normalize_address_input($_POST);
-
-            $required = ['user_id', 'address_name', 'address_line_1', 'city', 'state', 'zip_code'];
-            foreach ($required as $field) {
-                if (empty($data[$field])) {
-                    throw new Exception("$field is required");
-                }
+            $targetUserId = trim((string) ($data['user_id'] ?? ''));
+            if (!AddressValidationHelper::canMutateCustomerOwner($targetUserId)) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'error' => 'Forbidden']);
+                exit;
             }
+            AddressValidationHelper::assertOwnerExists('customer', $targetUserId);
+            $normalized = AddressValidationHelper::normalize($data);
+            AddressValidationHelper::assertRequired($normalized);
 
             // If this is set as default, unset other defaults
-            if (!empty($data['is_default'])) {
-                Database::execute("UPDATE addresses SET is_default = 0 WHERE owner_type = ? AND owner_id = ?", ['customer', $data['user_id']]);
+            if ((int) $normalized['is_default'] === 1) {
+                Database::execute("UPDATE addresses SET is_default = 0 WHERE owner_type = ? AND owner_id = ?", ['customer', $targetUserId]);
             }
 
             Database::execute("INSERT INTO addresses (owner_type, owner_id, address_name, address_line_1, address_line_2, city, state, zip_code, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                 'customer',
-                $data['user_id'],
-                $data['address_name'],
-                $data['address_line_1'],
-                $data['address_line_2'] ?? '',
-                $data['city'],
-                $data['state'],
-                $data['zip_code'],
-                !empty($data['is_default']) ? 1 : 0
+                $targetUserId,
+                $normalized['address_name'],
+                $normalized['address_line_1'],
+                $normalized['address_line_2'],
+                $normalized['city'],
+                $normalized['state'],
+                $normalized['zip_code'],
+                (int) $normalized['is_default']
             ]);
 
             $addressId = Database::lastInsertId();
@@ -107,24 +125,33 @@ try {
             if (empty($data['id'])) {
                 throw new Exception('Address ID is required');
             }
+            $existingAddress = Database::queryOne("SELECT owner_id FROM addresses WHERE id = ? AND owner_type = ?", [$data['id'], 'customer']);
+            if (!$existingAddress) {
+                throw new Exception('Address not found');
+            }
+            $targetUserId = (string) ($existingAddress['owner_id'] ?? '');
+            if (!AddressValidationHelper::canMutateCustomerOwner($targetUserId)) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'error' => 'Forbidden']);
+                exit;
+            }
+            AddressValidationHelper::assertOwnerExists('customer', $targetUserId);
+            $normalized = AddressValidationHelper::normalize($data);
+            AddressValidationHelper::assertRequired($normalized);
 
             // If this is set as default, unset other defaults for this user
-            if (!empty($data['is_default'])) {
-                // Get user_id for this address first (MySQL doesn't allow UPDATE with subquery on same table)
-                $address = Database::queryOne("SELECT owner_id FROM addresses WHERE id = ? AND owner_type = ?", [$data['id'], 'customer']);
-                if ($address) {
-                    Database::execute("UPDATE addresses SET is_default = 0 WHERE owner_type = ? AND owner_id = ?", ['customer', $address['owner_id']]);
-                }
+            if ((int) $normalized['is_default'] === 1) {
+                Database::execute("UPDATE addresses SET is_default = 0 WHERE owner_type = ? AND owner_id = ?", ['customer', $targetUserId]);
             }
 
             Database::execute("UPDATE addresses SET address_name = ?, address_line_1 = ?, address_line_2 = ?, city = ?, state = ?, zip_code = ?, is_default = ? WHERE id = ? AND owner_type = ?", [
-                $data['address_name'],
-                $data['address_line_1'],
-                $data['address_line_2'] ?? '',
-                $data['city'],
-                $data['state'],
-                $data['zip_code'],
-                !empty($data['is_default']) ? 1 : 0,
+                $normalized['address_name'],
+                $normalized['address_line_1'],
+                $normalized['address_line_2'],
+                $normalized['city'],
+                $normalized['state'],
+                $normalized['zip_code'],
+                (int) $normalized['is_default'],
                 $data['id'],
                 'customer'
             ]);
@@ -143,6 +170,15 @@ try {
             }
 
             $address = Database::queryOne("SELECT owner_id FROM addresses WHERE id = ? AND owner_type = ?", [$addressId, 'customer']);
+            if (!$address) {
+                throw new Exception('Address not found');
+            }
+            $targetUserId = (string) ($address['owner_id'] ?? '');
+            if (!AddressValidationHelper::canMutateCustomerOwner($targetUserId)) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'error' => 'Forbidden']);
+                exit;
+            }
             Database::execute("DELETE FROM addresses WHERE id = ? AND owner_type = ?", [$addressId, 'customer']);
 
             echo json_encode([
@@ -164,9 +200,15 @@ try {
             if (!$address) {
                 throw new Exception('Address not found');
             }
+            $targetUserId = (string) ($address['owner_id'] ?? '');
+            if (!AddressValidationHelper::canMutateCustomerOwner($targetUserId)) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'error' => 'Forbidden']);
+                exit;
+            }
 
             // Unset all defaults for this user
-            Database::execute("UPDATE addresses SET is_default = 0 WHERE owner_type = ? AND owner_id = ?", ['customer', $address['owner_id']]);
+            Database::execute("UPDATE addresses SET is_default = 0 WHERE owner_type = ? AND owner_id = ?", ['customer', $targetUserId]);
 
             // Set this as default
             Database::execute("UPDATE addresses SET is_default = 1 WHERE id = ? AND owner_type = ?", [$addressId, 'customer']);
@@ -181,7 +223,13 @@ try {
             throw new Exception('Invalid action');
     }
 
-} catch (Exception $e) {
+} catch (InvalidArgumentException $e) {
+    http_response_code(422);
+    echo json_encode([
+        'success' => false,
+        'error' => $e->getMessage()
+    ]);
+} catch (Throwable $e) {
     http_response_code(500);
     echo json_encode([
         'success' => false,

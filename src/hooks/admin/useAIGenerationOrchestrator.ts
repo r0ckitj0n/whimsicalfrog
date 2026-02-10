@@ -504,7 +504,9 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                 description,
                 category,
                 useImages: true,
-                fresh_start: freshStart
+                fresh_start: freshStart,
+                whimsicalTheme: true,
+                contentTone: 'whimsical_frog'
             });
 
             if (response && response.success) {

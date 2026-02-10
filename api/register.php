@@ -4,6 +4,7 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/helpers/ProfileCompletionHelper.php';
+require_once __DIR__ . '/../includes/helpers/AddressValidationHelper.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
@@ -114,18 +115,29 @@ try {
         $last_name,
         $phone_number
     ]);
+    $normalizedAddress = AddressValidationHelper::normalize([
+        'address_name' => 'Primary',
+        'address_line_1' => $address_line_1,
+        'address_line_2' => $address_line_2,
+        'city' => $city,
+        'state' => $state,
+        'zip_code' => $zip_code,
+        'is_default' => 1,
+    ]);
+    AddressValidationHelper::assertRequired($normalizedAddress);
+    AddressValidationHelper::assertOwnerExists('customer', (string) $user_id);
 
     Database::execute(
         'INSERT INTO addresses (owner_type, owner_id, address_name, address_line_1, address_line_2, city, state, zip_code, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)',
         [
             'customer',
             $user_id,
-            'Primary',
-            $address_line_1,
-            $address_line_2,
-            $city,
-            $state,
-            $zip_code
+            (string) $normalizedAddress['address_name'],
+            (string) $normalizedAddress['address_line_1'],
+            (string) $normalizedAddress['address_line_2'],
+            (string) $normalizedAddress['city'],
+            (string) $normalizedAddress['state'],
+            (string) $normalizedAddress['zip_code']
         ]
     );
 

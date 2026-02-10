@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/AddressValidationHelper.php';
 
 class CustomerAddressSyncHelper
 {
@@ -10,6 +11,7 @@ class CustomerAddressSyncHelper
         if ($userId === '') {
             return null;
         }
+        AddressValidationHelper::assertOwnerExists('customer', $userId);
 
         $row = Database::queryOne(
             'SELECT id, owner_type, owner_id, address_name, address_line_1, address_line_2, city, state, zip_code, is_default
@@ -76,18 +78,18 @@ class CustomerAddressSyncHelper
         if ($userId === '') {
             return;
         }
+        AddressValidationHelper::assertOwnerExists('customer', $userId);
 
-        $normalized = [
-            'address_line_1' => self::norm($address['address_line_1'] ?? null),
-            'address_line_2' => self::norm($address['address_line_2'] ?? null),
-            'city' => self::norm($address['city'] ?? null),
-            'state' => self::norm($address['state'] ?? null),
-            'zip_code' => self::norm($address['zip_code'] ?? null),
-        ];
-
-        if (!self::isAddressComplete($normalized)) {
-            return;
-        }
+        $normalized = AddressValidationHelper::normalize([
+            'address_name' => $address['address_name'] ?? 'Primary',
+            'address_line_1' => $address['address_line_1'] ?? null,
+            'address_line_2' => $address['address_line_2'] ?? null,
+            'city' => $address['city'] ?? null,
+            'state' => $address['state'] ?? null,
+            'zip_code' => $address['zip_code'] ?? null,
+            'is_default' => 1,
+        ]);
+        AddressValidationHelper::assertRequired($normalized);
 
         $target = Database::queryOne(
             'SELECT id, address_name FROM addresses WHERE owner_type = ? AND owner_id = ? AND is_default = 1 ORDER BY id ASC LIMIT 1',
@@ -147,14 +149,4 @@ class CustomerAddressSyncHelper
         return trim((string) $value);
     }
 
-    /**
-     * @param array<string, string> $address
-     */
-    private static function isAddressComplete(array $address): bool
-    {
-        return $address['address_line_1'] !== ''
-            && $address['city'] !== ''
-            && $address['state'] !== ''
-            && $address['zip_code'] !== '';
-    }
 }

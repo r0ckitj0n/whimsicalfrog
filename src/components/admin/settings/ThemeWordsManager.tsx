@@ -147,6 +147,21 @@ export const ThemeWordsManager: React.FC<ThemeWordsManagerProps> = ({ onClose, t
         }
     };
 
+    const handleToggleCategoryActive = async (cat: ICategory) => {
+        setIsSaving(true);
+        try {
+            const nextActive = !Boolean(cat.is_active);
+            const res = await saveCategory({ ...cat, is_active: nextActive });
+            if (res?.success) {
+                if (window.WFToast) window.WFToast.success(nextActive ? 'Category activated' : 'Category deactivated');
+            } else {
+                if (window.WFToast) window.WFToast.error(res?.error || 'Failed to update category');
+            }
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const modalContent = (
         <div
             className="admin-modal-overlay over-header show topmost"
@@ -228,6 +243,7 @@ export const ThemeWordsManager: React.FC<ThemeWordsManagerProps> = ({ onClose, t
                                 startInlineCategoryEdit={startInlineCategoryEdit}
                                 setEditingCategory={setEditingCategory}
                                 deleteCategory={deleteCategory}
+                                toggleCategoryActive={handleToggleCategoryActive}
                             />
                         ) : (
                             <WordGrid

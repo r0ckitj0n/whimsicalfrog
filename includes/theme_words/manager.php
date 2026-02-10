@@ -31,6 +31,23 @@ function normalize_tags($tags): string
     return implode(',', array_unique(array_filter(array_map('trim', $parts))));
 }
 
+function wf_theme_words_has_category_id_column(): bool
+{
+    static $hasCategoryId = null;
+    if ($hasCategoryId !== null) {
+        return $hasCategoryId;
+    }
+
+    try {
+        $rows = Database::queryAll("SHOW COLUMNS FROM theme_words LIKE 'category_id'");
+        $hasCategoryId = !empty($rows);
+    } catch (Throwable $e) {
+        $hasCategoryId = false;
+    }
+
+    return $hasCategoryId;
+}
+
 function get_theme_words_list($db)
 {
     $rows = Database::queryAll('SELECT * FROM theme_words ORDER BY base_word ASC');
@@ -88,22 +105,40 @@ function delete_theme_word_category(PDO $db, $id): bool
  */
 function get_diverse_theme_words($limit = 3, $category = null): array
 {
-    $where = "is_active = 1";
+    $where = "tw.is_active = 1 AND COALESCE(twc.is_active, 1) = 1";
     $params = [];
+    $hasCategoryId = wf_theme_words_has_category_id_column();
+
     if ($category) {
         if (is_numeric($category)) {
-            $where .= " AND category_id = ?";
-            $params[] = (int) $category;
+            if ($hasCategoryId) {
+                $where .= " AND (tw.category_id = ? OR twc.id = ?)";
+                $params[] = (int) $category;
+                $params[] = (int) $category;
+            } else {
+                $where .= " AND twc.id = ?";
+                $params[] = (int) $category;
+            }
         } else {
-            $where .= " AND category = ?";
-            $params[] = $category;
+            $where .= " AND LOWER(tw.category) = LOWER(?)";
+            $params[] = (string) $category;
         }
     }
 
-    $sql = "SELECT * FROM theme_words 
-            WHERE $where 
-            AND (max_usage_per_day IS NULL OR daily_usage_count < max_usage_per_day)
-            ORDER BY daily_usage_count ASC, usage_count ASC, last_used_at ASC 
+    $joinClause = $hasCategoryId
+        ? "LEFT JOIN theme_word_categories twc
+           ON (
+                (tw.category_id IS NOT NULL AND tw.category_id = twc.id)
+                OR
+                (tw.category_id IS NULL AND LOWER(tw.category) = LOWER(twc.name))
+           )"
+        : "LEFT JOIN theme_word_categories twc ON LOWER(tw.category) = LOWER(twc.name)";
+
+    $sql = "SELECT tw.* FROM theme_words tw
+            {$joinClause}
+            WHERE $where
+            AND (tw.max_usage_per_day IS NULL OR tw.daily_usage_count < tw.max_usage_per_day)
+            ORDER BY tw.daily_usage_count ASC, tw.usage_count ASC, tw.last_used_at ASC
             LIMIT " . (int) $limit;
 
     $words = Database::queryAll($sql, $params);

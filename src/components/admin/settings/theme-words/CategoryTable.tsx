@@ -11,6 +11,7 @@ interface CategoryTableProps {
     startInlineCategoryEdit: (cat: ICategory) => void;
     setEditingCategory: (cat: ICategory) => void;
     deleteCategory: (id: number) => Promise<boolean>;
+    toggleCategoryActive: (cat: ICategory) => Promise<void>;
 }
 
 export const CategoryTable: React.FC<CategoryTableProps> = ({
@@ -21,7 +22,8 @@ export const CategoryTable: React.FC<CategoryTableProps> = ({
     handleInlineCategoryBlur,
     startInlineCategoryEdit,
     setEditingCategory,
-    deleteCategory
+    deleteCategory,
+    toggleCategoryActive
 }) => {
     const { confirm: themedConfirm } = useModalContext();
 
@@ -33,7 +35,7 @@ export const CategoryTable: React.FC<CategoryTableProps> = ({
                         <th className="px-6 py-4">Category Name</th>
                         <th className="px-6 py-4">Slug</th>
                         <th className="px-6 py-4">Display Order</th>
-                        <th className="px-6 py-4">Status</th>
+                        <th className="px-6 py-4 text-center">Active</th>
                         <th className="px-6 py-4 text-right">Actions</th>
                     </tr>
                 </thead>
@@ -63,10 +65,16 @@ export const CategoryTable: React.FC<CategoryTableProps> = ({
                             </td>
                             <td className="px-6 py-4 text-[10px] text-slate-400 font-mono uppercase">{cat.slug}</td>
                             <td className="px-6 py-4">{cat.sort_order}</td>
-                            <td className="px-6 py-4">
-                                <span className={`px-2 py-1 rounded-md text-[9px] uppercase tracking-tighter ${cat.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                                    {cat.is_active ? 'Active' : 'Inactive'}
-                                </span>
+                            <td className="px-6 py-4 text-center">
+                                <label className="relative inline-flex items-center cursor-pointer" data-help-id="theme-word-category-active-toggle">
+                                    <input
+                                        type="checkbox"
+                                        checked={Boolean(cat.is_active)}
+                                        onChange={() => { void toggleCategoryActive(cat); }}
+                                        className="sr-only peer"
+                                    />
+                                    <div className={`w-9 h-5 rounded-full peer-focus:ring-2 peer-focus:ring-blue-200 transition-colors ${cat.is_active ? 'bg-emerald-500' : 'bg-slate-300'} peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-transform after:shadow-sm`}></div>
+                                </label>
                             </td>
                             <td className="px-6 py-4 text-right">
                                 <div className="flex justify-end gap-1">

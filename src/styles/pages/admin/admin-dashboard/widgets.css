@@ -4,3 +4,12 @@
 @import url("./widgets/widgets-templates.css");
 @import url("./widgets/widgets-troubleshooting.css");
 @import url("./widgets/widgets-icons.css");
+
+/* Shared dashboard field typography for all cards/widgets. */
+#dashboardGrid .dashboard-section {
+  --wf-dashboard-field-font-size: 0.875rem;
+}
+
+#dashboardGrid .dashboard-section :is(input, select, textarea) {
+  font-size: var(--wf-dashboard-field-font-size);
+}

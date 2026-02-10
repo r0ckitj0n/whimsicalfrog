@@ -8,6 +8,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
+require_once __DIR__ . '/../includes/inventory_helper.php';
 
 @ini_set('display_errors', 0);
 @ini_set('html_errors', 0);
@@ -21,9 +22,34 @@ if (!((strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false) || (strpos($_
 
 try {
     $db = Database::getInstance();
+    InventoryHelper::ensureArchiveColumns();
 
     // 1. Fetch core metrics
-    $total_items = (int) (Database::queryOne('SELECT COUNT(*) as count FROM items')['count'] ?? 0);
+    $inventoryTotals = Database::queryOne(
+        "SELECT
+            COUNT(*) AS item_count,
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN COALESCE(size_totals.variant_count, 0) > 0 THEN COALESCE(size_totals.total_stock, 0)
+                        ELSE COALESCE(i.stock_quantity, 0)
+                    END
+                ),
+                0
+            ) AS total_stock_units
+        FROM items i
+        LEFT JOIN (
+            SELECT
+                item_sku,
+                COUNT(*) AS variant_count,
+                COALESCE(SUM(CASE WHEN is_active = 1 THEN stock_level ELSE 0 END), 0) AS total_stock
+            FROM item_sizes
+            GROUP BY item_sku
+        ) AS size_totals ON size_totals.item_sku = i.sku
+        WHERE i.is_archived = 0"
+    );
+    $total_items = (int) ($inventoryTotals['item_count'] ?? 0);
+    $total_stock_units = (int) ($inventoryTotals['total_stock_units'] ?? 0);
     $total_orders = (int) (Database::queryOne('SELECT COUNT(*) as count FROM orders')['count'] ?? 0);
     $total_customers = (int) (Database::queryOne('SELECT COUNT(*) as count FROM users WHERE role != "admin"')['count'] ?? 0);
     $total_revenue = (float) (Database::queryOne('SELECT SUM(total_amount) as revenue FROM orders')['revenue'] ?? 0);
@@ -56,7 +82,27 @@ try {
     );
 
     // 3. Fetch Top Stock Items (Aligned with inventory_summary.php)
-    $topStockItems = Database::queryAll('SELECT name, sku, stock_quantity FROM items ORDER BY stock_quantity DESC LIMIT 3');
+    $topStockItems = Database::queryAll(
+        "SELECT
+            i.name,
+            i.sku,
+            CASE
+                WHEN COALESCE(size_totals.variant_count, 0) > 0 THEN COALESCE(size_totals.total_stock, 0)
+                ELSE COALESCE(i.stock_quantity, 0)
+            END AS stock_quantity
+        FROM items i
+        LEFT JOIN (
+            SELECT
+                item_sku,
+                COUNT(*) AS variant_count,
+                COALESCE(SUM(CASE WHEN is_active = 1 THEN stock_level ELSE 0 END), 0) AS total_stock
+            FROM item_sizes
+            GROUP BY item_sku
+        ) AS size_totals ON size_totals.item_sku = i.sku
+        WHERE i.is_archived = 0
+        ORDER BY stock_quantity DESC, i.sku ASC
+        LIMIT 3"
+    );
 
     // 4. Fetch Recent Customers
     $recentCustomers = Database::queryAll(
@@ -76,6 +122,7 @@ try {
 
     Response::success([
         'total_items' => $total_items,
+        'total_stock_units' => $total_stock_units,
         'total_orders' => $total_orders,
         'total_customers' => $total_customers,
         'total_revenue' => $total_revenue,

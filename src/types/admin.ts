@@ -5,6 +5,7 @@ export interface IDashboardMetrics {
     total_orders: number;
     total_customers: number;
     total_items: number;
+    total_stock_units?: number;
     top_stock_items?: Array<{
         sku: string;
         name: string;
@@ -185,6 +186,5 @@ export interface IAutomationPlaybookResponse {
         setting_value: string | IAutomationPlaybook[];
     }>;
 }
-
 
 

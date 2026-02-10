@@ -50,6 +50,7 @@ export const AdminDashboard: React.FC = () => {
                 />;
             case 'inventory_summary':
                 return <InventorySummaryWidget
+                    totalStockUnits={metrics?.total_stock_units || 0}
                     total_items={metrics?.total_items || 0}
                     lowStock={lowStockItems.length}
                     topStockItems={metrics?.top_stock_items || []}

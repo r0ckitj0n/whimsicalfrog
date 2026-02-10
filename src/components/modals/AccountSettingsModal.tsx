@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ProfileForm } from './partials/ProfileForm.js';
 import { AddressSection } from './partials/AddressSection.js';
+import { CustomerProfilePreferencesForm } from './partials/CustomerProfilePreferencesForm.js';
 import { useAccountSettings } from '../../hooks/useAccountSettings.js';
 import { useUnsavedChangesCloseGuard } from '../../hooks/useUnsavedChangesCloseGuard.js';
 
@@ -73,7 +74,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
             <div
                 className="wf-modal-card my-auto animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 overflow-hidden flex flex-col"
                 style={{
-                    maxWidth: '1000px',
+                    maxWidth: '1500px',
                     width: '100%',
                     maxHeight: '100%',
                     backgroundColor: 'white',
@@ -130,14 +131,21 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div className="flex-1 overflow-y-auto p-6 xl:p-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                         <ProfileForm
                             formData={formData}
                             handleInputChange={handleInputChange}
                             handleSaveProfile={handleSaveProfile}
                             isSaving={isSaving}
                             isEditing={isEditing}
+                        />
+
+                        <CustomerProfilePreferencesForm
+                            formData={formData}
+                            handleInputChange={handleInputChange}
+                            isEditing={isEditing}
+                            isSaving={isSaving}
                         />
 
                         <AddressSection

@@ -1,17 +1,9 @@
 import React from 'react';
-
-interface ProfileFormData {
-    email: string;
-    first_name: string;
-    last_name: string;
-    phone_number: string;
-    currentPassword?: string;
-    newPassword?: string;
-}
+import { IAccountSettingsFormData } from '../../../types/account.js';
 
 interface ProfileFormProps {
-    formData: ProfileFormData;
-    handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    formData: IAccountSettingsFormData;
+    handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
     handleSaveProfile: (e: React.FormEvent) => void;
     isSaving: boolean;
     isEditing: boolean;
@@ -31,14 +23,14 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
             </div>
 
             <form onSubmit={handleSaveProfile} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col">
                         <label>First Name</label>
                         <input
                             type="text" name="first_name"
                             value={formData.first_name}
                             onChange={handleInputChange}
-                            disabled={!isEditing}
+                            disabled={!isEditing || isSaving}
                             className="form-input"
                             autoComplete="given-name"
                         />
@@ -49,7 +41,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                             type="text" name="last_name"
                             value={formData.last_name}
                             onChange={handleInputChange}
-                            disabled={!isEditing}
+                            disabled={!isEditing || isSaving}
                             className="form-input"
                             autoComplete="family-name"
                         />
@@ -62,7 +54,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                         type="email" name="email" required
                         value={formData.email}
                         onChange={handleInputChange}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isSaving}
                         className="form-input"
                         autoComplete="email"
                     />
@@ -74,8 +66,9 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                         type="tel" name="phone_number"
                         value={formData.phone_number}
                         onChange={handleInputChange}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isSaving}
                         className="form-input"
+                        autoComplete="tel"
                     />
                 </div>
 
@@ -89,7 +82,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                             type="password" name="currentPassword"
                             value={formData.currentPassword}
                             onChange={handleInputChange}
-                            disabled={!isEditing}
+                            disabled={!isEditing || isSaving}
                             className="form-input"
                             placeholder="Required to change password"
                             autoComplete="current-password"
@@ -101,7 +94,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
                             type="password" name="newPassword"
                             value={formData.newPassword}
                             onChange={handleInputChange}
-                            disabled={!isEditing}
+                            disabled={!isEditing || isSaving}
                             className="form-input"
                             placeholder="Leave blank to keep current"
                             autoComplete="new-password"

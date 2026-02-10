@@ -4,6 +4,7 @@ import { useCustomers } from '../hooks/admin/useCustomers.js';
 import { ICustomerAddress } from '../types/admin/customers.js';
 import { useModalContext } from '../context/ModalContext.js';
 import ApiClient from '../core/ApiClient.js';
+import { IAccountSettingsFormData } from '../types/account.js';
 
 /**
  * Hook for managing account settings state and actions.
@@ -12,6 +13,7 @@ import ApiClient from '../core/ApiClient.js';
 export const useAccountSettings = () => {
     const { user, refresh } = useAuthContext();
     const {
+        fetchCustomerDetails,
         fetchCustomerAddresses,
         saveAddress,
         deleteAddress,
@@ -20,14 +22,20 @@ export const useAccountSettings = () => {
 
     const { confirm: confirmModal } = useModalContext();
 
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<IAccountSettingsFormData>({
         email: '',
         first_name: '',
         last_name: '',
         phone_number: '',
+        company: '',
+        job_title: '',
+        preferred_contact: '',
+        preferred_language: '',
+        marketing_opt_in: false,
         currentPassword: '',
         newPassword: ''
     });
+    const [initialFormData, setInitialFormData] = useState<IAccountSettingsFormData | null>(null);
 
     const [addresses, setAddresses] = useState<ICustomerAddress[]>([]);
     const [editingAddress, setEditingAddress] = useState<Partial<ICustomerAddress> | null>(null);
@@ -36,35 +44,47 @@ export const useAccountSettings = () => {
     const [isInitialized, setIsInitialized] = useState(false);
     const isPasswordDirty = Boolean(formData.newPassword);
 
-    const isProfileDirty = isInitialized && user ? (
-        (formData.email || '').trim() !== (user.email || '').trim() ||
-        (formData.first_name || '').trim() !== (user.first_name || '').trim() ||
-        (formData.last_name || '').trim() !== (user.last_name || '').trim() ||
-        (formData.phone_number || '').trim() !== (user.phone_number || '').trim() ||
+    const isProfileDirty = isInitialized && initialFormData ? (
+        (formData.email || '').trim() !== (initialFormData.email || '').trim() ||
+        (formData.first_name || '').trim() !== (initialFormData.first_name || '').trim() ||
+        (formData.last_name || '').trim() !== (initialFormData.last_name || '').trim() ||
+        (formData.phone_number || '').trim() !== (initialFormData.phone_number || '').trim() ||
+        (formData.company || '').trim() !== (initialFormData.company || '').trim() ||
+        (formData.job_title || '').trim() !== (initialFormData.job_title || '').trim() ||
+        (formData.preferred_contact || '').trim() !== (initialFormData.preferred_contact || '').trim() ||
+        (formData.preferred_language || '').trim() !== (initialFormData.preferred_language || '').trim() ||
+        formData.marketing_opt_in !== initialFormData.marketing_opt_in ||
         isPasswordDirty
     ) : false;
 
     useEffect(() => {
-        if (user) {
-            setFormData(prev => ({
-                ...prev,
-                email: user.email,
-                first_name: user.first_name || '',
-                last_name: user.last_name || '',
-                phone_number: user.phone_number || ''
-            }));
-            setIsInitialized(true);
+        if (!user) return;
 
-            const loadAddresses = async () => {
-                const addr = await fetchCustomerAddresses(user.id);
-                setAddresses(addr);
-            };
-            loadAddresses();
-        }
-    }, [user, fetchCustomerAddresses]);
+        const baseFormData: IAccountSettingsFormData = {
+            email: user.email || '',
+            first_name: user.first_name || '',
+            last_name: user.last_name || '',
+            phone_number: user.phone_number || '',
+            company: '',
+            job_title: '',
+            preferred_contact: '',
+            preferred_language: '',
+            marketing_opt_in: false,
+            currentPassword: '',
+            newPassword: ''
+        };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+        setFormData(baseFormData);
+        setInitialFormData(baseFormData);
+        setIsInitialized(true);
+    }, [user]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const target = e.target;
+        const value = target instanceof HTMLInputElement && target.type === 'checkbox'
+            ? target.checked
+            : target.value;
+        setFormData(prev => ({ ...prev, [target.name]: value }));
     };
 
     const handleSaveProfile = async (e?: React.FormEvent): Promise<boolean> => {
@@ -79,7 +99,12 @@ export const useAccountSettings = () => {
                 email: formData.email,
                 first_name: formData.first_name,
                 last_name: formData.last_name,
-                phone_number: formData.phone_number
+                phone_number: formData.phone_number,
+                company: formData.company,
+                job_title: formData.job_title,
+                preferred_contact: formData.preferred_contact,
+                preferred_language: formData.preferred_language,
+                marketing_opt_in: formData.marketing_opt_in ? '1' : '0'
             };
 
             let res;
@@ -101,11 +126,13 @@ export const useAccountSettings = () => {
                 if (window.WFToast) window.WFToast.success('Profile updated successfully');
                 setIsEditing(false);
                 setIsInitialized(false); // Force re-initialize after save
-                setFormData(prev => ({ ...prev, currentPassword: '', newPassword: '' }));
+                const updatedFormData = { ...formData, currentPassword: '', newPassword: '' };
+                setFormData(updatedFormData);
+                setInitialFormData(updatedFormData);
                 return true;
-            } else {
-                throw new Error(res?.error || 'Failed to update profile');
             }
+
+            throw new Error(res?.error || 'Failed to update profile');
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Update failed';
             if (window.WFToast) window.WFToast.error(message);
@@ -119,7 +146,6 @@ export const useAccountSettings = () => {
         e.preventDefault();
         if (!editingAddress || !user) return;
 
-        // Duplicate name check
         const isDuplicate = addresses.some(addr =>
             addr.address_name.toLowerCase() === editingAddress.address_name?.toLowerCase() &&
             addr.id !== editingAddress.id
@@ -166,17 +192,49 @@ export const useAccountSettings = () => {
     const reset = () => {
         setIsEditing(false);
         if (user) {
-            setFormData({
+            const resetFormData: IAccountSettingsFormData = {
                 email: user.email || '',
                 first_name: user.first_name || '',
                 last_name: user.last_name || '',
                 phone_number: user.phone_number || '',
+                company: '',
+                job_title: '',
+                preferred_contact: '',
+                preferred_language: '',
+                marketing_opt_in: false,
                 currentPassword: '',
                 newPassword: ''
-            });
+            };
+            setFormData(resetFormData);
+            setInitialFormData(resetFormData);
             setIsInitialized(true);
+
+            void (async () => {
+                const [detail, addr] = await Promise.all([
+                    fetchCustomerDetails(user.id),
+                    fetchCustomerAddresses(user.id)
+                ]);
+
+                if (detail) {
+                    const enrichedFormData: IAccountSettingsFormData = {
+                        ...resetFormData,
+                        company: detail.company || '',
+                        job_title: detail.job_title || '',
+                        preferred_contact: detail.preferred_contact || '',
+                        preferred_language: detail.preferred_language || '',
+                        marketing_opt_in: String(detail.marketing_opt_in ?? '0') === '1'
+                    };
+                    setFormData(enrichedFormData);
+                    setInitialFormData(enrichedFormData);
+                } else if (window.WFToast) {
+                    window.WFToast.error('Failed to load customer profile details');
+                }
+
+                setAddresses(addr);
+            })();
         } else {
             setIsInitialized(false);
+            setInitialFormData(null);
         }
     };
 

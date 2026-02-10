@@ -2,12 +2,14 @@ import React from 'react';
 import { buildAdminUrl } from '../../../../core/admin-url-builder.js';
 
 interface InventorySummaryWidgetProps {
+    totalStockUnits: number;
     total_items: number;
     lowStock: number;
     topStockItems: Array<{ name: string; sku: string; stock_quantity: number }>;
 }
 
 export const InventorySummaryWidget: React.FC<InventorySummaryWidgetProps> = ({
+    totalStockUnits,
     total_items,
     lowStock,
     topStockItems
@@ -16,8 +18,9 @@ export const InventorySummaryWidget: React.FC<InventorySummaryWidgetProps> = ({
         <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
                 <div className="bg-[var(--brand-primary)]/5 rounded text-center p-3">
-                    <div className="text-lg font-bold text-[var(--brand-primary)]">{total_items}</div>
-                    <div className="text-xs text-[var(--brand-primary)] opacity-80">Total Items</div>
+                    <div className="text-lg font-bold text-[var(--brand-primary)]">{totalStockUnits}</div>
+                    <div className="text-xs text-[var(--brand-primary)] opacity-80">Total Stock Units</div>
+                    <div className="text-[10px] text-gray-500 mt-1">{total_items} items</div>
                 </div>
                 <div className="bg-red-50 rounded text-center p-3">
                     <div className="text-lg font-bold text-red-600">{lowStock}</div>

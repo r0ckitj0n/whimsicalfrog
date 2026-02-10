@@ -30,7 +30,7 @@ export const useDashboard = () => {
             const [metricsRes, ordersRes, stockRes, configRes] = await Promise.all([
                 ApiClient.get<IDashboardMetrics>(`/api/get_dashboard_metrics.php?_t=${timestamp}`),
                 ApiClient.get<IOrdersResponse>(`/api/orders.php?limit=5&_t=${timestamp}`),
-                ApiClient.get<IInventoryResponse>(`/api/inventory.php?filter=low_stock&_t=${timestamp}`),
+                ApiClient.get<IInventoryResponse>(`/api/inventory.php?stock=low&_t=${timestamp}`),
                 ApiClient.get<{ success?: boolean; sections?: IDashboardSectionRaw[]; data?: { sections?: IDashboardSectionRaw[] } }>(`/api/dashboard_sections.php?action=get_sections&_t=${timestamp}`)
             ]);
 

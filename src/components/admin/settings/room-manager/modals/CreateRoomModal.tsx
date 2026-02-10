@@ -13,7 +13,9 @@ import {
 import type { IRoomData } from '../../../../../types/room.js';
 import type { IRoomImageGenerationRequest } from '../../../../../types/room-generation.js';
 import {
-    AUTOGENERATE_LABEL
+    AUTOGENERATE_LABEL,
+    CUSTOM_WRITE_YOUR_OWN_LABEL,
+    CUSTOM_WRITE_YOUR_OWN_VALUE
 } from '../../ai/roomPromptDropdownDefaults.js';
 
 interface CreateRoomModalProps {
@@ -82,6 +84,35 @@ const defaultFormState: CreateRoomFormState = {
     generate_image: true
 };
 
+const promptVariableFields: Array<keyof CreateRoomFormState> = [
+    'room_theme',
+    'display_furniture_style',
+    'thematic_accent_decorations',
+    'frog_action',
+    'vibe_adjectives',
+    'color_scheme',
+    'background_thematic_elements',
+    'image_style_declaration',
+    'location_phrase',
+    'character_statement',
+    'aesthetic_statement',
+    'critical_constraint_line',
+    'no_props_line',
+    'decorative_elements_line',
+    'open_display_zones_line',
+    'art_style_line',
+    'surfaces_line',
+    'text_constraint_line',
+    'lighting_line'
+];
+
+const buildPromptPresetMap = (formValues: CreateRoomFormState): Record<string, string> => {
+    return promptVariableFields.reduce<Record<string, string>>((acc, field) => {
+        acc[String(field)] = String(formValues[field] || '');
+        return acc;
+    }, {});
+};
+
 const parsePlaceholderKeys = (prompt: string): string[] => {
     const out = new Set<string>();
     const regex = /\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g;
@@ -116,6 +147,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
     onGenerateBackground
 }) => {
     const [form, setForm] = useState<CreateRoomFormState>(defaultFormState);
+    const [selectedPromptPresets, setSelectedPromptPresets] = useState<Record<string, string>>(() => buildPromptPresetMap(defaultFormState));
     const [selectedTemplateKey, setSelectedTemplateKey] = useState('room_staging_empty_shelves_v1');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPromptPreview, setShowPromptPreview] = useState(false);
@@ -204,6 +236,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
     useEffect(() => {
         if (!isOpen) return;
         setForm(defaultFormState);
+        setSelectedPromptPresets(buildPromptPresetMap(defaultFormState));
     }, [isOpen]);
 
     useEffect(() => {
@@ -264,13 +297,21 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         value: string
     ) => {
         const options = getOptionsForVariable(String(field));
-        const normalizedValue = options.includes(value) ? value : (options[0] || value);
+        const selectedPreset = selectedPromptPresets[String(field)] ?? (options[0] || '');
+        const normalizedSelectedPreset = (selectedPreset === CUSTOM_WRITE_YOUR_OWN_VALUE || options.includes(selectedPreset))
+            ? selectedPreset
+            : (options[0] || '');
+        const showCustomInput = normalizedSelectedPreset === CUSTOM_WRITE_YOUR_OWN_VALUE || value !== normalizedSelectedPreset;
         return (
             <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</label>
                 <select
-                    value={normalizedValue}
-                    onChange={(e) => updateForm(field, e.target.value as CreateRoomFormState[typeof field])}
+                    value={normalizedSelectedPreset}
+                    onChange={(e) => {
+                        const nextPreset = e.target.value;
+                        setSelectedPromptPresets((prev) => ({ ...prev, [String(field)]: nextPreset }));
+                        updateForm(field, (nextPreset === CUSTOM_WRITE_YOUR_OWN_VALUE ? '' : nextPreset) as CreateRoomFormState[typeof field]);
+                    }}
                     className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white"
                 >
                     {options.map((opt) => (
@@ -278,13 +319,16 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                             {opt}
                         </option>
                     ))}
+                    <option value={CUSTOM_WRITE_YOUR_OWN_VALUE}>{CUSTOM_WRITE_YOUR_OWN_LABEL}</option>
                 </select>
-                <textarea
-                    value={value}
-                    onChange={(e) => updateForm(field, e.target.value as CreateRoomFormState[typeof field])}
-                    rows={2}
-                    className="mt-2 w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white resize-y"
-                />
+                {showCustomInput && (
+                    <textarea
+                        value={value}
+                        onChange={(e) => updateForm(field, e.target.value as CreateRoomFormState[typeof field])}
+                        rows={2}
+                        className="mt-2 w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white resize-y"
+                    />
+                )}
             </div>
         );
     };

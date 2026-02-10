@@ -125,11 +125,14 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ 
                 className="wf-modal-card animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
                 style={{
                     width: '100%',
-                    maxWidth: '560px',
+                    maxWidth: '860px',
+                    maxHeight: 'calc(100vh - 40px)',
                     backgroundColor: '#ffffff',
                     borderRadius: '20px',
                     boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.55)',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column'
                 }}
             >
                 <div
@@ -154,8 +157,8 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ 
                     </p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <form onSubmit={handleSubmit} className="flex-1 min-h-0 p-6 overflow-y-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="flex flex-col">
                             <label className="text-sm font-bold text-gray-700">First Name</label>
                             <input type="text" name="first_name" className="form-input" value={formData.first_name} onChange={handleChange} required />
@@ -164,20 +167,18 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ 
                             <label className="text-sm font-bold text-gray-700">Last Name</label>
                             <input type="text" name="last_name" className="form-input" value={formData.last_name} onChange={handleChange} required />
                         </div>
-                    </div>
-                    <div className="flex flex-col">
-                        <label className="text-sm font-bold text-gray-700">Email</label>
-                        <input type="email" name="email" className="form-input" value={formData.email} onChange={handleChange} required />
-                    </div>
-                    <div className="flex flex-col">
-                        <label className="text-sm font-bold text-gray-700">Phone Number</label>
-                        <input type="tel" name="phone_number" className="form-input" value={formData.phone_number || ''} onChange={handleChange} />
-                    </div>
-                    <div className="flex flex-col">
-                        <label className="text-sm font-bold text-gray-700">Address</label>
-                        <input type="text" name="address_line_1" className="form-input" value={formData.address_line_1} onChange={handleChange} required />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="flex flex-col">
+                            <label className="text-sm font-bold text-gray-700">Email</label>
+                            <input type="email" name="email" className="form-input" value={formData.email} onChange={handleChange} required />
+                        </div>
+                        <div className="flex flex-col">
+                            <label className="text-sm font-bold text-gray-700">Phone Number</label>
+                            <input type="tel" name="phone_number" className="form-input" value={formData.phone_number || ''} onChange={handleChange} />
+                        </div>
+                        <div className="flex flex-col md:col-span-2">
+                            <label className="text-sm font-bold text-gray-700">Address</label>
+                            <input type="text" name="address_line_1" className="form-input" value={formData.address_line_1} onChange={handleChange} required />
+                        </div>
                         <div className="flex flex-col">
                             <label className="text-sm font-bold text-gray-700">City</label>
                             <input type="text" name="city" className="form-input" value={formData.city || ''} onChange={handleChange} required />
@@ -190,21 +191,21 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ 
                             <label className="text-sm font-bold text-gray-700">ZIP</label>
                             <input type="text" name="zip_code" className="form-input" value={formData.zip_code || ''} onChange={handleChange} required />
                         </div>
+
+                        {error && (
+                            <div className="rounded-xl bg-rose-50 text-rose-700 px-3 py-2 text-sm font-semibold md:col-span-2">
+                                {error}
+                            </div>
+                        )}
+
+                        <button
+                            type="submit"
+                            disabled={isSaving}
+                            className="btn btn-primary w-full py-4 uppercase tracking-wider font-black md:col-span-2"
+                        >
+                            {isSaving ? 'Saving...' : 'Save and Continue'}
+                        </button>
                     </div>
-
-                    {error && (
-                        <div className="rounded-xl bg-rose-50 text-rose-700 px-3 py-2 text-sm font-semibold">
-                            {error}
-                        </div>
-                    )}
-
-                    <button
-                        type="submit"
-                        disabled={isSaving}
-                        className="btn btn-primary w-full py-4 uppercase tracking-wider font-black"
-                    >
-                        {isSaving ? 'Saving...' : 'Save and Continue'}
-                    </button>
                 </form>
             </div>
         </div>,

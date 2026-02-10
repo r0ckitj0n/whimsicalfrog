@@ -13,6 +13,10 @@ import {
 import type { IBackgroundsHook, IBackground } from '../../../../../types/backgrounds.js';
 import type { IRoomData } from '../../../../../types/room.js';
 import type { IRoomImageGenerationRequest } from '../../../../../types/room-generation.js';
+import {
+    CUSTOM_WRITE_YOUR_OWN_LABEL,
+    CUSTOM_WRITE_YOUR_OWN_VALUE
+} from '../../ai/roomPromptDropdownDefaults.js';
 
 interface VisualsTabProps {
     backgrounds: IBackgroundsHook;
@@ -55,6 +59,12 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
 }) => {
     const [selectedTemplateKey, setSelectedTemplateKey] = useState<string>('');
     const [aestheticValues, setAestheticValues] = useState<Record<RoomImageAestheticFieldKey, string>>(initialAestheticValues);
+    const [selectedAestheticPresets, setSelectedAestheticPresets] = useState<Record<RoomImageAestheticFieldKey, string>>(() => {
+        return ROOM_IMAGE_AESTHETIC_FIELDS.reduce((acc, field) => {
+            acc[field.key] = initialAestheticValues[field.key];
+            return acc;
+        }, {} as Record<RoomImageAestheticFieldKey, string>);
+    });
     const [isGenerating, setIsGenerating] = useState(false);
     const [settingsTemplateKey, setSettingsTemplateKey] = useState<string>('');
     const {
@@ -209,13 +219,24 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                                 {ROOM_IMAGE_AESTHETIC_FIELDS.map((field) => {
                                     const options = getRoomImageVariableOptions(field.key, dropdownOptionsByVariable);
                                     const currentValue = aestheticValues[field.key] || '';
-                                    const normalizedValue = options.includes(currentValue) ? currentValue : (options[0] || currentValue);
+                                    const selectedPreset = selectedAestheticPresets[field.key] || options[0] || '';
+                                    const normalizedSelectedPreset = (selectedPreset === CUSTOM_WRITE_YOUR_OWN_VALUE || options.includes(selectedPreset))
+                                        ? selectedPreset
+                                        : (options[0] || '');
+                                    const showCustomInput = normalizedSelectedPreset === CUSTOM_WRITE_YOUR_OWN_VALUE || currentValue !== normalizedSelectedPreset;
                                     return (
                                         <div key={field.key} className="space-y-1">
                                             <label className="text-[10px] font-bold text-slate-500">{field.label}</label>
                                             <select
-                                                value={normalizedValue}
-                                                onChange={(e) => setAestheticValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                                value={normalizedSelectedPreset}
+                                                onChange={(e) => {
+                                                    const nextPreset = e.target.value;
+                                                    setSelectedAestheticPresets(prev => ({ ...prev, [field.key]: nextPreset }));
+                                                    setAestheticValues(prev => ({
+                                                        ...prev,
+                                                        [field.key]: nextPreset === CUSTOM_WRITE_YOUR_OWN_VALUE ? '' : nextPreset
+                                                    }));
+                                                }}
                                                 className="w-full text-[11px] p-2 border border-slate-200 rounded-lg bg-white"
                                                 disabled={isGenerating}
                                             >
@@ -224,14 +245,17 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                                                         {option}
                                                     </option>
                                                 ))}
+                                                <option value={CUSTOM_WRITE_YOUR_OWN_VALUE}>{CUSTOM_WRITE_YOUR_OWN_LABEL}</option>
                                             </select>
-                                            <textarea
-                                                value={currentValue}
-                                                onChange={(e) => setAestheticValues(prev => ({ ...prev, [field.key]: e.target.value }))}
-                                                rows={2}
-                                                className="w-full text-[11px] p-2 border border-slate-200 rounded-lg bg-white resize-y"
-                                                disabled={isGenerating}
-                                            />
+                                            {showCustomInput && (
+                                                <textarea
+                                                    value={currentValue}
+                                                    onChange={(e) => setAestheticValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                                    rows={2}
+                                                    className="w-full text-[11px] p-2 border border-slate-200 rounded-lg bg-white resize-y"
+                                                    disabled={isGenerating}
+                                                />
+                                            )}
                                         </div>
                                     );
                                 })}

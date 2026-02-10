@@ -121,7 +121,6 @@ export const useInventoryItemForm = ({
     const { populateFromSuggestion: populatePrice } = usePriceBreakdown(localSku);
     const isDirtyRef = useRef(isDirty);
     const isSavingRef = useRef(isSaving);
-    const skuPromotionInFlightRef = useRef(false);
 
     useEffect(() => {
         isDirtyRef.current = isDirty;
@@ -298,34 +297,6 @@ export const useInventoryItemForm = ({
         }
     }, [isAdding, isReadOnly, isSaving, item?.sku, localSku, formData.category, refresh]);
 
-    const promoteTempSkuForCategory = useCallback(async (resolvedCategory: string) => {
-        if (!isAdding) return;
-        if (!localSku || !localSku.startsWith('WF-TMP-')) return;
-        if (!resolvedCategory || skuPromotionInFlightRef.current) return;
-
-        skuPromotionInFlightRef.current = true;
-        try {
-            const response = await ApiClient.get<{
-                success?: boolean;
-                sku?: string;
-                data?: { sku?: string };
-                error?: string;
-            }>('/api/next_sku.php', { category: resolvedCategory });
-
-            const nextSku = String(response?.data?.sku || response?.sku || '').trim();
-            if (!nextSku || nextSku === localSku) return;
-
-            setSourceTempSku(prev => prev || localSku);
-            setLocalSku(nextSku);
-            setIsDirty(true);
-            window.WFToast?.success?.(`SKU assigned: ${nextSku}`);
-        } catch (_err) {
-            // Keep temp SKU if next_sku is unavailable; save endpoint still finalizes SKU safely.
-        } finally {
-            skuPromotionInFlightRef.current = false;
-        }
-    }, [isAdding, localSku]);
-
     const triggerGenerationChain = async () => {
         if (!localSku) {
             if (window.WFToast) window.WFToast.error('SKU is required for AI analysis');
@@ -380,9 +351,6 @@ export const useInventoryItemForm = ({
                         window.WFToast?.info?.(`📦 Dimensions updated by AI: ${changedDimensions.join(', ')}`);
                     }
 
-                    if (isAdding && context.category) {
-                        void promoteTempSkuForCategory(context.category);
-                    }
                 }
 
                 // Update form data progressively after each step, respecting locked fields
@@ -501,10 +469,6 @@ export const useInventoryItemForm = ({
 
         if (result.marketingData) {
             setCachedMarketingData(result.marketingData);
-        }
-
-        if (isAdding && result.category) {
-            await promoteTempSkuForCategory(result.category);
         }
 
         window.WFToast?.success?.('Generated item information and marketing');

@@ -22,6 +22,7 @@ interface DetailsColumnProps {
     availableGenders: string[];
     availableColors: Array<{ id: string; name: string; code: string }>;
     availableSizes: Array<{ code: string; name: string; stock: number; priceAdj: number }>;
+    isMobileLayout?: boolean;
 }
 
 export const DetailsColumn: React.FC<DetailsColumnProps> = ({
@@ -39,8 +40,117 @@ export const DetailsColumn: React.FC<DetailsColumnProps> = ({
     setSelectedSize,
     availableGenders,
     availableColors,
-    availableSizes
+    availableSizes,
+    isMobileLayout = false
 }) => {
+    if (!isMobileLayout) {
+        return (
+            <div className="details-column" style={{
+                width: '50%',
+                flex: '0 0 50%',
+                padding: '60px',
+                display: 'flex',
+                flexDirection: 'column',
+                background: 'white'
+            }}>
+                <div style={{ marginBottom: '40px' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 900, color: 'var(--brand-primary)', textTransform: 'uppercase', letterSpacing: '0.25em', marginBottom: '12px' }}>
+                        {item.category || 'Whimsical Original'}
+                    </div>
+                    <h2 style={{ fontSize: '36px', fontWeight: 900, color: '#111827', marginBottom: '8px', lineHeight: '1.1', fontFamily: "'Merienda', cursive", letterSpacing: '-0.02em' }}>
+                        {item.name}
+                    </h2>
+                    <div style={{ color: 'var(--brand-secondary)', fontSize: '42px', fontWeight: 900, letterSpacing: '-0.01em', marginBottom: '12px' }}>
+                        ${total_price.toFixed(2)}
+                    </div>
+                    <div style={{ fontSize: '15px', color: '#9ca3af', fontStyle: 'italic', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Status: <span style={{ color: maxQty > 0 ? 'var(--brand-primary)' : 'var(--brand-error)' }}>{maxQty > 0 ? `${maxQty} available now` : 'Sold out'}</span>
+                    </div>
+
+                    {item.description && (
+                        <div style={{ marginTop: '24px' }}>
+                            <div style={{ fontWeight: 900, color: '#111827', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '12px' }}>Item Story</div>
+                            <div style={{ lineHeight: '1.7', color: '#4b5563', background: '#ffffff', padding: '16px 20px', borderRadius: '12px', border: '1px solid #eee', whiteSpace: 'pre-line' }}>
+                                {item.description}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div style={{ marginBottom: '40px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--brand-primary)', fontWeight: 900, fontSize: '14px', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                        ★ Why You'll Love This
+                    </div>
+                    <div style={{
+                        backgroundColor: '#ffffff',
+                        color: 'var(--brand-primary)',
+                        padding: '16px 28px',
+                        borderRadius: '16px',
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '16px',
+                        width: 'fit-content',
+                        border: '2px solid var(--brand-primary)',
+                        boxShadow: '0 4px 12px rgba(var(--brand-primary-rgb), 0.1)'
+                    }}>
+                        <span className="btn-icon--check" style={{ fontSize: '20px' }} aria-hidden="true" />
+                        <span style={{ lineHeight: '1.4' }}>
+                            {item.features ? item.features.split('\n')[0] : "Hand-crafted quality and unique design."}
+                        </span>
+                    </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+                    {availableGenders.length > 0 && (
+                        <StyleSelection
+                            availableGenders={availableGenders}
+                            selectedGender={selectedGender}
+                            onSelect={setSelectedGender}
+                            isMobileLayout={isMobileLayout}
+                        />
+                    )}
+                    {availableColors.length > 0 && (availableGenders.length === 0 || selectedGender) && (
+                        <ColorSelection
+                            availableColors={availableColors}
+                            selectedColor={selectedColor}
+                            onSelect={setSelectedColor}
+                            isMobileLayout={isMobileLayout}
+                        />
+                    )}
+                    {availableSizes.length > 0 && (availableColors.length === 0 || selectedColor) && (availableGenders.length === 0 || selectedGender) && (
+                        <SizeSelection
+                            availableSizes={availableSizes}
+                            selectedSize={selectedSize}
+                            onSelect={setSelectedSize}
+                            isMobileLayout={isMobileLayout}
+                        />
+                    )}
+                </div>
+
+                <div style={{ marginTop: '60px', paddingTop: '40px', borderTop: '2px solid #f9fafb' }}>
+                    <ItemDetailsActions
+                        total_price={total_price}
+                        quantity={quantity}
+                        onQuantityChange={setQuantity}
+                        onAddToCart={handleAddToCart}
+                        maxQty={maxQty}
+                        disabled={
+                            (availableGenders.length > 0 && !selectedGender) ||
+                            (availableColors.length > 0 && !selectedColor) ||
+                            (availableSizes.length > 0 && !selectedSize)
+                        }
+                        buttonText={item.button_text}
+                        isMobileLayout={isMobileLayout}
+                    />
+                </div>
+
+                <ProductSpecifications item={item} isMobileLayout={isMobileLayout} />
+            </div>
+        );
+    }
+
     return (
         <div className="details-column flex w-full flex-col bg-white px-4 pb-4 pt-5 sm:px-6 sm:pb-6 sm:pt-6 md:w-1/2 md:flex-[0_0_50%] md:px-10 md:pb-10">
             <div className="details-block mb-6 sm:mb-8">
@@ -88,6 +198,7 @@ export const DetailsColumn: React.FC<DetailsColumnProps> = ({
                         availableGenders={availableGenders}
                         selectedGender={selectedGender}
                         onSelect={setSelectedGender}
+                        isMobileLayout={isMobileLayout}
                     />
                 )}
                 {availableColors.length > 0 && (availableGenders.length === 0 || selectedGender) && (
@@ -95,6 +206,7 @@ export const DetailsColumn: React.FC<DetailsColumnProps> = ({
                         availableColors={availableColors}
                         selectedColor={selectedColor}
                         onSelect={setSelectedColor}
+                        isMobileLayout={isMobileLayout}
                     />
                 )}
                 {availableSizes.length > 0 && (availableColors.length === 0 || selectedColor) && (availableGenders.length === 0 || selectedGender) && (
@@ -102,6 +214,7 @@ export const DetailsColumn: React.FC<DetailsColumnProps> = ({
                         availableSizes={availableSizes}
                         selectedSize={selectedSize}
                         onSelect={setSelectedSize}
+                        isMobileLayout={isMobileLayout}
                     />
                 )}
             </div>
@@ -119,10 +232,11 @@ export const DetailsColumn: React.FC<DetailsColumnProps> = ({
                         (availableSizes.length > 0 && !selectedSize)
                     }
                     buttonText={item.button_text}
+                    isMobileLayout={isMobileLayout}
                 />
             </div>
 
-            <ProductSpecifications item={item} />
+            <ProductSpecifications item={item} isMobileLayout={isMobileLayout} />
         </div>
     );
 };

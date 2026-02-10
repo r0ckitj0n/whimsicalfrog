@@ -30,6 +30,9 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ sku, isOpen,
     } = useItemOptions(item, options);
 
     const [quantity, setQuantity] = useState(1);
+    const [isMobileLayout, setIsMobileLayout] = useState(() =>
+        typeof window !== 'undefined' ? window.matchMedia('(max-width: 768px)').matches : false
+    );
 
     const total_price = useMemo(() => {
         if (!item) return 0;
@@ -89,11 +92,37 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ sku, isOpen,
         };
     }, [isOpen]);
 
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const mediaQuery = window.matchMedia('(max-width: 768px)');
+        const updateLayoutMode = () => setIsMobileLayout(mediaQuery.matches);
+        updateLayoutMode();
+        mediaQuery.addEventListener('change', updateLayoutMode);
+        return () => mediaQuery.removeEventListener('change', updateLayoutMode);
+    }, []);
+
     if (!isOpen) return null;
 
     const modalContent = (
         <div
-            className="wf-modal-overlay show detailed-item-modal fixed inset-0 z-[var(--wf-z-modal)] box-border flex items-end justify-center bg-black/80 p-0 font-[Nunito,sans-serif] backdrop-blur-md sm:items-center sm:p-4 lg:p-8"
+            className={isMobileLayout
+                ? 'wf-modal-overlay show detailed-item-modal fixed inset-0 z-[var(--wf-z-modal)] box-border flex items-end justify-center bg-black/80 p-0 font-[Nunito,sans-serif] backdrop-blur-md sm:items-center sm:p-4 lg:p-8'
+                : 'wf-modal-overlay show detailed-item-modal'}
+            style={isMobileLayout ? undefined : {
+                position: 'fixed',
+                inset: 0,
+                width: '100vw',
+                height: '100vh',
+                padding: '2.5vh 2.5vw',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                backdropFilter: 'blur(15px)',
+                zIndex: 'var(--wf-z-modal)',
+                fontFamily: "'Nunito', sans-serif",
+                boxSizing: 'border-box'
+            }}
             onClick={(e) => e.target === e.currentTarget && onClose()}
         >
             <style dangerouslySetInnerHTML={{
@@ -103,19 +132,41 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ sku, isOpen,
                 .detailed-item-modal-card .content-scroller::-webkit-scrollbar-thumb { background: var(--brand-primary) !important; border-radius: 999px !important; border: 2px solid transparent !important; background-clip: content-box !important; min-height: 36px !important; }
                 .detailed-item-modal-card .content-scroller::-webkit-scrollbar-thumb:hover { background: var(--brand-secondary) !important; }
                 .detailed-item-modal-card .content-scroller { scrollbar-width: auto !important; scrollbar-color: var(--brand-primary) rgba(0, 0, 0, 0.05) !important; overflow-y: auto !important; overflow-x: hidden !important; }
+                .detailed-item-modal-card .image-column, .detailed-item-modal-card .details-column { overflow: visible !important; height: auto !important; }
             ` }} />
             <div
-                className="wf-modal-card detailed-item-modal-card animate-in zoom-in-95 duration-300 relative flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden border border-slate-200 bg-white text-slate-900 shadow-2xl sm:h-[92dvh] sm:max-h-[92dvh] sm:max-w-[1100px] sm:rounded-3xl"
+                className={isMobileLayout
+                    ? 'wf-modal-card detailed-item-modal-card animate-in zoom-in-95 duration-300 relative flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden border border-slate-200 bg-white text-slate-900 shadow-2xl sm:h-[92dvh] sm:max-h-[92dvh] sm:max-w-[1100px] sm:rounded-3xl'
+                    : 'wf-modal-card detailed-item-modal-card animate-in zoom-in-95 duration-300'}
+                style={isMobileLayout ? undefined : {
+                    width: '100%',
+                    maxWidth: '1100px',
+                    height: '95vh',
+                    maxHeight: '95vh',
+                    backgroundColor: '#ffffff',
+                    borderRadius: '32px',
+                    position: 'relative',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
+                    boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.6)',
+                    color: '#111827',
+                    boxSizing: 'border-box',
+                    border: '1px solid #eee'
+                }}
                 onClick={e => e.stopPropagation()}
             >
-                <ItemDetailsHeader title={item?.name || 'Item Details'} onClose={onClose} />
+                <ItemDetailsHeader title={item?.name || 'Item Details'} onClose={onClose} isMobileLayout={isMobileLayout} />
 
                 <div className="flex-1 content-scroller">
                     {isLoading && !item ? (
                         <ItemDetailsLoading />
                     ) : item ? (
-                        <div className="modal-content-wrapper flex min-h-full w-full flex-col md:flex-row">
-                            <ImageColumn item={item} uniqueImages={uniqueImages} />
+                        <div
+                            className={isMobileLayout ? 'modal-content-wrapper flex min-h-full w-full flex-col md:flex-row' : 'modal-content-wrapper'}
+                            style={isMobileLayout ? undefined : { display: 'flex', flexDirection: 'row', width: '100%', minHeight: '100%' }}
+                        >
+                            <ImageColumn item={item} uniqueImages={uniqueImages} isMobileLayout={isMobileLayout} />
                             <DetailsColumn
                                 item={item}
                                 total_price={total_price}
@@ -132,6 +183,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ sku, isOpen,
                                 availableGenders={availableGenders}
                                 availableColors={availableColors}
                                 availableSizes={availableSizes}
+                                isMobileLayout={isMobileLayout}
                             />
                         </div>
                     ) : null}

@@ -98,3 +98,18 @@ export interface IBusinessLocalizationOptionsResponse {
     error?: string;
 }
 
+export interface IBusinessLocalizationLookupResult {
+    business_timezone: string;
+    business_dst_enabled: boolean;
+    business_currency: string;
+    business_locale: string;
+    business_country: string;
+    business_city: string;
+    business_state: string;
+}
+
+export interface IBusinessLocalizationLookupResponse {
+    success: boolean;
+    data?: IBusinessLocalizationLookupResult;
+    error?: string;
+}

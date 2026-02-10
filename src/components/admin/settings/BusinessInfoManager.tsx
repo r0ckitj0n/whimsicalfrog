@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useBusinessInfo, IBusinessInfo } from '../../../hooks/admin/useBusinessInfo.js';
 import { isDraftDirty } from '../../../core/utils.js';
+import logger from '../../../core/logger.js';
 import { IdentitySection } from './business/IdentitySection.js';
 import { ContactSection } from './business/ContactSection.js';
 import { AddressSection } from './business/AddressSection.js';
@@ -11,6 +12,7 @@ import { AboutSection } from './business/AboutSection.js';
 import { PoliciesSection } from './business/PoliciesSection.js';
 import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 import { useBusinessLocalizationOptions } from '../../../hooks/admin/useBusinessLocalizationOptions.js';
+import { lookupBusinessLocalization } from '../../../hooks/admin/useBusinessLocalizationLookup.js';
 
 interface BusinessInfoManagerProps {
     onClose?: () => void;
@@ -30,6 +32,7 @@ export const BusinessInfoManager: React.FC<BusinessInfoManagerProps> = ({ onClos
     const [editInfo, setEditTokens] = useState<IBusinessInfo>(info);
     const [initialState, setInitialState] = useState<IBusinessInfo | null>(null);
     const [hasUserEdited, setHasUserEdited] = useState(false);
+    const [autoLookupNonce, setAutoLookupNonce] = useState(0);
 
     useEffect(() => {
         if (isLoading || !info.business_name) return;
@@ -57,7 +60,42 @@ export const BusinessInfoManager: React.FC<BusinessInfoManagerProps> = ({ onClos
     const handleChange = (key: keyof IBusinessInfo, value: string | boolean) => {
         setHasUserEdited(true);
         setEditTokens(prev => ({ ...prev, [key]: value } as IBusinessInfo));
+        if (key === 'business_postal' || key === 'business_country') {
+            setAutoLookupNonce(n => n + 1);
+        }
     };
+
+    useEffect(() => {
+        if (!autoLookupNonce) return;
+
+        const postalCode = String(editInfo.business_postal || '').trim();
+        const countryCode = String(editInfo.business_country || 'US').trim().toUpperCase();
+        if (postalCode.length < 3) return;
+
+        const timeout = setTimeout(async () => {
+            try {
+                const detected = await lookupBusinessLocalization(postalCode, countryCode);
+                if (!detected) return;
+
+                setEditTokens(prev => ({
+                    ...prev,
+                    business_timezone: detected.business_timezone || prev.business_timezone,
+                    business_dst_enabled: typeof detected.business_dst_enabled === 'boolean' ? detected.business_dst_enabled : prev.business_dst_enabled,
+                    business_currency: detected.business_currency || prev.business_currency,
+                    business_locale: detected.business_locale || prev.business_locale,
+                    business_country: detected.business_country || prev.business_country
+                }));
+
+                if (window.WFToast) {
+                    window.WFToast.success('Localization auto-detected from ZIP');
+                }
+            } catch (err) {
+                logger.warn('[BusinessInfoManager] ZIP localization lookup failed', err);
+            }
+        }, 450);
+
+        return () => clearTimeout(timeout);
+    }, [autoLookupNonce, editInfo.business_postal, editInfo.business_country]);
 
     const isDirty = React.useMemo(() => {
         if (!initialState || !hasUserEdited) return false;

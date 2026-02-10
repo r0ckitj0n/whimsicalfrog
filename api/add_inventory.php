@@ -70,10 +70,30 @@ function wf_migrate_temp_sku_records(string $sourceSku, string $targetSku): void
         if (!wf_table_exists($table)) {
             continue;
         }
-        Database::execute(
-            "UPDATE `$table` SET `$column` = ? WHERE `$column` = ?",
-            [$targetSku, $sourceSku]
-        );
+        try {
+            Database::execute(
+                "UPDATE `$table` SET `$column` = ? WHERE `$column` = ?",
+                [$targetSku, $sourceSku]
+            );
+        } catch (PDOException $e) {
+            // Handle collision when destination SKU row already exists (e.g., previous failed create attempt).
+            $isDuplicate = ((string) $e->getCode() === '23000')
+                || (strpos((string) $e->getMessage(), '1062') !== false)
+                || (stripos((string) $e->getMessage(), 'Duplicate entry') !== false);
+            if (!$isDuplicate) {
+                throw $e;
+            }
+
+            // Prefer latest temp-SKU data by removing conflicting destination row, then retry migration.
+            Database::execute(
+                "DELETE FROM `$table` WHERE `$column` = ?",
+                [$targetSku]
+            );
+            Database::execute(
+                "UPDATE `$table` SET `$column` = ? WHERE `$column` = ?",
+                [$targetSku, $sourceSku]
+            );
+        }
     }
 
     if (wf_table_exists('items')) {
@@ -198,7 +218,7 @@ try {
     }
 
 } catch (PDOException $e) {
-    Response::serverError('Database connection failed', $e->getMessage());
+    Response::serverError('Database operation failed', $e->getMessage());
 } catch (Exception $e) {
     Response::serverError('An unexpected error occurred', $e->getMessage());
 }

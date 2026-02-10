@@ -18,6 +18,8 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ data }) => {
         payment_status,
         items,
         subtotal,
+        discount,
+        coupon_code,
         shipping,
         tax,
         total,
@@ -47,6 +49,8 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ data }) => {
                 <ReceiptTable
                     items={items}
                     subtotal={subtotal}
+                    discount={discount}
+                    coupon_code={coupon_code}
                     shipping={shipping}
                     tax={tax}
                     total={total}

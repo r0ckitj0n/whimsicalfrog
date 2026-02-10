@@ -11,6 +11,8 @@ interface ReceiptItem {
 interface ReceiptTableProps {
     items: ReceiptItem[];
     subtotal: string;
+    discount?: string;
+    coupon_code?: string | null;
     shipping: string;
     tax: string;
     total: string;
@@ -19,10 +21,16 @@ interface ReceiptTableProps {
 export const ReceiptTable: React.FC<ReceiptTableProps> = ({
     items,
     subtotal,
+    discount,
+    coupon_code,
     shipping,
     tax,
     total
 }) => {
+    const discountValue = Number(discount || '0');
+    const hasDiscount = Number.isFinite(discountValue) && discountValue > 0;
+    const discountLabel = coupon_code ? `Discount (${coupon_code})` : 'Discount';
+
     return (
         <div className="overflow-x-auto mb-8">
             <table className="receipt-table w-full text-sm border-collapse">
@@ -52,6 +60,13 @@ export const ReceiptTable: React.FC<ReceiptTableProps> = ({
                         <td className="text-right p-2">Subtotal</td>
                         <td className="text-right p-2">${subtotal}</td>
                     </tr>
+                    {hasDiscount && (
+                        <tr>
+                            <td colSpan={3}></td>
+                            <td className="text-right p-2">{discountLabel}</td>
+                            <td className="text-right p-2">-${discountValue.toFixed(2)}</td>
+                        </tr>
+                    )}
                     <tr>
                         <td colSpan={3}></td>
                         <td className="text-right p-2">Shipping</td>

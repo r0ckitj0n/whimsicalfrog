@@ -224,7 +224,8 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                                     const normalizedSelectedPreset = (selectedPreset === CUSTOM_WRITE_YOUR_OWN_VALUE || options.includes(selectedPreset))
                                         ? selectedPreset
                                         : (options[0] || '');
-                                    const showCustomInput = normalizedSelectedPreset !== AUTOGENERATE_LABEL;
+                                    const showCustomInput = normalizedSelectedPreset !== AUTOGENERATE_LABEL
+                                        && currentValue.trim() !== AUTOGENERATE_LABEL;
                                     return (
                                         <div key={field.key} className="space-y-1">
                                             <label className="text-[10px] font-bold text-slate-500">{field.label}</label>

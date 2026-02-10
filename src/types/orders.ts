@@ -38,6 +38,8 @@ export interface IReceiptData {
         ext_price: string;
     }>;
     subtotal: string;
+    discount?: string;
+    coupon_code?: string | null;
     shipping: string;
     tax: string;
     total: string;
@@ -74,4 +76,3 @@ export interface IFulfillmentOrder {
     payment_method: string | null;
     shipping_method: string | null;
 }
-

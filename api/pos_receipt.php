@@ -110,6 +110,7 @@ try {
         'items' => $itemsData,
         'subtotal' => number_format($itemsSubtotal, 2),
         'discount' => number_format($discount_amount, 2),
+        'coupon_code' => !empty($order['coupon_code']) ? (string) $order['coupon_code'] : null,
         'shipping' => number_format($shipping_amount, 2),
         'tax' => number_format($tax_amount, 2),
         'total' => number_format($total_amount, 2),

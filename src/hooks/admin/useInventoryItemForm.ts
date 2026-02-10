@@ -521,6 +521,53 @@ export const useInventoryItemForm = ({
         window.WFToast?.success?.('Generated item information and marketing');
     };
 
+    const persistAiBreakdowns = useCallback(async (targetSku: string): Promise<boolean> => {
+        let ok = true;
+
+        if (cached_cost_suggestion) {
+            try {
+                const res = await ApiClient.post<{ success?: boolean; error?: string }>('/api/populate_cost_from_ai.php', {
+                    sku: targetSku,
+                    suggestion: cached_cost_suggestion
+                });
+                if (res?.success) {
+                    setCachedCostSuggestion(null);
+                } else {
+                    ok = false;
+                    console.error('[useInventoryItemForm] Failed to persist cost breakdown', res?.error || 'Unknown error');
+                }
+            } catch (err) {
+                ok = false;
+                console.error('[useInventoryItemForm] Failed to persist cost breakdown', err);
+            }
+        }
+
+        if (cached_price_suggestion) {
+            try {
+                const res = await ApiClient.post<{ success?: boolean; error?: string }>('/api/populate_price_from_ai.php', {
+                    sku: targetSku,
+                    suggestion: cached_price_suggestion
+                });
+                if (res?.success) {
+                    setCachedPriceSuggestion(null);
+                } else {
+                    ok = false;
+                    console.error('[useInventoryItemForm] Failed to persist price breakdown', res?.error || 'Unknown error');
+                }
+            } catch (err) {
+                ok = false;
+                console.error('[useInventoryItemForm] Failed to persist price breakdown', err);
+            }
+        }
+
+        return ok;
+    }, [
+        cached_cost_suggestion,
+        cached_price_suggestion,
+        setCachedCostSuggestion,
+        setCachedPriceSuggestion
+    ]);
+
     const handleSave = useCallback(async (): Promise<boolean> => {
         if (isReadOnly || isSaving) return false;
         if (isAdding && !localSku) {
@@ -546,7 +593,12 @@ export const useInventoryItemForm = ({
                 });
                 if (res.success) {
                     const finalizedSku = String(res.sku || '').trim();
+                    const skuForBreakdowns = finalizedSku || skuToSave;
+                    const breakdownsSaved = await persistAiBreakdowns(skuForBreakdowns);
                     if (window.WFToast) {
+                        if (!breakdownsSaved && (cached_cost_suggestion || cached_price_suggestion)) {
+                            window.WFToast.info?.('Item created, but some AI breakdown details did not persist.');
+                        }
                         window.WFToast.success(finalizedSku ? `Item created successfully as ${finalizedSku}` : 'Item created successfully');
                     }
                     if (finalizedSku) {
@@ -666,7 +718,8 @@ export const useInventoryItemForm = ({
         lockedFields,
         lockedWords,
         imageUrls,
-        inferTempSkuFromImageUrls
+        inferTempSkuFromImageUrls,
+        persistAiBreakdowns
     ]);
 
     const handleApplyCost = (cost: number) => {

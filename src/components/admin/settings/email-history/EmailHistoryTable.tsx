@@ -70,6 +70,7 @@ export const EmailHistoryTable: React.FC<EmailHistoryTableProps> = ({ logs, onVi
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <button
+                                        type="button"
                                         onClick={() => onViewDetails(log)}
                                         className="btn btn-secondary px-3 py-1 bg-transparent border-0 text-[var(--brand-secondary)] hover:bg-[var(--brand-secondary)]/5 transition-all text-xs font-bold"
                                         data-help-id="common-view"

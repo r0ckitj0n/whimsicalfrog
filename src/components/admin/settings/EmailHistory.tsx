@@ -38,7 +38,9 @@ export const EmailHistory: React.FC = () => {
         const details = await getLogDetails(log.id);
         if (details) {
             setSelectedLog(details);
+            return;
         }
+        setSelectedLog(log);
     };
 
     if (isLoading && !logs.length) {

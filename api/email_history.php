@@ -19,6 +19,37 @@ function json_response($data, $code = 200)
   exit;
 }
 
+function normalize_email_type($rawType, $subject = '')
+{
+  $type = trim((string) ($rawType ?? ''));
+  if ($type !== '') {
+    return $type;
+  }
+
+  $subjectLc = strtolower(trim((string) $subject));
+  if ($subjectLc === '') {
+    return '';
+  }
+
+  if (strpos($subjectLc, 'thank you for your order') !== false) {
+    return 'order_confirmation';
+  }
+  if (strpos($subjectLc, 'new order') === 0) {
+    return 'admin_notification';
+  }
+  if (strpos($subjectLc, 'password reset') !== false || strpos($subjectLc, 'reset your password') !== false) {
+    return 'password_reset';
+  }
+  if (strpos($subjectLc, 'welcome') !== false) {
+    return 'welcome';
+  }
+  if (strpos($subjectLc, 'test') !== false && strpos($subjectLc, 'email') !== false) {
+    return 'test_email';
+  }
+
+  return 'transactional';
+}
+
 try {
   initializeEmailLogsTable();
 } catch (Throwable $e) {
@@ -106,7 +137,13 @@ try {
     } else {
       $sel[] = "'' AS subject";
     }
-    $sel[] = $_eh_has('email_type') ? 'email_type' : "'' AS email_type";
+    if ($_eh_has('email_type')) {
+      $sel[] = "NULLIF(TRIM(email_type), '') AS email_type";
+    } elseif ($_eh_has('type')) {
+      $sel[] = "NULLIF(TRIM(`type`), '') AS email_type";
+    } else {
+      $sel[] = "NULL AS email_type";
+    }
     $sel[] = $_eh_has('status') ? 'status' : "'' AS status";
     $sel[] = $_eh_has('error_message') ? 'error_message' : 'NULL AS error_message';
     if ($_eh_has('sent_at')) {
@@ -154,7 +191,7 @@ try {
         'to_email' => $r['to_email'] ?? '',
         'from_email' => $r['from_email'] ?? '',
         'subject' => $r['subject'] ?? '',
-        'type' => $r['email_type'] ?? '',
+        'type' => normalize_email_type($r['email_type'] ?? '', $r['subject'] ?? ''),
         'status' => $r['status'] ?? WF_Constants::EMAIL_STATUS_SENT,
         'error_message' => $r['error_message'] ?? null,
         'sent_at' => $r['sent_at'] ?? null,
@@ -191,7 +228,13 @@ try {
       $sel[] = "'' AS subject";
     }
     $sel[] = $_eh_has('content') ? 'content' : "'' AS content";
-    $sel[] = $_eh_has('email_type') ? 'email_type' : "'' AS email_type";
+    if ($_eh_has('email_type')) {
+      $sel[] = "NULLIF(TRIM(email_type), '') AS email_type";
+    } elseif ($_eh_has('type')) {
+      $sel[] = "NULLIF(TRIM(`type`), '') AS email_type";
+    } else {
+      $sel[] = "NULL AS email_type";
+    }
     $sel[] = $_eh_has('status') ? 'status' : "'' AS status";
     $sel[] = $_eh_has('error_message') ? 'error_message' : 'NULL AS error_message';
     if ($_eh_has('sent_at')) {
@@ -217,7 +260,7 @@ try {
         'from_email' => $row['from_email'] ?? '',
         'subject' => $row['subject'] ?? '',
         'content' => $row['content'] ?? '',
-        'type' => $row['email_type'] ?? '',
+        'type' => normalize_email_type($row['email_type'] ?? '', $row['subject'] ?? ''),
         'status' => $row['status'] ?? WF_Constants::EMAIL_STATUS_SENT,
         'error_message' => $row['error_message'] ?? null,
         'sent_at' => $row['sent_at'] ?? null,

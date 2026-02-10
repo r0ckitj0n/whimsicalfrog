@@ -87,23 +87,6 @@ Color palette: {{color_scheme}}.
 {{lighting_line}}
 PROMPT;
 
-    Database::execute(
-        "INSERT INTO ai_prompt_templates (template_key, template_name, description, context_type, prompt_text, is_active)
-         VALUES (?, ?, ?, ?, ?, 1)
-         ON DUPLICATE KEY UPDATE
-            description = VALUES(description),
-            context_type = VALUES(context_type),
-            prompt_text = VALUES(prompt_text),
-            is_active = VALUES(is_active)",
-        [
-            'room_staging_empty_shelves_v1',
-            'Whimsical Frog Room (Empty Shelves)',
-            'Generates a room background with empty staging surfaces and thematic separators.',
-            'room_generation',
-            $defaultTemplate
-        ]
-    );
-
     $variables = [
         ['room_number', 'Room Number', 'Room identifier that the generated image belongs to.', '7'],
         ['room_name', 'Room Name', 'Human-friendly room name from the room setup form.', 'Holiday Collection'],
@@ -133,16 +116,12 @@ PROMPT;
 
     foreach ($variables as $v) {
         Database::execute(
-            "INSERT INTO ai_prompt_variables (variable_key, display_name, description, sample_value, is_active)
-             VALUES (?, ?, ?, ?, 1)
-             ON DUPLICATE KEY UPDATE
-                display_name = VALUES(display_name),
-                description = VALUES(description),
-                sample_value = VALUES(sample_value),
-                is_active = VALUES(is_active)",
+            "INSERT IGNORE INTO ai_prompt_variables (variable_key, display_name, description, sample_value, is_active)
+             VALUES (?, ?, ?, ?, 1)",
             [$v[0], $v[1], $v[2], $v[3]]
         );
     }
+
 }
 
 function wf_resolve_prompt_text(string $template, array $resolvedVariables): string

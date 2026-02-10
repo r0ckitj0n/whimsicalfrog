@@ -3,6 +3,8 @@
 // Stores data at reports/social_templates.json to avoid DB migrations.
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 header('Content-Type: application/json');
 
 $store = dirname(__DIR__) . '/reports/social_templates.json';
@@ -22,7 +24,25 @@ function write_store($path, $data) {
 }
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-$action = $_GET['action'] ?? ($_POST['action'] ?? 'list');
+$action = trim((string) ($_GET['action'] ?? ($_POST['action'] ?? 'list')));
+$allowedActions = ['list', 'get', 'create', 'update', 'delete'];
+if (!in_array($action, $allowedActions, true)) {
+  http_response_code(400);
+  echo json_encode([ 'success' => false, 'error' => 'Unsupported action' ]);
+  exit;
+}
+if (($action === 'list' || $action === 'get') && $method !== 'GET') {
+  http_response_code(405);
+  echo json_encode([ 'success' => false, 'error' => 'GET required' ]);
+  exit;
+}
+if (($action === 'create' || $action === 'update' || $action === 'delete') && $method !== 'POST') {
+  http_response_code(405);
+  echo json_encode([ 'success' => false, 'error' => 'POST required' ]);
+  exit;
+}
+
+requireAdmin(true);
 
 try {
   if ($method === 'GET' && $action === 'list') {
@@ -45,15 +65,30 @@ try {
   if ($method === 'POST' && ($action === 'create' || $action === 'update')) {
     $body = json_decode(file_get_contents('php://input'), true) ?: [];
     $items = read_store($store);
+    $allowedPlatforms = ['facebook','instagram','twitter','linkedin','youtube','tiktok'];
+    $normalizePlatforms = static function ($value) use ($allowedPlatforms): array {
+      $arr = is_array($value) ? $value : [];
+      return array_values(array_unique(array_filter(array_map(
+        static fn($p) => strtolower(trim((string) $p)),
+        $arr
+      ), static fn($p) => in_array($p, $allowedPlatforms, true))));
+    };
 
     if ($action === 'create') {
       $id = (string)(time() . rand(100,999));
+      $name = trim((string)($body['name'] ?? 'Untitled'));
+      $content = (string)($body['content'] ?? '');
+      if ($name === '' || strlen($name) > 120 || strlen($content) > 5000) {
+        http_response_code(422);
+        echo json_encode([ 'success' => false, 'error' => 'Invalid template payload' ]);
+        exit;
+      }
       $tpl = [
         'id' => $id,
-        'name' => trim((string)($body['name'] ?? 'Untitled')),
-        'content' => (string)($body['content'] ?? ''),
-        'image_url' => (string)($body['image_url'] ?? ''),
-        'platforms' => is_array($body['platforms'] ?? null) ? $body['platforms'] : [],
+        'name' => $name,
+        'content' => $content,
+        'image_url' => substr((string)($body['image_url'] ?? ''), 0, 2000),
+        'platforms' => $normalizePlatforms($body['platforms'] ?? []),
         'is_active' => !!($body['is_active'] ?? true),
         'created_at' => date('c'),
         'updated_at' => date('c'),
@@ -66,13 +101,18 @@ try {
 
     if ($action === 'update') {
       $id = (string)($body['id'] ?? '');
+      if ($id === '') {
+        http_response_code(422);
+        echo json_encode([ 'success' => false, 'error' => 'Template id required' ]);
+        exit;
+      }
       $updated = null;
       foreach ($items as &$it) {
         if ((string)($it['id'] ?? '') === $id) {
-          $it['name'] = trim((string)($body['name'] ?? $it['name']));
-          $it['content'] = (string)($body['content'] ?? $it['content']);
-          $it['image_url'] = (string)($body['image_url'] ?? $it['image_url']);
-          $it['platforms'] = is_array($body['platforms'] ?? null) ? $body['platforms'] : ($it['platforms'] ?? []);
+          $it['name'] = substr(trim((string)($body['name'] ?? $it['name'])), 0, 120);
+          $it['content'] = substr((string)($body['content'] ?? $it['content']), 0, 5000);
+          $it['image_url'] = substr((string)($body['image_url'] ?? $it['image_url']), 0, 2000);
+          $it['platforms'] = $normalizePlatforms($body['platforms'] ?? ($it['platforms'] ?? []));
           $it['is_active'] = isset($body['is_active']) ? !!$body['is_active'] : ($it['is_active'] ?? true);
           $it['updated_at'] = date('c');
           $updated = $it;

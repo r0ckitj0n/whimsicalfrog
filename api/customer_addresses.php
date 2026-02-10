@@ -51,6 +51,23 @@ try {
 
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
     $user_id = $_GET['user_id'] ?? $_POST['user_id'] ?? '';
+    $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+    $allowedActions = ['get_addresses', 'add_address', 'update_address', 'delete_address', 'set_default'];
+    if (!in_array($action, $allowedActions, true)) {
+        throw new Exception('Invalid action');
+    }
+    $getOnlyActions = ['get_addresses'];
+    if (in_array($action, $getOnlyActions, true) && $method !== 'GET') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'error' => 'GET method required']);
+        exit;
+    }
+    if (!in_array($action, $getOnlyActions, true) && $method !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'error' => 'POST method required']);
+        exit;
+    }
 
     if (!isLoggedIn()) {
         http_response_code(401);
@@ -65,6 +82,9 @@ try {
         case 'get_addresses':
             if (empty($user_id)) {
                 throw new Exception('User ID is required');
+            }
+            if (!preg_match('/^[A-Za-z0-9_-]{1,64}$/', (string) $user_id)) {
+                throw new InvalidArgumentException('Invalid user ID');
             }
             if (!AddressValidationHelper::canMutateCustomerOwner((string) $user_id)) {
                 http_response_code(403);
@@ -84,6 +104,9 @@ try {
         case 'add_address':
             $data = wf_normalize_address_input($_POST);
             $targetUserId = trim((string) ($data['user_id'] ?? ''));
+            if (!preg_match('/^[A-Za-z0-9_-]{1,64}$/', $targetUserId)) {
+                throw new InvalidArgumentException('Invalid user ID');
+            }
             if (!AddressValidationHelper::canMutateCustomerOwner($targetUserId)) {
                 http_response_code(403);
                 echo json_encode(['success' => false, 'error' => 'Forbidden']);
@@ -124,6 +147,9 @@ try {
 
             if (empty($data['id'])) {
                 throw new Exception('Address ID is required');
+            }
+            if (!ctype_digit((string) $data['id'])) {
+                throw new InvalidArgumentException('Invalid address ID');
             }
             $existingAddress = Database::queryOne("SELECT owner_id FROM addresses WHERE id = ? AND owner_type = ?", [$data['id'], 'customer']);
             if (!$existingAddress) {
@@ -168,6 +194,9 @@ try {
             if (empty($addressId)) {
                 throw new Exception('Address ID is required');
             }
+            if (!ctype_digit((string) $addressId)) {
+                throw new InvalidArgumentException('Invalid address ID');
+            }
 
             $address = Database::queryOne("SELECT owner_id FROM addresses WHERE id = ? AND owner_type = ?", [$addressId, 'customer']);
             if (!$address) {
@@ -192,6 +221,9 @@ try {
 
             if (empty($addressId)) {
                 throw new Exception('Address ID is required');
+            }
+            if (!ctype_digit((string) $addressId)) {
+                throw new InvalidArgumentException('Invalid address ID');
             }
 
             // Get user ID for this address

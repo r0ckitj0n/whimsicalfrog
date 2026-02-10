@@ -3,6 +3,8 @@
 // Uses get_social_accounts.php to fetch configured accounts; logs results to reports/social_publish_log.json
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 header('Content-Type: application/json');
 
 $logFile = dirname(__DIR__) . '/reports/social_publish_log.json';
@@ -24,16 +26,34 @@ $action = $_GET['action'] ?? ($_POST['action'] ?? 'publish');
 $method = $_SERVER['REQUEST_METHOD'] ?? 'POST';
 
 if ($method !== 'POST' || $action !== 'publish') {
+  http_response_code(405);
   echo json_encode([ 'success' => false, 'error' => 'Unsupported action' ]); exit;
 }
 
+requireAdmin(true);
+
 $body = json_decode(file_get_contents('php://input'), true) ?: [];
-$content = (string)($body['content'] ?? '');
-$image_url = (string)($body['image_url'] ?? '');
+$content = trim((string)($body['content'] ?? ''));
+$image_url = trim((string)($body['image_url'] ?? ''));
 $platforms = is_array($body['platforms'] ?? null) ? $body['platforms'] : [];
 $publishAll = !!($body['publish_all'] ?? false);
 
-if ($content === '') { echo json_encode([ 'success' => false, 'error' => 'Missing content' ]); exit; }
+if ($content === '' || strlen($content) > 5000) {
+  http_response_code(422);
+  echo json_encode([ 'success' => false, 'error' => 'Invalid content' ]);
+  exit;
+}
+if ($image_url !== '' && strlen($image_url) > 2000) {
+  http_response_code(422);
+  echo json_encode([ 'success' => false, 'error' => 'Invalid image URL' ]);
+  exit;
+}
+
+$allowedPlatforms = ['facebook','instagram','twitter','linkedin','youtube','tiktok'];
+$platforms = array_values(array_unique(array_filter(array_map(
+  static fn($p) => strtolower(trim((string) $p)),
+  $platforms
+), static fn($p) => in_array($p, $allowedPlatforms, true))));
 
 // Load connected accounts directly from database to avoid HTTP loopback deadlocks
 $connected = [];

@@ -6,6 +6,8 @@
  */
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/ai_image_processor.php';
 require_once __DIR__ . '/../includes/area_mappings/helpers/AreaMappingSchemaHelper.php';
@@ -32,11 +34,31 @@ try {
 
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true) ?? [];
-$action = $_GET['action'] ?? $input['action'] ?? '';
+$action = trim((string) ($_GET['action'] ?? $input['action'] ?? ''));
+
+$allowedGetActions = [
+    'get_mapping_row',
+    'list_room_raw',
+    'get_room_coordinates',
+    'get_mappings',
+    'get_live_view',
+    'get_sitemap_entries',
+    'door_sign_destinations',
+];
+$allowedPostActions = [
+    'upload_content_image',
+    'add_mapping',
+    'update_mapping',
+    'delete_mapping',
+    'swap',
+];
 
 try {
     switch ($method) {
         case 'GET':
+            if (!in_array($action, $allowedGetActions, true)) {
+                Response::error('Invalid action', null, 400);
+            }
             switch ($action) {
                 case 'get_mapping_row':
                     $id = $_GET['id'] ?? null;
@@ -123,6 +145,10 @@ try {
             break;
 
         case 'POST':
+            if (!in_array($action, $allowedPostActions, true)) {
+                Response::error('Invalid action', null, 400);
+            }
+            requireAdmin(true);
             if ($action === 'upload_content_image') {
                 Response::success(['image_url' => AreaMappingUploadHelper::handleUpload()]);
             } elseif ($action === 'add_mapping') {
@@ -139,10 +165,12 @@ try {
             break;
 
         case 'PUT':
+            requireAdmin(true);
             Response::json(AreaMappingActionHelper::updateMapping($input));
             break;
 
         case 'DELETE':
+            requireAdmin(true);
             Response::json(AreaMappingActionHelper::deleteMapping($input['id'] ?? null));
             break;
 

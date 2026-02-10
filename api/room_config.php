@@ -18,18 +18,6 @@ function respond($arr, $code = 200)
     exit;
 }
 
-// Basic admin guard (prefer AuthHelper)
-$IS_ADMIN = false;
-try {
-    if (class_exists('AuthHelper')) {
-        $IS_ADMIN = AuthHelper::isAdmin();
-    } elseif (function_exists('isAdmin')) {
-        $IS_ADMIN = isAdmin();
-    }
-} catch (Throwable $e) {
-    $IS_ADMIN = false;
-}
-
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $action = $_GET['action'] ?? ($_POST['action'] ?? '');
 
@@ -56,11 +44,27 @@ if (!$room && isset($input['room'])) {
     $room = (string)$input['room'];
 }
 $room = trim($room);
+if ($room !== '' && !preg_match('/^[A-Za-z0-9_-]{1,32}$/', $room)) {
+    respond(['success' => false, 'message' => 'Invalid room parameter'], 400);
+}
 
 $storageDir = dirname(__DIR__) . '/data/room_configs';
 if (!is_dir($storageDir)) {
     @mkdir($storageDir, 0775, true);
 }
+
+$allowedActions = ['get', 'save'];
+if (!in_array($action, $allowedActions, true)) {
+    respond(['success' => false, 'message' => 'Unknown action'], 400);
+}
+if ($action === 'get' && $method !== 'GET') {
+    respond(['success' => false, 'message' => 'Method not allowed'], 405);
+}
+if ($action === 'save' && $method !== 'POST') {
+    respond(['success' => false, 'message' => 'Method not allowed'], 405);
+}
+
+requireAdmin(true);
 
 function get_default_config()
 {
@@ -110,9 +114,6 @@ if ($action === 'get') {
 }
 
 if ($action === 'save') {
-    if (!$IS_ADMIN) {
-        respond(['success' => false, 'message' => 'Unauthorized'], 401);
-    }
     if ($room === '') {
         respond(['success' => false, 'message' => 'Missing room parameter'], 400);
     }
@@ -131,9 +132,9 @@ if ($action === 'save') {
         if (is_bool($defaults[$k])) {
             $out[$k] = (bool)$v;
         } elseif (is_int($defaults[$k])) {
-            $out[$k] = (int)$v;
+            $out[$k] = max(0, min(10000, (int) $v));
         } else {
-            $out[$k] = (string)$v;
+            $out[$k] = substr((string) $v, 0, 64);
         }
     }
     $file = $storageDir . '/' . preg_replace('/[^a-zA-Z0-9_-]/', '', $room) . '.json';

@@ -6,6 +6,8 @@
  */
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/../includes/business_settings_helper.php';
 require_once __DIR__ . '/../includes/secret_store.php';
 require_once __DIR__ . '/../includes/response.php';
@@ -28,7 +30,32 @@ try {
     Response::serverError('Database connection failed: ' . $e->getMessage());
 }
 
-$action = $_GET['action'] ?? $_POST['action'] ?? (json_decode(file_get_contents('php://input'), true)['action'] ?? '');
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$input = json_decode(file_get_contents('php://input'), true);
+$input = is_array($input) ? $input : [];
+$action = trim((string) ($_GET['action'] ?? $_POST['action'] ?? ($input['action'] ?? '')));
+
+$allowedActions = [
+    'get_settings',
+    'save_settings',
+    'test_connection',
+    'sync_items',
+    'get_sync_status',
+    'import_from_square',
+];
+$postOnlyActions = ['save_settings', 'test_connection', 'sync_items', 'import_from_square'];
+
+if (!in_array($action, $allowedActions, true)) {
+    Response::error('Invalid action', 400);
+}
+if (in_array($action, $postOnlyActions, true) && $method !== 'POST') {
+    Response::methodNotAllowed('POST method required for action');
+}
+if (!in_array($action, $postOnlyActions, true) && $method !== 'GET') {
+    Response::methodNotAllowed('GET method required for action');
+}
+
+requireAdmin(true);
 
 try {
     switch ($action) {
@@ -37,7 +64,6 @@ try {
             break;
 
         case 'save_settings':
-            $input = json_decode(file_get_contents('php://input'), true);
             Response::json(SquareConfigHelper::saveSettings($input));
             break;
 

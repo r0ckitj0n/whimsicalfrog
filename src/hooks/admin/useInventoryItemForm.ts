@@ -116,6 +116,7 @@ export const useInventoryItemForm = ({
     const [lockedFields, setLockedFields] = useState<Record<string, boolean>>({});
     const [lockedWords, setLockedWords] = useState<Record<string, string>>({});
     const [cachedMarketingData, setCachedMarketingData] = useState<MarketingData | null>(null);
+    const autoSkuCategoryRef = useRef<string>('');
 
     const { populateFromSuggestion: populateCost } = useCostBreakdown(localSku);
     const { populateFromSuggestion: populatePrice } = usePriceBreakdown(localSku);
@@ -272,6 +273,19 @@ export const useInventoryItemForm = ({
         setIsDirty(true);
         window.WFToast?.info?.('Temporary SKU assigned. Choose a category and re-generate for a category-based SKU.');
     };
+
+    useEffect(() => {
+        if (!isAdding) return;
+        const category = String(formData.category || '').trim();
+        if (!category) return;
+        if (autoSkuCategoryRef.current === category) return;
+
+        const isTempOrEmpty = !localSku || /^WF-TMP-/i.test(localSku);
+        if (!isTempOrEmpty) return;
+
+        autoSkuCategoryRef.current = category;
+        void generateSku();
+    }, [isAdding, formData.category, localSku]);
 
     const regenerateSku = useCallback(async (): Promise<{ success: boolean; newSku?: string; updatedCounts?: Record<string, number>; error?: string }> => {
         if (isAdding || isReadOnly || isSaving) {

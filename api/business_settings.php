@@ -49,9 +49,15 @@ try {
     }
     $publicReadActions = [
         WF_Constants::ACTION_GET_BUSINESS_INFO,
-        WF_Constants::ACTION_GET_SALES_VERBIAGE
+        WF_Constants::ACTION_GET_SALES_VERBIAGE,
     ];
-    if (!in_array($action, $publicReadActions, true)) {
+    $publicCategoryAllowlist = ['shopping_cart'];
+    $isPublicCategoryRead = (
+        $action === WF_Constants::ACTION_GET_BY_CATEGORY
+        && in_array((string) ($_GET['category'] ?? $_POST['category'] ?? $input['category'] ?? ''), $publicCategoryAllowlist, true)
+    );
+
+    if (!in_array($action, $publicReadActions, true) && !$isPublicCategoryRead) {
         AuthHelper::requireAdmin(403, 'Admin access required');
     }
     $mutatingActions = [WF_Constants::ACTION_UPDATE_SETTING, WF_Constants::ACTION_UPSERT_SETTINGS];

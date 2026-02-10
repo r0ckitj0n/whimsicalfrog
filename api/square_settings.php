@@ -44,6 +44,8 @@ $allowedActions = [
     'import_from_square',
 ];
 $postOnlyActions = ['save_settings', 'test_connection', 'sync_items', 'import_from_square'];
+// Storefront checkout needs read-only access to published Square client settings.
+$publicReadActions = ['get_settings'];
 
 if (!in_array($action, $allowedActions, true)) {
     Response::error('Invalid action', 400);
@@ -55,7 +57,9 @@ if (!in_array($action, $postOnlyActions, true) && $method !== 'GET') {
     Response::methodNotAllowed('GET method required for action');
 }
 
-requireAdmin(true);
+if (!in_array($action, $publicReadActions, true)) {
+    requireAdmin(true);
+}
 
 try {
     switch ($action) {

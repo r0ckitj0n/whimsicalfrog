@@ -15,6 +15,7 @@ interface RoomPromptDropdownOptionsEditorProps {
 
 const buildDraftText = (options: string[]): string => options.join('\n');
 const EXCLUDED_VARIABLE_KEYS = new Set(['room_number', 'display_order']);
+const LEGACY_AUTOGENERATE_LABEL = '(autogenerate)';
 
 const parseDraftText = (raw: string): string[] => {
     const seen = new Set<string>();
@@ -22,7 +23,7 @@ const parseDraftText = (raw: string): string[] => {
     const lines = raw.split('\n').map((line) => line.trim()).filter(Boolean);
     for (const line of lines) {
         const key = line.toLowerCase();
-        if (key === AUTOGENERATE_LABEL.toLowerCase()) continue;
+        if (key === AUTOGENERATE_LABEL.toLowerCase() || key === LEGACY_AUTOGENERATE_LABEL) continue;
         if (seen.has(key)) continue;
         seen.add(key);
         out.push(line);

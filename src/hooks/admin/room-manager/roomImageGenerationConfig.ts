@@ -118,6 +118,34 @@ export const mapRenderContextToScaleMode = (renderContext?: string | null): Room
     return 'modal';
 };
 
+const LEGACY_AUTOGENERATE_LABEL = '(autogenerate)';
+
+const normalizeAutoDropdownOption = (value: string): string => {
+    const trimmed = value.trim();
+    const key = trimmed.toLowerCase();
+    if (key === AUTOGENERATE_LABEL.toLowerCase() || key === LEGACY_AUTOGENERATE_LABEL) {
+        return AUTOGENERATE_LABEL;
+    }
+    return trimmed;
+};
+
+const normalizeRoomDropdownOptions = (rawOptions: string[], fallbackValue: string): string[] => {
+    const seen = new Set<string>();
+    const normalized: string[] = [];
+    const allOptions = [AUTOGENERATE_LABEL, ...rawOptions, fallbackValue];
+
+    for (const option of allOptions) {
+        const candidate = normalizeAutoDropdownOption(String(option || ''));
+        if (!candidate) continue;
+        const key = candidate.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        normalized.push(candidate);
+    }
+
+    return normalized;
+};
+
 export const getRoomImageVariableOptions = (
     variableKey: RoomImagePromptVariableKey,
     dropdownOptionsByVariable: IAIPromptDropdownOptionsByVariable,
@@ -125,9 +153,9 @@ export const getRoomImageVariableOptions = (
 ): string[] => {
     const apiOptions = dropdownOptionsByVariable[variableKey];
     if (Array.isArray(apiOptions) && apiOptions.length > 0) {
-        return apiOptions;
+        return normalizeRoomDropdownOptions(apiOptions, fallbackValue);
     }
-    return ROOM_PROMPT_DROPDOWN_DEFAULTS[variableKey] || [fallbackValue];
+    return normalizeRoomDropdownOptions(ROOM_PROMPT_DROPDOWN_DEFAULTS[variableKey] || [], fallbackValue);
 };
 
 export const getRoomImageVariableLabel = (variableKey: RoomImagePromptVariableKey): string => getVariableLabel(variableKey);
@@ -143,7 +171,7 @@ interface ResolveRoomGenerationVariablesParams {
 }
 
 const normalizeAutoValue = (value: string, fallbackInstruction: string): string => {
-    const trimmed = value.trim();
+    const trimmed = normalizeAutoDropdownOption(value);
     if (!trimmed || trimmed.toLowerCase() === AUTOGENERATE_LABEL.toLowerCase()) {
         return fallbackInstruction;
     }

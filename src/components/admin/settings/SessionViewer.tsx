@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { ApiClient } from '../../../core/ApiClient.js';
 import type { SessionViewerData, SessionViewerResponse } from '../../../types/admin/sessionViewer.js';
 
 interface SessionViewerProps {
@@ -21,14 +22,10 @@ export function SessionViewer({ onClose, title }: SessionViewerProps) {
         setLoading(true);
         setError(null);
         try {
-            // Use direct same-origin fetch here to avoid backend-origin cookie mismatches.
-            const response = await fetch(`/api/session_diagnostics.php?action=get&cb=${Date.now()}`, {
-                credentials: 'include',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
+            const json = await ApiClient.get<SessionViewerResponse>('/api/session_diagnostics.php', {
+                action: 'get',
+                cb: Date.now(),
             });
-            const json = (await response.json()) as SessionViewerResponse;
             if (json.success) {
                 setData(json.data || null);
             } else {

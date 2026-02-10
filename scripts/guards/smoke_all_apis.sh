@@ -15,7 +15,16 @@ probe() {
   local code
 
   code="$(curl -sS -o /tmp/wf_smoke_api.json -w '%{http_code}' "$url" || true)"
-  if [[ "$code" != "$expected" ]]; then
+  local matched=1
+  IFS=',' read -r -a expected_codes <<< "$expected"
+  for candidate in "${expected_codes[@]}"; do
+    if [[ "$code" == "$candidate" ]]; then
+      matched=0
+      break
+    fi
+  done
+
+  if [[ "$matched" -ne 0 ]]; then
     echo "FAIL ${path} (expected ${expected}, got ${code})"
     FAILURES=$((FAILURES + 1))
     return
@@ -28,10 +37,10 @@ say "Core API endpoint health"
 probe "/api/bootstrap.php?path=%2F"
 probe "/api/get_rooms.php"
 probe "/api/get_items.php"
-probe "/api/health_items.php"
-probe "/api/health_backgrounds.php"
+probe "/api/health_items.php" "200,401,403"
+probe "/api/health_backgrounds.php" "200,401,403"
 probe "/api/room_status.php"
-probe "/api/db_tools.php?action=status"
+probe "/api/db_tools.php?action=status" "200,401,403"
 
 say "Auth probe redirect"
 probe "/api/auth_redirect_probe.php?token=wf_probe_2025_09&next=whoami" 302

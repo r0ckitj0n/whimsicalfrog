@@ -4,6 +4,15 @@ require_once __DIR__ . '/../business_settings_helper.php';
 
 class BusinessDateTimeHelper
 {
+    public static function nowUtcString(): string
+    {
+        try {
+            return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
+        } catch (Throwable $e) {
+            return gmdate('Y-m-d H:i:s');
+        }
+    }
+
     public static function nowString(): string
     {
         $timezone = (string) BusinessSettings::get('business_timezone', 'America/New_York');

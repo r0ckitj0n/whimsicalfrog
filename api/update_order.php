@@ -84,8 +84,8 @@ try {
 
         if ($newPS === 'paid' && $currentOrder['payment_status'] !== 'paid') {
             if (empty($input['payment_at']) || $input['payment_at'] === '—') {
-                $input['payment_at'] = BusinessDateTimeHelper::nowString();
-                error_log('[OrderUpdate] Auto-setting payment_at to current business timestamp due to status transition to paid');
+                $input['payment_at'] = BusinessDateTimeHelper::nowUtcString();
+                error_log('[OrderUpdate] Auto-setting payment_at to current UTC timestamp due to status transition to paid');
             }
         }
     }

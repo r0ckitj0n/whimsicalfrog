@@ -79,7 +79,7 @@ const AI_PROMPT_DROPDOWN_DEFAULTS = [
         'the subject inspecting lighting over the shelving',
         'the subject reviewing a clipboard checklist',
         'the subject sweeping the floor with a small broom',
-        'two frog partners relaxing together on the porch',
+        'husband and wife frog chilling on the porch',
     ],
     'vibe_adjectives' => [
         AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL,

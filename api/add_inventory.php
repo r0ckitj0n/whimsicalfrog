@@ -36,6 +36,51 @@ function wf_generate_sku_for_category(string $category): string
     return $candidate;
 }
 
+function wf_items_has_column(string $column): bool
+{
+    static $columns = null;
+    if (is_array($columns)) {
+        return isset($columns[strtolower($column)]);
+    }
+
+    $columns = [];
+    try {
+        $rows = Database::queryAll('SHOW COLUMNS FROM items');
+        foreach ($rows as $row) {
+            $name = strtolower((string)($row['Field'] ?? ''));
+            if ($name !== '') {
+                $columns[$name] = true;
+            }
+        }
+    } catch (Throwable $e) {
+        return false;
+    }
+
+    return isset($columns[strtolower($column)]);
+}
+
+function wf_resolve_category_id(string $categoryName): ?int
+{
+    $name = trim($categoryName);
+    if ($name === '') {
+        return null;
+    }
+
+    try {
+        $row = Database::queryOne(
+            'SELECT id FROM categories WHERE LOWER(name) = LOWER(?) LIMIT 1',
+            [$name]
+        );
+        if ($row && isset($row['id'])) {
+            return (int) $row['id'];
+        }
+    } catch (Throwable $e) {
+        return null;
+    }
+
+    return null;
+}
+
 function wf_has_categories_column(string $column): bool
 {
     static $columns = null;
@@ -237,6 +282,7 @@ try {
         $package_length_in = floatval($data['package_length_in'] ?? 0);
         $package_width_in = floatval($data['package_width_in'] ?? 0);
         $package_height_in = floatval($data['package_height_in'] ?? 0);
+        $resolvedCategoryId = wf_resolve_category_id($resolvedCategory);
 
         $isTemporarySku = ($skuInput === '') || (stripos($skuInput, 'WF-TMP-') === 0);
         $sku = $isTemporarySku ? wf_generate_sku_for_category($resolvedCategory) : $skuInput;
@@ -245,24 +291,46 @@ try {
         $alreadyExists = !empty($existing);
 
         // Upsert allows image-first flows where an item shell may already exist.
-        $affected = Database::execute(
-            'INSERT INTO items (sku, name, category, stock_quantity, reorder_point, cost_price, retail_price, description, status, weight_oz, package_length_in, package_width_in, package_height_in)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-             ON DUPLICATE KEY UPDATE
-                name = VALUES(name),
-                category = VALUES(category),
-                stock_quantity = VALUES(stock_quantity),
-                reorder_point = VALUES(reorder_point),
-                cost_price = VALUES(cost_price),
-                retail_price = VALUES(retail_price),
-                description = VALUES(description),
-                status = VALUES(status),
-                weight_oz = VALUES(weight_oz),
-                package_length_in = VALUES(package_length_in),
-                package_width_in = VALUES(package_width_in),
-                package_height_in = VALUES(package_height_in)',
-            [$sku, $name, $resolvedCategory, $stock_quantity, $reorder_point, $cost_price, $retail_price, $description, $status, $weight_oz, $package_length_in, $package_width_in, $package_height_in]
-        );
+        if (wf_items_has_column('category_id')) {
+            $affected = Database::execute(
+                'INSERT INTO items (sku, name, category, category_id, stock_quantity, reorder_point, cost_price, retail_price, description, status, weight_oz, package_length_in, package_width_in, package_height_in)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE
+                    name = VALUES(name),
+                    category = VALUES(category),
+                    category_id = VALUES(category_id),
+                    stock_quantity = VALUES(stock_quantity),
+                    reorder_point = VALUES(reorder_point),
+                    cost_price = VALUES(cost_price),
+                    retail_price = VALUES(retail_price),
+                    description = VALUES(description),
+                    status = VALUES(status),
+                    weight_oz = VALUES(weight_oz),
+                    package_length_in = VALUES(package_length_in),
+                    package_width_in = VALUES(package_width_in),
+                    package_height_in = VALUES(package_height_in)',
+                [$sku, $name, $resolvedCategory, $resolvedCategoryId, $stock_quantity, $reorder_point, $cost_price, $retail_price, $description, $status, $weight_oz, $package_length_in, $package_width_in, $package_height_in]
+            );
+        } else {
+            $affected = Database::execute(
+                'INSERT INTO items (sku, name, category, stock_quantity, reorder_point, cost_price, retail_price, description, status, weight_oz, package_length_in, package_width_in, package_height_in)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE
+                    name = VALUES(name),
+                    category = VALUES(category),
+                    stock_quantity = VALUES(stock_quantity),
+                    reorder_point = VALUES(reorder_point),
+                    cost_price = VALUES(cost_price),
+                    retail_price = VALUES(retail_price),
+                    description = VALUES(description),
+                    status = VALUES(status),
+                    weight_oz = VALUES(weight_oz),
+                    package_length_in = VALUES(package_length_in),
+                    package_width_in = VALUES(package_width_in),
+                    package_height_in = VALUES(package_height_in)',
+                [$sku, $name, $resolvedCategory, $stock_quantity, $reorder_point, $cost_price, $retail_price, $description, $status, $weight_oz, $package_length_in, $package_width_in, $package_height_in]
+            );
+        }
 
         if ($affected !== false) {
             if ($isTemporarySku && $skuInput !== '' && $skuInput !== $sku) {

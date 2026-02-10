@@ -105,9 +105,14 @@ function sendTemplatedEmail($template, $toEmail, $variables, $emailType)
             'reply_to' => $fromEmail,
         ]);
 
-        $success = EmailHelper::send($toEmail, $subject, $htmlContent, ['is_html' => true]);
-        logEmailSend($toEmail, $subject, $emailType, $success ? WF_Constants::EMAIL_STATUS_SENT : WF_Constants::EMAIL_STATUS_FAILED, $template['id']);
-        return $success;
+        $orderId = isset($variables['order_id']) ? (string) $variables['order_id'] : null;
+        return EmailHelper::send($toEmail, $subject, $htmlContent, [
+            'is_html' => true,
+            'email_type' => $emailType,
+            'order_id' => $orderId,
+            'created_by' => WF_Constants::ROLE_SYSTEM,
+            'content' => $htmlContent
+        ]);
     } catch (Exception $e) {
         logEmailSend($toEmail, $template['subject'] ?? 'Email', $emailType, WF_Constants::EMAIL_STATUS_FAILED, $template['id'], $e->getMessage());
         return false;

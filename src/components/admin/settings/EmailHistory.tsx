@@ -53,25 +53,25 @@ export const EmailHistory: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-3">
             <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b bg-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="px-4 py-3 border-b bg-gray-50 flex flex-col lg:flex-row lg:items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
-                        <h2 className="text-lg font-bold text-gray-800">Email Communication History</h2>
+                        <h2 className="text-base font-bold text-gray-800">Email Communication History</h2>
                     </div>
 
-                    <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-2">
+                    <form onSubmit={handleSearch} className="flex flex-wrap lg:flex-nowrap items-center gap-2">
                         <input
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search emails, orders..."
-                            className="form-input form-input-search text-xs w-64"
+                            className="form-input form-input-search text-xs w-full sm:w-72"
                         />
                         <select
                             value={status}
                             onChange={(e) => setStatus(e.target.value)}
-                            className="form-input py-1.5 text-xs w-32"
+                            className="form-input py-1.5 text-xs w-full sm:w-36"
                         >
                             <option value="">All Status</option>
                             <option value={EMAIL_STATUS.SENT}>Sent</option>
@@ -90,7 +90,7 @@ export const EmailHistory: React.FC = () => {
                 <EmailHistoryTable logs={logs} onViewDetails={handleViewDetails} />
 
                 {pagination && pagination.total_pages > 1 && (
-                    <div className="px-6 py-4 border-t bg-gray-50 flex items-center justify-between">
+                    <div className="px-4 py-3 border-t bg-gray-50 flex items-center justify-between">
                         <div className="text-xs text-gray-500">
                             Showing {logs.length} of {pagination.total} logs
                         </div>

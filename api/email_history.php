@@ -50,6 +50,55 @@ function normalize_email_type($rawType, $subject = '')
   return 'transactional';
 }
 
+function extract_order_id_from_subject($subject)
+{
+  $s = trim((string) $subject);
+  if ($s === '') {
+    return null;
+  }
+
+  if (preg_match('/\border\s*#?\s*([A-Za-z0-9-]+)/i', $s, $m)) {
+    return (string) $m[1];
+  }
+  return null;
+}
+
+function normalize_order_id($rawOrderId, $subject = '')
+{
+  $id = trim((string) ($rawOrderId ?? ''));
+  if ($id !== '') {
+    return $id;
+  }
+  return extract_order_id_from_subject($subject);
+}
+
+function resolve_content($rawContent, $row)
+{
+  $content = trim((string) ($rawContent ?? ''));
+  if ($content !== '') {
+    return $content;
+  }
+
+  $subject = (string) ($row['subject'] ?? '');
+  $toEmail = (string) ($row['to_email'] ?? '');
+  $fromEmail = (string) ($row['from_email'] ?? '');
+  $status = (string) ($row['status'] ?? '');
+  $sentAt = (string) ($row['sent_at'] ?? '');
+  $orderId = normalize_order_id($row['order_id'] ?? null, $subject) ?? 'N/A';
+  $type = normalize_email_type($row['email_type'] ?? '', $subject);
+
+  return trim(
+    "Subject: {$subject}\n"
+    . "To: {$toEmail}\n"
+    . "From: {$fromEmail}\n"
+    . "Type: {$type}\n"
+    . "Status: {$status}\n"
+    . "Order ID: {$orderId}\n"
+    . "Sent At: {$sentAt}\n\n"
+    . "Original body content was not stored for this transmission."
+  );
+}
+
 try {
   initializeEmailLogsTable();
 } catch (Throwable $e) {
@@ -195,7 +244,7 @@ try {
         'status' => $r['status'] ?? WF_Constants::EMAIL_STATUS_SENT,
         'error_message' => $r['error_message'] ?? null,
         'sent_at' => $r['sent_at'] ?? null,
-        'order_id' => $r['order_id'] ?? null,
+        'order_id' => normalize_order_id($r['order_id'] ?? null, $r['subject'] ?? ''),
         'created_by' => $r['created_by'] ?? null,
       ];
     }, $rows);
@@ -259,12 +308,12 @@ try {
         'to_email' => $row['to_email'] ?? '',
         'from_email' => $row['from_email'] ?? '',
         'subject' => $row['subject'] ?? '',
-        'content' => $row['content'] ?? '',
+        'content' => resolve_content($row['content'] ?? '', $row),
         'type' => normalize_email_type($row['email_type'] ?? '', $row['subject'] ?? ''),
         'status' => $row['status'] ?? WF_Constants::EMAIL_STATUS_SENT,
         'error_message' => $row['error_message'] ?? null,
         'sent_at' => $row['sent_at'] ?? null,
-        'order_id' => $row['order_id'] ?? null,
+        'order_id' => normalize_order_id($row['order_id'] ?? null, $row['subject'] ?? ''),
         'created_by' => $row['created_by'] ?? null,
         'bcc_email' => null, // not stored
         'headers' => null,   // not stored

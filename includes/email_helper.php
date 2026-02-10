@@ -14,6 +14,32 @@ require_once __DIR__ . '/email/TemplateSender.php';
 
 class EmailHelper
 {
+    private static $emailLogColumns = null;
+
+    private static function getEmailLogColumns(): array
+    {
+        if (is_array(self::$emailLogColumns)) {
+            return self::$emailLogColumns;
+        }
+
+        try {
+            $cols = Database::queryAll("SHOW COLUMNS FROM email_logs");
+            $map = [];
+            foreach (($cols ?: []) as $col) {
+                $field = (string)($col['Field'] ?? '');
+                if ($field !== '') {
+                    $map[$field] = true;
+                }
+            }
+            self::$emailLogColumns = $map;
+            return $map;
+        } catch (Exception $e) {
+            error_log("Unable to inspect email_logs schema: " . $e->getMessage());
+            self::$emailLogColumns = [];
+            return self::$emailLogColumns;
+        }
+    }
+
     /**
      * Configure email settings at runtime.
      */
@@ -43,7 +69,11 @@ class EmailHelper
             'is_html' => true,
             'attachments' => [],
             'cc' => [],
-            'bcc' => []
+            'bcc' => [],
+            'email_type' => null,
+            'order_id' => null,
+            'created_by' => WF_Constants::ROLE_SYSTEM,
+            'content' => null
         ], $options);
 
         try {
@@ -60,12 +90,36 @@ class EmailHelper
             }
 
             if ($result) {
-                self::logEmail($to, $subject, 'sent');
+                self::logEmail(
+                    $to,
+                    $subject,
+                    WF_Constants::EMAIL_STATUS_SENT,
+                    null,
+                    $options['order_id'],
+                    [
+                        'from_email' => $options['from_email'],
+                        'content' => $options['content'] ?? $body,
+                        'email_type' => $options['email_type'],
+                        'created_by' => $options['created_by'],
+                    ]
+                );
             }
 
             return $result;
         } catch (Exception $e) {
-            self::logEmail($to, $subject, 'failed', $e->getMessage());
+            self::logEmail(
+                $to,
+                $subject,
+                WF_Constants::EMAIL_STATUS_FAILED,
+                $e->getMessage(),
+                $options['order_id'],
+                [
+                    'from_email' => $options['from_email'],
+                    'content' => $options['content'] ?? $body,
+                    'email_type' => $options['email_type'],
+                    'created_by' => $options['created_by'],
+                ]
+            );
             
             if (class_exists('Logger')) {
                 Logger::error('Email send failed', [
@@ -99,16 +153,49 @@ class EmailHelper
         return EmailConfig::createFromBusinessSettings($pdo);
     }
 
-    public static function logEmail($to, $subject, $status = 'sent', $error = null, $order_id = null)
+    public static function logEmail($to, $subject, $status = 'sent', $error = null, $order_id = null, $meta = [])
     {
         try {
             $config = EmailConfig::getConfig();
-            Database::execute(
-                "INSERT INTO email_logs (to_email, from_email, subject, status, error_message, order_id, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())",
-                [is_array($to) ? implode(', ', $to) : $to, $config['from_email'], $subject, $status, $error, $order_id]
-            );
+            $columns = self::getEmailLogColumns();
+            if (empty($columns)) {
+                return false;
+            }
+
+            $toEmail = is_array($to) ? implode(', ', $to) : (string) $to;
+            $fromEmail = (string) ($meta['from_email'] ?? $config['from_email'] ?? '');
+            $content = (string) ($meta['content'] ?? '');
+            $emailType = isset($meta['email_type']) ? trim((string) $meta['email_type']) : '';
+            $createdBy = isset($meta['created_by']) ? (string) $meta['created_by'] : WF_Constants::ROLE_SYSTEM;
+
+            $insert = [];
+            if (!empty($columns['to_email'])) $insert['to_email'] = $toEmail;
+            if (!empty($columns['from_email'])) $insert['from_email'] = $fromEmail;
+            if (!empty($columns['subject'])) {
+                $insert['subject'] = (string) $subject;
+            } elseif (!empty($columns['email_subject'])) {
+                $insert['email_subject'] = (string) $subject;
+            }
+            if (!empty($columns['content'])) $insert['content'] = $content;
+            if (!empty($columns['email_type']) && $emailType !== '') $insert['email_type'] = $emailType;
+            if (!empty($columns['status'])) $insert['status'] = (string) $status;
+            if (!empty($columns['error_message'])) $insert['error_message'] = $error;
+            if (!empty($columns['order_id']) && $order_id !== null && $order_id !== '') $insert['order_id'] = (string) $order_id;
+            if (!empty($columns['created_by'])) $insert['created_by'] = $createdBy;
+            if (!empty($columns['sent_at'])) $insert['sent_at'] = date('Y-m-d H:i:s');
+            if (!empty($columns['created_at'])) $insert['created_at'] = date('Y-m-d H:i:s');
+
+            if (empty($insert)) {
+                return false;
+            }
+
+            $names = array_keys($insert);
+            $placeholders = implode(', ', array_fill(0, count($names), '?'));
+            $sql = "INSERT INTO email_logs (" . implode(', ', $names) . ") VALUES ($placeholders)";
+            Database::execute($sql, array_values($insert));
             return true;
         } catch (Exception $e) {
+            error_log("Failed to log email: " . $e->getMessage());
             return false;
         }
     }

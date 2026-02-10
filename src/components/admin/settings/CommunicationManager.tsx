@@ -140,8 +140,8 @@ export const CommunicationManager: React.FC<CommunicationManagerProps> = ({
 
                 {/* Content Area */}
                 <div className="flex-1 overflow-y-auto w-full">
-                    <div className="p-8 lg:p-12">
-                        <div className="max-w-5xl mx-auto">
+                    <div className={activeTab === 'history' ? 'p-3 lg:p-4' : 'p-8 lg:p-12'}>
+                        <div className={activeTab === 'history' ? 'w-full' : 'max-w-5xl mx-auto'}>
                             {error && (
                                 <div className="mb-8 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold animate-in shake duration-500">
                                     ⚠️ {error}

@@ -19,18 +19,19 @@ export const EmailHistoryTable: React.FC<EmailHistoryTableProps> = ({ logs, onVi
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-600 font-bold border-b">
                         <tr>
-                            <th className="px-6 py-3">Date / Time</th>
-                            <th className="px-6 py-3">Recipient</th>
-                            <th className="px-6 py-3">Subject</th>
-                            <th className="px-6 py-3">Type</th>
-                            <th className="px-6 py-3 text-center">Status</th>
-                            <th className="px-6 py-3 text-right">Actions</th>
+                            <th className="px-3 py-2">Date / Time</th>
+                            <th className="px-3 py-2">Recipient</th>
+                            <th className="px-3 py-2">Subject</th>
+                            <th className="px-3 py-2">Type</th>
+                            <th className="px-3 py-2">Order</th>
+                            <th className="px-3 py-2 text-center">Status</th>
+                            <th className="px-3 py-2 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {logs.map((log) => (
                             <tr key={log.id} className="hover:bg-gray-50 group">
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-3 py-2.5 whitespace-nowrap">
                                     {(() => {
                                         const dt = formatDateTime(log.sent_at);
                                         return (
@@ -41,23 +42,31 @@ export const EmailHistoryTable: React.FC<EmailHistoryTableProps> = ({ logs, onVi
                                         );
                                     })()}
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-3 py-2.5">
                                     <div className="font-medium text-gray-900">{log.to_email}</div>
-                                    {log.order_id && (
-                                        <div className="text-[10px] text-[var(--brand-primary)] font-bold">Order #{log.order_id}</div>
-                                    )}
                                 </td>
-                                <td className="px-6 py-4">
-                                    <div className="truncate max-w-xs text-gray-600" title={log.subject}>
+                                <td className="px-3 py-2.5">
+                                    <div
+                                        className="max-w-[420px] text-gray-600 leading-snug break-words overflow-hidden"
+                                        style={{
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical'
+                                        }}
+                                        title={log.subject}
+                                    >
                                         {log.subject}
                                     </div>
                                 </td>
-                                <td className="px-6 py-4">
-                                    <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold uppercase rounded truncate max-w-[100px] inline-block">
+                                <td className="px-3 py-2.5">
+                                    <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold uppercase rounded inline-block whitespace-nowrap">
                                         {log.type.replace(/_/g, ' ')}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-center">
+                                <td className="px-3 py-2.5 whitespace-nowrap text-gray-800">
+                                    {log.order_id || '—'}
+                                </td>
+                                <td className="px-3 py-2.5 text-center">
                                     <div className="flex justify-center text-lg">
                                         {log.status === EMAIL_STATUS.SENT ? (
                                             '✅'
@@ -68,7 +77,7 @@ export const EmailHistoryTable: React.FC<EmailHistoryTableProps> = ({ logs, onVi
                                         )}
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 text-right">
+                                <td className="px-3 py-2.5 text-right">
                                     <button
                                         type="button"
                                         onClick={() => onViewDetails(log)}

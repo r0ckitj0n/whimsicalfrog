@@ -12,21 +12,43 @@ export const useOrders = () => {
     const [payment_status_options, setPaymentStatusOptions] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
 
+    const normalizeOrdersResponse = (res: IOrdersResponse | (IOrdersResponse & { data?: IOrdersResponse['data'] })) => {
+        const payload = (res as unknown as { data?: IOrdersResponse['data'] })?.data;
+        const effective = payload && Array.isArray(payload.orders) ? payload : res;
+        return {
+            orders: effective.orders || [],
+            status_options: effective.status_options || [],
+            payment_method_options: effective.payment_method_options || [],
+            shipping_method_options: effective.shipping_method_options || [],
+            payment_status_options: effective.payment_status_options || []
+        };
+    };
+
     const fetchOrders = useCallback(async (filters: Record<string, string> = {}) => {
         setIsLoading(true);
         setError(null);
         try {
             const res = await ApiClient.get<IOrdersResponse>('/api/orders.php', filters);
-            
-            if (res && res.orders) {
-                setOrders(res.orders);
-                setStatusOptions(res.status_options || []);
-                setPaymentMethodOptions(res.payment_method_options || []);
-                setShippingMethodOptions(res.shipping_method_options || []);
-                setPaymentStatusOptions(res.payment_status_options || []);
-            } else {
-                setError('Failed to load orders');
+
+            const normalized = normalizeOrdersResponse(res);
+
+            if (normalized.orders.length === 0 && Object.values(filters).some(Boolean)) {
+                const unfilteredRes = await ApiClient.get<IOrdersResponse>('/api/orders.php');
+                const unfiltered = normalizeOrdersResponse(unfilteredRes);
+                setOrders(unfiltered.orders);
+                setStatusOptions(unfiltered.status_options);
+                setPaymentMethodOptions(unfiltered.payment_method_options);
+                setShippingMethodOptions(unfiltered.shipping_method_options);
+                setPaymentStatusOptions(unfiltered.payment_status_options);
+                setError('No orders matched active filters. Showing all orders.');
+                return;
             }
+
+            setOrders(normalized.orders);
+            setStatusOptions(normalized.status_options);
+            setPaymentMethodOptions(normalized.payment_method_options);
+            setShippingMethodOptions(normalized.shipping_method_options);
+            setPaymentStatusOptions(normalized.payment_status_options);
         } catch (err) {
             logger.error('[useOrders] fetchOrders failed', err);
             setError('Unable to load orders list');
@@ -38,13 +60,11 @@ export const useOrders = () => {
     const fetchDropdownOptions = useCallback(async () => {
         try {
             const res = await ApiClient.get<IOrdersResponse>('/api/orders.php');
-            
-            if (res) {
-                setStatusOptions(res.status_options || []);
-                setPaymentMethodOptions(res.payment_method_options || []);
-                setShippingMethodOptions(res.shipping_method_options || []);
-                setPaymentStatusOptions(res.payment_status_options || []);
-            }
+            const normalized = normalizeOrdersResponse(res);
+            setStatusOptions(normalized.status_options);
+            setPaymentMethodOptions(normalized.payment_method_options);
+            setShippingMethodOptions(normalized.shipping_method_options);
+            setPaymentStatusOptions(normalized.payment_status_options);
         } catch (err) {
             logger.error('[useOrders] fetchDropdownOptions failed', err);
         }

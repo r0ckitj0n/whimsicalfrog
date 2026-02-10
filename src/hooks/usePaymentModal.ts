@@ -124,7 +124,12 @@ export const usePaymentModal = (isOpen: boolean, onClose: () => void) => {
                 };
                 const square_token = await tokenize({
                     billingContact,
-                    verificationDetails: { billingContact }
+                    verificationDetails: {
+                        intent: 'CHARGE',
+                        amount: Number(pricing.total || 0).toFixed(2),
+                        currencyCode: 'USD',
+                        billingContact
+                    }
                 });
                 token = square_token ?? undefined;
             } catch (err: unknown) {

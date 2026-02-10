@@ -99,6 +99,9 @@ export const useSquare = (applicationId: string | null | undefined, locationId: 
             countryCode?: string;
         };
         verificationDetails?: {
+            intent?: string;
+            amount?: string;
+            currencyCode?: string;
             billingContact?: {
                 addressLines?: string[];
                 city?: string;

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ApiClient } from '../../../../../core/ApiClient.js';
 import { useAIPromptTemplates } from '../../../../../hooks/admin/useAIPromptTemplates.js';
 import type { IRoomData } from '../../../../../types/room.js';
@@ -422,11 +423,15 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         onClose();
     };
 
-    if (!isOpen) return null;
+    if (!isOpen || typeof document === 'undefined') return null;
 
-    return (
+    const modalContent = (
         <>
-            <div className="fixed inset-0 z-[var(--z-overlay-modal)] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+                style={{ zIndex: 'calc(var(--z-overlay-topmost) + 1)' }}
+                onClick={(e) => e.target === e.currentTarget && onClose()}
+            >
                 <div className="relative w-full max-w-5xl bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden">
                     <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                         <div>
@@ -654,6 +659,8 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             )}
         </>
     );
+
+    return createPortal(modalContent, document.body);
 };
 
 export default CreateRoomModal;

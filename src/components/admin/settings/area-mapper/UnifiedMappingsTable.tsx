@@ -11,6 +11,7 @@ interface UnifiedMappingsTableProps {
     derivedMappings: IAreaMapping[];
     roomOptions: IRoomOption[];
     onEdit: (mapping: IAreaMapping) => void;
+    onToggleActive: (id: number, currentActive: boolean | number) => void;
     onDelete: (id: number) => void;
     onConvert: (area: string, sku: string) => void;
 }
@@ -119,6 +120,7 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
     derivedMappings,
     roomOptions,
     onEdit,
+    onToggleActive,
     onDelete,
     onConvert
 }) => {
@@ -179,9 +181,10 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                             <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase" style={{ width: '10%' }}>Area</th>
                             <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase" style={{ width: '12%' }}>Status</th>
                             <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase" style={{ width: '12%' }}>Type</th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase" style={{ width: '36%' }}>Destination</th>
-                            <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase" style={{ width: '12%' }}>Preview</th>
-                            <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase" style={{ width: '18%' }}>Actions</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase" style={{ width: '30%' }}>Destination</th>
+                            <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase" style={{ width: '10%' }}>Preview</th>
+                            <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase" style={{ width: '12%' }}>Active</th>
+                            <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase" style={{ width: '14%' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -191,6 +194,8 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                             const typeBadge = getTypeBadge(mapping?.mapping_type);
                             const destination = getDestinationLabel(mapping, roomOptions);
                             const isItemDerived = slot.status === 'derived' && (slot.live?.item_sku || slot.live?.sku);
+                            const isExplicitSlot = slot.status === 'explicit' && !!slot.explicit;
+                            const isActive = Boolean(Number(mapping?.is_active));
 
                             return (
                                 <tr key={slot.area} className="hover:bg-[var(--brand-primary)]/5 group transition-colors">
@@ -230,6 +235,21 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                                             loading="lazy"
                                         />
                                     </td>
+                                    <td className="px-4 py-3 text-center">
+                                        {isExplicitSlot && slot.explicit ? (
+                                            <label className="relative inline-flex items-center cursor-pointer" data-help-id="mapping-active-toggle">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isActive}
+                                                    onChange={() => onToggleActive(slot.explicit!.id, slot.explicit!.is_active)}
+                                                    className="sr-only peer"
+                                                />
+                                                <div className={`w-9 h-5 rounded-full peer-focus:ring-2 peer-focus:ring-blue-200 transition-colors ${isActive ? 'bg-emerald-500' : 'bg-slate-300'} peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-transform after:shadow-sm`}></div>
+                                            </label>
+                                        ) : (
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">Derived</span>
+                                        )}
+                                    </td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex justify-end gap-2">
                                             {slot.status === 'explicit' && slot.explicit && (
@@ -265,7 +285,7 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                         })}
                         {unifiedSlots.length === 0 && (
                             <tr>
-                                <td colSpan={6} className="px-4 py-12 text-center text-gray-400 italic text-sm">
+                                <td colSpan={7} className="px-4 py-12 text-center text-gray-400 italic text-sm">
                                     No content mappings for this room
                                 </td>
                             </tr>

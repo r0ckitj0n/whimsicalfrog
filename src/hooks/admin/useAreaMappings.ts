@@ -48,7 +48,7 @@ export const useAreaMappings = (): IAreaMappingsHook => {
             const ts = Date.now();
             const [exp, live] = await Promise.all([
                 ApiClient.get<IMappingsResponse>('/api/area_mappings.php', {
-                    action: API_ACTION.GET_MAPPINGS,
+                    action: 'list_room_raw',
                     room: room,
                     room_number: room,
                     _: ts
@@ -196,6 +196,35 @@ export const useAreaMappings = (): IAreaMappingsHook => {
         }
     }, [fetchMappings]);
 
+    const toggleMappingActive = useCallback(async (room: string, id: number, currentActive: boolean | number) => {
+        setIsLoading(true);
+        try {
+            const nextActive = !(currentActive === true || currentActive === 1);
+            const res = await ApiClient.post<{ success: boolean; message?: string; error?: string }>('/api/area_mappings.php', {
+                action: API_ACTION.UPDATE_MAPPING,
+                id,
+                is_active: nextActive ? 1 : 0
+            });
+
+            if (!res?.success) {
+                throw new Error(res?.error || res?.message || 'Failed to update mapping status');
+            }
+
+            await fetchMappings(room);
+            if (window.roomModalManager?.invalidateRoom) {
+                window.roomModalManager.invalidateRoom(room);
+            }
+            return true;
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Unknown error';
+            logger.error('toggleMappingActive failed', err);
+            setError(message);
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [fetchMappings]);
+
     const uploadImage = useCallback(async (file: File) => {
         const formData = new FormData();
         formData.append('image', file);
@@ -230,6 +259,7 @@ export const useAreaMappings = (): IAreaMappingsHook => {
         fetchLookupData,
         fetchAvailableAreas,
         saveMapping,
+        toggleMappingActive,
         deleteMapping,
         uploadImage
     };

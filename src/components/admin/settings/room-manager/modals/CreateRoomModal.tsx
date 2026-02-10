@@ -2,11 +2,18 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ApiClient } from '../../../../../core/ApiClient.js';
 import { useAIPromptTemplates } from '../../../../../hooks/admin/useAIPromptTemplates.js';
+import {
+    DEFAULT_ROOM_IMAGE_VARIABLE_VALUES,
+    getRoomImageVariableOptions,
+    imageSizeForScaleMode,
+    resolveRoomGenerationVariables,
+    RoomImagePromptVariableKey,
+    targetAspectRatioForScaleMode
+} from '../../../../../hooks/admin/room-manager/roomImageGenerationConfig.js';
 import type { IRoomData } from '../../../../../types/room.js';
 import type { IRoomImageGenerationRequest } from '../../../../../types/room-generation.js';
 import {
-    AUTOGENERATE_LABEL,
-    ROOM_PROMPT_DROPDOWN_DEFAULTS
+    AUTOGENERATE_LABEL
 } from '../../ai/roomPromptDropdownDefaults.js';
 
 interface CreateRoomModalProps {
@@ -52,39 +59,27 @@ const defaultFormState: CreateRoomFormState = {
     door_label: '',
     display_order: 0,
     description: '',
-    room_theme: AUTOGENERATE_LABEL,
-    display_furniture_style: AUTOGENERATE_LABEL,
-    thematic_accent_decorations: AUTOGENERATE_LABEL,
-    frog_action: AUTOGENERATE_LABEL,
-    vibe_adjectives: AUTOGENERATE_LABEL,
-    color_scheme: AUTOGENERATE_LABEL,
-    background_thematic_elements: AUTOGENERATE_LABEL,
-    image_style_declaration: AUTOGENERATE_LABEL,
-    location_phrase: AUTOGENERATE_LABEL,
-    character_statement: 'The signature fedora-wearing 3D cartoon frog is present as the proprietor. He is depicted {{frog_action}}, surveying his shop with pride.',
-    aesthetic_statement: AUTOGENERATE_LABEL,
-    critical_constraint_line: 'CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.',
-    no_props_line: 'Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.',
-    decorative_elements_line: 'Keep decorative elements strictly on walls, ceiling, floor edges, corners, or perimeter zones away from display surfaces.',
-    open_display_zones_line: 'Maintain large uninterrupted open display zones for future item placement.',
-    art_style_line: "Art style: modern 3D children's cartoon animation (Pixar-esque).",
-    surfaces_line: 'Surfaces: smooth, vibrant, saturated colors, clean presentation.',
-    text_constraint_line: 'Text constraint: strictly NO TEXT anywhere in the image.',
-    lighting_line: 'Lighting: bright and inviting, highlighting empty display surface textures for product insertion.',
+    room_theme: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.room_theme,
+    display_furniture_style: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.display_furniture_style,
+    thematic_accent_decorations: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.thematic_accent_decorations,
+    frog_action: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.frog_action,
+    vibe_adjectives: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.vibe_adjectives,
+    color_scheme: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.color_scheme,
+    background_thematic_elements: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.background_thematic_elements,
+    image_style_declaration: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.image_style_declaration,
+    location_phrase: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.location_phrase,
+    character_statement: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.character_statement,
+    aesthetic_statement: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.aesthetic_statement,
+    critical_constraint_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.critical_constraint_line,
+    no_props_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.no_props_line,
+    decorative_elements_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.decorative_elements_line,
+    open_display_zones_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.open_display_zones_line,
+    art_style_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.art_style_line,
+    surfaces_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.surfaces_line,
+    text_constraint_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.text_constraint_line,
+    lighting_line: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.lighting_line,
     scale_mode: 'modal',
     generate_image: true
-};
-
-const imageSizeForScaleMode: Record<CreateRoomFormState['scale_mode'], IRoomImageGenerationRequest['size']> = {
-    modal: '1024x1024',
-    fullscreen: '1536x1024',
-    fixed: '1024x1536'
-};
-
-const targetAspectRatioForScaleMode: Record<CreateRoomFormState['scale_mode'], number> = {
-    modal: 1024 / 768,
-    fullscreen: 1280 / 896,
-    fixed: 1024 / 768
 };
 
 const parsePlaceholderKeys = (prompt: string): string[] => {
@@ -153,99 +148,35 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         return map;
     }, [variables]);
 
-    const resolvedVariables = useMemo(() => {
-        const normalizeAutoValue = (value: string, fallbackInstruction: string): string => {
-            const trimmed = value.trim();
-            if (!trimmed || trimmed.toLowerCase() === AUTOGENERATE_LABEL.toLowerCase()) {
-                return fallbackInstruction;
-            }
-            return trimmed;
-        };
-        return {
-            ...variableDefaults,
-            room_number: form.room_number.trim(),
-            room_name: form.room_name.trim(),
-            door_label: form.door_label.trim(),
-            display_order: String(form.display_order || 0),
-            room_description: form.description.trim(),
-            room_theme: normalizeAutoValue(
-                form.room_theme,
-                'Invent a custom room theme that fits the room name and description; do not pick from preset dropdown examples'
-            ),
-            display_furniture_style: normalizeAutoValue(
-                form.display_furniture_style,
-                'Invent a custom display furniture style specifically for this room context; do not pick from preset dropdown examples'
-            ),
-            thematic_accent_decorations: normalizeAutoValue(
-                form.thematic_accent_decorations,
-                'Invent custom accent decorations that fit this room context and keep staging surfaces open; do not pick from preset dropdown examples'
-            ),
-            frog_action: normalizeAutoValue(
-                form.frog_action,
-                'Invent a custom frog proprietor action that matches this room concept; do not pick from preset dropdown examples'
-            ),
-            vibe_adjectives: normalizeAutoValue(
-                form.vibe_adjectives,
-                'Invent custom vibe adjectives that best fit this room concept; do not pick from preset dropdown examples'
-            ),
-            color_scheme: normalizeAutoValue(
-                form.color_scheme,
-                'Invent a custom color scheme suitable for this room concept and product presentation; do not pick from preset dropdown examples'
-            ),
-            background_thematic_elements: normalizeAutoValue(
-                form.background_thematic_elements,
-                'Invent custom oversized thematic background elements for this room context; do not pick from preset dropdown examples'
-            ),
-            image_style_declaration: normalizeAutoValue(
-                form.image_style_declaration,
-                'A high-quality 3D cartoon render for room'
-            ),
-            location_phrase: normalizeAutoValue(
-                form.location_phrase,
-                'corner inside the whimsical frog’s cottage'
-            ),
-            character_statement: normalizeAutoValue(
-                form.character_statement,
-                'The signature fedora-wearing 3D cartoon frog is present as the proprietor. He is depicted {{frog_action}}, surveying his shop with pride.'
-            ),
-            aesthetic_statement: normalizeAutoValue(
-                form.aesthetic_statement,
-                "Background walls/ceiling include decorative oversized 3D {{background_thematic_elements}} that reinforce the room's function."
-            ),
-            critical_constraint_line: normalizeAutoValue(
-                form.critical_constraint_line,
-                'CRITICAL CONSTRAINT: All display surfaces (shelves, racks, counters, tabletops, hooks, bins, stands) must remain completely empty and flat.'
-            ),
-            no_props_line: normalizeAutoValue(
-                form.no_props_line,
-                'Do NOT place any props, decor, products, containers, signage, books, plants, objects, or accents on any display surface.'
-            ),
-            decorative_elements_line: normalizeAutoValue(
-                form.decorative_elements_line,
-                'Keep decorative elements strictly on walls, ceiling, floor edges, corners, or perimeter zones away from display surfaces.'
-            ),
-            open_display_zones_line: normalizeAutoValue(
-                form.open_display_zones_line,
-                'Maintain large uninterrupted open display zones for future item placement.'
-            ),
-            art_style_line: normalizeAutoValue(
-                form.art_style_line,
-                "Art style: modern 3D children's cartoon animation (Pixar-esque)."
-            ),
-            surfaces_line: normalizeAutoValue(
-                form.surfaces_line,
-                'Surfaces: smooth, vibrant, saturated colors, clean presentation.'
-            ),
-            text_constraint_line: normalizeAutoValue(
-                form.text_constraint_line,
-                'Text constraint: strictly NO TEXT anywhere in the image.'
-            ),
-            lighting_line: normalizeAutoValue(
-                form.lighting_line,
-                'Lighting: bright and inviting, highlighting empty display surface textures for product insertion.'
-            )
-        };
-    }, [form, variableDefaults]);
+    const resolvedVariables = useMemo(() => resolveRoomGenerationVariables({
+        roomNumber: form.room_number,
+        roomName: form.room_name,
+        doorLabel: form.door_label,
+        displayOrder: form.display_order,
+        description: form.description,
+        variableDefaults,
+        values: {
+            room_theme: form.room_theme,
+            display_furniture_style: form.display_furniture_style,
+            thematic_accent_decorations: form.thematic_accent_decorations,
+            frog_action: form.frog_action,
+            vibe_adjectives: form.vibe_adjectives,
+            color_scheme: form.color_scheme,
+            background_thematic_elements: form.background_thematic_elements,
+            image_style_declaration: form.image_style_declaration,
+            location_phrase: form.location_phrase,
+            character_statement: form.character_statement,
+            aesthetic_statement: form.aesthetic_statement,
+            critical_constraint_line: form.critical_constraint_line,
+            no_props_line: form.no_props_line,
+            decorative_elements_line: form.decorative_elements_line,
+            open_display_zones_line: form.open_display_zones_line,
+            art_style_line: form.art_style_line,
+            surfaces_line: form.surfaces_line,
+            text_constraint_line: form.text_constraint_line,
+            lighting_line: form.lighting_line
+        }
+    }), [form, variableDefaults]);
 
     const generatedPromptText = useMemo(() => {
         const basePrompt = selectedTemplate?.prompt_text || '';
@@ -353,11 +284,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
     };
 
     const getOptionsForVariable = (variableKey: string): string[] => {
-        const apiOptions = dropdownOptionsByVariable[variableKey];
-        if (Array.isArray(apiOptions) && apiOptions.length > 0) {
-            return apiOptions;
-        }
-        return ROOM_PROMPT_DROPDOWN_DEFAULTS[variableKey] || [AUTOGENERATE_LABEL];
+        return getRoomImageVariableOptions(variableKey as RoomImagePromptVariableKey, dropdownOptionsByVariable, AUTOGENERATE_LABEL);
     };
 
     const handleCopyPrompt = async () => {

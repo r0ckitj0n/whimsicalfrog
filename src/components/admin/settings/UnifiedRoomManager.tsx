@@ -195,6 +195,7 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                                     onContentUpload={handleContentUpload}
                                     onContentEdit={handleContentEdit}
                                     onContentConvert={handleContentConvert}
+                                    onToggleMappingActive={shortcuts.handleToggleMappingActive}
                                 />
                             )}
 
@@ -202,6 +203,7 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                                 <VisualsTab
                                     backgrounds={backgrounds}
                                     selectedRoom={selectedRoom}
+                                    selectedRoomData={roomsData.find((room) => String(room.room_number) === String(selectedRoom)) || null}
                                     previewImage={preview_image}
                                     setPreviewImage={setPreviewImage}
                                     onApplyBackground={handleApplyBackground}

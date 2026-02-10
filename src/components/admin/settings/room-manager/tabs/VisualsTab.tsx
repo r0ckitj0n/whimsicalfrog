@@ -1,11 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
-import { IBackgroundsHook, IBackground } from '../../../../../types/backgrounds.js';
+import { ApiClient } from '../../../../../core/ApiClient.js';
 import { useAIPromptTemplates } from '../../../../../hooks/admin/useAIPromptTemplates.js';
+import {
+    DEFAULT_ROOM_IMAGE_VARIABLE_VALUES,
+    getRoomImageVariableOptions,
+    imageSizeForScaleMode,
+    mapRenderContextToScaleMode,
+    resolveRoomGenerationVariables,
+    ROOM_IMAGE_AESTHETIC_FIELDS,
+    RoomImageAestheticFieldKey
+} from '../../../../../hooks/admin/room-manager/roomImageGenerationConfig.js';
+import type { IBackgroundsHook, IBackground } from '../../../../../types/backgrounds.js';
+import type { IRoomData } from '../../../../../types/room.js';
 import type { IRoomImageGenerationRequest } from '../../../../../types/room-generation.js';
 
 interface VisualsTabProps {
     backgrounds: IBackgroundsHook;
     selectedRoom: string;
+    selectedRoomData: IRoomData | null;
     previewImage: { url: string; name: string } | null;
     setPreviewImage: React.Dispatch<React.SetStateAction<{ url: string; name: string } | null>>;
     onApplyBackground: (bgId: number) => Promise<void>;
@@ -15,9 +27,24 @@ interface VisualsTabProps {
     getImageUrl: (bg: { webp_filename?: string; image_filename?: string }) => string;
 }
 
+const initialAestheticValues: Record<RoomImageAestheticFieldKey, string> = {
+    room_theme: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.room_theme,
+    display_furniture_style: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.display_furniture_style,
+    thematic_accent_decorations: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.thematic_accent_decorations,
+    frog_action: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.frog_action,
+    vibe_adjectives: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.vibe_adjectives,
+    color_scheme: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.color_scheme,
+    background_thematic_elements: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.background_thematic_elements,
+    image_style_declaration: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.image_style_declaration,
+    location_phrase: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.location_phrase,
+    character_statement: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.character_statement,
+    aesthetic_statement: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.aesthetic_statement
+};
+
 export const VisualsTab: React.FC<VisualsTabProps> = ({
     backgrounds,
     selectedRoom,
+    selectedRoomData,
     previewImage,
     setPreviewImage,
     onApplyBackground,
@@ -27,14 +54,17 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
     getImageUrl
 }) => {
     const [selectedTemplateKey, setSelectedTemplateKey] = useState<string>('');
-    const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+    const [aestheticValues, setAestheticValues] = useState<Record<RoomImageAestheticFieldKey, string>>(initialAestheticValues);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [settingsTemplateKey, setSettingsTemplateKey] = useState<string>('');
     const {
         templates,
         variables,
+        dropdownOptionsByVariable,
         isLoading: templatesLoading,
         fetchTemplates,
-        fetchVariables
+        fetchVariables,
+        fetchDropdownOptions
     } = useAIPromptTemplates();
 
     const roomTemplates = useMemo(
@@ -45,29 +75,53 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
     useEffect(() => {
         void fetchTemplates();
         void fetchVariables();
-    }, [fetchTemplates, fetchVariables]);
-
-    useEffect(() => {
-        if (!selectedTemplateKey && roomTemplates.length > 0) {
-            setSelectedTemplateKey(roomTemplates[0].template_key);
-        }
-    }, [roomTemplates, selectedTemplateKey]);
-
-    useEffect(() => {
-        if (variables.length === 0) return;
-        setVariableValues(prev => {
-            const next = { ...prev };
-            for (const v of variables) {
-                if (!(v.variable_key in next) && v.sample_value) {
-                    next[v.variable_key] = v.sample_value;
-                }
-            }
-            return next;
+        void fetchDropdownOptions();
+        void ApiClient.get<{ success?: boolean; settings?: { room_generation_template_key?: string } }>(
+            '/api/ai_settings.php',
+            { action: 'get_settings' }
+        ).then((res) => {
+            const key = String(res?.settings?.room_generation_template_key || '').trim();
+            if (key) setSettingsTemplateKey(key);
+        }).catch(() => {
+            // Optional preference key; ignore if unavailable.
         });
+    }, [fetchDropdownOptions, fetchTemplates, fetchVariables]);
+
+    useEffect(() => {
+        if (roomTemplates.length === 0) return;
+        const preferred = settingsTemplateKey || 'room_staging_empty_shelves_v1';
+        const foundPreferred = roomTemplates.find((t) => t.template_key === preferred);
+        setSelectedTemplateKey(foundPreferred?.template_key || roomTemplates[0].template_key);
+    }, [roomTemplates, settingsTemplateKey]);
+
+    const variableDefaults = useMemo(() => {
+        const map: Record<string, string> = {};
+        for (const v of variables) {
+            map[v.variable_key] = String(v.sample_value || '');
+        }
+        return map;
     }, [variables]);
 
+    const roomNumber = useMemo(() => String(selectedRoomData?.room_number || selectedRoom || '').trim(), [selectedRoom, selectedRoomData?.room_number]);
+    const roomName = useMemo(() => String(selectedRoomData?.room_name || '').trim(), [selectedRoomData?.room_name]);
+
+    const resolvedVariables = useMemo(() => resolveRoomGenerationVariables({
+        roomNumber,
+        roomName,
+        doorLabel: String(selectedRoomData?.door_label || roomName || roomNumber),
+        displayOrder: Number(selectedRoomData?.display_order || 0),
+        description: String(selectedRoomData?.description || ''),
+        variableDefaults,
+        values: aestheticValues
+    }), [aestheticValues, roomName, roomNumber, selectedRoomData?.description, selectedRoomData?.display_order, selectedRoomData?.door_label, variableDefaults]);
+
+    const imageSize = useMemo(() => {
+        const scaleMode = mapRenderContextToScaleMode(String(selectedRoomData?.render_context || 'modal'));
+        return imageSizeForScaleMode[scaleMode];
+    }, [selectedRoomData?.render_context]);
+
     const handleGenerate = async () => {
-        if (!selectedRoom) {
+        if (!roomNumber) {
             window.WFToast?.error?.('Select a room first');
             return;
         }
@@ -78,10 +132,12 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
 
         setIsGenerating(true);
         const result = await onGenerateBackground({
-            room_number: selectedRoom,
+            room_number: roomNumber,
             template_key: selectedTemplateKey,
-            variables: variableValues,
-            provider: 'openai'
+            variables: resolvedVariables,
+            provider: 'openai',
+            size: imageSize,
+            background_name: roomName ? `${roomNumber} - ${roomName}` : roomNumber
         });
         setIsGenerating(false);
 
@@ -152,20 +208,36 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                                 ))}
                             </select>
                         </div>
-                        <div className="max-h-40 overflow-auto space-y-2 pr-1">
-                            {variables.map(v => (
-                                <div key={`room-var-${v.id}`} className="space-y-1">
-                                    <label className="text-[10px] font-bold text-slate-500">{v.display_name}</label>
-                                    <input
-                                        type="text"
-                                        value={variableValues[v.variable_key] ?? ''}
-                                        onChange={(e) => setVariableValues(prev => ({ ...prev, [v.variable_key]: e.target.value }))}
-                                        className="w-full text-[11px] p-2 border border-slate-200 rounded-lg bg-white"
-                                        disabled={isGenerating}
-                                    />
-                                </div>
-                            ))}
+                        <p className="text-[11px] text-slate-500">
+                            Aesthetic variables use the same room-image generation flow as room creation.
+                        </p>
+                        <div className="max-h-56 overflow-auto pr-1">
+                            <div className="grid grid-cols-1 gap-2">
+                                {ROOM_IMAGE_AESTHETIC_FIELDS.map((field) => {
+                                    const listId = `visuals-room-${field.key}-options`;
+                                    return (
+                                        <div key={field.key} className="space-y-1">
+                                            <label className="text-[10px] font-bold text-slate-500">{field.label}</label>
+                                            <input
+                                                list={listId}
+                                                value={aestheticValues[field.key] || ''}
+                                                onChange={(e) => setAestheticValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                                className="w-full text-[11px] p-2 border border-slate-200 rounded-lg bg-white"
+                                                disabled={isGenerating}
+                                            />
+                                            <datalist id={listId}>
+                                                {getRoomImageVariableOptions(field.key, dropdownOptionsByVariable).map((option) => (
+                                                    <option key={`${listId}-${option}`} value={option} />
+                                                ))}
+                                            </datalist>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
+                        <p className="text-[10px] text-slate-500">
+                            Size: <span className="font-bold">{imageSize}</span>
+                        </p>
                         <button
                             type="button"
                             onClick={() => void handleGenerate()}

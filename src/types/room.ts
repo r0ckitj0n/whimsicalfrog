@@ -251,6 +251,7 @@ export interface IAreaMappingsHook {
     fetchLookupData: () => Promise<void>;
     fetchAvailableAreas: (room: string) => Promise<void>;
     saveMapping: (mapping: Partial<import('./admin.js').IAreaMapping>) => Promise<boolean>;
+    toggleMappingActive: (room: string, id: number, currentActive: boolean | number) => Promise<boolean>;
     deleteMapping: (id: number, room: string) => Promise<boolean>;
     uploadImage: (file: File) => Promise<string | null>;
 }
@@ -312,6 +313,7 @@ export interface IRoomShortcutsHook {
     setNewMapping: React.Dispatch<React.SetStateAction<Partial<import('./admin.js').IAreaMapping>>>;
     handleContentSave: (e?: React.FormEvent) => Promise<void>;
     handleContentConvert: (area: string, sku: string) => Promise<void>;
+    handleToggleMappingActive: (id: number, currentActive: boolean | number) => Promise<void>;
     handleContentUpload: (e: React.ChangeEvent<HTMLInputElement>, field: 'content_image' | 'link_image') => Promise<void>;
     handleContentEdit: (mapping: import('./admin.js').IAreaMapping) => void;
     isContentDirty: boolean;

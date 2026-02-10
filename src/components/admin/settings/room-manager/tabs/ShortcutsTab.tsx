@@ -14,6 +14,7 @@ interface ShortcutsTabProps {
     onContentUpload: (e: React.ChangeEvent<HTMLInputElement>, field: 'content_image' | 'link_image') => Promise<void>;
     onContentEdit: (mapping: IAreaMapping) => void;
     onContentConvert: (area: string, sku: string) => Promise<void>;
+    onToggleMappingActive: (id: number, currentActive: boolean | number) => Promise<void>;
 }
 
 export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
@@ -25,7 +26,8 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
     onContentSave,
     onContentUpload,
     onContentEdit,
-    onContentConvert
+    onContentConvert,
+    onToggleMappingActive
 }) => {
     return (
         <div className="p-8 lg:p-10 overflow-y-auto flex-1">
@@ -49,6 +51,7 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
                         derivedMappings={mappings.derivedMappings}
                         roomOptions={mappings.roomOptions}
                         onEdit={onContentEdit}
+                        onToggleActive={onToggleMappingActive}
                         onDelete={(id: number) => mappings.deleteMapping(id, selectedRoom)}
                         onConvert={onContentConvert}
                     />

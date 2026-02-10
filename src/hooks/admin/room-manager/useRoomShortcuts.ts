@@ -28,6 +28,15 @@ export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHo
         });
     }, [selectedRoom, mappings]);
 
+    const handleToggleMappingActive = useCallback(async (id: number, currentActive: boolean | number) => {
+        if (!selectedRoom) return;
+        const success = await mappings.toggleMappingActive(selectedRoom, id, currentActive);
+        if (success && window.WFToast) {
+            const wasActive = currentActive === true || currentActive === 1;
+            window.WFToast.success(wasActive ? 'Shortcut deactivated' : 'Shortcut activated');
+        }
+    }, [selectedRoom, mappings]);
+
     const handleContentUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, field: 'content_image' | 'link_image') => {
         const file = e.target.files?.[0];
         if (!file || !selectedRoom) return;
@@ -50,6 +59,7 @@ export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHo
         setNewMapping,
         handleContentSave,
         handleContentConvert,
+        handleToggleMappingActive,
         handleContentUpload,
         handleContentEdit,
         isContentDirty

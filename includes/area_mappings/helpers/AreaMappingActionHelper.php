@@ -101,6 +101,10 @@ class AreaMappingActionHelper
             'display_order' => $input['display_order'] ?? null
         ];
 
+        if (array_key_exists('is_active', $input)) {
+            $fields['is_active'] = !empty($input['is_active']) ? 1 : 0;
+        }
+
         $updateFields = [];
         $values = [];
         foreach ($fields as $col => $val) {

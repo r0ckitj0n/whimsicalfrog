@@ -249,11 +249,28 @@ export const useInventoryItemForm = ({
     }, []);
 
     const generateSku = async () => {
+        const category = String(formData.category || '').trim();
+        if (category) {
+            try {
+                const res = await ApiClient.get<{ success?: boolean; sku?: string; data?: { sku?: string } }>('/api/next_sku.php', { category });
+                const generatedSku = String(res?.sku || res?.data?.sku || '').trim();
+                if (generatedSku) {
+                    setLocalSku(generatedSku);
+                    setSourceTempSku('');
+                    setIsDirty(true);
+                    window.WFToast?.success?.(`Generated SKU ${generatedSku}`);
+                    return;
+                }
+            } catch (err) {
+                console.warn('[useInventoryItemForm] Category SKU generation failed, falling back to temporary SKU', err);
+            }
+        }
+
         const fallbackSku = makeFallbackSku();
         setLocalSku(fallbackSku);
         setSourceTempSku('');
         setIsDirty(true);
-        window.WFToast?.info?.('Temporary SKU assigned. Final category SKU is generated when saving.');
+        window.WFToast?.info?.('Temporary SKU assigned. Choose a category and re-generate for a category-based SKU.');
     };
 
     const regenerateSku = useCallback(async (): Promise<{ success: boolean; newSku?: string; updatedCounts?: Record<string, number>; error?: string }> => {

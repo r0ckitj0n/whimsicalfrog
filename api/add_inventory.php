@@ -13,10 +13,7 @@ header('Content-Type: application/json');
 
 function wf_generate_sku_for_category(string $category): string
 {
-    $categoryCode = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $category), 0, 2));
-    if (strlen($categoryCode) < 2) {
-        $categoryCode = 'GN';
-    }
+    $categoryCode = wf_resolve_sku_prefix_for_category($category);
 
     $lastSku = Database::queryOne(
         "SELECT sku FROM items WHERE sku LIKE ? ORDER BY sku DESC LIMIT 1",
@@ -37,6 +34,67 @@ function wf_generate_sku_for_category(string $category): string
         $candidate = sprintf('WF-%s-%03d', $categoryCode, $nextNum);
     }
     return $candidate;
+}
+
+function wf_has_categories_column(string $column): bool
+{
+    static $columns = null;
+    if (is_array($columns)) {
+        return isset($columns[strtolower($column)]);
+    }
+
+    $columns = [];
+    try {
+        $rows = Database::queryAll('SHOW COLUMNS FROM categories');
+        foreach ($rows as $row) {
+            $name = strtolower((string)($row['Field'] ?? ''));
+            if ($name !== '') {
+                $columns[$name] = true;
+            }
+        }
+    } catch (Throwable $e) {
+        return false;
+    }
+
+    return isset($columns[strtolower($column)]);
+}
+
+function wf_default_sku_prefix(string $category): string
+{
+    $prefix = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $category), 0, 2));
+    return strlen($prefix) >= 2 ? $prefix : 'GN';
+}
+
+function wf_normalize_sku_prefix(string $raw): string
+{
+    $clean = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $raw));
+    if ($clean === '') {
+        return '';
+    }
+    return substr($clean, 0, 8);
+}
+
+function wf_resolve_sku_prefix_for_category(string $category): string
+{
+    $fallback = wf_default_sku_prefix($category);
+    if (trim($category) === '' || !wf_has_categories_column('sku_rules')) {
+        return $fallback;
+    }
+
+    try {
+        $row = Database::queryOne(
+            'SELECT sku_rules FROM categories WHERE LOWER(name) = LOWER(?) LIMIT 1',
+            [$category]
+        );
+        $prefix = wf_normalize_sku_prefix((string)($row['sku_rules'] ?? ''));
+        if (strlen($prefix) >= 2) {
+            return $prefix;
+        }
+    } catch (Throwable $e) {
+        // Fallback to legacy category-derived prefix.
+    }
+
+    return $fallback;
 }
 
 function wf_table_exists(string $tableName): bool

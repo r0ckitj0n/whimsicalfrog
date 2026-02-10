@@ -114,22 +114,18 @@ export const usePaymentModal = (isOpen: boolean, onClose: () => void) => {
         if (payment_method === PAYMENT_METHOD.SQUARE) {
             try {
                 const selectedAddress = addresses.find(a => String(a.id) === String(selected_address_id ?? ''));
-                const billingPostal = (selectedAddress?.zip_code || '').trim();
-                const square_token = await tokenize(
-                    billingPostal
-                        ? {
-                            verificationDetails: {
-                                billingContact: {
-                                    addressLines: [selectedAddress?.address_line_1, selectedAddress?.address_line_2].filter(Boolean) as string[],
-                                    city: selectedAddress?.city || '',
-                                    state: selectedAddress?.state || '',
-                                    postalCode: billingPostal,
-                                    countryCode: 'US'
-                                }
-                            }
+                const billingPostal = (selectedAddress?.zip_code || user?.zip_code || '').trim();
+                const square_token = await tokenize({
+                    verificationDetails: {
+                        billingContact: {
+                            addressLines: [selectedAddress?.address_line_1, selectedAddress?.address_line_2].filter(Boolean) as string[],
+                            city: selectedAddress?.city || user?.city || '',
+                            state: selectedAddress?.state || user?.state || '',
+                            postalCode: billingPostal,
+                            countryCode: 'US'
                         }
-                        : undefined
-                );
+                    }
+                });
                 token = square_token ?? undefined;
             } catch (err: unknown) {
                 const message = err instanceof Error ? err.message : 'Card validation failed';

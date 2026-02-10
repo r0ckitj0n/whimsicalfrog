@@ -46,6 +46,50 @@ const initialAestheticValues: Record<RoomImageAestheticFieldKey, string> = {
     aesthetic_statement: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES.aesthetic_statement
 };
 
+const parsePlaceholderKeys = (prompt: string): string[] => {
+    const out = new Set<string>();
+    const regex = /\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g;
+    let match = regex.exec(prompt);
+    while (match) {
+        out.add(match[1]);
+        match = regex.exec(prompt);
+    }
+    return Array.from(out);
+};
+
+const resolveTemplateText = (template: string, values: Record<string, string>): string => {
+    let prompt = template;
+    for (let pass = 0; pass < 5; pass += 1) {
+        const keys = parsePlaceholderKeys(prompt);
+        if (keys.length === 0) break;
+        const prev = prompt;
+        for (const key of keys) {
+            const value = values[key] ?? '';
+            prompt = prompt.replaceAll(`{{${key}}}`, value);
+        }
+        if (prompt === prev) break;
+    }
+    return prompt;
+};
+
+const buildPriorityInstructionBlock = (values: Record<string, string>): string => {
+    const get = (key: string, fallback: string): string => String(values[key] || fallback).trim();
+    return [
+        'PRIORITY INSTRUCTIONS (MUST FOLLOW):',
+        '- Treat user-provided variable content as highest priority over generic defaults.',
+        '- Preserve explicit character count/roles and concrete actions when provided (for example husband/wife pair).',
+        `- Ensure this scene direction appears clearly in composition: ${get('room_theme', 'themed room')}`,
+        `- Ensure location framing includes: ${get('location_phrase', 'room setting')}`,
+        `- Ensure frog action is visibly represented: ${get('frog_action', 'frog proprietor action')}`,
+        `- Ensure character details are visibly represented: ${get('character_statement', 'character statement')}`,
+        `- Ensure accent decorations include: ${get('thematic_accent_decorations', 'contextual accents')}`,
+        `- Ensure background thematic elements include: ${get('background_thematic_elements', 'thematic background elements')}`,
+        `- Ensure final aesthetic intent is represented: ${get('aesthetic_statement', 'cohesive aesthetic statement')}`,
+        '- Do not ignore these constraints unless they conflict with safety policy.',
+        ''
+    ].join('\n');
+};
+
 export const VisualsTab: React.FC<VisualsTabProps> = ({
     backgrounds,
     selectedRoom,
@@ -67,6 +111,7 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
         }, {} as Record<RoomImageAestheticFieldKey, string>);
     });
     const [isGenerating, setIsGenerating] = useState(false);
+    const [showPromptPreview, setShowPromptPreview] = useState(false);
     const [generationMessage, setGenerationMessage] = useState<{ type: 'error' | 'success' | 'info'; text: string } | null>(null);
     const [settingsTemplateKey, setSettingsTemplateKey] = useState<string>('');
     const {
@@ -131,6 +176,17 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
         const scaleMode = mapRenderContextToScaleMode(String(selectedRoomData?.render_context || 'modal'));
         return imageSizeForScaleMode[scaleMode];
     }, [selectedRoomData?.render_context]);
+    const selectedTemplate = useMemo(
+        () => roomTemplates.find((template) => template.template_key === selectedTemplateKey) || null,
+        [roomTemplates, selectedTemplateKey]
+    );
+    const generatedPromptText = useMemo(() => {
+        const basePrompt = selectedTemplate?.prompt_text || '';
+        if (!basePrompt) return '';
+        const promptBody = resolveTemplateText(basePrompt, resolvedVariables);
+        const priorityBlock = buildPriorityInstructionBlock(resolvedVariables);
+        return `${priorityBlock}${promptBody}`;
+    }, [resolvedVariables, selectedTemplate?.prompt_text]);
 
     const handleGenerate = async () => {
         setGenerationMessage(null);
@@ -226,9 +282,21 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                                 ))}
                             </select>
                         </div>
-                        <p className="text-[11px] text-slate-500">
-                            Pick a preset from each dropdown, then edit the text below for this generation only.
-                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 items-start gap-2">
+                            <p className="text-[11px] text-slate-500">
+                                Pick a preset from each dropdown, then edit the text below for this generation only.
+                            </p>
+                            <div className="sm:justify-self-end">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPromptPreview(true)}
+                                    disabled={!selectedTemplateKey || !generatedPromptText}
+                                    className="btn btn-secondary px-3 py-2 text-[10px] font-black uppercase tracking-widest disabled:opacity-60"
+                                >
+                                    Preview Prompt
+                                </button>
+                            </div>
+                        </div>
                         <div className="max-h-56 overflow-auto pr-1">
                             <div className="grid grid-cols-1 gap-2">
                                 {ROOM_IMAGE_AESTHETIC_FIELDS.map((field) => {
@@ -348,6 +416,35 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                     </div>
                 </div>
             </div>
+            {showPromptPreview && (
+                <div className="fixed inset-0 z-[var(--wf-z-modal)] bg-black/45 backdrop-blur-sm p-4 flex items-center justify-center">
+                    <div className="w-full max-w-3xl max-h-[85vh] bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col">
+                        <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                            <h5 className="text-xs font-black uppercase tracking-widest text-slate-700">Resolved Prompt Preview</h5>
+                            <button
+                                type="button"
+                                onClick={() => setShowPromptPreview(false)}
+                                className="admin-action-btn btn-icon--close"
+                                aria-label="Close prompt preview"
+                            />
+                        </div>
+                        <div className="p-4 overflow-auto">
+                            <pre className="text-[11px] leading-relaxed whitespace-pre-wrap break-words text-slate-700 font-mono">
+                                {generatedPromptText || 'No prompt available. Select a template first.'}
+                            </pre>
+                        </div>
+                        <div className="px-4 py-3 border-t border-slate-200 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setShowPromptPreview(false)}
+                                className="btn btn-primary px-4 py-2 text-[10px] font-black uppercase tracking-widest"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

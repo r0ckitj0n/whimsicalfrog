@@ -19,6 +19,7 @@ export function initSelectAutoSort(): void {
     } catch { /* URL parsing failed - keep default behavior */ }
 
     const processed = new WeakSet<HTMLSelectElement>();
+    let suppressObserver = false;
 
     function isPlaceholder(opt: HTMLOptionElement): boolean {
         if (!opt) return false;
@@ -75,12 +76,18 @@ export function initSelectAutoSort(): void {
             rest.sort((a, b) => text(a).localeCompare(text(b), undefined, { numeric: true, sensitivity: 'base' }));
         }
 
-        const frag = document.createDocumentFragment();
-        placeholders.forEach(o => frag.appendChild(o));
-        rest.forEach(o => frag.appendChild(o));
-
-        select.innerHTML = '';
-        select.appendChild(frag);
+        const reordered = [...placeholders, ...rest];
+        const unchanged = reordered.length === opts.length && reordered.every((option, index) => option === opts[index]);
+        if (!unchanged) {
+            const frag = document.createDocumentFragment();
+            reordered.forEach(o => frag.appendChild(o));
+            suppressObserver = true;
+            select.innerHTML = '';
+            select.appendChild(frag);
+            window.setTimeout(() => {
+                suppressObserver = false;
+            }, 0);
+        }
 
         Array.from(select.options).forEach(o => {
             o.selected = currentValues.has(o.value);
@@ -108,6 +115,7 @@ export function initSelectAutoSort(): void {
     }, 250);
 
     const mo = new MutationObserver((list) => {
+        if (suppressObserver) return;
         list.forEach(m => {
             if (m.type === 'childList') {
                 m.addedNodes.forEach(n => {

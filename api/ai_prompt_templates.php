@@ -219,6 +219,7 @@ function ai_prompt_templates_normalize_dropdown_values(array $rawOptions): array
 {
     $seen = [];
     $normalized = [AI_PROMPT_DROPDOWN_AUTOGENERATE_LABEL];
+    $values = [];
 
     foreach ($rawOptions as $raw) {
         $value = trim((string) $raw);
@@ -237,6 +238,14 @@ function ai_prompt_templates_normalize_dropdown_values(array $rawOptions): array
             continue;
         }
         $seen[$key] = true;
+        $values[] = $value;
+    }
+
+    usort($values, static function (string $a, string $b): int {
+        return strnatcasecmp($a, $b);
+    });
+
+    foreach ($values as $value) {
         $normalized[] = $value;
     }
 
@@ -493,6 +502,10 @@ try {
                     $optionsByVariable[$variableKey] = [];
                 }
                 $optionsByVariable[$variableKey][] = $value;
+            }
+
+            foreach ($optionsByVariable as $variableKey => $values) {
+                $optionsByVariable[$variableKey] = ai_prompt_templates_normalize_dropdown_values($values);
             }
 
             Response::json(['success' => true, 'options_by_variable' => $optionsByVariable]);

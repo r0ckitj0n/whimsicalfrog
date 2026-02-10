@@ -143,7 +143,11 @@ const normalizeRoomDropdownOptions = (rawOptions: string[], fallbackValue: strin
         normalized.push(candidate);
     }
 
-    return normalized;
+    const nonAuto = normalized
+        .filter((option) => option.toLowerCase() !== AUTOGENERATE_LABEL.toLowerCase())
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
+    return [AUTOGENERATE_LABEL, ...nonAuto];
 };
 
 export const getRoomImageVariableOptions = (

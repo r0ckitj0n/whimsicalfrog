@@ -12,11 +12,11 @@ export function initSelectAutoSort(): void {
 
     try {
         const qs = new URLSearchParams(window.location.search || '');
-        const enable = qs.get('wf_enable_select_autosort') === '1';
-        if (!enable) {
+        const disable = qs.get('wf_disable_select_autosort') === '1';
+        if (disable) {
             return;
         }
-    } catch { /* URL parsing failed - allow default behavior */ }
+    } catch { /* URL parsing failed - keep default behavior */ }
 
     const processed = new WeakSet<HTMLSelectElement>();
 

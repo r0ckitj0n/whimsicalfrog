@@ -21,7 +21,7 @@ interface UseInventoryItemFormProps {
     sku: string;
     mode: 'edit' | 'view' | 'add' | '';
     item: ItemData | null;
-    addItem: (data: Record<string, unknown>) => Promise<{ success: boolean; error?: string }>;
+    addItem: (data: Record<string, unknown>) => Promise<{ success: boolean; error?: string; sku?: string }>;
     updateCell: (sku: string, column: string, value: string | number | boolean | null) => Promise<{ success: boolean; error?: string }>;
     // Using generic function type since useInventoryAI has stricter required params
     fetch_all_suggestions: (params: Record<string, unknown>) => Promise<IAISuggestionsResponse | null>;
@@ -497,7 +497,13 @@ export const useInventoryItemForm = ({
                     stock_quantity: formData.stock_level
                 });
                 if (res.success) {
-                    if (window.WFToast) window.WFToast.success('Item created successfully');
+                    const finalizedSku = String(res.sku || '').trim();
+                    if (window.WFToast) {
+                        window.WFToast.success(finalizedSku ? `Item created successfully as ${finalizedSku}` : 'Item created successfully');
+                    }
+                    if (finalizedSku) {
+                        setLocalSku(finalizedSku);
+                    }
                     setIsDirty(false);
                     onSaved?.();
                     onClose();

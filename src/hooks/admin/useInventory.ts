@@ -107,7 +107,7 @@ export const useInventory = (initialFilters: IInventoryFilters = { search: '', c
             const res = await ApiClient.post<IAddInventoryResponse>('/api/add_inventory.php', itemData);
             if (res && res.success) {
                 await fetchInventory();
-                return { success: true };
+                return { success: true, sku: res?.data?.sku || res?.data?.id };
             }
             const detailMessage = typeof res?.details === 'string' ? res.details : '';
             return { success: false, error: detailMessage || res?.error || 'Add failed' };

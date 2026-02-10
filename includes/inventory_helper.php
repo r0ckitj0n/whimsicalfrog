@@ -294,34 +294,85 @@ class InventoryHelper
 
         foreach ($imageRows as $row) {
             $sku = $row['sku'] ?? null;
-            if (!$sku || isset($primaryImages[$sku]))
+            if (!$sku)
                 continue;
 
-            $primaryImages[$sku] = [
-                'image_path' => $row['image_path'] ?? null,
+            $resolvedPath = self::resolveExistingInventoryImagePath((string) ($row['image_path'] ?? ''));
+            $candidate = [
+                'image_path' => $resolvedPath ?: ($row['image_path'] ?? null),
                 'alt_text' => $row['alt_text'] ?? null,
                 'is_primary' => (bool) ($row['is_primary'] ?? false),
-                'sort_order' => (int) ($row['sort_order'] ?? 0)
+                'sort_order' => (int) ($row['sort_order'] ?? 0),
+                '__exists' => $resolvedPath !== null
             ];
+
+            if (!isset($primaryImages[$sku])) {
+                $primaryImages[$sku] = $candidate;
+                continue;
+            }
+
+            // Prefer a thumbnail that resolves to an existing file.
+            $existingSelected = !empty($primaryImages[$sku]['__exists']);
+            if (!$existingSelected && !empty($candidate['__exists'])) {
+                $primaryImages[$sku] = $candidate;
+            }
         }
 
         foreach ($items as &$item) {
             $sku = $item['sku'] ?? null;
             // Use image from item_images if available, otherwise fallback to items.image_url
             if ($sku && isset($primaryImages[$sku])) {
-                $item['primary_image'] = $primaryImages[$sku];
+                $resolvedCandidate = $primaryImages[$sku];
+                $candidateExists = !empty($resolvedCandidate['__exists']);
+                unset($resolvedCandidate['__exists']);
+                if ($candidateExists) {
+                    $item['primary_image'] = $resolvedCandidate;
+                } else {
+                    $item['primary_image'] = null;
+                }
             } elseif (!empty($item['image_url'])) {
-                $item['primary_image'] = [
-                    'image_path' => $item['image_url'],
-                    'alt_text' => $item['name'] ?? null,
-                    'is_primary' => true,
-                    'sort_order' => 0
-                ];
+                $fallbackPath = self::resolveExistingInventoryImagePath((string) $item['image_url']) ?? (string) $item['image_url'];
+                if (self::resolveExistingInventoryImagePath($fallbackPath) !== null) {
+                    $item['primary_image'] = [
+                        'image_path' => $fallbackPath,
+                        'alt_text' => $item['name'] ?? null,
+                        'is_primary' => true,
+                        'sort_order' => 0
+                    ];
+                } else {
+                    $item['primary_image'] = null;
+                }
             } else {
                 $item['primary_image'] = null;
             }
         }
 
         return $items;
+    }
+
+    private static function resolveExistingInventoryImagePath(string $imagePath): ?string
+    {
+        $normalized = ltrim(trim($imagePath), '/');
+        if ($normalized === '') {
+            return null;
+        }
+
+        $absolute = __DIR__ . '/../' . $normalized;
+        if (is_file($absolute)) {
+            return $normalized;
+        }
+
+        $ext = strtolower((string) pathinfo($normalized, PATHINFO_EXTENSION));
+        if ($ext === 'webp') {
+            $pngRelative = preg_replace('/\.webp$/i', '.png', $normalized);
+            if (is_string($pngRelative) && $pngRelative !== '') {
+                $pngAbsolute = __DIR__ . '/../' . $pngRelative;
+                if (is_file($pngAbsolute)) {
+                    return $pngRelative;
+                }
+            }
+        }
+
+        return null;
     }
 }

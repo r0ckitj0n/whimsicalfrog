@@ -402,11 +402,11 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving}
-                                className={`admin-action-btn ${isAdding ? '' : 'dirty-only'} ${isAdding ? 'btn-icon--plus' : 'btn-icon--save'} ${isDirty ? 'is-dirty' : ''} ${isSaving ? 'is-loading' : ''}`}
+                                className={`admin-action-btn ${isAdding ? '' : 'dirty-only'} ${isAdding ? 'btn-icon--plus' : 'btn-icon--save'} ${(isAdding || isDirty) ? 'is-dirty' : ''} ${isSaving ? 'is-loading' : ''}`}
                                 data-help-id={isAdding ? 'inventory-item-create' : 'inventory-item-save'}
                                 aria-label={isAdding ? 'Create item' : 'Save item'}
                                 title={isAdding ? 'Create item' : 'Save item'}
-                                style={isDirty ? { animation: 'wf-save-pulse 1.5s infinite' } : undefined}
+                                style={(isAdding || isDirty) ? { animation: 'wf-save-pulse 1.5s infinite' } : undefined}
                             >
                                 <span aria-hidden="true" className="text-[10px] font-bold uppercase tracking-wide">
                                     {isAdding ? 'Create' : 'Save'}

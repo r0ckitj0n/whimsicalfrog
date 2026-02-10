@@ -99,6 +99,47 @@ function wf_migrate_temp_sku_records(string $sourceSku, string $targetSku): void
     if (wf_table_exists('items')) {
         Database::execute("DELETE FROM items WHERE sku = ?", [$sourceSku]);
     }
+
+    // Normalize image metadata for target SKU after migration.
+    if (wf_table_exists('item_images')) {
+        $primaryRows = Database::queryAll(
+            "SELECT id, image_path FROM item_images WHERE sku = ? AND is_primary = 1 ORDER BY sort_order ASC, id ASC",
+            [$targetSku]
+        );
+
+        if (!empty($primaryRows)) {
+            // Keep only the first primary as canonical.
+            $keepPrimaryId = (int) ($primaryRows[0]['id'] ?? 0);
+            if ($keepPrimaryId > 0) {
+                Database::execute(
+                    "UPDATE item_images SET is_primary = CASE WHEN id = ? THEN 1 ELSE 0 END WHERE sku = ?",
+                    [$keepPrimaryId, $targetSku]
+                );
+
+                if (wf_table_exists('items')) {
+                    $primaryPath = (string) ($primaryRows[0]['image_path'] ?? '');
+                    if ($primaryPath !== '') {
+                        Database::execute("UPDATE items SET image_url = ? WHERE sku = ?", [$primaryPath, $targetSku]);
+                    }
+                }
+            }
+        } else {
+            $firstRow = Database::queryOne(
+                "SELECT id, image_path FROM item_images WHERE sku = ? ORDER BY sort_order ASC, id ASC LIMIT 1",
+                [$targetSku]
+            );
+            if (!empty($firstRow['id'])) {
+                $firstId = (int) $firstRow['id'];
+                Database::execute("UPDATE item_images SET is_primary = CASE WHEN id = ? THEN 1 ELSE 0 END WHERE sku = ?", [$firstId, $targetSku]);
+                if (wf_table_exists('items')) {
+                    $primaryPath = (string) ($firstRow['image_path'] ?? '');
+                    if ($primaryPath !== '') {
+                        Database::execute("UPDATE items SET image_url = ? WHERE sku = ?", [$primaryPath, $targetSku]);
+                    }
+                }
+            }
+        }
+    }
 }
 
 try {

@@ -28,6 +28,13 @@ try {
             // Logic for interaction tracking
             Response::success();
             break;
+        case 'track_cart_action':
+            // Keep analytics non-blocking; cart actions may be emitted from older/newer clients.
+            Response::success();
+            break;
+        case 'track_conversion':
+            Response::success();
+            break;
         case 'get_analytics_report':
             getAnalyticsReport();
             break;

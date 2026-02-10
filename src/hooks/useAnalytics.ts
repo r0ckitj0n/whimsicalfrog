@@ -1,5 +1,4 @@
 import { useEffect, useCallback, useRef } from 'react';
-import { ApiClient } from '../core/ApiClient.js';
 import { PAGE } from '../core/constants.js';
 import logger from '../core/logger.js';
 
@@ -41,7 +40,17 @@ export const useAnalytics = () => {
         if (!isTracking.current) return;
         
         try {
-            await ApiClient.post(`/api/analytics_tracker.php?action=${action}`, data);
+            const response = await fetch(`/api/analytics_tracker.php?action=${encodeURIComponent(action)}`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) {
+                throw new Error(`Analytics request failed (${response.status})`);
+            }
         } catch (error) {
             logger.warn('Analytics tracking failed:', error);
         }

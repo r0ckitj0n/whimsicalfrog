@@ -139,6 +139,36 @@ function wf_resolve_prompt_text(string $template, array $resolvedVariables): str
     return $prompt;
 }
 
+function wf_build_priority_instruction_block(array $resolvedVariables): string
+{
+    $safe = static function (string $key, string $fallback = '') use ($resolvedVariables): string {
+        return trim((string) ($resolvedVariables[$key] ?? $fallback));
+    };
+
+    $roomTheme = $safe('room_theme');
+    $locationPhrase = $safe('location_phrase');
+    $frogAction = $safe('frog_action');
+    $characterStatement = $safe('character_statement');
+    $accentDecor = $safe('thematic_accent_decorations');
+    $aestheticStatement = $safe('aesthetic_statement');
+    $backgroundElements = $safe('background_thematic_elements');
+
+    return implode("\n", [
+        'PRIORITY INSTRUCTIONS (MUST FOLLOW):',
+        '- Treat user-provided variable content as highest priority over generic defaults.',
+        '- Preserve explicit character count/roles and concrete actions when provided (for example husband/wife pair).',
+        '- Ensure this scene direction appears clearly in composition: ' . ($roomTheme !== '' ? $roomTheme : 'themed room'),
+        '- Ensure location framing includes: ' . ($locationPhrase !== '' ? $locationPhrase : 'room setting'),
+        '- Ensure frog action is visibly represented: ' . ($frogAction !== '' ? $frogAction : 'frog proprietor action'),
+        '- Ensure character details are visibly represented: ' . ($characterStatement !== '' ? $characterStatement : 'character statement'),
+        '- Ensure accent decorations include: ' . ($accentDecor !== '' ? $accentDecor : 'contextual accents'),
+        '- Ensure background thematic elements include: ' . ($backgroundElements !== '' ? $backgroundElements : 'thematic background elements'),
+        '- Ensure final aesthetic intent is represented: ' . ($aestheticStatement !== '' ? $aestheticStatement : 'cohesive aesthetic statement'),
+        '- Do not ignore these constraints unless they conflict with safety policy.',
+        ''
+    ]);
+}
+
 function wf_get_current_user_id(): ?string
 {
     $user = AuthHelper::getCurrentUser();
@@ -331,7 +361,9 @@ try {
         $resolved[(string) $key] = trim((string) $value);
     }
 
-    $prompt = wf_resolve_prompt_text((string) ($template['prompt_text'] ?? ''), $resolved);
+    $promptBody = wf_resolve_prompt_text((string) ($template['prompt_text'] ?? ''), $resolved);
+    $priorityBlock = wf_build_priority_instruction_block($resolved);
+    $prompt = $priorityBlock . $promptBody;
 
     $settingsRows = Database::queryAll("SELECT setting_key, setting_value FROM business_settings WHERE category = 'ai'");
     $settings = [];

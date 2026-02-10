@@ -118,6 +118,17 @@ export const useInventoryItemForm = ({
     const [cachedMarketingData, setCachedMarketingData] = useState<MarketingData | null>(null);
     const autoSkuCategoryRef = useRef<string>('');
 
+    const inferTempSkuFromImageUrls = useCallback((urls: string[]): string => {
+        for (const raw of urls) {
+            const url = String(raw || '');
+            const m = url.match(/\/images\/items\/(WF-TMP-[0-9]+)[A-Z]\.[a-z0-9]+$/i);
+            if (m && m[1]) {
+                return m[1];
+            }
+        }
+        return '';
+    }, []);
+
     const { populateFromSuggestion: populateCost } = useCostBreakdown(localSku);
     const { populateFromSuggestion: populatePrice } = usePriceBreakdown(localSku);
     const isDirtyRef = useRef(isDirty);
@@ -250,14 +261,17 @@ export const useInventoryItemForm = ({
     }, []);
 
     const generateSku = async () => {
+        const priorSku = String(localSku || '').trim();
         const category = String(formData.category || '').trim();
         if (category) {
             try {
                 const res = await ApiClient.get<{ success?: boolean; sku?: string; data?: { sku?: string } }>('/api/next_sku.php', { category });
                 const generatedSku = String(res?.sku || res?.data?.sku || '').trim();
                 if (generatedSku) {
+                    if (/^WF-TMP-/i.test(priorSku) && !/^WF-TMP-/i.test(generatedSku) && priorSku !== generatedSku) {
+                        setSourceTempSku(priorSku);
+                    }
                     setLocalSku(generatedSku);
-                    setSourceTempSku('');
                     setIsDirty(true);
                     window.WFToast?.success?.(`Generated SKU ${generatedSku}`);
                     return;
@@ -268,8 +282,10 @@ export const useInventoryItemForm = ({
         }
 
         const fallbackSku = makeFallbackSku();
+        if (/^WF-TMP-/i.test(priorSku) && priorSku !== fallbackSku) {
+            setSourceTempSku(priorSku);
+        }
         setLocalSku(fallbackSku);
-        setSourceTempSku('');
         setIsDirty(true);
         window.WFToast?.info?.('Temporary SKU assigned. Choose a category and re-generate for a category-based SKU.');
     };
@@ -521,10 +537,11 @@ export const useInventoryItemForm = ({
         setIsSaving(true);
         try {
             if (isAdding) {
+                const inferredSourceTempSku = sourceTempSku || inferTempSkuFromImageUrls(imageUrls);
                 const res = await addItem({
                     ...formData,
                     sku: localSku,
-                    source_temp_sku: sourceTempSku || undefined,
+                    source_temp_sku: inferredSourceTempSku || undefined,
                     stock_quantity: formData.stock_level
                 });
                 if (res.success) {
@@ -648,7 +665,8 @@ export const useInventoryItemForm = ({
         onClose,
         lockedFields,
         lockedWords,
-        imageUrls
+        imageUrls,
+        inferTempSkuFromImageUrls
     ]);
 
     const handleApplyCost = (cost: number) => {

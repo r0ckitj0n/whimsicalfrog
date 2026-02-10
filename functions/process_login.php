@@ -12,6 +12,7 @@ require_once __DIR__ . '/../includes/auth_cookie.php';
 require_once __DIR__ . '/../includes/helpers/LoginHelper.php';
 require_once __DIR__ . '/../includes/helpers/AuthSessionHelper.php';
 require_once __DIR__ . '/../includes/helpers/ProfileCompletionHelper.php';
+require_once __DIR__ . '/../includes/helpers/CustomerAddressSyncHelper.php';
 require_once __DIR__ . '/../includes/user_meta.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -67,7 +68,10 @@ try {
     $user = LoginHelper::validateAuth((string) $data['username'], (string) $data['password']);
 
     if ($user) {
-        $missingProfileFields = wf_profile_missing_fields($user);
+        $userId = (string) ($user['id'] ?? '');
+        $profileUser = CustomerAddressSyncHelper::mergeUserWithPrimaryAddress($userId, $user);
+
+        $missingProfileFields = wf_profile_missing_fields($profileUser);
         $profileCompletionRequired = count($missingProfileFields) > 0;
         set_user_meta_many($user['id'], [
             'profile_completion_required' => $profileCompletionRequired ? '1' : '0',
@@ -85,11 +89,11 @@ try {
             'first_name' => $user['first_name'] ?? null,
             'last_name' => $user['last_name'] ?? null,
             'phone_number' => $user['phone_number'] ?? null,
-            'address_line_1' => $user['address_line_1'] ?? null,
-            'address_line_2' => $user['address_line_2'] ?? null,
-            'city' => $user['city'] ?? null,
-            'state' => $user['state'] ?? null,
-            'zip_code' => $user['zip_code'] ?? null,
+            'address_line_1' => $profileUser['address_line_1'] ?: null,
+            'address_line_2' => $profileUser['address_line_2'] ?: null,
+            'city' => $profileUser['city'] ?: null,
+            'state' => $profileUser['state'] ?: null,
+            'zip_code' => $profileUser['zip_code'] ?: null,
             'profile_missing_fields' => $missingProfileFields,
             'profile_completion_required' => $profileCompletionRequired
         ];
@@ -115,11 +119,11 @@ try {
             'first_name' => $user['first_name'] ?? null,
             'last_name' => $user['last_name'] ?? null,
             'phone_number' => $user['phone_number'] ?? null,
-            'address_line_1' => $user['address_line_1'] ?? null,
-            'address_line_2' => $user['address_line_2'] ?? null,
-            'city' => $user['city'] ?? null,
-            'state' => $user['state'] ?? null,
-            'zip_code' => $user['zip_code'] ?? null,
+            'address_line_1' => $profileUser['address_line_1'] ?: null,
+            'address_line_2' => $profileUser['address_line_2'] ?: null,
+            'city' => $profileUser['city'] ?: null,
+            'state' => $profileUser['state'] ?: null,
+            'zip_code' => $profileUser['zip_code'] ?: null,
             'profile_missing_fields' => $missingProfileFields,
             'profile_completion_required' => $profileCompletionRequired,
             'redirectUrl' => $_SESSION['redirect_after_login'] ?? null

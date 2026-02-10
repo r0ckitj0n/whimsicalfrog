@@ -6,6 +6,7 @@ require_once dirname(__DIR__) . '/includes/functions.php';
 require_once dirname(__DIR__) . '/includes/response.php';
 require_once dirname(__DIR__) . '/includes/user_meta.php';
 require_once dirname(__DIR__) . '/includes/helpers/ProfileCompletionHelper.php';
+require_once dirname(__DIR__) . '/includes/helpers/CustomerAddressSyncHelper.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
@@ -101,20 +102,22 @@ try {
     // Hash password using secure method
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-    // Insert new user with all fields
-    Database::execute("INSERT INTO users (id, username, email, password, first_name, last_name, phone_number, address_line_1, address_line_2, city, state, zip_code, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Customer')", [
+    // Insert new user
+    Database::execute("INSERT INTO users (id, username, email, password, first_name, last_name, phone_number, role) VALUES (?, ?, ?, ?, ?, ?, ?, 'Customer')", [
         $user_id,
         $username,
         $email,
         $hashedPassword,
         $first_name,
         $last_name,
-        $phone_number,
-        $address_line_1,
-        $address_line_2,
-        $city,
-        $state,
-        $zip_code
+        $phone_number
+    ]);
+    CustomerAddressSyncHelper::upsertPrimaryFromUserFields($user_id, [
+        'address_line_1' => $address_line_1,
+        'address_line_2' => $address_line_2,
+        'city' => $city,
+        'state' => $state,
+        'zip_code' => $zip_code,
     ]);
 
     $profileSeed = [

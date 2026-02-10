@@ -25,7 +25,7 @@ function wf_address_normalized(array $row): array
 {
     return [
         'id' => $row['id'],
-        'user_id' => $row['user_id'],
+        'user_id' => $row['owner_id'] ?? '',
         'address_name' => $row['address_name'] ?? '',
         'address_line_1' => $row['address_line_1'] ?? '',
         'address_line_2' => $row['address_line_2'] ?? '',
@@ -56,7 +56,7 @@ try {
                 throw new Exception('User ID is required');
             }
 
-            $addresses = Database::queryAll("SELECT * FROM customer_addresses WHERE user_id = ? ORDER BY is_default DESC, address_name ASC", [$user_id]);
+            $addresses = Database::queryAll("SELECT * FROM addresses WHERE owner_type = ? AND owner_id = ? ORDER BY is_default DESC, address_name ASC", ['customer', $user_id]);
             $addresses = array_map('wf_address_normalized', is_array($addresses) ? $addresses : []);
 
             echo json_encode([
@@ -77,10 +77,11 @@ try {
 
             // If this is set as default, unset other defaults
             if (!empty($data['is_default'])) {
-                Database::execute("UPDATE customer_addresses SET is_default = 0 WHERE user_id = ?", [$data['user_id']]);
+                Database::execute("UPDATE addresses SET is_default = 0 WHERE owner_type = ? AND owner_id = ?", ['customer', $data['user_id']]);
             }
 
-            Database::execute("INSERT INTO customer_addresses (user_id, address_name, address_line_1, address_line_2, city, state, zip_code, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
+            Database::execute("INSERT INTO addresses (owner_type, owner_id, address_name, address_line_1, address_line_2, city, state, zip_code, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                'customer',
                 $data['user_id'],
                 $data['address_name'],
                 $data['address_line_1'],
@@ -110,13 +111,13 @@ try {
             // If this is set as default, unset other defaults for this user
             if (!empty($data['is_default'])) {
                 // Get user_id for this address first (MySQL doesn't allow UPDATE with subquery on same table)
-                $address = Database::queryOne("SELECT user_id FROM customer_addresses WHERE id = ?", [$data['id']]);
+                $address = Database::queryOne("SELECT owner_id FROM addresses WHERE id = ? AND owner_type = ?", [$data['id'], 'customer']);
                 if ($address) {
-                    Database::execute("UPDATE customer_addresses SET is_default = 0 WHERE user_id = ?", [$address['user_id']]);
+                    Database::execute("UPDATE addresses SET is_default = 0 WHERE owner_type = ? AND owner_id = ?", ['customer', $address['owner_id']]);
                 }
             }
 
-            Database::execute("UPDATE customer_addresses SET address_name = ?, address_line_1 = ?, address_line_2 = ?, city = ?, state = ?, zip_code = ?, is_default = ? WHERE id = ?", [
+            Database::execute("UPDATE addresses SET address_name = ?, address_line_1 = ?, address_line_2 = ?, city = ?, state = ?, zip_code = ?, is_default = ? WHERE id = ? AND owner_type = ?", [
                 $data['address_name'],
                 $data['address_line_1'],
                 $data['address_line_2'] ?? '',
@@ -124,7 +125,8 @@ try {
                 $data['state'],
                 $data['zip_code'],
                 !empty($data['is_default']) ? 1 : 0,
-                $data['id']
+                $data['id'],
+                'customer'
             ]);
 
             echo json_encode([
@@ -140,7 +142,8 @@ try {
                 throw new Exception('Address ID is required');
             }
 
-            Database::execute("DELETE FROM customer_addresses WHERE id = ?", [$addressId]);
+            $address = Database::queryOne("SELECT owner_id FROM addresses WHERE id = ? AND owner_type = ?", [$addressId, 'customer']);
+            Database::execute("DELETE FROM addresses WHERE id = ? AND owner_type = ?", [$addressId, 'customer']);
 
             echo json_encode([
                 'success' => true,
@@ -156,17 +159,17 @@ try {
             }
 
             // Get user ID for this address
-            $address = Database::queryOne("SELECT user_id FROM customer_addresses WHERE id = ?", [$addressId]);
+            $address = Database::queryOne("SELECT owner_id FROM addresses WHERE id = ? AND owner_type = ?", [$addressId, 'customer']);
 
             if (!$address) {
                 throw new Exception('Address not found');
             }
 
             // Unset all defaults for this user
-            Database::execute("UPDATE customer_addresses SET is_default = 0 WHERE user_id = ?", [$address['user_id']]);
+            Database::execute("UPDATE addresses SET is_default = 0 WHERE owner_type = ? AND owner_id = ?", ['customer', $address['owner_id']]);
 
             // Set this as default
-            Database::execute("UPDATE customer_addresses SET is_default = 1 WHERE id = ?", [$addressId]);
+            Database::execute("UPDATE addresses SET is_default = 1 WHERE id = ? AND owner_type = ?", [$addressId, 'customer']);
 
             echo json_encode([
                 'success' => true,

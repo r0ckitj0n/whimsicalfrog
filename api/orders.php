@@ -64,8 +64,23 @@ try {
 
     // Get orders with user information
     $orders = Database::queryAll(
-        "SELECT o.*, o.total_amount AS total, u.username, u.address_line_1, u.address_line_2, u.city, u.state, u.zip_code 
-         FROM orders o LEFT JOIN users u ON o.user_id = u.id OR o.user_id = u.email OR o.user_id = u.username {$whereClause} ORDER BY o.created_at DESC",
+        "SELECT o.*, o.total_amount AS total, u.username, pa.address_line_1, pa.address_line_2, pa.city, pa.state, pa.zip_code
+         FROM orders o
+         LEFT JOIN users u ON o.user_id = u.id OR o.user_id = u.email OR o.user_id = u.username
+         LEFT JOIN (
+             SELECT ca1.owner_id, ca1.address_line_1, ca1.address_line_2, ca1.city, ca1.state, ca1.zip_code
+             FROM addresses ca1
+             LEFT JOIN addresses ca2
+               ON ca2.owner_type = ca1.owner_type
+              AND ca2.owner_id = ca1.owner_id
+              AND (
+                   ca2.is_default > ca1.is_default
+                   OR (ca2.is_default = ca1.is_default AND ca2.id < ca1.id)
+              )
+             WHERE ca1.owner_type = 'customer' AND ca2.id IS NULL
+         ) pa ON pa.owner_id = u.id
+         {$whereClause}
+         ORDER BY o.created_at DESC",
         $params
     );
 

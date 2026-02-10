@@ -11,6 +11,7 @@ require_once __DIR__ . '/../api/config.php';
 require_once __DIR__ . '/session.php';
 require_once __DIR__ . '/auth_cookie.php';
 require_once __DIR__ . '/helpers/AuthSessionHelper.php';
+require_once __DIR__ . '/helpers/CustomerAddressSyncHelper.php';
 
 /**
  * Ensure PHP session is started before accessing $_SESSION
@@ -274,6 +275,8 @@ function loginUser($userData)
     if (session_status() !== PHP_SESSION_ACTIVE) {
         session_start();
     }
+    $userId = (string) ($userData['id'] ?? $userData['user_id'] ?? '');
+    $profile = CustomerAddressSyncHelper::mergeUserWithPrimaryAddress($userId, is_array($userData) ? $userData : []);
     $_SESSION['user'] = [
         'user_id' => $userData['id'] ?? $userData['user_id'],
         'username' => $userData['username'],
@@ -281,7 +284,12 @@ function loginUser($userData)
         'role' => $userData['role'],
         'first_name' => $userData['first_name'] ?? null,
         'last_name' => $userData['last_name'] ?? null,
-        'phone_number' => $userData['phone_number'] ?? null
+        'phone_number' => $userData['phone_number'] ?? null,
+        'address_line_1' => ($profile['address_line_1'] ?? '') !== '' ? $profile['address_line_1'] : null,
+        'address_line_2' => ($profile['address_line_2'] ?? '') !== '' ? $profile['address_line_2'] : null,
+        'city' => ($profile['city'] ?? '') !== '' ? $profile['city'] : null,
+        'state' => ($profile['state'] ?? '') !== '' ? $profile['state'] : null,
+        'zip_code' => ($profile['zip_code'] ?? '') !== '' ? $profile['zip_code'] : null
     ];
 }
 

@@ -47,6 +47,14 @@ try {
         // Fetch metadata
         require_once dirname(__DIR__) . '/includes/user_meta.php';
         $meta = get_user_meta_bulk($userData['id']);
+        $primaryAddress = Database::queryOne(
+            "SELECT address_line_1, address_line_2, city, state, zip_code
+             FROM addresses
+             WHERE owner_type = ? AND owner_id = ?
+             ORDER BY is_default DESC, id ASC
+             LIMIT 1",
+            ['customer', $userData['id']]
+        ) ?: [];
 
         // Fetch order history - handle orders linked by ID, email, or username
         $orders = Database::queryAll('SELECT * FROM orders WHERE user_id = ? OR user_id = ? OR user_id = ? ORDER BY created_at DESC', [$userData['id'], $userData['email'], $userData['username']]) ?: [];
@@ -60,11 +68,11 @@ try {
             'first_name' => $userData['first_name'] ?? '',
             'last_name' => $userData['last_name'] ?? '',
             'phone_number' => $userData['phone_number'] ?? '',
-            'address_line_1' => $userData['address_line_1'] ?? '',
-            'address_line_2' => $userData['address_line_2'] ?? '',
-            'city' => $userData['city'] ?? '',
-            'state' => $userData['state'] ?? '',
-            'zip_code' => $userData['zip_code'] ?? '',
+            'address_line_1' => $primaryAddress['address_line_1'] ?? '',
+            'address_line_2' => $primaryAddress['address_line_2'] ?? '',
+            'city' => $primaryAddress['city'] ?? '',
+            'state' => $primaryAddress['state'] ?? '',
+            'zip_code' => $primaryAddress['zip_code'] ?? '',
             // Metadata
             'company' => $meta['company'] ?? '',
             'job_title' => $meta['job_title'] ?? '',
@@ -86,8 +94,28 @@ try {
         echo json_encode($formattedUser);
         exit;
     } else {
-        // Query for all users
-        $users = Database::queryAll('SELECT * FROM users');
+        // Query for all users with primary/default address
+        $users = Database::queryAll(
+            "SELECT u.*,
+                    pa.address_line_1,
+                    pa.address_line_2,
+                    pa.city,
+                    pa.state,
+                    pa.zip_code
+             FROM users u
+             LEFT JOIN (
+                 SELECT ca1.owner_id, ca1.address_line_1, ca1.address_line_2, ca1.city, ca1.state, ca1.zip_code
+                 FROM addresses ca1
+                 LEFT JOIN addresses ca2
+                   ON ca2.owner_type = ca1.owner_type
+                  AND ca2.owner_id = ca1.owner_id
+                  AND (
+                       ca2.is_default > ca1.is_default
+                       OR (ca2.is_default = ca1.is_default AND ca2.id < ca1.id)
+                  )
+                 WHERE ca1.owner_type = 'customer' AND ca2.id IS NULL
+             ) pa ON pa.owner_id = u.id"
+        );
 
         // Fetch order counts - handle orders linked by ID, email, or username
         $orderCounts = [];

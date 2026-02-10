@@ -25,13 +25,25 @@ try {
                                 o.*, 
                                 u.username, 
                                 u.email, 
-                                COALESCE(NULLIF(o.address_line_1, ''), u.address_line_1) as address_line_1,
-                                COALESCE(NULLIF(o.address_line_2, ''), u.address_line_2) as address_line_2,
-                                COALESCE(NULLIF(o.city, ''), u.city) as city,
-                                COALESCE(NULLIF(o.state, ''), u.state) as state,
-                                COALESCE(NULLIF(o.zip_code, ''), u.zip_code) as zip_code
+                                COALESCE(NULLIF(o.address_line_1, ''), pa.address_line_1) as address_line_1,
+                                COALESCE(NULLIF(o.address_line_2, ''), pa.address_line_2) as address_line_2,
+                                COALESCE(NULLIF(o.city, ''), pa.city) as city,
+                                COALESCE(NULLIF(o.state, ''), pa.state) as state,
+                                COALESCE(NULLIF(o.zip_code, ''), pa.zip_code) as zip_code
                           FROM orders o 
                           LEFT JOIN users u ON o.user_id = u.id OR o.user_id = u.email OR o.user_id = u.username 
+                          LEFT JOIN (
+                              SELECT ca1.owner_id, ca1.address_line_1, ca1.address_line_2, ca1.city, ca1.state, ca1.zip_code
+                              FROM addresses ca1
+                              LEFT JOIN addresses ca2
+                                ON ca2.owner_type = ca1.owner_type
+                               AND ca2.owner_id = ca1.owner_id
+                               AND (
+                                    ca2.is_default > ca1.is_default
+                                    OR (ca2.is_default = ca1.is_default AND ca2.id < ca1.id)
+                               )
+                              WHERE ca1.owner_type = 'customer' AND ca2.id IS NULL
+                          ) pa ON pa.owner_id = u.id
                           WHERE o.id = ?", [$order_id]);
 
     if (!$order) {

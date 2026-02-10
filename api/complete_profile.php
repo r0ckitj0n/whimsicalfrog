@@ -6,6 +6,7 @@ require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/includes/user_meta.php';
 require_once dirname(__DIR__) . '/includes/helpers/UserUpdateHelper.php';
 require_once dirname(__DIR__) . '/includes/helpers/ProfileCompletionHelper.php';
+require_once dirname(__DIR__) . '/includes/helpers/CustomerAddressSyncHelper.php';
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -100,12 +101,15 @@ try {
         'first_name' => $firstName,
         'last_name' => $lastName,
         'email' => $email,
-        'phone_number' => $phoneNumber,
+        'phone_number' => $phoneNumber
+    ]);
+
+    CustomerAddressSyncHelper::upsertPrimaryFromUserFields((string) $userId, [
         'address_line_1' => $addressLine1,
         'address_line_2' => $addressLine2,
         'city' => $city,
         'state' => $state,
-        'zip_code' => $zipCode
+        'zip_code' => $zipCode,
     ]);
 
     set_user_meta_many($userId, [

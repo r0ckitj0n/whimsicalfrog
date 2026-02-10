@@ -104,7 +104,7 @@ try {
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
     // Insert new user
-    Database::execute('INSERT INTO users (id, username, password, email, role, first_name, last_name, phone_number, address_line_1, address_line_2, city, state, zip_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+    Database::execute('INSERT INTO users (id, username, password, email, role, first_name, last_name, phone_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
         $user_id,
         $username,
         $hashedPassword,
@@ -112,13 +112,22 @@ try {
         $role,
         $first_name,
         $last_name,
-        $phone_number,
-        $address_line_1,
-        $address_line_2,
-        $city,
-        $state,
-        $zip_code
+        $phone_number
     ]);
+
+    Database::execute(
+        'INSERT INTO addresses (owner_type, owner_id, address_name, address_line_1, address_line_2, city, state, zip_code, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)',
+        [
+            'customer',
+            $user_id,
+            'Primary',
+            $address_line_1,
+            $address_line_2,
+            $city,
+            $state,
+            $zip_code
+        ]
+    );
 
     $profileSeed = [
         'first_name' => $first_name,

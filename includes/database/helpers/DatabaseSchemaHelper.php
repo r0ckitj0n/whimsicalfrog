@@ -181,11 +181,6 @@ class DatabaseSchemaHelper
                     `first_name` varchar(64) DEFAULT NULL,
                     `last_name` varchar(64) DEFAULT NULL,
                     `phone_number` varchar(32) DEFAULT NULL,
-                    `address_line_1` varchar(128) DEFAULT NULL,
-                    `address_line_2` varchar(128) DEFAULT NULL,
-                    `city` varchar(64) DEFAULT NULL,
-                    `state` varchar(64) DEFAULT NULL,
-                    `zip_code` varchar(16) DEFAULT NULL,
                     `is_protected` tinyint(1) DEFAULT '0',
                     `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
                     `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -277,10 +272,11 @@ class DatabaseSchemaHelper
                     KEY `idx_user` (`user_id`),
                     KEY `idx_key` (`meta_key`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-            'customer_addresses' => "
-                CREATE TABLE IF NOT EXISTS `customer_addresses` (
+            'addresses' => "
+                CREATE TABLE IF NOT EXISTS `addresses` (
                     `id` INT AUTO_INCREMENT PRIMARY KEY,
-                    `user_id` VARCHAR(16) NOT NULL,
+                    `owner_type` VARCHAR(32) NOT NULL DEFAULT 'customer',
+                    `owner_id` VARCHAR(64) NOT NULL,
                     `address_name` VARCHAR(100) NOT NULL,
                     `address_line_1` VARCHAR(255) NOT NULL,
                     `address_line_2` VARCHAR(255) NULL,
@@ -290,7 +286,8 @@ class DatabaseSchemaHelper
                     `is_default` TINYINT(1) DEFAULT 0,
                     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+                    KEY `idx_owner` (`owner_type`, `owner_id`),
+                    KEY `idx_owner_default` (`owner_type`, `owner_id`, `is_default`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
         ];
     }

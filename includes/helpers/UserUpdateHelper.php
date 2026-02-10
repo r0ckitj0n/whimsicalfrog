@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../../api/config.php';
 require_once __DIR__ . '/../../includes/user_meta.php';
+require_once __DIR__ . '/../../includes/helpers/CustomerAddressSyncHelper.php';
 
 class UserUpdateHelper
 {
@@ -17,9 +18,6 @@ class UserUpdateHelper
         $hasFirstName = true;
         $hasLastName = true;
         $hasPhone = true;
-        $hasAddr1 = true;
-        $hasAddr2 = true;
-        $hasZip = true;
         try {
             $cols = Database::queryAll('SHOW COLUMNS FROM users');
             $map = [];
@@ -31,9 +29,6 @@ class UserUpdateHelper
             $hasFirstName = isset($map['first_name']);
             $hasLastName = isset($map['last_name']);
             $hasPhone = isset($map['phone_number']);
-            $hasAddr1 = isset($map['address_line_1']);
-            $hasAddr2 = isset($map['address_line_2']);
-            $hasZip = isset($map['zip_code']);
         } catch (Exception $e) {
             // If schema detection fails, fall back to optimistic defaults
         }
@@ -46,11 +41,11 @@ class UserUpdateHelper
             'first_name' => $hasFirstName ? 'first_name' : null,
             'last_name' => $hasLastName ? 'last_name' : null,
             'phone_number' => $hasPhone ? 'phone_number' : null,
-            'address_line_1' => $hasAddr1 ? 'address_line_1' : null,
-            'address_line_2' => $hasAddr2 ? 'address_line_2' : null,
-            'city' => 'city',
-            'state' => 'state',
-            'zip_code' => $hasZip ? 'zip_code' : null,
+            'address_line_1' => null,
+            'address_line_2' => null,
+            'city' => null,
+            'state' => null,
+            'zip_code' => null,
             'role' => 'role'
         ];
 
@@ -119,6 +114,7 @@ class UserUpdateHelper
             if ($currentId == $user_id) {
                 $updatedUser = Database::queryOne("SELECT * FROM users WHERE id = ?", [$user_id]);
                 if ($updatedUser) {
+                    $mergedProfile = CustomerAddressSyncHelper::mergeUserWithPrimaryAddress((string) $user_id, $updatedUser);
                     $_SESSION['user'] = [
                         'user_id' => $updatedUser['id'],
                         'username' => $updatedUser['username'],
@@ -127,11 +123,11 @@ class UserUpdateHelper
                         'first_name' => $updatedUser['first_name'] ?? null,
                         'last_name' => $updatedUser['last_name'] ?? null,
                         'phone_number' => $updatedUser['phone_number'] ?? null,
-                        'address_line_1' => $updatedUser['address_line_1'] ?? null,
-                        'address_line_2' => $updatedUser['address_line_2'] ?? null,
-                        'city' => $updatedUser['city'] ?? null,
-                        'state' => $updatedUser['state'] ?? null,
-                        'zip_code' => $updatedUser['zip_code'] ?? null
+                        'address_line_1' => ($mergedProfile['address_line_1'] ?? '') !== '' ? $mergedProfile['address_line_1'] : null,
+                        'address_line_2' => ($mergedProfile['address_line_2'] ?? '') !== '' ? $mergedProfile['address_line_2'] : null,
+                        'city' => ($mergedProfile['city'] ?? '') !== '' ? $mergedProfile['city'] : null,
+                        'state' => ($mergedProfile['state'] ?? '') !== '' ? $mergedProfile['state'] : null,
+                        'zip_code' => ($mergedProfile['zip_code'] ?? '') !== '' ? $mergedProfile['zip_code'] : null
                     ];
                 }
             }

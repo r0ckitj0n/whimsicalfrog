@@ -6,6 +6,7 @@ require_once dirname(__DIR__) . '/includes/user_meta.php';
 require_once dirname(__DIR__) . '/includes/session.php';
 require_once dirname(__DIR__) . '/includes/helpers/AuthSessionHelper.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/helpers/CustomerAddressSyncHelper.php';
 
 // Standardize session initialization
 if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -86,7 +87,35 @@ try {
     }
 
     require_once dirname(__DIR__) . '/includes/helpers/UserUpdateHelper.php';
+    $addressKeys = ['address_line_1', 'address_line_2', 'city', 'state', 'zip_code'];
+    $shouldSyncAddress = false;
+    foreach ($addressKeys as $key) {
+        if (array_key_exists($key, $data)) {
+            $shouldSyncAddress = true;
+            break;
+        }
+    }
+
+    $addressPayload = [];
+    if ($shouldSyncAddress) {
+        $currentPrimaryAddress = CustomerAddressSyncHelper::getPrimaryAddress($targetUserId) ?? [];
+        $addressPayload = [
+            'address_line_1' => $data['address_line_1'] ?? ($currentPrimaryAddress['address_line_1'] ?? ''),
+            'address_line_2' => $data['address_line_2'] ?? ($currentPrimaryAddress['address_line_2'] ?? ''),
+            'city' => $data['city'] ?? ($currentPrimaryAddress['city'] ?? ''),
+            'state' => $data['state'] ?? ($currentPrimaryAddress['state'] ?? ''),
+            'zip_code' => $data['zip_code'] ?? ($currentPrimaryAddress['zip_code'] ?? ''),
+        ];
+
+        foreach ($addressKeys as $key) {
+            unset($data[$key]);
+        }
+    }
+
     UserUpdateHelper::update($targetUserId, $data);
+    if ($shouldSyncAddress) {
+        CustomerAddressSyncHelper::upsertPrimaryFromUserFields($targetUserId, $addressPayload);
+    }
 
     echo json_encode([
         'success' => true,

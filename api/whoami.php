@@ -8,6 +8,8 @@ require_once __DIR__ . '/../includes/session.php';
 require_once __DIR__ . '/../includes/auth_cookie.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/user_meta.php';
+require_once __DIR__ . '/../includes/helpers/ProfileCompletionHelper.php';
+require_once __DIR__ . '/../includes/helpers/CustomerAddressSyncHelper.php';
 
 if (!function_exists('wf_whoami_emit')) {
     function wf_whoami_emit(array $payload, int $statusCode = 200): void
@@ -153,7 +155,6 @@ try {
         $user_id = $user_id_raw;
         try {
             $meta = get_user_meta_bulk($user_id_raw);
-            $profile_completion_required = isset($meta['profile_completion_required']) && (string) $meta['profile_completion_required'] === '1';
             $company = isset($meta['company']) ? (string) $meta['company'] : null;
             $job_title = isset($meta['job_title']) ? (string) $meta['job_title'] : null;
             $preferred_contact = isset($meta['preferred_contact']) ? (string) $meta['preferred_contact'] : null;
@@ -161,6 +162,39 @@ try {
             $marketing_opt_in = isset($meta['marketing_opt_in']) ? (string) $meta['marketing_opt_in'] : null;
         } catch (\Throwable $e) {
             error_log('[whoami] users_meta lookup failed: ' . $e->getMessage());
+        }
+
+        try {
+            $dbUser = Database::queryOne(
+                'SELECT first_name, last_name, email
+                 FROM users WHERE id = ? LIMIT 1',
+                [$user_id_raw]
+            );
+            if (is_array($dbUser)) {
+                $mergedProfile = CustomerAddressSyncHelper::mergeUserWithPrimaryAddress((string) $user_id_raw, $dbUser);
+
+                if ($first_name === null && ($mergedProfile['first_name'] ?? '') !== '') {
+                    $first_name = $mergedProfile['first_name'];
+                }
+                if ($last_name === null && ($mergedProfile['last_name'] ?? '') !== '') {
+                    $last_name = $mergedProfile['last_name'];
+                }
+                if ($email === null && ($mergedProfile['email'] ?? '') !== '') {
+                    $email = $mergedProfile['email'];
+                }
+                $address_line_1 = ($mergedProfile['address_line_1'] ?? '') !== '' ? $mergedProfile['address_line_1'] : null;
+                $address_line_2 = ($mergedProfile['address_line_2'] ?? '') !== '' ? $mergedProfile['address_line_2'] : null;
+                $city = ($mergedProfile['city'] ?? '') !== '' ? $mergedProfile['city'] : null;
+                $state = ($mergedProfile['state'] ?? '') !== '' ? $mergedProfile['state'] : null;
+                $zip_code = ($mergedProfile['zip_code'] ?? '') !== '' ? $mergedProfile['zip_code'] : null;
+
+                $profile_completion_required = count(wf_profile_missing_fields($mergedProfile)) > 0;
+                if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['user']) && is_array($_SESSION['user'])) {
+                    $_SESSION['user']['profile_completion_required'] = $profile_completion_required;
+                }
+            }
+        } catch (\Throwable $e) {
+            error_log('[whoami] merged profile evaluation failed: ' . $e->getMessage());
         }
     }
 

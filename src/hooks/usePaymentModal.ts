@@ -126,6 +126,8 @@ export const usePaymentModal = (isOpen: boolean, onClose: () => void) => {
                     billingContact,
                     verificationDetails: {
                         intent: 'CHARGE',
+                        customerInitiated: true,
+                        sellerKeyedIn: false,
                         amount: Number(pricing.total || 0).toFixed(2),
                         currencyCode: 'USD',
                         billingContact

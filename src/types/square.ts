@@ -47,6 +47,8 @@ export interface ISquareCard {
         };
         verificationDetails?: {
             intent?: string;
+            customerInitiated?: boolean;
+            sellerKeyedIn?: boolean;
             amount?: string;
             currencyCode?: string;
             billingContact?: {

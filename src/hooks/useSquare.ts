@@ -100,6 +100,8 @@ export const useSquare = (applicationId: string | null | undefined, locationId: 
         };
         verificationDetails?: {
             intent?: string;
+            customerInitiated?: boolean;
+            sellerKeyedIn?: boolean;
             amount?: string;
             currencyCode?: string;
             billingContact?: {
@@ -113,13 +115,49 @@ export const useSquare = (applicationId: string | null | undefined, locationId: 
     }) => {
         if (!cardRef.current) return null;
         try {
-            const result = await cardRef.current.tokenize(options);
+            const attemptTokenize = async (tokenizeOptions?: typeof options) => cardRef.current!.tokenize(tokenizeOptions);
+
+            let result = await attemptTokenize(options);
+            // Some SDK/runtime combinations expect verification details fields flattened at the top level.
+            // If we get a verificationDetails validation error, retry once with a flattened payload.
+            if (
+                result.status !== 'OK' &&
+                options?.verificationDetails &&
+                (result.errors?.[0]?.message || '').includes('verificationDetails.')
+            ) {
+                const flattenedOptions = {
+                    ...options.verificationDetails,
+                    billingContact: options.verificationDetails.billingContact || options.billingContact
+                };
+                result = await attemptTokenize(flattenedOptions);
+            }
             if (result.status === 'OK') {
                 return result.token;
             } else {
                 throw new Error(result.errors?.[0]?.message || 'Tokenization failed');
             }
         } catch (err) {
+            if (
+                options?.verificationDetails &&
+                err instanceof Error &&
+                err.message.includes('verificationDetails.')
+            ) {
+                try {
+                    const flattenedOptions = {
+                        ...options.verificationDetails,
+                        billingContact: options.verificationDetails.billingContact || options.billingContact
+                    };
+                    const retryResult = await cardRef.current.tokenize(flattenedOptions);
+                    if (retryResult.status === 'OK') {
+                        return retryResult.token;
+                    }
+                    throw new Error(retryResult.errors?.[0]?.message || 'Tokenization failed');
+                } catch (retryErr) {
+                    const retryErrorMsg = retryErr instanceof Error ? retryErr.message : 'Unknown tokenization error';
+                    setError(retryErrorMsg);
+                    throw retryErr;
+                }
+            }
             const errorMsg = err instanceof Error ? err.message : 'Unknown tokenization error';
             setError(errorMsg);
             throw err;

@@ -263,22 +263,22 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         field: keyof CreateRoomFormState,
         value: string
     ) => {
-        const listId = `create-room-${String(field)}-options`;
         const options = getOptionsForVariable(String(field));
+        const normalizedValue = options.includes(value) ? value : (options[0] || value);
         return (
             <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</label>
-                <input
-                    list={listId}
-                    value={value}
+                <select
+                    value={normalizedValue}
                     onChange={(e) => updateForm(field, e.target.value as CreateRoomFormState[typeof field])}
                     className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white"
-                />
-                <datalist id={listId}>
+                >
                     {options.map((opt) => (
-                        <option key={`${listId}-${opt}`} value={opt} />
+                        <option key={`create-room-${String(field)}-${opt}`} value={opt}>
+                            {opt}
+                        </option>
                     ))}
-                </datalist>
+                </select>
             </div>
         );
     };

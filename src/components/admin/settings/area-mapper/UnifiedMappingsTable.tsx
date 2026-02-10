@@ -16,7 +16,7 @@ interface UnifiedMappingsTableProps {
     onConvert: (area: string, sku: string) => void;
 }
 
-type SlotStatus = 'explicit' | 'derived' | 'empty';
+type SlotStatus = 'explicit' | 'derived' | 'inactive' | 'empty';
 
 interface UnifiedSlot {
     area: string;
@@ -101,6 +101,8 @@ const getStatusIndicator = (status: SlotStatus): { icon: string; label: string; 
             return { icon: '✓', label: 'Explicit', className: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
         case 'derived':
             return { icon: '↻', label: 'Derived', className: 'bg-blue-100 text-blue-700 border-blue-200' };
+        case 'inactive':
+            return { icon: '●', label: 'Inactive', className: 'bg-slate-100 text-slate-500 border-slate-200' };
         case 'empty':
             return { icon: '○', label: 'Empty', className: 'bg-gray-100 text-gray-500 border-gray-200' };
     }
@@ -189,13 +191,19 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                         {unifiedSlots.map(slot => {
-                            const statusInfo = getStatusIndicator(slot.status);
+                            const hasExplicit = !!slot.explicit;
+                            const explicitIsLive = hasExplicit && !!slot.live && String(slot.live?.id ?? '') === String(slot.explicit?.id ?? '');
+                            const effectiveStatus: SlotStatus = hasExplicit
+                                ? (explicitIsLive ? 'explicit' : 'inactive')
+                                : (slot.live?.derived ? 'derived' : (slot.live ? 'explicit' : 'empty'));
+                            const statusInfo = getStatusIndicator(effectiveStatus);
                             const mapping = slot.explicit || slot.live;
+                            const liveMapping = slot.live || slot.explicit;
                             const typeBadge = getTypeBadge(mapping?.mapping_type);
                             const destination = getDestinationLabel(mapping, roomOptions);
-                            const isItemDerived = slot.status === 'derived' && (slot.live?.item_sku || slot.live?.sku);
-                            const isExplicitSlot = slot.status === 'explicit' && !!slot.explicit;
-                            const isActive = Boolean(Number(mapping?.is_active));
+                            const isItemDerived = effectiveStatus === 'derived' && (slot.live?.item_sku || slot.live?.sku);
+                            const isExplicitSlot = hasExplicit;
+                            const isActive = hasExplicit ? explicitIsLive : Boolean(slot.live);
 
                             return (
                                 <tr key={slot.area} className="hover:bg-[var(--brand-primary)]/5 group transition-colors">
@@ -229,7 +237,7 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <img
-                                            src={getImageSource(slot.live)}
+                                            src={getImageSource(liveMapping)}
                                             alt={`Preview for ${slot.area}`}
                                             className="w-10 h-10 rounded border border-black/5 object-contain bg-white shadow-sm mx-auto"
                                             loading="lazy"

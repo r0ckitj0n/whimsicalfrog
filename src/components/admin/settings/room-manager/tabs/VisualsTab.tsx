@@ -214,22 +214,24 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                         <div className="max-h-56 overflow-auto pr-1">
                             <div className="grid grid-cols-1 gap-2">
                                 {ROOM_IMAGE_AESTHETIC_FIELDS.map((field) => {
-                                    const listId = `visuals-room-${field.key}-options`;
+                                    const options = getRoomImageVariableOptions(field.key, dropdownOptionsByVariable);
+                                    const currentValue = aestheticValues[field.key] || '';
+                                    const normalizedValue = options.includes(currentValue) ? currentValue : (options[0] || currentValue);
                                     return (
                                         <div key={field.key} className="space-y-1">
                                             <label className="text-[10px] font-bold text-slate-500">{field.label}</label>
-                                            <input
-                                                list={listId}
-                                                value={aestheticValues[field.key] || ''}
+                                            <select
+                                                value={normalizedValue}
                                                 onChange={(e) => setAestheticValues(prev => ({ ...prev, [field.key]: e.target.value }))}
                                                 className="w-full text-[11px] p-2 border border-slate-200 rounded-lg bg-white"
                                                 disabled={isGenerating}
-                                            />
-                                            <datalist id={listId}>
-                                                {getRoomImageVariableOptions(field.key, dropdownOptionsByVariable).map((option) => (
-                                                    <option key={`${listId}-${option}`} value={option} />
+                                            >
+                                                {options.map((option) => (
+                                                    <option key={`visuals-room-${field.key}-${option}`} value={option}>
+                                                        {option}
+                                                    </option>
                                                 ))}
-                                            </datalist>
+                                            </select>
                                         </div>
                                     );
                                 })}

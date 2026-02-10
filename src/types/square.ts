@@ -37,7 +37,15 @@ export type { Environment } from '../core/constants.js';
 // Square SDK Types
 export interface ISquareCard {
     attach: (elementId: string) => Promise<void>;
-    tokenize: () => Promise<{ status: string; token?: string; errors?: Array<{ message: string }> }>;
+    tokenize: (options?: {
+        billingContact?: {
+            addressLines?: string[];
+            city?: string;
+            state?: string;
+            postalCode?: string;
+            countryCode?: string;
+        };
+    }) => Promise<{ status: string; token?: string; errors?: Array<{ message: string }> }>;
     destroy: () => Promise<void>;
 }
 

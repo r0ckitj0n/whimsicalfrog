@@ -90,10 +90,18 @@ export const useSquare = (applicationId: string | null | undefined, locationId: 
         }
     }, [applicationId, locationId]);
 
-    const tokenize = useCallback(async () => {
+    const tokenize = useCallback(async (options?: {
+        billingContact?: {
+            addressLines?: string[];
+            city?: string;
+            state?: string;
+            postalCode?: string;
+            countryCode?: string;
+        };
+    }) => {
         if (!cardRef.current) return null;
         try {
-            const result = await cardRef.current.tokenize();
+            const result = await cardRef.current.tokenize(options);
             if (result.status === 'OK') {
                 return result.token;
             } else {

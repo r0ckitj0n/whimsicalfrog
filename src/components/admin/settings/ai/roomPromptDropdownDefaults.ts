@@ -55,7 +55,8 @@ export const ROOM_PROMPT_DROPDOWN_DEFAULTS: Record<string, string[]> = {
         'magical apothecary',
         'artisan bakery',
         'storybook gift shop',
-        'modern boutique'
+        'modern boutique',
+        'A cozy cabin settled in North Georgia mountains.'
     ],
     display_furniture_style: [
         AUTOGENERATE_LABEL,
@@ -88,7 +89,8 @@ export const ROOM_PROMPT_DROPDOWN_DEFAULTS: Record<string, string[]> = {
         'welcoming visitors with a cheerful wave',
         'pointing toward featured display zones',
         'inspecting lighting over the shelving',
-        'sweeping the floor with a tiny broom'
+        'sweeping the floor with a tiny broom',
+        'Give me 2 frogs, husband and wife, just chilling on the porch.'
     ],
     vibe_adjectives: [
         AUTOGENERATE_LABEL,
@@ -129,7 +131,8 @@ export const ROOM_PROMPT_DROPDOWN_DEFAULTS: Record<string, string[]> = {
         'A premium cinematic 3D cartoon render for room',
         'A whimsical storybook 3D cartoon render for room',
         'A polished boutique-style 3D cartoon render for room',
-        'A bright family-friendly 3D cartoon render for room'
+        'A bright family-friendly 3D cartoon render for room',
+        'A whimsical storybook 3D cartoon render for cabin'
     ],
     location_phrase: [
         AUTOGENERATE_LABEL,
@@ -137,7 +140,8 @@ export const ROOM_PROMPT_DROPDOWN_DEFAULTS: Record<string, string[]> = {
         "feature nook inside the whimsical frog’s cottage",
         "showcase alcove inside the whimsical frog’s cottage",
         "merchandising corner inside the whimsical frog’s cottage",
-        "themed room vignette inside the whimsical frog’s cottage"
+        "themed room vignette inside the whimsical frog’s cottage",
+        'front of the cabin with yard crafts all around'
     ],
     character_statement: [
         AUTOGENERATE_LABEL,
@@ -145,7 +149,8 @@ export const ROOM_PROMPT_DROPDOWN_DEFAULTS: Record<string, string[]> = {
         'The iconic fedora-wearing frog shopkeeper appears in scene. He is shown {{frog_action}}, welcoming guests with confidence.',
         'A charismatic frog proprietor in a signature fedora anchors the scene. He is depicted {{frog_action}}, guiding the boutique mood.',
         'The whimsical frog owner is clearly visible as the host. He is portrayed {{frog_action}}, keeping the space lively and inviting.',
-        'A polished frog merchant in a fedora is featured as proprietor. He is depicted {{frog_action}}, overseeing the display floor.'
+        'A polished frog merchant in a fedora is featured as proprietor. He is depicted {{frog_action}}, overseeing the display floor.',
+        'The husband frog is wearing a fedora and the wife is wearing a crafty looking hat.'
     ],
     aesthetic_statement: [
         AUTOGENERATE_LABEL,

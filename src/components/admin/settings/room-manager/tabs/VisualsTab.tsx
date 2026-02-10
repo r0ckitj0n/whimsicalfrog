@@ -67,6 +67,7 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
         }, {} as Record<RoomImageAestheticFieldKey, string>);
     });
     const [isGenerating, setIsGenerating] = useState(false);
+    const [generationMessage, setGenerationMessage] = useState<{ type: 'error' | 'success' | 'info'; text: string } | null>(null);
     const [settingsTemplateKey, setSettingsTemplateKey] = useState<string>('');
     const {
         templates,
@@ -132,31 +133,47 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
     }, [selectedRoomData?.render_context]);
 
     const handleGenerate = async () => {
+        setGenerationMessage(null);
         if (!roomNumber) {
-            window.WFToast?.error?.('Select a room first');
+            const message = 'Select a room first';
+            window.WFToast?.error?.(message);
+            setGenerationMessage({ type: 'error', text: message });
             return;
         }
         if (!selectedTemplateKey) {
-            window.WFToast?.error?.('Select an AI template');
+            const message = 'Select an AI template';
+            window.WFToast?.error?.(message);
+            setGenerationMessage({ type: 'error', text: message });
             return;
         }
 
-        setIsGenerating(true);
-        const result = await onGenerateBackground({
-            room_number: roomNumber,
-            template_key: selectedTemplateKey,
-            variables: resolvedVariables,
-            provider: 'openai',
-            size: imageSize,
-            background_name: roomName ? `${roomNumber} - ${roomName}` : roomNumber
-        });
-        setIsGenerating(false);
+        try {
+            setIsGenerating(true);
+            setGenerationMessage({ type: 'info', text: 'Generating room image...' });
+            const result = await onGenerateBackground({
+                room_number: roomNumber,
+                template_key: selectedTemplateKey,
+                variables: resolvedVariables,
+                provider: 'openai',
+                size: imageSize,
+                background_name: roomName ? `${roomNumber} - ${roomName}` : roomNumber
+            });
 
-        if (!result.success) {
-            window.WFToast?.error?.(result.error || 'AI image generation failed');
-            return;
+            if (!result.success) {
+                const message = result.error || 'AI image generation failed';
+                window.WFToast?.error?.(message);
+                setGenerationMessage({ type: 'error', text: message });
+                return;
+            }
+            window.WFToast?.success?.('AI room background generated and saved to library');
+            setGenerationMessage({ type: 'success', text: 'AI room background generated and saved to library.' });
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'AI image generation failed';
+            window.WFToast?.error?.(message);
+            setGenerationMessage({ type: 'error', text: message });
+        } finally {
+            setIsGenerating(false);
         }
-        window.WFToast?.success?.('AI room background generated and saved to library');
     };
 
     return (
@@ -209,9 +226,6 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                                 ))}
                             </select>
                         </div>
-                        <p className="text-[11px] text-slate-500">
-                            Aesthetic variables use the same room-image generation flow as room creation.
-                        </p>
                         <p className="text-[11px] text-slate-500">
                             Pick a preset from each dropdown, then edit the text below for this generation only.
                         </p>
@@ -280,6 +294,17 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                         >
                             {isGenerating ? 'Generating...' : 'Generate Room Image'}
                         </button>
+                        {generationMessage && (
+                            <p className={`text-[11px] ${
+                                generationMessage.type === 'error'
+                                    ? 'text-red-600'
+                                    : generationMessage.type === 'success'
+                                        ? 'text-emerald-700'
+                                        : 'text-slate-500'
+                            }`}>
+                                {generationMessage.text}
+                            </p>
+                        )}
                     </div>
                     </div>
                 </div>

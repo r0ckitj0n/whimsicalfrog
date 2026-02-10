@@ -17,6 +17,7 @@ try {
 
     // Get filter parameters
     $filter_created_at = $_GET['filter_created_at'] ?? '';
+    $filter_order_id = $_GET['filter_order_id'] ?? '';
     $filter_items = $_GET['filter_items'] ?? '';
     $filter_status = $_GET['filter_status'] ?? '';
     $filter_payment_method = $_GET['filter_payment_method'] ?? '';
@@ -30,6 +31,11 @@ try {
     if (!empty($filter_created_at)) {
         $where_conditions[] = "DATE(o.created_at) = ?";
         $params[] = $filter_created_at;
+    }
+
+    if (!empty($filter_order_id)) {
+        $where_conditions[] = "o.id LIKE ?";
+        $params[] = '%' . $filter_order_id . '%';
     }
 
     // Apply status filter only when explicitly provided
@@ -125,6 +131,7 @@ try {
         'payment_status_options' => $payment_status_options,
         'filters' => [
             'filter_created_at' => $filter_created_at,
+            'filter_order_id' => $filter_order_id,
             'filter_items' => $filter_items,
             'filter_status' => $filter_status,
             'filter_payment_method' => $filter_payment_method,

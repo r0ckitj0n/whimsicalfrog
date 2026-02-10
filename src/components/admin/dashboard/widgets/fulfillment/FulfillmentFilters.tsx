@@ -23,7 +23,18 @@ export const FulfillmentFilters: React.FC<FulfillmentFiltersProps> = ({
 }) => {
     return (
         <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <form onSubmit={onApply} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <form onSubmit={onApply} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
+                <div className="space-y-1">
+                    <label className="block text-xs font-medium text-gray-700">Order ID</label>
+                    <input
+                        type="text"
+                        name="filter_order_id"
+                        value={filters.filter_order_id || ''}
+                        onChange={onFilterChange}
+                        placeholder="e.g. 56B10U34"
+                        className="w-full text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500"
+                    />
+                </div>
                 <div className="space-y-1">
                     <label className="block text-xs font-medium text-gray-700">Date</label>
                     <input

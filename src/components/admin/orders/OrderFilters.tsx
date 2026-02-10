@@ -33,6 +33,18 @@ export const OrderFilters: React.FC<OrderFiltersProps> = ({
         <div className="admin-filter--orange bg-white p-4 border rounded-xl shadow-sm w-full">
             <div className="flex flex-wrap gap-4 items-end w-full">
                 <div className="space-y-1">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Order ID</label>
+                    <input
+                        type="text"
+                        name="filter_order_id"
+                        value={filters.filter_order_id || ''}
+                        onChange={handleChange}
+                        placeholder="e.g. 56B10U34"
+                        className="form-input text-sm py-1.5"
+                    />
+                </div>
+
+                <div className="space-y-1">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Date</label>
                     <input
                         type="date"

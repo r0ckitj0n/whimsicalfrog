@@ -320,6 +320,11 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
     const updateForm = <K extends keyof CreateRoomFormState>(key: K, value: CreateRoomFormState[K]) => {
         setForm((prev) => ({ ...prev, [key]: value }));
     };
+    const hasRequiredFields = Boolean(
+        form.room_number.trim() &&
+        form.room_name.trim() &&
+        form.door_label.trim()
+    );
 
     const renderEditableDropdown = (
         label: string,
@@ -445,31 +450,46 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                     </div>
 
                     <div className="p-5 max-h-[70vh] overflow-y-auto space-y-5">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div>
-                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Room Number</label>
-                                <input
-                                    value={form.room_number}
-                                    onChange={(e) => updateForm('room_number', e.target.value)}
-                                    className="w-full text-sm p-2.5 border border-slate-200 rounded-lg"
-                                />
+                        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-3">
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-600">Required Fields</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">
+                                        Room Number <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        value={form.room_number}
+                                        onChange={(e) => updateForm('room_number', e.target.value)}
+                                        className="w-full text-sm p-2.5 border border-slate-200 rounded-lg"
+                                        aria-required="true"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">
+                                        Room Name <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        value={form.room_name}
+                                        onChange={(e) => updateForm('room_name', e.target.value)}
+                                        className="w-full text-sm p-2.5 border border-slate-200 rounded-lg"
+                                        aria-required="true"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">
+                                        Door Label <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        value={form.door_label}
+                                        onChange={(e) => updateForm('door_label', e.target.value)}
+                                        className="w-full text-sm p-2.5 border border-slate-200 rounded-lg"
+                                        aria-required="true"
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Room Name</label>
-                                <input
-                                    value={form.room_name}
-                                    onChange={(e) => updateForm('room_name', e.target.value)}
-                                    className="w-full text-sm p-2.5 border border-slate-200 rounded-lg"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Door Label</label>
-                                <input
-                                    value={form.door_label}
-                                    onChange={(e) => updateForm('door_label', e.target.value)}
-                                    className="w-full text-sm p-2.5 border border-slate-200 rounded-lg"
-                                />
-                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Display Order</label>
                                 <input
@@ -579,8 +599,8 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                             <button
                                 type="button"
                                 onClick={() => void handleSubmit()}
-                                disabled={isSubmitting}
-                                className="btn btn-primary px-4 py-2 text-xs font-black uppercase tracking-widest"
+                                disabled={isSubmitting || !hasRequiredFields}
+                                className={`btn btn-primary px-4 py-2 text-xs font-black uppercase tracking-widest ${(isSubmitting || !hasRequiredFields) ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 {isSubmitting ? 'Working...' : form.generate_image ? 'Create Room + Generate Image' : 'Create Room'}
                             </button>

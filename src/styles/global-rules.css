@@ -92,16 +92,7 @@ body[data-page='admin/orders'] .page-content {
   input[type="button"],
   input[type="submit"],
   input[type="reset"],
-  select,
-  label[for],
-  .admin-action-btn,
-  .mobile-nav-link,
-  .logo-link,
-  .wf-notification,
-  .wf-notification-overlay,
-  .wf-modal-overlay,
-  .admin-modal-overlay,
-  .wf-revealco-overlay
+  .admin-action-btn
 ) {
   cursor: pointer;
 }

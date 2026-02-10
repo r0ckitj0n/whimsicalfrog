@@ -149,48 +149,13 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
     };
 
     return (
-        <div className="p-8 lg:p-10 overflow-y-auto flex-1">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                {/* Active Look */}
-                <div className="space-y-6">
-                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2">Active Look</h4>
-                    {backgrounds.activeBackground ? (
-                        <div className="relative group rounded-3xl overflow-hidden border-4 border-white shadow-xl bg-white">
-                            <div className="aspect-video relative overflow-hidden">
-                                <img
-                                    src={getImageUrl(backgrounds.activeBackground)}
-                                    alt="Active background"
-                                    className="w-full h-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-                                <div className="absolute bottom-4 left-4 right-4 text-white">
-                                    <p className="text-sm font-black truncate">{backgrounds.activeBackground.name}</p>
-                                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">Deployed</p>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="aspect-video rounded-3xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center text-center p-6 bg-slate-50/50 italic text-slate-400 text-xs">
-                            No active background
-                        </div>
-                    )}
-                </div>
-
-                {/* Upload */}
-                <div className="space-y-6">
-                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2">Add Variation</h4>
-                    <button
-                        type="button"
-                        onClick={() => document.getElementById('bg-upload-input')?.click()}
-                        className="w-full h-40 border-2 border-dashed border-gray-200 rounded-3xl flex flex-col items-center justify-center text-center p-8 hover:border-blue-200 hover:bg-blue-50/30 transition-all group bg-white"
-                        data-help-id="common-upload"
-                    >
-                        <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-2xl mb-3 group-hover:bg-white transition-all">📁</div>
-                        <p className="text-xs font-black text-slate-600 uppercase tracking-widest">Upload Content</p>
-                    </button>
-                    <input id="bg-upload-input" type="file" className="hidden" accept="image/*" onChange={onBackgroundUpload} />
-
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+        <div className="p-8 lg:p-10 flex-1 min-h-0 overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 h-full min-h-0">
+                {/* Create New Background */}
+                <div className="space-y-6 h-full min-h-0 flex flex-col">
+                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2">Create New Background</h4>
+                    <div className="space-y-6 overflow-y-auto pr-1 flex-1 min-h-0">
+                        <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
                         <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Generate With AI (OpenAI)</div>
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Template</label>
@@ -249,12 +214,24 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                             {isGenerating ? 'Generating...' : 'Generate Room Image'}
                         </button>
                     </div>
+                    </div>
                 </div>
 
                 {/* Library */}
-                <div className="space-y-6">
-                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2">Room Library</h4>
-                    <div className="space-y-4">
+                <div className="space-y-6 h-full min-h-0 flex flex-col">
+                    <div className="flex items-center justify-between border-b border-gray-50 pb-2">
+                        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Room Library</h4>
+                        <button
+                            type="button"
+                            onClick={() => document.getElementById('bg-upload-input')?.click()}
+                            className="admin-action-btn btn-icon--add"
+                            aria-label="Upload content"
+                            title="Upload content"
+                            data-help-id="common-upload"
+                        />
+                    </div>
+                    <input id="bg-upload-input" type="file" className="hidden" accept="image/*" onChange={onBackgroundUpload} />
+                    <div className="space-y-4 overflow-y-auto pr-1 flex-1 min-h-0">
                         {backgrounds.backgrounds.map((bg: IBackground) => {
                             const is_active = backgrounds.activeBackground?.id === bg.id;
                             return (

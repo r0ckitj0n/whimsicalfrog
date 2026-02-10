@@ -126,7 +126,8 @@ body[data-page^='admin'] .attr-modal-body {
 
 /* Override for fullscreen modals that need independent column scrolling */
 body[data-page^='admin'] .admin-modal-overlay .admin-modal.admin-modal-fullscreen {
-  height: var(--admin-modal-content-height, 95vh) !important;
+  height: auto !important;
+  max-height: var(--admin-modal-content-height, 95vh) !important;
 }
 
 body[data-page^='admin'] .admin-modal-overlay .admin-modal.admin-modal-fullscreen>.modal-body {

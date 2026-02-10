@@ -79,14 +79,19 @@ export const usePaymentModal = (isOpen: boolean, onClose: () => void) => {
                 await loadSDK();
                 // Small buffer to ensure DOM container is ready, matching POS implementation
                 await new Promise(r => setTimeout(r, 100));
-                await initializeCard('#pm-card-container', { postalCode: false });
+                const selectedAddress = addresses.find(a => String(a.id) === String(selected_address_id ?? ''));
+                const initialPostalCode = (selectedAddress?.zip_code || '').trim();
+                await initializeCard(
+                    '#pm-card-container',
+                    initialPostalCode ? { postalCode: initialPostalCode } : undefined
+                );
             };
             init();
         }
         return () => {
             if (payment_method === PAYMENT_METHOD.SQUARE) destroySquare();
         };
-    }, [isOpen, payment_method, squareEnabled, squareAppId, squareLocId, loadSDK, initializeCard, destroySquare]);
+    }, [isOpen, payment_method, squareEnabled, squareAppId, squareLocId, loadSDK, initializeCard, destroySquare, addresses, selected_address_id]);
 
     useEffect(() => {
         if (isOpen && user) {
@@ -113,7 +118,7 @@ export const usePaymentModal = (isOpen: boolean, onClose: () => void) => {
                 const square_token = await tokenize(
                     billingPostal
                         ? {
-                            billingContact: {
+                            billing: {
                                 addressLines: [selectedAddress?.address_line_1, selectedAddress?.address_line_2].filter(Boolean) as string[],
                                 city: selectedAddress?.city || '',
                                 state: selectedAddress?.state || '',

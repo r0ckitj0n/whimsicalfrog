@@ -46,7 +46,7 @@ export const useSquare = (applicationId: string | null | undefined, locationId: 
         });
     }, [environment]);
 
-    const initializeCard = useCallback(async (containerId: string, options?: { postalCode?: boolean }) => {
+    const initializeCard = useCallback(async (containerId: string, options?: { postalCode?: string }) => {
         const win = window as unknown as ISquareWindow;
         logger.info('[useSquare] initializeCard called', {
             isLoaded,
@@ -91,7 +91,7 @@ export const useSquare = (applicationId: string | null | undefined, locationId: 
     }, [applicationId, locationId]);
 
     const tokenize = useCallback(async (options?: {
-        billingContact?: {
+        billing?: {
             addressLines?: string[];
             city?: string;
             state?: string;

@@ -38,7 +38,7 @@ export type { Environment } from '../core/constants.js';
 export interface ISquareCard {
     attach: (elementId: string) => Promise<void>;
     tokenize: (options?: {
-        billingContact?: {
+        billing?: {
             addressLines?: string[];
             city?: string;
             state?: string;
@@ -50,7 +50,7 @@ export interface ISquareCard {
 }
 
 export interface ISquarePayments {
-    card: (options?: { postalCode?: boolean }) => Promise<ISquareCard>;
+    card: (options?: { postalCode?: string }) => Promise<ISquareCard>;
 }
 
 export interface ISquare {

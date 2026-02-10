@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { ApiClient } from './core/ApiClient.js';
 import { eventBus } from './core/event-bus.js';
 import logger from './core/logger.js';
+import { formatCurrency as formatBusinessCurrency, setBusinessFormatting } from './core/date-utils.js';
 
 interface IModuleDef {
     init?: () => void;
@@ -30,6 +31,23 @@ export const SiteCoreBridge = () => {
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
+        void (async () => {
+            try {
+                const res = await ApiClient.get<{ success?: boolean; settings?: Record<string, unknown> }>('/api/business_settings.php?action=get_business_info');
+                const settings = res?.settings || (res as Record<string, unknown> | undefined) || {};
+                setBusinessFormatting({
+                    timezone: (settings.business_timezone as string) || 'America/New_York',
+                    locale: (settings.business_locale as string) || 'en-US',
+                    currency: (settings.business_currency as string) || 'USD',
+                    dstEnabled: typeof settings.business_dst_enabled === 'boolean'
+                        ? settings.business_dst_enabled
+                        : String(settings.business_dst_enabled ?? 'true') !== 'false'
+                });
+            } catch (err) {
+                logger.warn('[SiteCoreBridge] Failed to load business formatting settings', err);
+            }
+        })();
+
         // Core system state
         const WF_CORE: ICoreState = {
             version: '2.1.0',
@@ -54,10 +72,7 @@ export const SiteCoreBridge = () => {
             },
 
             formatCurrency(amount: number) {
-                return new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD'
-                }).format(amount);
+                return formatBusinessCurrency(amount);
             },
 
             escapeHtml(text: string) {

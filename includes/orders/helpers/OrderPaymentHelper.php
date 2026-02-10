@@ -53,7 +53,7 @@ class OrderPaymentHelper
             'source_id' => $token,
             'amount_money' => [
                 'amount' => $amountCents,
-                'currency' => BusinessSettings::get('currency_code', 'USD')
+                'currency' => (string) BusinessSettings::get('business_currency', BusinessSettings::get('currency_code', 'USD'))
             ],
             'location_id' => $credentials['location_id'],
             'autocomplete' => true,

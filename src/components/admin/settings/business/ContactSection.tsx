@@ -3,7 +3,7 @@ import { IBusinessInfo } from '../../../../hooks/admin/useBusinessInfo.js';
 
 interface ContactSectionProps {
     info: IBusinessInfo;
-    onChange: (key: keyof IBusinessInfo, value: string) => void;
+    onChange: (key: keyof IBusinessInfo, value: string | boolean) => void;
 }
 
 export const ContactSection: React.FC<ContactSectionProps> = ({ info, onChange }) => {

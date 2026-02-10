@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ApiClient } from '../../core/ApiClient.js';
 import logger from '../../core/logger.js';
-import { setBusinessTimezone } from '../../core/date-utils.js';
+import { setBusinessTimezone, setBusinessFormatting } from '../../core/date-utils.js';
 import type { IBusinessInfo, IBusinessInfoResponse } from '../../types/settings.js';
 
 // Re-export for backward compatibility
@@ -30,6 +30,7 @@ export const useBusinessInfo = () => {
         business_support_phone: '',
         business_tax_id: '',
         business_timezone: 'America/New_York',
+        business_dst_enabled: true,
         business_currency: 'USD',
         business_locale: 'en-US',
         business_terms_url: '',
@@ -58,12 +59,24 @@ export const useBusinessInfo = () => {
             const res = await ApiClient.get<any>('/api/business_settings.php?action=get_business_info');
             if (res) {
                 const data = res.settings || res;
+                const normalizedData = {
+                    ...data,
+                    business_dst_enabled: typeof data.business_dst_enabled === 'boolean'
+                        ? data.business_dst_enabled
+                        : String(data.business_dst_enabled ?? 'true') !== 'false'
+                };
                 if (data.business_timezone) {
                     setBusinessTimezone(data.business_timezone);
                 }
+                setBusinessFormatting({
+                    timezone: normalizedData.business_timezone || defaultInfo.business_timezone,
+                    locale: normalizedData.business_locale || defaultInfo.business_locale,
+                    currency: normalizedData.business_currency || defaultInfo.business_currency,
+                    dstEnabled: normalizedData.business_dst_enabled
+                });
                 setInfo({
                     ...defaultInfo,
-                    ...data
+                    ...normalizedData
                 });
             }
         } catch (err) {
@@ -85,6 +98,12 @@ export const useBusinessInfo = () => {
 
             if (res) {
                 setInfo(newInfo);
+                setBusinessFormatting({
+                    timezone: newInfo.business_timezone,
+                    locale: newInfo.business_locale,
+                    currency: newInfo.business_currency,
+                    dstEnabled: !!newInfo.business_dst_enabled
+                });
                 return { success: true };
             }
             return { success: false, error: 'Save failed' };

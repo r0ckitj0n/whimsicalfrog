@@ -3,6 +3,7 @@ import { IOrder } from '../../../types/admin/orders.js';
 import { ORDER_STATUS } from '../../../core/constants.js';
 import { EditableSelect } from './EditableSelect.js';
 import { getStatusBadgeClass, getPaymentStatusBadgeClass, formatDate, formatDateTime } from './OrdersTableHelpers.js';
+import { formatCurrency } from '../../../core/date-utils.js';
 
 interface OrdersTableProps {
     orders: IOrder[];
@@ -180,7 +181,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                                         </td>
                                         <td className="px-4 py-3 text-right border-b-2 border-gray-300">
                                             <div className="text-sm font-black text-gray-900">
-                                                ${Number(order.total || 0).toFixed(2)}
+                                                {formatCurrency(Number(order.total || 0))}
                                             </div>
                                         </td>
                                         <td className="p-2 border-b-2 border-gray-300">

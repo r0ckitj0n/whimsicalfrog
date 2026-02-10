@@ -45,7 +45,7 @@ try {
             'discount' => (float) ($pricing['discount'] ?? 0),
             'coupon' => !empty($pricing['coupon']) ? ['code' => (string) $pricing['coupon']] : null,
             'total' => (float) ($pricing['total'] ?? 0),
-            'currency' => BusinessSettings::get('currency_code', 'USD')
+            'currency' => (string) BusinessSettings::get('business_currency', BusinessSettings::get('currency_code', 'USD'))
         ]
     ]);
 } catch (Exception $e) {

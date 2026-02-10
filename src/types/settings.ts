@@ -41,6 +41,7 @@ export interface IBusinessInfo {
     business_support_phone: string;
     business_tax_id: string;
     business_timezone: string;
+    business_dst_enabled: boolean;
     business_currency: string;
     business_locale: string;
     business_terms_url: string;
@@ -80,4 +81,20 @@ export interface IBusinessInfoResponse {
     error?: string;
 }
 
+export interface ISelectOption {
+    value: string;
+    label: string;
+}
+
+export interface IBusinessLocalizationOptions {
+    timezones: ISelectOption[];
+    currencies: ISelectOption[];
+    locales: ISelectOption[];
+}
+
+export interface IBusinessLocalizationOptionsResponse {
+    success: boolean;
+    data?: IBusinessLocalizationOptions;
+    error?: string;
+}
 

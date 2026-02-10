@@ -9,6 +9,7 @@ export interface IPricingSummary {
     tax: number;
     discount: number;
     total: number;
+    currency?: string;
 }
 
 export interface ICheckoutPayload {

@@ -1,29 +1,16 @@
 import React from 'react';
 import { IOrderHistoryItem } from '../../../../types/admin/customers.js';
+import { formatCurrency, formatDate } from '../../../../core/date-utils.js';
 
 interface CustomerOrderHistoryProps {
     orders: IOrderHistoryItem[];
 }
 
 export const CustomerOrderHistory: React.FC<CustomerOrderHistoryProps> = ({ orders }) => {
-    const formatDate = (dateStr: string) => {
-        try {
-            return new Date(dateStr).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-            });
-        } catch (e) {
-            return dateStr;
-        }
-    };
-
-    const formatCurrency = (amount: number | string) => {
+    const formatOrderDate = (dateStr: string) => formatDate(dateStr);
+    const formatOrderCurrency = (amount: number | string) => {
         const val = typeof amount === 'string' ? parseFloat(amount) : amount;
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD'
-        }).format(val || 0);
+        return formatCurrency(val || 0);
     };
 
     return (
@@ -61,11 +48,11 @@ export const CustomerOrderHistory: React.FC<CustomerOrderHistoryProps> = ({ orde
                                 <div className="grid grid-cols-2 gap-2 text-[10px]">
                                     <div className="flex flex-col">
                                         <span className="text-gray-400 font-bold uppercase">Date</span>
-                                        <span className="text-gray-700 font-medium">{formatDate(order.date || order.created_at || '')}</span>
+                                        <span className="text-gray-700 font-medium">{formatOrderDate(order.date || order.created_at || '')}</span>
                                     </div>
                                     <div className="flex flex-col">
                                         <span className="text-gray-400 font-bold uppercase">Total</span>
-                                        <span className="text-gray-700 font-bold text-xs">{formatCurrency(order.total || order.total_amount || 0)}</span>
+                                        <span className="text-gray-700 font-bold text-xs">{formatOrderCurrency(order.total || order.total_amount || 0)}</span>
                                     </div>
                                     <div className="col-span-2 flex flex-col pt-1 border-t border-gray-50 mt-1">
                                         <span className="text-gray-400 font-bold uppercase">Payment & Shipping</span>

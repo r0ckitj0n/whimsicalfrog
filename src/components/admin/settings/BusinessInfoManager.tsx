@@ -10,6 +10,7 @@ import { FooterSection } from './business/FooterSection.js';
 import { AboutSection } from './business/AboutSection.js';
 import { PoliciesSection } from './business/PoliciesSection.js';
 import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
+import { useBusinessLocalizationOptions } from '../../../hooks/admin/useBusinessLocalizationOptions.js';
 
 interface BusinessInfoManagerProps {
     onClose?: () => void;
@@ -24,6 +25,7 @@ export const BusinessInfoManager: React.FC<BusinessInfoManagerProps> = ({ onClos
         saveInfo,
         refresh
     } = useBusinessInfo();
+    const { options: localizationOptions, isLoading: areLocalizationOptionsLoading } = useBusinessLocalizationOptions();
 
     const [editInfo, setEditTokens] = useState<IBusinessInfo>(info);
     const [initialState, setInitialState] = useState<IBusinessInfo | null>(null);
@@ -52,9 +54,9 @@ export const BusinessInfoManager: React.FC<BusinessInfoManagerProps> = ({ onClos
         }
     };
 
-    const handleChange = (key: keyof IBusinessInfo, value: string) => {
+    const handleChange = (key: keyof IBusinessInfo, value: string | boolean) => {
         setHasUserEdited(true);
-        setEditTokens(prev => ({ ...prev, [key]: value }));
+        setEditTokens(prev => ({ ...prev, [key]: value } as IBusinessInfo));
     };
 
     const isDirty = React.useMemo(() => {
@@ -134,7 +136,14 @@ export const BusinessInfoManager: React.FC<BusinessInfoManagerProps> = ({ onClos
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            <LegalSection info={editInfo} onChange={handleChange} />
+                            <LegalSection
+                                info={editInfo}
+                                onChange={handleChange}
+                                timezoneOptions={localizationOptions.timezones}
+                                currencyOptions={localizationOptions.currencies}
+                                localeOptions={localizationOptions.locales}
+                                optionsLoading={areLocalizationOptionsLoading}
+                            />
                             <FooterSection info={editInfo} onChange={handleChange} />
                             <AboutSection info={editInfo} onChange={handleChange} />
                         </div>

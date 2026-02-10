@@ -7,6 +7,7 @@ require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/business_settings_helper.php';
+require_once __DIR__ . '/../includes/helpers/BusinessDateTimeHelper.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Response::methodNotAllowed('Method not allowed');
@@ -83,15 +84,8 @@ try {
 
         if ($newPS === 'paid' && $currentOrder['payment_status'] !== 'paid') {
             if (empty($input['payment_at']) || $input['payment_at'] === '—') {
-                $tz = BusinessSettings::get('business_timezone', 'America/New_York');
-                try {
-                    $dt = new DateTime('now', new DateTimeZone($tz));
-                    $input['payment_at'] = $dt->format('Y-m-d H:i:s');
-                    error_log("[OrderUpdate] Auto-setting payment_at to current timestamp ({$tz}) due to status transition to 'paid'");
-                } catch (Exception $e) {
-                    $input['payment_at'] = date('Y-m-d H:i:s');
-                    error_log("[OrderUpdate] Failed to use timezone {$tz}, falling back to system time: " . $e->getMessage());
-                }
+                $input['payment_at'] = BusinessDateTimeHelper::nowString();
+                error_log('[OrderUpdate] Auto-setting payment_at to current business timestamp due to status transition to paid');
             }
         }
     }

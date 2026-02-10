@@ -2,6 +2,7 @@
 // includes/orders/helpers/OrderActionHelper.php
 
 require_once __DIR__ . '/../../Constants.php';
+require_once __DIR__ . '/../../helpers/BusinessDateTimeHelper.php';
 
 class OrderActionHelper
 {
@@ -47,7 +48,7 @@ class OrderActionHelper
             $pricing['shipping'] ?? 0.00,
             $input['payment_method'],
             (in_array($input['payment_method'], [WF_Constants::PAYMENT_METHOD_CASH, WF_Constants::PAYMENT_METHOD_CHECK]) ? WF_Constants::ORDER_STATUS_PENDING : WF_Constants::ORDER_STATUS_PROCESSING),
-            date('Y-m-d H:i:s')
+            BusinessDateTimeHelper::nowString()
         ];
 
         if ($schemaInfo['orders.shipping_method']) {
@@ -73,7 +74,7 @@ class OrderActionHelper
 
             if ($status === WF_Constants::PAYMENT_STATUS_PAID) {
                 $cols[] = 'payment_at';
-                $vals[] = date('Y-m-d H:i:s');
+                $vals[] = BusinessDateTimeHelper::nowString();
             }
         }
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { ORDER_STATUS } from '../../../../../core/constants.js';
+import { formatCurrency, formatDate, formatTime } from '../../../../../core/date-utils.js';
 
 import { IFulfillmentOrder } from './FulfillmentTable.js';
 
@@ -94,7 +95,7 @@ export const FulfillmentRow: React.FC<FulfillmentRowProps> = ({
         if (field === 'payment_at') {
             return (
                 <div className="text-gray-600">
-                    {order.payment_at ? new Date(order.payment_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                    {order.payment_at ? formatDate(order.payment_at) : '—'}
                 </div>
             );
         }
@@ -109,10 +110,10 @@ export const FulfillmentRow: React.FC<FulfillmentRowProps> = ({
                 <div className="font-bold text-gray-900">{order.username || 'N/A'}</div>
             </td>
             <td className="p-2 text-gray-600">
-                {new Date(order.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                {formatDate(order.created_at)}
             </td>
             <td className="p-2 text-gray-600">
-                {new Date(order.created_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true })}
+                {formatTime(order.created_at)}
             </td>
             <td className="p-2 text-center">
                 <button
@@ -123,7 +124,7 @@ export const FulfillmentRow: React.FC<FulfillmentRowProps> = ({
                     {order.total_items} item{order.total_items !== 1 ? 's' : ''}
                 </button>
             </td>
-            <td className="p-2 font-semibold text-gray-900">${Number(order.total || 0).toFixed(2)}</td>
+            <td className="p-2 font-semibold text-gray-900">{formatCurrency(Number(order.total || 0))}</td>
             <td
                 className={`p-2 cursor-pointer hover:bg-blue-50/50 transition-colors ${isEditing('payment_status') ? 'bg-blue-50' : ''}`}
                 onClick={() => onCellClick(order.id, 'payment_status', order.payment_status || 'Pending')}

@@ -129,7 +129,7 @@ export const usePaymentModal = (isOpen: boolean, onClose: () => void) => {
                         customerInitiated: true,
                         sellerKeyedIn: false,
                         amount: Number(pricing.total || 0).toFixed(2),
-                        currencyCode: 'USD',
+                        currencyCode: (pricing.currency || 'USD').toUpperCase(),
                         billingContact
                     }
                 });

@@ -3,7 +3,7 @@ import { IBusinessInfo } from '../../../../hooks/admin/useBusinessInfo.js';
 
 interface FooterSectionProps {
     info: IBusinessInfo;
-    onChange: (key: keyof IBusinessInfo, value: string) => void;
+    onChange: (key: keyof IBusinessInfo, value: string | boolean) => void;
 }
 
 export const FooterSection: React.FC<FooterSectionProps> = ({ info, onChange }) => {

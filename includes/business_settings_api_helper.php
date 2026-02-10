@@ -142,6 +142,7 @@ function handle_get_business_info()
         'business_support_phone' => $get('business_support_phone'),
         'business_tax_id' => $get('business_tax_id'),
         'business_timezone' => $get('business_timezone', 'America/New_York'),
+        'business_dst_enabled' => in_array(strtolower((string) $get('business_dst_enabled', 'true')), ['1', 'true', 'yes', 'on'], true),
         'business_currency' => $get('business_currency', 'USD'),
         'business_locale' => $get('business_locale', 'en-US'),
         'business_terms_url' => $get('business_terms_url'),

@@ -42,7 +42,10 @@ export const usePayment = () => {
             // Handle both nested (res.data.pricing) and flat (res.pricing) response formats
             const pricingData = res?.data?.pricing || res?.pricing;
             if (res && res.success && pricingData) {
-                setPricing(pricingData);
+                setPricing({
+                    ...pricingData,
+                    currency: pricingData.currency || 'USD'
+                });
             }
         } catch (err) {
             logger.warn('[usePayment] Pricing update failed', err);

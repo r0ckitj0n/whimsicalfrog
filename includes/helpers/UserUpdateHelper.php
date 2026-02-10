@@ -128,6 +128,7 @@ class UserUpdateHelper
                         'last_name' => $updatedUser['last_name'] ?? null,
                         'phone_number' => $updatedUser['phone_number'] ?? null,
                         'address_line_1' => $updatedUser['address_line_1'] ?? null,
+                        'address_line_2' => $updatedUser['address_line_2'] ?? null,
                         'city' => $updatedUser['city'] ?? null,
                         'state' => $updatedUser['state'] ?? null,
                         'zip_code' => $updatedUser['zip_code'] ?? null

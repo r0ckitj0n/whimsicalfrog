@@ -113,6 +113,7 @@ try {
     $email = null;
     $phone_number = null;
     $address_line_1 = null;
+    $address_line_2 = null;
     $city = null;
     $state = null;
     $zip_code = null;
@@ -138,6 +139,7 @@ try {
         $email = $user['email'] ?? null;
         $phone_number = $user['phone_number'] ?? null;
         $address_line_1 = $user['address_line_1'] ?? null;
+        $address_line_2 = $user['address_line_2'] ?? null;
         $city = $user['city'] ?? null;
         $state = $user['state'] ?? null;
         $zip_code = $user['zip_code'] ?? null;
@@ -220,6 +222,9 @@ try {
     }
     if ($address_line_1 !== null) {
         $payload['address_line_1'] = (string) $address_line_1;
+    }
+    if ($address_line_2 !== null) {
+        $payload['address_line_2'] = (string) $address_line_2;
     }
     if ($city !== null) {
         $payload['city'] = (string) $city;

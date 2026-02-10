@@ -31,6 +31,7 @@ export const useAuth = () => {
                     last_name: res.last_name,
                     phone_number: res.phone_number,
                     address_line_1: res.address_line_1,
+                    address_line_2: res.address_line_2,
                     city: res.city,
                     state: res.state,
                     zip_code: res.zip_code,

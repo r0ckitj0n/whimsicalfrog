@@ -63,6 +63,7 @@ try {
     $email = trim((string) ($payload['email'] ?? ''));
     $phoneNumber = trim((string) ($payload['phone_number'] ?? ''));
     $addressLine1 = trim((string) ($payload['address_line_1'] ?? ''));
+    $addressLine2 = trim((string) ($payload['address_line_2'] ?? ''));
     $city = trim((string) ($payload['city'] ?? ''));
     $state = trim((string) ($payload['state'] ?? ''));
     $zipCode = trim((string) ($payload['zip_code'] ?? ''));
@@ -101,6 +102,7 @@ try {
         'email' => $email,
         'phone_number' => $phoneNumber,
         'address_line_1' => $addressLine1,
+        'address_line_2' => $addressLine2,
         'city' => $city,
         'state' => $state,
         'zip_code' => $zipCode

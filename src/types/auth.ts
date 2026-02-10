@@ -7,6 +7,7 @@ export interface IUserProfile {
     last_name?: string;
     phone_number?: string;
     address_line_1?: string;
+    address_line_2?: string;
     city?: string;
     state?: string;
     zip_code?: string;
@@ -35,6 +36,7 @@ export interface IWhoAmIResponse {
     first_name: string;
     last_name: string;
     address_line_1?: string;
+    address_line_2?: string;
     city?: string;
     state?: string;
     zip_code?: string;
@@ -78,6 +80,7 @@ export interface ICompleteProfileRequest {
     email: string;
     phone_number?: string;
     address_line_1: string;
+    address_line_2?: string;
     city: string;
     state: string;
     zip_code: string;

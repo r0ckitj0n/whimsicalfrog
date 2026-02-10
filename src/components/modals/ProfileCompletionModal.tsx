@@ -25,6 +25,7 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ 
         email: user?.email || '',
         phone_number: user?.phone_number || '',
         address_line_1: user?.address_line_1 || '',
+        address_line_2: user?.address_line_2 || '',
         city: user?.city || '',
         state: user?.state || '',
         zip_code: user?.zip_code || ''
@@ -38,6 +39,7 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ 
             email: user.email || '',
             phone_number: user.phone_number || '',
             address_line_1: user.address_line_1 || '',
+            address_line_2: user.address_line_2 || '',
             city: user.city || '',
             state: user.state || '',
             zip_code: user.zip_code || ''
@@ -175,9 +177,13 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ 
                             <label className="text-sm font-bold text-gray-700">Phone Number</label>
                             <input type="tel" name="phone_number" className="form-input" value={formData.phone_number || ''} onChange={handleChange} />
                         </div>
-                        <div className="flex flex-col md:col-span-2">
-                            <label className="text-sm font-bold text-gray-700">Address</label>
+                        <div className="flex flex-col">
+                            <label className="text-sm font-bold text-gray-700">Address 1</label>
                             <input type="text" name="address_line_1" className="form-input" value={formData.address_line_1} onChange={handleChange} required />
+                        </div>
+                        <div className="flex flex-col">
+                            <label className="text-sm font-bold text-gray-700">Address 2</label>
+                            <input type="text" name="address_line_2" className="form-input" value={formData.address_line_2 || ''} onChange={handleChange} />
                         </div>
                         <div className="flex flex-col">
                             <label className="text-sm font-bold text-gray-700">City</label>

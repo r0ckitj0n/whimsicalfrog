@@ -72,13 +72,12 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
             ) : (
                 <form onSubmit={onApplyCoupon} className="flex gap-2">
                     <div className="relative flex-1">
-                        <span className="btn-icon--tag absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true" style={{ fontSize: '14px' }} />
                         <input
                             type="text"
                             value={coupon_code}
                             onChange={e => onCouponCodeChange(e.target.value.toUpperCase())}
                             placeholder="PROMO CODE"
-                            className="w-full pl-9 py-2 text-[10px] font-black tracking-widest uppercase rounded-xl border-2 border-gray-100 focus:border-brand-primary outline-none transition-all"
+                            className="w-full pl-3 py-2 text-[10px] font-black tracking-widest uppercase rounded-xl border-2 border-gray-100 focus:border-brand-primary outline-none transition-all"
                         />
                     </div>
                     <button

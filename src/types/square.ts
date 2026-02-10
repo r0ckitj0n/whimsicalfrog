@@ -50,7 +50,7 @@ export interface ISquareCard {
 }
 
 export interface ISquarePayments {
-    card: () => Promise<ISquareCard>;
+    card: (options?: { postalCode?: boolean }) => Promise<ISquareCard>;
 }
 
 export interface ISquare {

@@ -46,7 +46,7 @@ export const useSquare = (applicationId: string | null | undefined, locationId: 
         });
     }, [environment]);
 
-    const initializeCard = useCallback(async (containerId: string) => {
+    const initializeCard = useCallback(async (containerId: string, options?: { postalCode?: boolean }) => {
         const win = window as unknown as ISquareWindow;
         logger.info('[useSquare] initializeCard called', {
             isLoaded,
@@ -70,7 +70,7 @@ export const useSquare = (applicationId: string | null | undefined, locationId: 
             }
 
             const payments = win.Square.payments(applicationId, locationId);
-            const cardInstance = await payments.card();
+            const cardInstance = await payments.card(options);
 
             // Clear the container (removes 'Loading...' placeholder)
             const container = document.querySelector(containerId);

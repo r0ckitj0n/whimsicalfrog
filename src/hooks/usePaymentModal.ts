@@ -79,7 +79,7 @@ export const usePaymentModal = (isOpen: boolean, onClose: () => void) => {
                 await loadSDK();
                 // Small buffer to ensure DOM container is ready, matching POS implementation
                 await new Promise(r => setTimeout(r, 100));
-                await initializeCard('#pm-card-container');
+                await initializeCard('#pm-card-container', { postalCode: false });
             };
             init();
         }

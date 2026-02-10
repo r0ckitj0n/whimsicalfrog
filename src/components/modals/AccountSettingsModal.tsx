@@ -66,7 +66,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
                 backdropFilter: 'blur(8px)',
                 width: '100vw',
                 height: '100vh',
-                padding: '2.5vh 2.5vw',
+                padding: '1.5vh 1.5vw',
                 boxSizing: 'border-box'
             }}
             onClick={(e) => e.target === e.currentTarget && void attemptClose()}
@@ -74,7 +74,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
             <div
                 className="wf-modal-card my-auto animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 overflow-hidden flex flex-col"
                 style={{
-                    maxWidth: '1500px',
+                    maxWidth: '1800px',
                     width: '100%',
                     maxHeight: '100%',
                     backgroundColor: 'white',
@@ -131,8 +131,8 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 xl:p-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                <div className="flex-1 overflow-y-auto p-4 lg:p-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
                         <ProfileForm
                             formData={formData}
                             handleInputChange={handleInputChange}

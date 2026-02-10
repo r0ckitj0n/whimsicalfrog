@@ -70,8 +70,8 @@ export const AdminDashboard: React.FC = () => {
             'recent_orders': 'card-theme-purple',
             'low_stock': 'card-theme-red',
             'inventory_summary': 'card-theme-emerald',
-            'customer_summary': 'card-theme-cyan',
-            'marketing_tools': 'card-theme-amber',
+            'customer_summary': 'card-theme-emerald',
+            'marketing_tools': 'card-theme-orange',
             'order_fulfillment': 'card-theme-blue',
             'reports_summary': 'card-theme-purple',
         };

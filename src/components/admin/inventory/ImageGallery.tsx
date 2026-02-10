@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useInventoryImages } from '../../../hooks/admin/useInventoryImages.js';
 import { IItemImage } from '../../../types/index.js';
+import { useModalContext } from '../../../context/ModalContext.js';
+import { ApiClient } from '../../../core/ApiClient.js';
 
 interface ImageGalleryProps {
     sku: string;
@@ -17,9 +19,11 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
     onImagesChanged,
     variant = 'full'
 }) => {
-    const { images, isLoading, uploadProgress, error, deleteImage, setPrimaryImage, uploadImages } = useInventoryImages(sku);
+    const { images, isLoading, uploadProgress, error, deleteImage, setPrimaryImage, uploadImages, fetchImages } = useInventoryImages(sku);
+    const { confirm: confirmModal } = useModalContext();
     const [isViewerOpen, setIsViewerOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState<IItemImage | null>(null);
+    const [isProcessingAll, setIsProcessingAll] = useState(false);
 
     useEffect(() => {
         onImagesChanged?.(images);
@@ -39,6 +43,63 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
     const closeViewer = () => {
         setIsViewerOpen(false);
         setSelectedImage(null);
+    };
+
+    const handleProcessExistingImagesWithAI = async () => {
+        if (!sku || images.length === 0 || isProcessingAll) return;
+
+        const confirmed = await confirmModal({
+            title: 'AI Crop/Compress All Images?',
+            message: `Run AI crop/compress for all ${images.length} image${images.length === 1 ? '' : 's'} on ${sku}?`,
+            subtitle: 'This updates existing image files to optimized crop/compression outputs.',
+            confirmText: 'Process Images',
+            cancelText: 'Cancel',
+            confirmStyle: 'warning',
+            iconKey: 'warning'
+        });
+
+        if (!confirmed) return;
+
+        setIsProcessingAll(true);
+        try {
+            const response = await ApiClient.get<{
+                success?: boolean;
+                processed?: number;
+                skipped?: number;
+                errors?: string[];
+                error?: string;
+            }>('/api/run_image_analysis.php', { sku, force: 1 });
+
+            if (!response?.success) {
+                throw new Error(response?.error || 'AI image processing failed');
+            }
+
+            await fetchImages();
+            const processed = response.processed ?? 0;
+            const skipped = response.skipped ?? 0;
+            const errorCount = Array.isArray(response.errors) ? response.errors.length : 0;
+            window.WFToast?.success?.(`AI crop/compress complete: ${processed} processed, ${skipped} skipped, ${errorCount} errors.`);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Failed to process images';
+            window.WFToast?.error?.(message);
+        } finally {
+            setIsProcessingAll(false);
+        }
+    };
+
+    const handleDeleteImage = async (imageId: number) => {
+        const confirmed = await confirmModal({
+            title: 'Delete This Image?',
+            message: 'This will permanently remove the image from this item.',
+            subtitle: 'This action cannot be undone.',
+            confirmText: 'Delete Image',
+            cancelText: 'Cancel',
+            confirmStyle: 'danger',
+            iconKey: 'warning'
+        });
+
+        if (!confirmed) return;
+        await deleteImage(imageId);
     };
 
     if (!sku) return null;
@@ -96,9 +157,10 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
                             <button
                                 type="button"
                                 className="btn btn-secondary px-3 py-1 bg-transparent border-0 text-amber-700 hover:bg-amber-100 transition-all text-xs font-bold uppercase tracking-wider"
-                                onClick={() => {/* TODO: Wire processExistingImagesWithAI */ }}
+                                onClick={() => { void handleProcessExistingImagesWithAI(); }}
+                                disabled={isProcessingAll || isLoading || images.length === 0}
                             >
-                                AI Crop/Compress All
+                                {isProcessingAll ? 'Processing...' : 'AI Crop/Compress All'}
                             </button>
                         )}
                     </div>
@@ -142,7 +204,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
                                         )}
                                         <button
                                             type="button"
-                                            onClick={() => deleteImage(image.id)}
+                                            onClick={() => { void handleDeleteImage(image.id); }}
                                             className="admin-action-btn btn-icon--delete"
                                             data-help-id="inventory-image-delete"
                                         />

@@ -48,6 +48,8 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
     const [cachedPriceSuggestion, setCachedPriceSuggestion] = useState<PriceSuggestion | null>(null);
     const [hasGeneratedCostAnalysis, setHasGeneratedCostAnalysis] = useState(false);
     const [hasGeneratedPriceAnalysis, setHasGeneratedPriceAnalysis] = useState(false);
+    const [resolvedPrimaryImageUrl, setResolvedPrimaryImageUrl] = useState<string>('');
+    const [resolvedImageUrls, setResolvedImageUrls] = useState<string[]>([]);
 
     // Track if form has been modified (determines Save button visibility)
     const [isDirty, setIsDirty] = useState(false);
@@ -98,7 +100,62 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
         setCachedPriceSuggestion(null);
         setHasGeneratedCostAnalysis(false);
         setHasGeneratedPriceAnalysis(false);
+        setResolvedPrimaryImageUrl('');
+        setResolvedImageUrls([]);
     }, [selectedSku, currentItem]);
+
+    useEffect(() => {
+        let isCancelled = false;
+
+        const normalizePath = (path: string): string => {
+            const trimmed = String(path || '').trim();
+            if (!trimmed) return '';
+            if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed;
+            return `/${trimmed.replace(/^\/+/, '')}`;
+        };
+
+        const loadImages = async () => {
+            if (!selectedSku) {
+                if (!isCancelled) {
+                    setResolvedPrimaryImageUrl('');
+                    setResolvedImageUrls([]);
+                }
+                return;
+            }
+
+            const fallback = `/images/items/${selectedSku}A.webp`;
+            try {
+                const res = await ApiClient.get<{
+                    success?: boolean;
+                    images?: Array<{ image_path?: string; is_primary?: boolean }>;
+                }>('/api/get_item_images.php', { sku: selectedSku });
+
+                const images = Array.isArray(res?.images) ? res.images : [];
+                const normalized = images
+                    .map((img) => normalizePath(String(img?.image_path || '')))
+                    .filter(Boolean);
+                const deduped = Array.from(new Set(normalized));
+                const primary = normalizePath(
+                    String(images.find((img) => Boolean(img?.is_primary))?.image_path || deduped[0] || fallback)
+                );
+
+                if (!isCancelled) {
+                    setResolvedImageUrls(deduped);
+                    setResolvedPrimaryImageUrl(primary || fallback);
+                }
+            } catch (_err) {
+                if (!isCancelled) {
+                    setResolvedPrimaryImageUrl(fallback);
+                    setResolvedImageUrls([fallback]);
+                }
+            }
+        };
+
+        void loadImages();
+        return () => {
+            isCancelled = true;
+        };
+    }, [selectedSku]);
 
     useEffect(() => {
         if (marketing) {
@@ -166,8 +223,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
     const handleGenerate = async () => {
         if (!currentItem) return;
 
-        // Build primary image URL from the item's SKU
-        const primaryImageUrl = `/images/items/${currentItem.sku}A.webp`;
+        const primaryImageUrl = resolvedPrimaryImageUrl || `/images/items/${currentItem.sku}A.webp`;
 
         // Use the orchestrator which shows toast notifications for each step
         const generationLockedWords = lockedWords;
@@ -175,6 +231,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
         const result = await orchestrateFullGeneration({
             sku: currentItem.sku,
             primaryImageUrl,
+            imageUrls: resolvedImageUrls,
             initialName: currentItem.name,
             initialDescription: currentItem.description || '',
             initialCategory: currentItem.category || '',
@@ -322,13 +379,14 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
     const handleGenerateItemInfo = async () => {
         if (!currentItem) return;
 
-        const primaryImageUrl = `/images/items/${currentItem.sku}A.webp`;
+        const primaryImageUrl = resolvedPrimaryImageUrl || `/images/items/${currentItem.sku}A.webp`;
         const infoLockedWords = lockedWords;
         if (window.WFToast) window.WFToast.info('Generating AI item information...');
         try {
             const infoResult = await generateInfoOnly({
                 sku: currentItem.sku,
                 primaryImageUrl,
+                imageUrls: resolvedImageUrls,
                 previousName: localFormData.name || currentItem.name || '',
                 lockedFields,
                 lockedWords: infoLockedWords,
@@ -618,7 +676,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
                                     {currentItem ? (
                                         <div className="px-4 py-3 border-b border-slate-200 bg-slate-50/50">
                                             <img
-                                                src={`/images/items/${currentItem.sku}A.webp`}
+                                                src={resolvedPrimaryImageUrl || `/images/items/${currentItem.sku}A.webp`}
                                                 alt={`${currentItem.name} primary`}
                                                 className="w-full h-40 object-cover rounded-xl border border-slate-200 shadow-sm"
                                                 onError={(event) => {
@@ -695,6 +753,8 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
                                                 setCachedCostSuggestion(suggestion);
                                             }}
                                             showStoredMetadata={false}
+                                            primaryImageUrl={resolvedPrimaryImageUrl || (selectedSku ? `/images/items/${selectedSku}A.webp` : undefined)}
+                                            imageUrls={resolvedImageUrls}
                                         />
                                         <div className="bg-white rounded-xl border border-amber-200 overflow-hidden shadow-sm">
                                             <div className="px-3 py-2 bg-amber-50/80 border-b border-amber-200">
@@ -754,6 +814,8 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
                                                 setHasGeneratedPriceAnalysis(true);
                                                 setCachedPriceSuggestion(suggestion);
                                             }}
+                                            primaryImageUrl={resolvedPrimaryImageUrl || (selectedSku ? `/images/items/${selectedSku}A.webp` : undefined)}
+                                            imageUrls={resolvedImageUrls}
                                         />
                                         <div className="bg-white rounded-xl border border-emerald-200 overflow-hidden shadow-sm">
                                             <div className="px-3 py-2 bg-emerald-50/80 border-b border-emerald-200">

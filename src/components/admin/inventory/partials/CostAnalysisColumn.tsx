@@ -25,6 +25,8 @@ interface CostAnalysisColumnProps {
     onToggleFieldLock?: (field: string) => void;
     cachedSuggestion?: CostSuggestion | null;
     onSuggestionUpdated?: (suggestion: CostSuggestion) => void;
+    primaryImageUrl?: string;
+    imageUrls?: string[];
 }
 
 export const CostAnalysisColumn: React.FC<CostAnalysisColumnProps> = ({
@@ -40,7 +42,9 @@ export const CostAnalysisColumn: React.FC<CostAnalysisColumnProps> = ({
     lockedFields = {},
     onToggleFieldLock,
     cachedSuggestion = null,
-    onSuggestionUpdated
+    onSuggestionUpdated,
+    primaryImageUrl,
+    imageUrls = []
 }) => {
     return (
         <div className="bg-gradient-to-br from-amber-50 via-orange-50/70 to-white rounded-2xl p-5 border border-amber-200 shadow-sm">
@@ -69,6 +73,8 @@ export const CostAnalysisColumn: React.FC<CostAnalysisColumnProps> = ({
                     onTierChange={onTierChange}
                     cachedSuggestion={cachedSuggestion}
                     onSuggestionUpdated={onSuggestionUpdated}
+                    primaryImageUrl={primaryImageUrl}
+                    imageUrls={imageUrls}
                 />
             </div>
 

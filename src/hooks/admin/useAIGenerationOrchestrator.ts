@@ -218,6 +218,42 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
         imageUrls: string[] = [],
         lockedWords?: Record<string, string>
     ): Promise<GenerationStepResult> => {
+        const normalizeImageUrl = (url: string): string => {
+            const trimmed = String(url || '').trim();
+            if (!trimmed) return '';
+            if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed;
+            return `/${trimmed.replace(/^\/+/, '')}`;
+        };
+
+        const isPngImage = (url: string): boolean => {
+            const normalized = String(url || '').toLowerCase();
+            if (normalized.startsWith('data:image/png')) return true;
+            return /\.png(?:$|[?#])/.test(normalized);
+        };
+
+        const isWebpImage = (url: string): boolean => {
+            const normalized = String(url || '').toLowerCase();
+            if (normalized.startsWith('data:image/webp')) return true;
+            return /\.webp(?:$|[?#])/.test(normalized);
+        };
+
+        const isJpegImage = (url: string): boolean => {
+            const normalized = String(url || '').toLowerCase();
+            if (normalized.startsWith('data:image/jpeg') || normalized.startsWith('data:image/jpg')) return true;
+            return /\.jpe?g(?:$|[?#])/.test(normalized);
+        };
+
+        const prioritizeImages = (urls: string[]): string[] => {
+            const unique = Array.from(new Set(urls.filter(Boolean)));
+            const rank = (url: string): number => {
+                if (isPngImage(url)) return 0;
+                if (isWebpImage(url)) return 1;
+                if (isJpegImage(url)) return 2;
+                return 3;
+            };
+            return unique.sort((a, b) => rank(a) - rank(b));
+        };
+
         const mapInfoResponse = (response: {
             success: boolean;
             info_suggestion?: {
@@ -256,11 +292,42 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
 
         try {
             const normalizedImageUrls = imageUrls
-                .map((url) => (typeof url === 'string' ? url.trim() : ''))
+                .map((url) => normalizeImageUrl(typeof url === 'string' ? url : ''))
                 .filter((url) => url.length > 0);
-            const imagePayload: string | string[] = normalizedImageUrls.length > 0
-                ? normalizedImageUrls
-                : primaryImageUrl;
+
+            const dedupedImages = Array.from(new Set([
+                ...normalizedImageUrls,
+                normalizeImageUrl(primaryImageUrl)
+            ].filter(Boolean)));
+
+            let candidateImages = prioritizeImages(dedupedImages);
+            if (candidateImages.length === 0 && sku) {
+                try {
+                    const imageRes = await ApiClient.get<{
+                        success?: boolean;
+                        images?: Array<{ image_path?: string; is_primary?: boolean }>;
+                    }>('/api/get_item_images.php', { sku });
+                    const dbImages = Array.isArray(imageRes?.images) ? imageRes.images : [];
+                    const dbCandidates = dbImages
+                        .sort((a, b) => Number(Boolean(b?.is_primary)) - Number(Boolean(a?.is_primary)))
+                        .map((img) => normalizeImageUrl(String(img?.image_path || '')))
+                        .filter((url) => url.length > 0);
+                    candidateImages = prioritizeImages([...candidateImages, ...dbCandidates]);
+                } catch (_err) {
+                    // Non-fatal: proceed with currently known images.
+                }
+            }
+
+            if (candidateImages.length === 0) {
+                return {
+                    success: false,
+                    stepName: 'info',
+                    data: {},
+                    error: 'No usable item image found. Tried PNG, WebP, and JPEG/JPG. Upload an item image and try again.'
+                };
+            }
+
+            const imagePayload: string | string[] = candidateImages.length > 1 ? candidateImages : candidateImages[0];
 
             console.log('[AI Orchestrator] executeInfoStep called with:', {
                 sku,
@@ -295,34 +362,6 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
             const firstPass = mapInfoResponse(response);
             if (firstPass.success) {
                 return firstPass;
-            }
-
-            const shouldFallbackToTextOnly = (firstPass.error || '').toLowerCase().includes('vision-capable model');
-            if (shouldFallbackToTextOnly) {
-                const fallback = await ApiClient.post<{
-                    success: boolean;
-                    info_suggestion?: {
-                        name?: string;
-                        description?: string;
-                        category?: string;
-                        weight_oz?: number | string;
-                        package_length_in?: number | string;
-                        package_width_in?: number | string;
-                        package_height_in?: number | string;
-                    };
-                    error?: string;
-                }>('/api/suggest_all.php', {
-                    sku,
-                    useImages: false,
-                    step: 'info',
-                    locked_words: lockedWords || {},
-                    image_first_priority: false
-                });
-                const fallbackResult = mapInfoResponse(fallback);
-                if (fallbackResult.success) {
-                    window.WFToast?.info?.('Vision model unavailable; generated item info using text-only fallback.');
-                    return fallbackResult;
-                }
             }
 
             return firstPass;
@@ -645,13 +684,13 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
         setIsGenerating(true);
         setProgress(0);
 
-        const context: GenerationContext = {
-            sku,
-            primaryImageUrl,
-            imageUrls,
-            name: '',
-            description: '',
-            category: '',
+            const context: GenerationContext = {
+                sku,
+                primaryImageUrl,
+                imageUrls,
+                name: params.initialName || '',
+                description: params.initialDescription || '',
+                category: params.initialCategory || '',
             tier,
             weightOz: null,
             packageLengthIn: null,
@@ -702,14 +741,11 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                 toastSuccess('✅ Generated title, description, and category');
                 onStepComplete?.('info', { ...context }, []);
             } else {
-                // If info generation fails but we have initial values, continue
-                if (!context.name) {
-                    toastError(infoResult.error || 'Image analysis failed. Switch to a vision-capable model in AI Settings and run Test Provider.');
-                    setIsGenerating(false);
-                    setCurrentStep(null);
-                    return null;
-                }
-                window.WFToast?.info?.('Using existing item info, continuing...');
+                const errorMessage = infoResult.error || 'Image analysis failed. Switch to a vision-capable model in AI Settings and run Test Provider.';
+                toastError(errorMessage);
+                setIsGenerating(false);
+                setCurrentStep(null);
+                return null;
             }
 
             // Step 2: Generate Cost Breakdown using title, description, category

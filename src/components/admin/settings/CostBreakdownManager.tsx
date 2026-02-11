@@ -11,6 +11,7 @@ import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesClo
 import { IItemDetailsResponse } from '../../../types/inventory.js';
 import { QualityTierControl } from '../inventory/QualityTierControl.js';
 import { generateCostSuggestion } from '../../../hooks/admin/inventory-ai/generateCostSuggestion.js';
+import { useAIGenerationOrchestrator } from '../../../hooks/admin/useAIGenerationOrchestrator.js';
 
 interface CostBreakdownManagerProps {
     sku?: string;
@@ -45,6 +46,7 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
 
     const { items, isLoadingItems } = useAIContentGenerator();
     const { fetch_cost_suggestion } = useInventoryAI();
+    const { generateInfoOnly } = useAIGenerationOrchestrator();
     const [activeCategory, setActiveCategory] = useState<CostCategory>(COST_CATEGORY.MATERIALS);
 
     useEffect(() => {
@@ -117,8 +119,10 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
                 category: currentItem.category || '',
                 tier: costTier,
                 showApplyingToast: true,
+                primaryImageUrl: `/images/items/${currentItem.sku}A.webp`,
                 imageData: `/images/items/${currentItem.sku}A.webp`,
                 fetchCostSuggestion: fetch_cost_suggestion,
+                generateInfoOnly,
                 onSuggestionGenerated: (suggestion) => {
                     applySuggestionLocally(suggestion);
                     setHasUserChanges(true);

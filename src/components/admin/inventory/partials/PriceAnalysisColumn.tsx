@@ -26,6 +26,8 @@ interface PriceAnalysisColumnProps {
     onToggleFieldLock?: (field: string) => void;
     cachedSuggestion?: PriceSuggestion | null;
     onSuggestionUpdated?: (suggestion: PriceSuggestion) => void;
+    primaryImageUrl?: string;
+    imageUrls?: string[];
 }
 
 export const PriceAnalysisColumn: React.FC<PriceAnalysisColumnProps> = ({
@@ -41,7 +43,9 @@ export const PriceAnalysisColumn: React.FC<PriceAnalysisColumnProps> = ({
     lockedFields = {},
     onToggleFieldLock,
     cachedSuggestion = null,
-    onSuggestionUpdated
+    onSuggestionUpdated,
+    primaryImageUrl,
+    imageUrls = []
 }) => {
     return (
         <div className="bg-gradient-to-br from-emerald-50 via-green-50/70 to-white rounded-2xl p-5 border border-emerald-200 shadow-sm">
@@ -71,6 +75,8 @@ export const PriceAnalysisColumn: React.FC<PriceAnalysisColumnProps> = ({
                     onTierChange={onTierChange}
                     cachedSuggestion={cachedSuggestion}
                     onSuggestionUpdated={onSuggestionUpdated}
+                    primaryImageUrl={primaryImageUrl}
+                    imageUrls={imageUrls}
                 />
             </div>
 

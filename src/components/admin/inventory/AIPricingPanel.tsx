@@ -6,6 +6,8 @@ import { getPriceTierMultiplier } from '../../../hooks/admin/inventory-ai/usePri
 import { toastSuccess, toastError } from '../../../core/toast.js';
 import { formatTime } from '../../../core/date-utils.js';
 import { QualityTierControl } from './QualityTierControl.js';
+import { generatePriceSuggestion } from '../../../hooks/admin/inventory-ai/generateCostSuggestion.js';
+import { useAIGenerationOrchestrator } from '../../../hooks/admin/useAIGenerationOrchestrator.js';
 
 interface AIPricingPanelProps {
     sku: string;
@@ -21,6 +23,8 @@ interface AIPricingPanelProps {
     /** Optional cached suggestion to use instead of hook state (for orchestrated generation) */
     cachedSuggestion?: PriceSuggestion | null;
     onSuggestionUpdated?: (suggestion: PriceSuggestion) => void;
+    primaryImageUrl?: string;
+    imageUrls?: string[];
 }
 
 export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
@@ -35,7 +39,9 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
     tier,
     onTierChange,
     cachedSuggestion: propCachedSuggestion,
-    onSuggestionUpdated
+    onSuggestionUpdated,
+    primaryImageUrl,
+    imageUrls = []
 }) => {
     const {
         is_busy,
@@ -49,33 +55,36 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
     const cached_price_suggestion = propCachedSuggestion ?? hookCachedSuggestion;
 
     const { populateFromSuggestion, confidence: savedConfidence, appliedAt: savedAt, fetchBreakdown } = usePriceBreakdown(sku);
+    const { generateInfoOnly } = useAIGenerationOrchestrator();
 
     const [isApplying, setIsApplying] = React.useState(false);
 
+    const runImageFirstSuggestion = async (targetTier: string) => {
+        const suggestion = await generatePriceSuggestion({
+            sku,
+            name,
+            description,
+            category,
+            costPrice: cost_price,
+            tier: targetTier,
+            isReadOnly,
+            primaryImageUrl,
+            imageUrls,
+            imageData: primaryImageUrl,
+            fetchPriceSuggestion: fetch_price_suggestion,
+            generateInfoOnly,
+            onSuggestionGenerated: (nextSuggestion) => {
+                setCachedPriceSuggestion(nextSuggestion);
+                onSuggestionUpdated?.(nextSuggestion);
+                if (!isReadOnly && onApplyPrice) onApplyPrice(nextSuggestion.suggested_price);
+            },
+            onApplied
+        });
+        return suggestion;
+    };
+
     const handleSuggest = async () => {
-        if (window.WFToast) window.WFToast.info('Generating AI price suggestion...');
-        try {
-            const suggestion = await fetch_price_suggestion({
-                sku,
-                name,
-                description,
-                category,
-                cost_price,
-                tier
-            });
-            if (suggestion && onSuggestionUpdated) {
-                onSuggestionUpdated(suggestion);
-            }
-            if (suggestion && !isReadOnly) {
-                // Mark as dirty so save button appears
-                if (onApplied) onApplied();
-                if (toastSuccess) toastSuccess('Price suggestion generated');
-            } else if (!suggestion && toastError) {
-                toastError('Failed to generate price suggestion');
-            }
-        } catch (_err) {
-            if (toastError) toastError('Failed to generate price suggestion');
-        }
+        await runImageFirstSuggestion(tier);
     };
 
     const handleTierChange = (newTier: string) => {
@@ -144,21 +153,11 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
                     return;
                 }
 
-                const suggestion = await fetch_price_suggestion({
-                    sku,
-                    name,
-                    description,
-                    category,
-                    cost_price,
-                    tier: newTier
-                });
+                const suggestion = await runImageFirstSuggestion(newTier);
                 if (!suggestion) {
                     if (toastError) toastError('Failed to recalculate suggested price');
                     return;
                 }
-                setCachedPriceSuggestion(suggestion);
-                if (onSuggestionUpdated) onSuggestionUpdated(suggestion);
-                if (!isReadOnly && onApplyPrice) onApplyPrice(suggestion.suggested_price);
                 if (toastSuccess) toastSuccess('Suggested price updated');
             } catch (_err) {
                 if (toastError) toastError('Failed to recalculate suggested price');

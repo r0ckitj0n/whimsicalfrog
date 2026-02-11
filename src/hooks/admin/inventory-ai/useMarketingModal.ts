@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useMarketingManager, MarketingData } from './useMarketingManager.js';
+import { useAIGenerationOrchestrator } from '../useAIGenerationOrchestrator.js';
+import { generateMarketingSuggestion } from './generateCostSuggestion.js';
 
 interface UseMarketingModalParams {
     sku: string;
@@ -27,6 +29,7 @@ export const useMarketingModal = ({
         generateMarketing,
         setMarketingData
     } = useMarketingManager();
+    const { generateInfoOnly } = useAIGenerationOrchestrator();
 
     // Local editable state
     const [editedTitle, setEditedTitle] = useState('');
@@ -66,13 +69,20 @@ export const useMarketingModal = ({
 
     const handleGenerateAll = useCallback(async () => {
         setApplyStatus({ message: 'Generating AI content... This may take 10-30 seconds.', success: true });
-
-        const result = await generateMarketing({
+        const result = await generateMarketingSuggestion({
             sku,
             name: itemName,
             description: itemDescription,
             category,
-            freshStart: true
+            generateInfoOnly,
+            fetchMarketingSuggestion: async ({ sku: nextSku, name: nextName, description: nextDescription, category: nextCategory }) =>
+                generateMarketing({
+                    sku: nextSku,
+                    name: nextName,
+                    description: nextDescription,
+                    category: nextCategory,
+                    freshStart: true
+                })
         });
 
         if (result) {
@@ -83,7 +93,7 @@ export const useMarketingModal = ({
             setApplyStatus({ message: 'Failed to generate content. Check console for details.', success: false });
             setTimeout(() => setApplyStatus(null), 5000);
         }
-    }, [sku, itemName, itemDescription, category, generateMarketing]);
+    }, [sku, itemName, itemDescription, category, generateMarketing, generateInfoOnly]);
 
     const handleRefreshFromDb = useCallback(async () => {
         setApplyStatus({ message: 'Refreshing saved marketing data...', success: true });

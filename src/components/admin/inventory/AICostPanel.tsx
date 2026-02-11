@@ -4,6 +4,7 @@ import { useCostBreakdown } from '../../../hooks/admin/useCostBreakdown.js';
 import { getPriceTierMultiplier } from '../../../hooks/admin/inventory-ai/usePriceSuggestions.js';
 import { toastSuccess, toastError } from '../../../core/toast.js';
 import { generateCostSuggestion } from '../../../hooks/admin/inventory-ai/generateCostSuggestion.js';
+import { useAIGenerationOrchestrator } from '../../../hooks/admin/useAIGenerationOrchestrator.js';
 import { formatTime } from '../../../core/date-utils.js';
 import { QualityTierControl } from './QualityTierControl.js';
 
@@ -23,6 +24,8 @@ interface AICostPanelProps {
     cachedSuggestion?: CostSuggestion | null;
     onSuggestionUpdated?: (suggestion: CostSuggestion) => void;
     showStoredMetadata?: boolean;
+    primaryImageUrl?: string;
+    imageUrls?: string[];
 }
 
 export const AICostPanel: React.FC<AICostPanelProps> = ({
@@ -37,7 +40,9 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
     onTierChange,
     cachedSuggestion: propCachedSuggestion,
     onSuggestionUpdated,
-    showStoredMetadata = true
+    showStoredMetadata = true,
+    primaryImageUrl,
+    imageUrls = []
 }) => {
     const {
         is_busy,
@@ -49,23 +54,34 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
     // Prefer prop over hook state - allows parent to pass in orchestrated suggestions
     const cached_cost_suggestion = propCachedSuggestion ?? hookCachedSuggestion;
     const { populateFromSuggestion, confidence: savedConfidence, appliedAt: savedAt, fetchBreakdown } = useCostBreakdown(sku);
+    const { generateInfoOnly } = useAIGenerationOrchestrator();
     const [isApplying, setIsApplying] = React.useState(false);
 
-    const handleSuggest = async () => {
-        await generateCostSuggestion({
+    const runImageFirstSuggestion = async (targetTier: string) => {
+        const suggestion = await generateCostSuggestion({
             sku,
             name,
             description,
             category,
-            tier,
+            tier: targetTier,
             isReadOnly,
-            imageData: `/images/items/${sku}A.webp`,
+            primaryImageUrl,
+            imageUrls,
+            imageData: primaryImageUrl,
             fetchCostSuggestion: fetch_cost_suggestion,
-            onSuggestionGenerated: (suggestion) => {
-                onSuggestionUpdated?.(suggestion);
+            generateInfoOnly,
+            onSuggestionGenerated: (nextSuggestion) => {
+                setCachedCostSuggestion(nextSuggestion);
+                onSuggestionUpdated?.(nextSuggestion);
+                if (!isReadOnly && onApplyCost) onApplyCost(nextSuggestion.suggested_cost);
             },
             onApplied
         });
+        return suggestion;
+    };
+
+    const handleSuggest = async () => {
+        await runImageFirstSuggestion(tier);
     };
 
     const handleTierChange = (newTier: string) => {
@@ -124,20 +140,11 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
                     return;
                 }
 
-                const suggestion = await fetch_cost_suggestion({
-                    sku,
-                    name,
-                    description,
-                    category,
-                    tier: newTier
-                });
+                const suggestion = await runImageFirstSuggestion(newTier);
                 if (!suggestion) {
                     if (toastError) toastError('Failed to recalculate suggested cost');
                     return;
                 }
-                setCachedCostSuggestion(suggestion);
-                if (onSuggestionUpdated) onSuggestionUpdated(suggestion);
-                if (!isReadOnly && onApplyCost) onApplyCost(suggestion.suggested_cost);
                 if (toastSuccess) toastSuccess('Suggested cost updated');
             } catch (_err) {
                 if (toastError) toastError('Failed to recalculate suggested cost');

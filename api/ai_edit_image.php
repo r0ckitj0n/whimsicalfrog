@@ -13,11 +13,6 @@ require_once __DIR__ . '/../includes/backgrounds/manager.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-function wf_is_gpt_image_model(string $model): bool
-{
-    return str_starts_with($model, 'gpt-image-');
-}
-
 function wf_openai_images_edits_request(string $apiKey, array $postFields): array
 {
     $ch = curl_init('https://api.openai.com/v1/images/edits');
@@ -56,58 +51,24 @@ function wf_openai_edit_image(
     string $apiKey,
     string $model,
     string $prompt,
-    string $sourceImageAbs,
-    string $targetType = 'item'
+    string $sourceImageAbs
 ): array
 {
     $file = new CURLFile($sourceImageAbs, mime_content_type($sourceImageAbs) ?: 'image/png', basename($sourceImageAbs));
-    $isGptImage = wf_is_gpt_image_model($model);
     $postFields = [
         'model' => $model,
         'prompt' => $prompt,
         'n' => '1',
         'image' => $file
     ];
-    if (!$isGptImage) {
-        // DALL-E models support response_format; GPT Image models always return base64.
+    if (!str_starts_with($model, 'gpt-image-')) {
+        // Legacy DALL-E edits expect this field; GPT image models ignore it.
         $postFields['response_format'] = 'b64_json';
-    } else {
-        // Improve edit fidelity/clarity for GPT image edits.
-        $postFields['quality'] = 'high';
-        // Preserve source composition/aspect by not forcing background dimensions.
-        $postFields['size'] = 'auto';
-        $postFields['output_format'] = 'png';
-        if ($model === 'gpt-image-1') {
-            $postFields['input_fidelity'] = 'high';
-        }
     }
 
     $result = wf_openai_images_edits_request($apiKey, $postFields);
     $status = (int) ($result['status'] ?? 0);
     $decoded = (array) ($result['decoded'] ?? []);
-
-    if ($status >= 400 && $isGptImage) {
-        $msg = strtolower((string) ($decoded['error']['message'] ?? $decoded['error'] ?? ''));
-        $retryable =
-            str_contains($msg, 'unknown parameter') ||
-            str_contains($msg, 'unsupported parameter') ||
-            str_contains($msg, 'input_fidelity') ||
-            str_contains($msg, 'output_format') ||
-            str_contains($msg, 'quality') ||
-            str_contains($msg, 'size');
-
-        if ($retryable) {
-            $fallbackFields = [
-                'model' => $model,
-                'prompt' => $prompt,
-                'n' => '1',
-                'image' => $file
-            ];
-            $result = wf_openai_images_edits_request($apiKey, $fallbackFields);
-            $status = (int) ($result['status'] ?? 0);
-            $decoded = (array) ($result['decoded'] ?? []);
-        }
-    }
 
     if ($status >= 400) {
         $msg = (string) ($decoded['error']['message'] ?? $decoded['error'] ?? 'Unknown OpenAI error');
@@ -256,78 +217,6 @@ function wf_edited_image_to_temp(array $openAiResponse): string
     throw new RuntimeException('OpenAI image edit response had no b64_json or url payload');
 }
 
-function wf_open_image_resource_for_compare(string $path)
-{
-    $info = @getimagesize($path);
-    $type = (int) ($info[2] ?? 0);
-    switch ($type) {
-        case IMAGETYPE_JPEG:
-            return @imagecreatefromjpeg($path);
-        case IMAGETYPE_PNG:
-            return @imagecreatefrompng($path);
-        case IMAGETYPE_GIF:
-            return @imagecreatefromgif($path);
-        case IMAGETYPE_WEBP:
-            if (function_exists('imagecreatefromwebp')) {
-                return @imagecreatefromwebp($path);
-            }
-            return false;
-        default:
-            return false;
-    }
-}
-
-function wf_image_delta_ratio(string $sourceAbs, string $editedAbs): float
-{
-    $a = wf_open_image_resource_for_compare($sourceAbs);
-    $b = wf_open_image_resource_for_compare($editedAbs);
-    if (!$a || !$b) {
-        if ($a) {
-            imagedestroy($a);
-        }
-        if ($b) {
-            imagedestroy($b);
-        }
-        return 1.0;
-    }
-
-    $w = 96;
-    $h = 96;
-    $ra = imagecreatetruecolor($w, $h);
-    $rb = imagecreatetruecolor($w, $h);
-    imagecopyresampled($ra, $a, 0, 0, 0, 0, $w, $h, imagesx($a), imagesy($a));
-    imagecopyresampled($rb, $b, 0, 0, 0, 0, $w, $h, imagesx($b), imagesy($b));
-    imagedestroy($a);
-    imagedestroy($b);
-
-    $sum = 0.0;
-    $count = 0;
-    for ($y = 0; $y < $h; $y++) {
-        for ($x = 0; $x < $w; $x++) {
-            $ca = imagecolorat($ra, $x, $y);
-            $cb = imagecolorat($rb, $x, $y);
-
-            $ar = ($ca >> 16) & 0xFF;
-            $ag = ($ca >> 8) & 0xFF;
-            $ab = $ca & 0xFF;
-            $br = ($cb >> 16) & 0xFF;
-            $bg = ($cb >> 8) & 0xFF;
-            $bb = $cb & 0xFF;
-
-            $sum += abs($ar - $br) + abs($ag - $bg) + abs($ab - $bb);
-            $count += 3;
-        }
-    }
-    imagedestroy($ra);
-    imagedestroy($rb);
-
-    if ($count === 0) {
-        return 1.0;
-    }
-
-    return $sum / ($count * 255.0);
-}
-
 function wf_resolve_local_image_abs(string $sourceImageUrl): string
 {
     $sourceImageUrl = trim($sourceImageUrl);
@@ -469,26 +358,9 @@ try {
             $apiKey,
             $model,
             $effectiveInstructions,
-            $uploadSourcePath,
-            $targetType
+            $uploadSourcePath
         );
         $editedTemp = wf_edited_image_to_temp($openAiResponse);
-
-        // Guard against no-op outputs: retry once with stricter prompt if result is near-identical.
-        $delta = wf_image_delta_ratio($uploadSourcePath, $editedTemp);
-        if ($delta < 0.012) {
-            @unlink($editedTemp);
-            $editedTemp = '';
-            $retryPrompt = $effectiveInstructions;
-            $retryResponse = wf_openai_edit_image(
-                $apiKey,
-                $model,
-                $retryPrompt,
-                $uploadSourcePath,
-                $targetType
-            );
-            $editedTemp = wf_edited_image_to_temp($retryResponse);
-        }
 
         if ($targetType === 'item') {
             $sku = trim((string) ($input['item_sku'] ?? ''));

@@ -103,14 +103,26 @@ class LogTableDefinitions
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 to_email VARCHAR(255) NOT NULL,
                 from_email VARCHAR(255),
+                subject VARCHAR(500),
                 email_subject VARCHAR(500),
+                content LONGTEXT NULL,
                 email_type VARCHAR(100),
                 status VARCHAR(50) DEFAULT 'sent',
                 error_message TEXT NULL,
-                sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                sent_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+                order_id VARCHAR(50) NULL,
+                created_by VARCHAR(100) NULL,
+                cc_email TEXT NULL,
+                bcc_email TEXT NULL,
+                reply_to VARCHAR(255) NULL,
+                is_html TINYINT(1) NOT NULL DEFAULT 1,
+                headers_json LONGTEXT NULL,
+                attachments_json LONGTEXT NULL,
+                created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
                 INDEX idx_sent_at (sent_at),
                 INDEX idx_to_email (to_email),
-                INDEX idx_status (status)
+                INDEX idx_status (status),
+                INDEX idx_order_id (order_id)
             )"
         ];
     }

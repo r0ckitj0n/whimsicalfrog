@@ -65,9 +65,13 @@ function sendOrderConfirmationEmails($order_id, $pdo)
 
 function sendTemplatedEmail($template, $toEmail, $variables, $emailType)
 {
+    $subject = (string) ($template['subject'] ?? 'Email');
+    $htmlContent = (string) ($template['html_content'] ?? '');
+    $orderId = isset($variables['order_id']) ? (string) $variables['order_id'] : null;
+
     try {
-        $subject = $template['subject'];
-        $htmlContent = $template['html_content'];
+        $subject = (string) $template['subject'];
+        $htmlContent = (string) $template['html_content'];
         $styleBlock = "<style>" . EmailNotificationHelper::getEmailStyles() . "</style>";
 
         $htmlContent = preg_replace('/<head>/', "<head>\n    " . $styleBlock, $htmlContent);
@@ -90,6 +94,7 @@ function sendTemplatedEmail($template, $toEmail, $variables, $emailType)
 
         $fromEmail = BusinessSettings::getBusinessEmail();
         $fromName = BusinessSettings::getBusinessName() ?: 'WhimsicalFrog';
+        $bccEmail = trim((string) ($emailSettings['bcc_email'] ?? ''));
         $secUser = secret_get('smtp_username');
         $secPass = secret_get('smtp_password');
 
@@ -105,24 +110,53 @@ function sendTemplatedEmail($template, $toEmail, $variables, $emailType)
             'reply_to' => $fromEmail,
         ]);
 
-        $orderId = isset($variables['order_id']) ? (string) $variables['order_id'] : null;
+        $headers = [
+            'template_id' => (int) ($template['id'] ?? 0),
+            'template_name' => (string) ($template['template_name'] ?? ''),
+        ];
         return EmailHelper::send($toEmail, $subject, $htmlContent, [
             'is_html' => true,
             'email_type' => $emailType,
             'order_id' => $orderId,
             'created_by' => WF_Constants::ROLE_SYSTEM,
-            'content' => $htmlContent
+            'content' => $htmlContent,
+            'bcc' => $bccEmail !== '' ? [$bccEmail] : [],
+            'reply_to' => $fromEmail,
+            'headers' => $headers
         ]);
     } catch (Exception $e) {
-        logEmailSend($toEmail, $template['subject'] ?? 'Email', $emailType, WF_Constants::EMAIL_STATUS_FAILED, $template['id'], $e->getMessage());
+        $fromEmail = (string) BusinessSettings::getBusinessEmail();
+        logEmailSend(
+            $toEmail,
+            $subject ?? ($template['subject'] ?? 'Email'),
+            $emailType,
+            WF_Constants::EMAIL_STATUS_FAILED,
+            (int) ($template['id'] ?? 0),
+            $e->getMessage(),
+            [
+                'from_email' => $fromEmail,
+                'content' => $htmlContent ?? '',
+                'order_id' => $orderId,
+            ]
+        );
         return false;
     }
 }
 
-function logEmailSend($to, $subject, $type, $status, $templateId, $error = null)
+function logEmailSend($to, $subject, $type, $status, $templateId, $error = null, $meta = [])
 {
     try {
-        Database::execute("INSERT INTO email_logs (to_email, subject, email_type, template_id, status, sent_at, error_message) VALUES (?, ?, ?, ?, ?, NOW(), ?)", [$to, $subject, $type, $templateId, $status, $error]);
+        $headers = [
+            'template_id' => (int) $templateId,
+        ];
+        EmailHelper::logEmail($to, $subject, $status, $error, $meta['order_id'] ?? null, [
+            'from_email' => (string) ($meta['from_email'] ?? ''),
+            'content' => (string) ($meta['content'] ?? ''),
+            'email_type' => (string) $type,
+            'created_by' => WF_Constants::ROLE_SYSTEM,
+            'is_html' => true,
+            'headers' => $headers
+        ]);
     } catch (Exception $e) {
         error_log("Log error: " . $e->getMessage());
     }

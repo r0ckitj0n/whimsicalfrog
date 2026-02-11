@@ -41,6 +41,12 @@ export interface IEmailLog {
     from_email: string;
     subject: string;
     content?: string;
+    cc_email?: string | null;
+    bcc_email?: string | null;
+    reply_to?: string | null;
+    is_html?: boolean;
+    headers?: Record<string, unknown> | null;
+    attachments?: unknown[] | null;
     type: string;
     status: string;
     error_message: string | null;
@@ -90,4 +96,3 @@ export interface IEmailSettings {
     dkimIdentity: string;
     smtpAllowSelfSigned: boolean;
 }
-

@@ -99,6 +99,19 @@ function resolve_content($rawContent, $row)
   );
 }
 
+function decode_json_field($rawValue)
+{
+  if ($rawValue === null) {
+    return null;
+  }
+  $text = trim((string) $rawValue);
+  if ($text === '') {
+    return null;
+  }
+  $decoded = json_decode($text, true);
+  return (json_last_error() === JSON_ERROR_NONE) ? $decoded : null;
+}
+
 try {
   initializeEmailLogsTable();
 } catch (Throwable $e) {
@@ -295,6 +308,12 @@ try {
     }
     $sel[] = $_eh_has('order_id') ? 'order_id' : 'NULL AS order_id';
     $sel[] = $_eh_has('created_by') ? 'created_by' : 'NULL AS created_by';
+    $sel[] = $_eh_has('cc_email') ? 'cc_email' : 'NULL AS cc_email';
+    $sel[] = $_eh_has('bcc_email') ? 'bcc_email' : 'NULL AS bcc_email';
+    $sel[] = $_eh_has('reply_to') ? 'reply_to' : 'NULL AS reply_to';
+    $sel[] = $_eh_has('is_html') ? 'is_html' : '1 AS is_html';
+    $sel[] = $_eh_has('headers_json') ? 'headers_json' : 'NULL AS headers_json';
+    $sel[] = $_eh_has('attachments_json') ? 'attachments_json' : 'NULL AS attachments_json';
     $selectSql = implode(', ', $sel);
 
     $row = Database::queryOne("SELECT $selectSql FROM email_logs WHERE id = ?", [$id]);
@@ -315,8 +334,12 @@ try {
         'sent_at' => $row['sent_at'] ?? null,
         'order_id' => normalize_order_id($row['order_id'] ?? null, $row['subject'] ?? ''),
         'created_by' => $row['created_by'] ?? null,
-        'bcc_email' => null, // not stored
-        'headers' => null,   // not stored
+        'cc_email' => $row['cc_email'] ?? null,
+        'bcc_email' => $row['bcc_email'] ?? null,
+        'reply_to' => $row['reply_to'] ?? null,
+        'is_html' => isset($row['is_html']) ? ((int) $row['is_html'] === 1) : true,
+        'headers' => decode_json_field($row['headers_json'] ?? null),
+        'attachments' => decode_json_field($row['attachments_json'] ?? null),
       ]
     ]);
   }

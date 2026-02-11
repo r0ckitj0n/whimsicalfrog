@@ -511,11 +511,30 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                                                     room_number: selectedRoom,
                                                     source_background_id: Number(bg.id)
                                                 })}
-                                                className="admin-action-btn btn-icon--view"
-                                                data-help-id="common-view"
-                                                aria-label={`View ${bg.name}`}
-                                            />
-                                            {!is_active && <button onClick={() => onApplyBackground(bg.id)} className="px-3 py-1.5 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest rounded-lg" data-help-id="common-deploy">Deploy</button>}
+                                                className="px-3 py-1.5 bg-white text-slate-900 text-[9px] font-black uppercase tracking-widest rounded-lg"
+                                                data-help-id="common-inspect"
+                                                aria-label={`Inspect ${bg.name}`}
+                                            >
+                                                Inspect
+                                            </button>
+                                            {!is_active && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onApplyBackground(bg.id)}
+                                                    className="px-3 py-1.5 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest rounded-lg"
+                                                    data-help-id="common-deploy"
+                                                >
+                                                    Deploy
+                                                </button>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => onDeleteBackground(bg.id, bg.name)}
+                                                className="px-3 py-1.5 bg-rose-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg"
+                                                data-help-id="common-delete"
+                                            >
+                                                Delete
+                                            </button>
                                         </div>
                                     </div>
                                     <div className="p-3 bg-white flex justify-between items-center">

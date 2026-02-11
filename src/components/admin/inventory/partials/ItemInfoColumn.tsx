@@ -323,7 +323,7 @@ export const ItemInfoColumn: React.FC<ItemInfoColumnProps> = ({
                         role="presentation"
                     >
                         <div className="flex items-center gap-3 p-3 border-b">
-                            <h3 className="text-sm font-medium truncate shrink-0 max-w-[180px]">{formData.name || sku}</h3>
+                            <h3 className="text-sm font-medium text-white truncate shrink-0 max-w-[180px]">{formData.name || sku}</h3>
                             <input
                                 type="text"
                                 value={imageTweakPrompt}

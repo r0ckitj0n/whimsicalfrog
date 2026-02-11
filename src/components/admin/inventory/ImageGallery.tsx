@@ -3,6 +3,7 @@ import { useInventoryImages } from '../../../hooks/admin/useInventoryImages.js';
 import { IItemImage } from '../../../types/index.js';
 import { useModalContext } from '../../../context/ModalContext.js';
 import { ApiClient } from '../../../core/ApiClient.js';
+import { useAIImageEdit } from '../../../hooks/admin/useAIImageEdit.js';
 
 interface ImageGalleryProps {
     sku: string;
@@ -24,6 +25,8 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
     const [isViewerOpen, setIsViewerOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState<IItemImage | null>(null);
     const [isProcessingAll, setIsProcessingAll] = useState(false);
+    const [imageTweakPrompt, setImageTweakPrompt] = useState('');
+    const { isSubmitting: isSubmittingImageTweak, submitImageEdit } = useAIImageEdit();
 
     useEffect(() => {
         onImagesChanged?.(images);
@@ -43,6 +46,35 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
     const closeViewer = () => {
         setIsViewerOpen(false);
         setSelectedImage(null);
+        setImageTweakPrompt('');
+    };
+
+    const handleSubmitImageTweak = async () => {
+        if (!selectedImage) return;
+        const instructions = imageTweakPrompt.trim();
+        if (!instructions) {
+            window.WFToast?.error?.('Enter tweak instructions first');
+            return;
+        }
+        if (!sku) {
+            window.WFToast?.error?.('A valid SKU is required to save edited item images');
+            return;
+        }
+
+        try {
+            await submitImageEdit({
+                target_type: 'item',
+                source_image_url: `/${String(selectedImage.image_path || '').replace(/^\/+/, '')}`,
+                instructions,
+                item_sku: sku
+            });
+            window.WFToast?.success?.('AI-edited image saved as an additional item image');
+            setImageTweakPrompt('');
+            await fetchImages();
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Failed to submit image tweak';
+            window.WFToast?.error?.(message);
+        }
     };
 
     const handleProcessExistingImagesWithAI = async () => {
@@ -277,8 +309,24 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
                         onClick={(e) => e.stopPropagation()}
                         role="presentation"
                     >
-                        <div className="flex items-center justify-between p-3 border-b">
-                            <h3 className="text-sm font-medium truncate">{selectedImage.image_path.split('/').pop()}</h3>
+                        <div className="flex items-center gap-3 p-3 border-b">
+                            <h3 className="text-sm font-medium text-white truncate shrink-0 max-w-[180px]">{selectedImage.image_path.split('/').pop()}</h3>
+                            <input
+                                type="text"
+                                value={imageTweakPrompt}
+                                onChange={(e) => setImageTweakPrompt(e.target.value)}
+                                placeholder="Tweak your image"
+                                className="flex-1 min-w-0 text-sm p-2 border border-slate-300 rounded-lg bg-white"
+                                disabled={isSubmittingImageTweak}
+                            />
+                            <button
+                                type="button"
+                                className="btn btn-primary px-3 py-2 text-[10px] font-black uppercase tracking-widest disabled:opacity-60"
+                                onClick={() => void handleSubmitImageTweak()}
+                                disabled={isSubmittingImageTweak}
+                            >
+                                {isSubmittingImageTweak ? 'Submitting...' : 'Submit to AI'}
+                            </button>
                             <button
                                 onClick={closeViewer}
                                 className="admin-action-btn btn-icon--close"

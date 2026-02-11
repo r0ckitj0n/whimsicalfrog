@@ -301,9 +301,9 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
 
     return (
         <div className="p-8 lg:p-10 flex-1 min-h-0 overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 h-full min-h-0">
+            <div className="grid grid-cols-1 lg:grid-cols-3 lg:[grid-template-columns:0.9fr_1.35fr_0.9fr] gap-10 h-full min-h-0">
                 {/* Active Look */}
-                <div className="space-y-6 h-full min-h-0 flex flex-col lg:col-span-3">
+                <div className="space-y-6 h-full min-h-0 flex flex-col">
                     <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2">Active Look</h4>
                     {backgrounds.activeBackground ? (
                         <div className="relative group rounded-3xl overflow-hidden border-4 border-white shadow-xl bg-white">
@@ -343,7 +343,7 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                 </div>
 
                 {/* Create New Background */}
-                <div className="space-y-6 h-full min-h-0 flex flex-col lg:col-span-6">
+                <div className="space-y-6 h-full min-h-0 flex flex-col">
                     <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2">Create New Background</h4>
                     <div className="space-y-6 overflow-y-auto pr-1 flex-1 min-h-0">
                         <div className="space-y-1.5">
@@ -475,7 +475,7 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                 </div>
 
                 {/* Library */}
-                <div className="space-y-6 h-full min-h-0 flex flex-col overflow-hidden lg:col-span-3">
+                <div className="space-y-6 h-full min-h-0 flex flex-col overflow-hidden">
                     <div className="flex items-center justify-between border-b border-gray-50 pb-2">
                         <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Room Library</h4>
                         <button

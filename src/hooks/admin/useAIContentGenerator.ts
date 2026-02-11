@@ -28,7 +28,9 @@ export const useAIContentGenerator = () => {
                 description: it.description || '',
                 category: it.category || '',
                 retail_price: Number(it.retail_price) || 0,
-                cost_price: Number(it.cost_price) || 0
+                cost_price: Number(it.cost_price) || 0,
+                image_url: ('image_url' in it ? String(it.image_url || '') : ''),
+                primary_image: it.primary_image
             })));
         } catch (err) {
             console.error('[AIContentGenerator] failed to load items', err);

@@ -50,6 +50,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
     const [hasGeneratedPriceAnalysis, setHasGeneratedPriceAnalysis] = useState(false);
     const [resolvedPrimaryImageUrl, setResolvedPrimaryImageUrl] = useState<string>('');
     const [resolvedImageUrls, setResolvedImageUrls] = useState<string[]>([]);
+    const [primaryImageIndex, setPrimaryImageIndex] = useState(0);
 
     // Track if form has been modified (determines Save button visibility)
     const [isDirty, setIsDirty] = useState(false);
@@ -102,6 +103,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
         setHasGeneratedPriceAnalysis(false);
         setResolvedPrimaryImageUrl('');
         setResolvedImageUrls([]);
+        setPrimaryImageIndex(0);
     }, [selectedSku, currentItem]);
 
     useEffect(() => {
@@ -119,11 +121,29 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
                 if (!isCancelled) {
                     setResolvedPrimaryImageUrl('');
                     setResolvedImageUrls([]);
+                    setPrimaryImageIndex(0);
                 }
                 return;
             }
 
-            const fallback = `/images/items/${selectedSku}A.webp`;
+            const currentPrimaryFromItem = normalizePath(
+                typeof currentItem?.primary_image === 'string'
+                    ? currentItem.primary_image
+                    : String(currentItem?.primary_image?.image_path || '')
+            );
+            const currentImageUrl = normalizePath(String(currentItem?.image_url || ''));
+            const fallbackCandidates = [
+                currentPrimaryFromItem,
+                currentImageUrl,
+                `/images/items/${selectedSku}A.webp`,
+                `/images/items/${selectedSku}A.png`,
+                `/images/items/${selectedSku}A.jpg`,
+                `/images/items/${selectedSku}A.jpeg`,
+                `/images/items/${selectedSku}.webp`,
+                `/images/items/${selectedSku}.png`,
+                `/images/items/${selectedSku}.jpg`,
+                `/images/items/${selectedSku}.jpeg`
+            ].map((path) => normalizePath(path)).filter(Boolean);
             try {
                 const res = await ApiClient.get<{
                     success?: boolean;
@@ -131,22 +151,30 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
                 }>('/api/get_item_images.php', { sku: selectedSku });
 
                 const images = Array.isArray(res?.images) ? res.images : [];
-                const normalized = images
+                const fromApi = images
                     .map((img) => normalizePath(String(img?.image_path || '')))
                     .filter(Boolean);
-                const deduped = Array.from(new Set(normalized));
+                const deduped = Array.from(new Set([...fromApi, ...fallbackCandidates]));
                 const primary = normalizePath(
-                    String(images.find((img) => Boolean(img?.is_primary))?.image_path || deduped[0] || fallback)
+                    String(
+                        images.find((img) => Boolean(img?.is_primary))?.image_path ||
+                        currentPrimaryFromItem ||
+                        currentImageUrl ||
+                        deduped[0] ||
+                        ''
+                    )
                 );
 
                 if (!isCancelled) {
                     setResolvedImageUrls(deduped);
-                    setResolvedPrimaryImageUrl(primary || fallback);
+                    setResolvedPrimaryImageUrl(primary || deduped[0] || '');
+                    setPrimaryImageIndex(0);
                 }
             } catch (_err) {
                 if (!isCancelled) {
-                    setResolvedPrimaryImageUrl(fallback);
-                    setResolvedImageUrls([fallback]);
+                    setResolvedImageUrls(fallbackCandidates);
+                    setResolvedPrimaryImageUrl(currentPrimaryFromItem || currentImageUrl || fallbackCandidates[0] || '');
+                    setPrimaryImageIndex(0);
                 }
             }
         };
@@ -155,7 +183,25 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
         return () => {
             isCancelled = true;
         };
-    }, [selectedSku]);
+    }, [selectedSku, currentItem]);
+
+    const primaryImageCandidates = React.useMemo(() => {
+        if (resolvedImageUrls.length === 0) {
+            return resolvedPrimaryImageUrl ? [resolvedPrimaryImageUrl] : [];
+        }
+        const ranked = [resolvedPrimaryImageUrl, ...resolvedImageUrls].filter(Boolean);
+        return Array.from(new Set(ranked));
+    }, [resolvedPrimaryImageUrl, resolvedImageUrls]);
+
+    const activePrimaryImageUrl = primaryImageCandidates[primaryImageIndex] || '';
+
+    useEffect(() => {
+        setPrimaryImageIndex(0);
+    }, [selectedSku, resolvedPrimaryImageUrl, resolvedImageUrls]);
+
+    const handlePrimaryImageError = React.useCallback(() => {
+        setPrimaryImageIndex((prev) => (prev + 1 < primaryImageCandidates.length ? prev + 1 : prev));
+    }, [primaryImageCandidates.length]);
 
     useEffect(() => {
         if (marketing) {
@@ -675,14 +721,18 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
                                     </div>
                                     {currentItem ? (
                                         <div className="px-4 py-3 border-b border-slate-200 bg-slate-50/50">
-                                            <img
-                                                src={resolvedPrimaryImageUrl || `/images/items/${currentItem.sku}A.webp`}
-                                                alt={`${currentItem.name} primary`}
-                                                className="w-full h-40 object-cover rounded-xl border border-slate-200 shadow-sm"
-                                                onError={(event) => {
-                                                    event.currentTarget.style.display = 'none';
-                                                }}
-                                            />
+                                            {activePrimaryImageUrl ? (
+                                                <img
+                                                    src={activePrimaryImageUrl}
+                                                    alt={`${currentItem.name} primary`}
+                                                    className="w-full h-40 object-cover rounded-xl border border-slate-200 shadow-sm"
+                                                    onError={handlePrimaryImageError}
+                                                />
+                                            ) : (
+                                                <div className="w-full h-40 rounded-xl border border-slate-200 bg-slate-100 flex items-center justify-center text-xs font-bold tracking-wide text-slate-500 uppercase">
+                                                    Image Missing
+                                                </div>
+                                            )}
                                         </div>
                                     ) : null}
                                     <div className="px-4 py-3 border-b border-slate-200 bg-white">

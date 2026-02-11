@@ -350,6 +350,12 @@ export interface IInventoryItemMinimal {
     category: string;
     retail_price?: number;
     cost_price?: number;
+    image_url?: string;
+    primary_image?: string | {
+        image_path: string;
+        alt_text?: string;
+        is_primary?: boolean;
+    };
 }
 
 // ============================================================================

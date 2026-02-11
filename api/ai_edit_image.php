@@ -70,14 +70,6 @@ function wf_resolve_openai_edit_model(string $requestedModel): string
 
 function wf_prepare_openai_edit_source_image(string $sourceImageAbs): array
 {
-    $mime = strtolower((string) (mime_content_type($sourceImageAbs) ?: ''));
-    if ($mime === 'image/png') {
-        return [
-            'path' => $sourceImageAbs,
-            'cleanup' => ''
-        ];
-    }
-
     $info = @getimagesize($sourceImageAbs);
     $type = (int) ($info[2] ?? 0);
     $image = null;
@@ -105,20 +97,37 @@ function wf_prepare_openai_edit_source_image(string $sourceImageAbs): array
         throw new RuntimeException('Failed to read source image for AI edit upload');
     }
 
-    imagealphablending($image, false);
-    imagesavealpha($image, true);
+    $width = imagesx($image);
+    $height = imagesy($image);
+    if ($width <= 0 || $height <= 0) {
+        imagedestroy($image);
+        throw new RuntimeException('Invalid source image dimensions for AI edit upload');
+    }
+
+    // Force RGBA output so OpenAI edits API accepts the uploaded image mode.
+    $rgbaImage = imagecreatetruecolor($width, $height);
+    if (!$rgbaImage) {
+        imagedestroy($image);
+        throw new RuntimeException('Failed to allocate RGBA buffer for AI edit upload');
+    }
+    imagealphablending($rgbaImage, false);
+    imagesavealpha($rgbaImage, true);
+    $transparent = imagecolorallocatealpha($rgbaImage, 0, 0, 0, 127);
+    imagefill($rgbaImage, 0, 0, $transparent);
+    imagecopy($rgbaImage, $image, 0, 0, 0, 0, $width, $height);
+    imagedestroy($image);
 
     $tmp = tempnam(sys_get_temp_dir(), 'wf-ai-edit-src-png-');
     if ($tmp === false) {
-        imagedestroy($image);
+        imagedestroy($rgbaImage);
         throw new RuntimeException('Failed to create temp PNG for AI edit upload');
     }
-    if (!@imagepng($image, $tmp, 1)) {
-        imagedestroy($image);
+    if (!imagepng($rgbaImage, $tmp, 1)) {
+        imagedestroy($rgbaImage);
         @unlink($tmp);
         throw new RuntimeException('Failed to convert source image to PNG for AI edit upload');
     }
-    imagedestroy($image);
+    imagedestroy($rgbaImage);
 
     return [
         'path' => $tmp,

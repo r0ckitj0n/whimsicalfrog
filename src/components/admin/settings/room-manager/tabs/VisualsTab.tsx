@@ -517,6 +517,21 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                                             >
                                                 Inspect
                                             </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPreviewImage({
+                                                    url: getImageUrl(bg),
+                                                    name: bg.name,
+                                                    target_type: 'background',
+                                                    room_number: selectedRoom,
+                                                    source_background_id: Number(bg.id)
+                                                })}
+                                                className="px-3 py-1.5 bg-sky-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg"
+                                                data-help-id="common-view"
+                                                aria-label={`View ${bg.name}`}
+                                            >
+                                                View
+                                            </button>
                                             {!is_active && (
                                                 <button
                                                     type="button"

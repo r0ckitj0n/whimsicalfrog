@@ -23,8 +23,20 @@ interface VisualsTabProps {
     backgrounds: IBackgroundsHook;
     selectedRoom: string;
     selectedRoomData: IRoomData | null;
-    previewImage: { url: string; name: string } | null;
-    setPreviewImage: React.Dispatch<React.SetStateAction<{ url: string; name: string } | null>>;
+    previewImage: {
+        url: string;
+        name: string;
+        target_type?: 'background';
+        room_number?: string;
+        source_background_id?: number;
+    } | null;
+    setPreviewImage: React.Dispatch<React.SetStateAction<{
+        url: string;
+        name: string;
+        target_type?: 'background';
+        room_number?: string;
+        source_background_id?: number;
+    } | null>>;
     onApplyBackground: (bgId: number) => Promise<void>;
     onDeleteBackground: (bgId: number, name: string) => Promise<void>;
     onBackgroundUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
@@ -301,6 +313,21 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                                     alt="Active background"
                                     className="w-full h-full object-cover"
                                 />
+                                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                    <button
+                                        type="button"
+                                        className="admin-action-btn btn-icon--view"
+                                        data-help-id="common-view"
+                                        aria-label="View active background"
+                                        onClick={() => setPreviewImage({
+                                            url: getImageUrl(backgrounds.activeBackground!),
+                                            name: backgrounds.activeBackground?.name || 'Active background',
+                                            target_type: 'background',
+                                            room_number: selectedRoom,
+                                            source_background_id: Number(backgrounds.activeBackground?.id || 0)
+                                        })}
+                                    />
+                                </div>
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
                                 <div className="absolute bottom-4 left-4 right-4 text-white">
                                     <p className="text-sm font-black truncate">{backgrounds.activeBackground.name}</p>
@@ -320,7 +347,17 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                     <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2">Create New Background</h4>
                     <div className="space-y-6 overflow-y-auto pr-1 flex-1 min-h-0">
                         <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
-                        <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Generate With AI (OpenAI)</div>
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Generate With AI (OpenAI)</div>
+                            <button
+                                type="button"
+                                onClick={() => setShowPromptPreview(true)}
+                                disabled={!selectedTemplateKey || !generatedPromptText}
+                                className="btn btn-secondary px-3 py-2 text-[10px] font-black uppercase tracking-widest disabled:opacity-60"
+                            >
+                                Preview Prompt
+                            </button>
+                        </div>
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Template</label>
                             <select
@@ -349,24 +386,6 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                                 <option value="fullscreen">Full Page (wide)</option>
                                 <option value="fixed">Fixed (portrait)</option>
                             </select>
-                            <p className="text-[10px] text-slate-500">
-                                Image size follows mode: <span className="font-bold">{imageSize}</span>
-                            </p>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 items-start gap-2">
-                            <p className="text-[11px] text-slate-500">
-                                Pick a preset from each dropdown, then edit the text below for this generation only.
-                            </p>
-                            <div className="sm:justify-self-end">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPromptPreview(true)}
-                                    disabled={!selectedTemplateKey || !generatedPromptText}
-                                    className="btn btn-secondary px-3 py-2 text-[10px] font-black uppercase tracking-widest disabled:opacity-60"
-                                >
-                                    Preview Prompt
-                                </button>
-                            </div>
                         </div>
                         <div className="max-h-56 overflow-auto pr-1">
                             <div className="space-y-4">
@@ -483,7 +502,19 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                                         />
                                         <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                            <button onClick={() => setPreviewImage({ url: getImageUrl(bg), name: bg.name })} className="px-3 py-1.5 bg-white text-slate-900 text-[9px] font-black uppercase tracking-widest rounded-lg" data-help-id="common-inspect">Inspect</button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPreviewImage({
+                                                    url: getImageUrl(bg),
+                                                    name: bg.name,
+                                                    target_type: 'background',
+                                                    room_number: selectedRoom,
+                                                    source_background_id: Number(bg.id)
+                                                })}
+                                                className="admin-action-btn btn-icon--view"
+                                                data-help-id="common-view"
+                                                aria-label={`View ${bg.name}`}
+                                            />
                                             {!is_active && <button onClick={() => onApplyBackground(bg.id)} className="px-3 py-1.5 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest rounded-lg" data-help-id="common-deploy">Deploy</button>}
                                         </div>
                                     </div>

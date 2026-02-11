@@ -303,8 +303,20 @@ export interface IRoomNavigationHook {
 }
 
 export interface IRoomVisualsHook {
-    preview_image: { url: string; name: string } | null;
-    setPreviewImage: React.Dispatch<React.SetStateAction<{ url: string; name: string } | null>>;
+    preview_image: {
+        url: string;
+        name: string;
+        target_type?: 'background';
+        room_number?: string;
+        source_background_id?: number;
+    } | null;
+    setPreviewImage: React.Dispatch<React.SetStateAction<{
+        url: string;
+        name: string;
+        target_type?: 'background';
+        room_number?: string;
+        source_background_id?: number;
+    } | null>>;
     getImageUrl: (bg: { webp_filename?: string; image_filename?: string }) => string;
 }
 

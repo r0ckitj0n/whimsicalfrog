@@ -10,6 +10,7 @@ import { VisualsTab } from './room-manager/tabs/VisualsTab.js';
 import { CategoriesTab } from './room-manager/tabs/CategoriesTab.js';
 import { BoundariesTab } from './room-manager/tabs/BoundariesTab.js';
 import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
+import { useAIImageEdit } from '../../../hooks/admin/useAIImageEdit.js';
 
 interface UnifiedRoomManagerProps {
     onClose?: () => void;
@@ -77,6 +78,8 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
         createRoom,
         getImageUrl
     } = useUnifiedRoomManager({ onClose, initialTab });
+    const [imageTweakPrompt, setImageTweakPrompt] = React.useState('');
+    const { isSubmitting: isSubmittingImageTweak, submitImageEdit } = useAIImageEdit();
 
     // UI Wrappers to sync local state with roomForm
     const handleBgUrlChange = (val: string) => { setBgUrl(val); if (selectedRoom) setRoomForm(prev => ({ ...prev, background_url: val })); };
@@ -89,6 +92,36 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
         onSave: handleGlobalSave,
         closeAfterSave: true
     });
+
+    const handleSubmitPreviewTweak = async () => {
+        if (!preview_image) return;
+        const instructions = imageTweakPrompt.trim();
+        if (!instructions) {
+            window.WFToast?.error?.('Enter tweak instructions first');
+            return;
+        }
+        if (preview_image.target_type !== 'background') {
+            window.WFToast?.error?.('Preview is missing background metadata for AI tweak');
+            return;
+        }
+
+        try {
+            await submitImageEdit({
+                target_type: 'background',
+                source_image_url: preview_image.url,
+                instructions,
+                room_number: String(preview_image.room_number || selectedRoom || '')
+            });
+            window.WFToast?.success?.('AI-edited background saved to Room Library');
+            setImageTweakPrompt('');
+            if (selectedRoom) {
+                await backgrounds.fetchBackgroundsForRoom(selectedRoom);
+            }
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Failed to submit image tweak';
+            window.WFToast?.error?.(message);
+        }
+    };
 
     const modalContent = (
         <div className="admin-modal-overlay over-header show topmost" onClick={(e) => e.target === e.currentTarget && void attemptClose()}>
@@ -260,9 +293,44 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
 
             {/* Preview Overlay */}
             {preview_image && (
-                <div className="fixed inset-0 z-[var(--z-overlay-topmost)] flex items-center justify-center p-8 bg-black/90 backdrop-blur-sm" onClick={() => setPreviewImage(null)}>
-                    <img src={preview_image.url} className="max-h-full max-w-full object-contain rounded-3xl" onClick={e => e.stopPropagation()} />
-                    <button className="admin-action-btn btn-icon--close absolute top-8 right-8 text-white text-3xl shadow-lg" onClick={() => setPreviewImage(null)} data-help-id="common-close" />
+                <div
+                    className="fixed inset-0 z-[var(--z-overlay-topmost)] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+                    onClick={() => setPreviewImage(null)}
+                >
+                    <div
+                        className="w-full max-w-6xl max-h-[92vh] bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-2xl flex flex-col"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="px-4 py-3 border-b border-slate-200 flex items-center gap-3">
+                            <h3 className="text-xs font-black uppercase tracking-widest text-slate-700 truncate shrink-0 max-w-[220px]">
+                                {preview_image.name || 'Image Preview'}
+                            </h3>
+                            <input
+                                type="text"
+                                value={imageTweakPrompt}
+                                onChange={(e) => setImageTweakPrompt(e.target.value)}
+                                placeholder="Tweak your image"
+                                className="flex-1 min-w-0 text-sm p-2 border border-slate-300 rounded-lg"
+                                disabled={isSubmittingImageTweak}
+                            />
+                            <button
+                                type="button"
+                                className="btn btn-primary px-3 py-2 text-[10px] font-black uppercase tracking-widest disabled:opacity-60"
+                                onClick={() => void handleSubmitPreviewTweak()}
+                                disabled={isSubmittingImageTweak}
+                            >
+                                {isSubmittingImageTweak ? 'Submitting...' : 'Submit to AI'}
+                            </button>
+                            <button
+                                className="admin-action-btn btn-icon--close"
+                                onClick={() => setPreviewImage(null)}
+                                data-help-id="common-close"
+                            />
+                        </div>
+                        <div className="flex-1 min-h-0 p-4 bg-slate-100/60">
+                            <img src={preview_image.url} className="max-h-full max-w-full object-contain rounded-2xl mx-auto" />
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

@@ -7,6 +7,7 @@ import { useInventoryAI } from '../../../../hooks/admin/useInventoryAI.js';
 import { useInventoryItemForm } from '../../../../hooks/admin/useInventoryItemForm.js';
 import { useModalContext } from '../../../../context/ModalContext.js';
 import { AiManager } from '../../../../core/ai/AiManager.js';
+import { ApiClient } from '../../../../core/ApiClient.js';
 import type { MarketingData } from '../../../../hooks/admin/inventory-ai/useMarketingManager.js';
 import type { IItemDetails, IItemImage } from '../../../../types/inventory.js';
 
@@ -149,6 +150,20 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
             return nextImages;
         });
     }, [isAdding]);
+    const handleItemImageTweakSaved = useCallback(async () => {
+        if (isAdding) {
+            if (!activeSku) return;
+            const response = await ApiClient.get<{ success: boolean; images?: IItemImage[]; error?: string }>(
+                '/api/get_item_images.php',
+                { sku: activeSku }
+            );
+            if (response?.success && Array.isArray(response.images)) {
+                setWorkingImages(response.images);
+            }
+            return;
+        }
+        await refresh();
+    }, [isAdding, activeSku, refresh]);
 
     const isLoading = detailsLoading && !isAdding;
     const showSaveAction = isAdding ? hasUploadedImage : isDirty;
@@ -478,7 +493,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                             <div>
                             <ItemInfoColumn
-                                sku={sku}
+                                sku={activeSku}
                                 localSku={localSku}
                                 mode={mode}
                                 isReadOnly={isReadOnly}
@@ -496,6 +511,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                                 onToggleFieldLock={toggleFieldLock}
                                 lockedWords={lockedWords}
                                 onLockedWordsChange={updateLockedWords}
+                                onImageTweakSaved={handleItemImageTweakSaved}
                             />
                             </div>
 

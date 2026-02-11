@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ItemSelector } from '../../settings/ai-suggestions/ItemSelector.js';
+import { useAIImageEdit } from '../../../../hooks/admin/useAIImageEdit.js';
 
 interface ItemInfoColumnProps {
     sku: string;
@@ -37,6 +38,7 @@ interface ItemInfoColumnProps {
     onToggleFieldLock?: (field: string) => void;
     /** Update locked words for a field */
     onLockedWordsChange?: (field: string, value: string) => void;
+    onImageTweakSaved?: () => Promise<void> | void;
 }
 
 export const ItemInfoColumn: React.FC<ItemInfoColumnProps> = ({
@@ -57,9 +59,41 @@ export const ItemInfoColumn: React.FC<ItemInfoColumnProps> = ({
     lockedFields = {},
     lockedWords = {},
     onToggleFieldLock,
-    onLockedWordsChange
+    onLockedWordsChange,
+    onImageTweakSaved
 }) => {
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [imageTweakPrompt, setImageTweakPrompt] = useState('');
+    const { isSubmitting: isSubmittingImageTweak, submitImageEdit } = useAIImageEdit();
+
+    const handleSubmitImageTweak = async () => {
+        const instructions = imageTweakPrompt.trim();
+        if (!instructions) {
+            window.WFToast?.error?.('Enter tweak instructions first');
+            return;
+        }
+        if (!sku) {
+            window.WFToast?.error?.('A valid SKU is required to save edited item images');
+            return;
+        }
+
+        try {
+            await submitImageEdit({
+                target_type: 'item',
+                source_image_url: primaryImage,
+                instructions,
+                item_sku: sku
+            });
+            window.WFToast?.success?.('AI-edited image saved as an additional item image');
+            setImageTweakPrompt('');
+            if (onImageTweakSaved) {
+                await onImageTweakSaved();
+            }
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Failed to submit image tweak';
+            window.WFToast?.error?.(message);
+        }
+    };
 
     return (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -288,8 +322,24 @@ export const ItemInfoColumn: React.FC<ItemInfoColumnProps> = ({
                         onClick={(e) => e.stopPropagation()}
                         role="presentation"
                     >
-                        <div className="flex items-center justify-between p-3 border-b">
-                            <h3 className="text-sm font-medium truncate">{formData.name || sku}</h3>
+                        <div className="flex items-center gap-3 p-3 border-b">
+                            <h3 className="text-sm font-medium truncate shrink-0 max-w-[180px]">{formData.name || sku}</h3>
+                            <input
+                                type="text"
+                                value={imageTweakPrompt}
+                                onChange={(e) => setImageTweakPrompt(e.target.value)}
+                                placeholder="Tweak your image"
+                                className="flex-1 min-w-0 text-sm p-2 border border-slate-300 rounded-lg bg-white"
+                                disabled={isSubmittingImageTweak}
+                            />
+                            <button
+                                type="button"
+                                className="btn btn-primary px-3 py-2 text-[10px] font-black uppercase tracking-widest disabled:opacity-60"
+                                onClick={() => void handleSubmitImageTweak()}
+                                disabled={isSubmittingImageTweak}
+                            >
+                                {isSubmittingImageTweak ? 'Submitting...' : 'Submit to AI'}
+                            </button>
                             <button
                                 onClick={() => setIsPreviewOpen(false)}
                                 className="admin-action-btn btn-icon--close"

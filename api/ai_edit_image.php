@@ -504,13 +504,6 @@ try {
         $uploadSourceTemp = (string) ($preparedSource['cleanup'] ?? '');
 
         $effectiveInstructions = trim($instructions);
-        if ($targetType === 'background') {
-            $effectiveInstructions = $effectiveInstructions
-                . "\n\n"
-                . 'Apply these edits decisively so the output is visibly different from the source image. '
-                . 'Preserve the room style and perspective unless explicitly changed. '
-                . 'If asked to upscale, return a sharper, higher-detail version while keeping composition coherent.';
-        }
 
         if ($targetType === 'background') {
             $maskPrepared = wf_create_full_edit_mask($uploadSourcePath);
@@ -532,12 +525,7 @@ try {
         if ($delta < 0.012) {
             @unlink($editedTemp);
             $editedTemp = '';
-            $retryPrompt = $effectiveInstructions
-                . "\n\n"
-                . 'Previous attempt was too similar to the source image. '
-                . 'Make the requested edits clearly and visibly, not subtly. '
-                . 'If asked to remove subjects, they must be removed. '
-                . 'If asked to upscale, increase detail and sharpness significantly.';
+            $retryPrompt = $effectiveInstructions;
             $retryResponse = wf_openai_edit_image(
                 $apiKey,
                 $model,

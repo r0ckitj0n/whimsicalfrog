@@ -58,6 +58,16 @@ function wf_openai_edit_image(string $apiKey, string $model, string $prompt, str
     return $decoded;
 }
 
+function wf_resolve_openai_edit_model(string $requestedModel): string
+{
+    $normalized = strtolower(trim($requestedModel));
+    // The /v1/images/edits endpoint currently accepts dall-e-2.
+    if ($normalized !== 'dall-e-2') {
+        return 'dall-e-2';
+    }
+    return $normalized;
+}
+
 function wf_download_to_temp(string $url): string
 {
     $tmp = tempnam(sys_get_temp_dir(), 'wf-ai-edit-url-');
@@ -173,10 +183,8 @@ try {
         throw new RuntimeException('OpenAI API key is missing in AI settings');
     }
 
-    $model = trim((string) ($input['model'] ?? $settings['openai_image_model'] ?? 'gpt-image-1'));
-    if ($model === '') {
-        $model = 'gpt-image-1';
-    }
+    $requestedModel = trim((string) ($input['model'] ?? $settings['openai_image_model'] ?? 'dall-e-2'));
+    $model = wf_resolve_openai_edit_model($requestedModel);
 
     $sourceImageAbs = wf_resolve_local_image_abs($sourceImageUrl);
     $editedTemp = '';

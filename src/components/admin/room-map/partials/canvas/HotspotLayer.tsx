@@ -7,6 +7,7 @@ interface HotspotLayerProps {
     selectedIds: string[];
     isEditMode: boolean;
     dims: { w: number, h: number };
+    stretchToFill?: boolean;
     onMouseDown: (e: React.MouseEvent) => void;
     onMouseMove: (e: React.MouseEvent) => void;
     onMouseUp: (e: React.MouseEvent) => void;
@@ -18,6 +19,7 @@ export const HotspotLayer: React.FC<HotspotLayerProps> = ({
     selectedIds,
     isEditMode,
     dims,
+    stretchToFill = false,
     onMouseDown,
     onMouseMove,
     onMouseUp
@@ -46,7 +48,7 @@ export const HotspotLayer: React.FC<HotspotLayerProps> = ({
             onMouseMove={onMouseMove}
             onMouseUp={onMouseUp}
             onMouseLeave={onMouseUp}
-            preserveAspectRatio="xMinYMin meet"
+            preserveAspectRatio={stretchToFill ? 'none' : 'xMinYMin meet'}
         >
             {areas.map(area => (
                 <g key={area.id}>

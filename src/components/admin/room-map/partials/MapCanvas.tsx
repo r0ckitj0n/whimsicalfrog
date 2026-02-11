@@ -50,6 +50,10 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     const [previewItems, setPreviewItems] = useState<IPreviewItem[]>([]);
     const [activeAreaSelectors, setActiveAreaSelectors] = useState<string[]>([]);
     const [containerHeight, setContainerHeight] = useState<number | null>(null);
+    const [viewportAspectRatio, setViewportAspectRatio] = useState<number>(() => {
+        if (typeof window === 'undefined') return 16 / 9;
+        return window.innerWidth / Math.max(window.innerHeight, 1);
+    });
 
     const normalizeSelector = (selector: string) => {
         const value = String(selector || '').trim().toLowerCase();
@@ -57,16 +61,31 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         return value.startsWith('.') ? value : `.${value}`;
     };
 
-    // Calculate container height based on width and aspect ratio to enable scrolling
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const updateViewportAspectRatio = () => {
+            setViewportAspectRatio(window.innerWidth / Math.max(window.innerHeight, 1));
+        };
+        updateViewportAspectRatio();
+        window.addEventListener('resize', updateViewportAspectRatio);
+        return () => window.removeEventListener('resize', updateViewportAspectRatio);
+    }, []);
+
+    const tar = typeof aspectRatio === 'number' ? aspectRatio : (parseFloat(String(aspectRatio)) || (1024 / 768));
+    const isFullScale = roomId === 'A' || roomId === '0' || tar > 1.4;
+    const dims = isFullScale ? { w: 1280, h: 896 } : { w: 1024, h: 768 };
+    const isFullscreenPreview = fitEntire || renderContext === 'fullscreen';
+    const currentAspectRatio = aspectRatio || (dims.w / dims.h);
+    const previewAspectRatio = isFullscreenPreview ? viewportAspectRatio : currentAspectRatio;
+
+    // Calculate container height based on width and active preview aspect ratio.
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
 
         const updateHeight = () => {
             const width = container.clientWidth;
-            // Calculate height based on width and image aspect ratio (1280/896)
-            const imageAspectRatio = 1280 / 896;
-            const calculatedHeight = width / imageAspectRatio;
+            const calculatedHeight = width / Math.max(previewAspectRatio, 0.1);
             setContainerHeight(calculatedHeight);
         };
 
@@ -75,7 +94,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         resizeObserver.observe(container);
 
         return () => resizeObserver.disconnect();
-    }, [bgUrl]);
+    }, [bgUrl, previewAspectRatio]);
 
     const {
         handleMouseDown,
@@ -177,16 +196,11 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         return areas.filter((area) => activeSet.has(normalizeSelector(area.selector)));
     }, [areas, activeAreaSelectors]);
 
-    const tar = typeof aspectRatio === 'number' ? aspectRatio : (parseFloat(String(aspectRatio)) || (1024 / 768));
-    const isFullScale = roomId === 'A' || roomId === '0' || tar > 1.4;
-    const dims = isFullScale ? { w: 1280, h: 896 } : { w: 1024, h: 768 };
-    const currentAspectRatio = aspectRatio || (dims.w / dims.h);
-
     const finalBgUrl = bgUrl ? (bgUrl.startsWith('http') || bgUrl.startsWith('/') ? bgUrl : `/images/${bgUrl}`) : '';
     const containerStyle: React.CSSProperties = {
-        '--map-aspect-ratio': String(currentAspectRatio),
+        '--map-aspect-ratio': String(previewAspectRatio),
         backgroundImage: finalBgUrl ? `url(${finalBgUrl})` : 'none',
-        backgroundSize: 'contain',
+        backgroundSize: isFullscreenPreview ? '100% 100%' : 'contain',
         backgroundPosition: 'top left',
         backgroundRepeat: 'no-repeat',
         height: containerHeight ? `${containerHeight}px` : 'auto',
@@ -203,11 +217,12 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
             style={containerStyle}
         >
             {/* 0. Boundary Indicators - only shown in fullscreen mode */}
-            {renderContext === 'fullscreen' && (
+            {isFullscreenPreview && (
                 <BoundaryIndicators
                     dims={dims}
                     headerHeight={headerHeight}
                     footerHeight={footerHeight}
+                    stretchToFill={isFullscreenPreview}
                 />
             )}
 
@@ -226,6 +241,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                 selectedIds={selectedIds}
                 isEditMode={isEditMode}
                 dims={dims}
+                stretchToFill={isFullscreenPreview}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}

@@ -43,6 +43,26 @@ if ($requestedPath === '/policy') {
     return true;
 }
 
+if ($requestedPath === '/robots.txt' || $requestedPath === '/sitemap.xml') {
+    require_once __DIR__ . '/includes/helpers/SitemapHelper.php';
+    $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
+    $forwardedProto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
+    $https = $_SERVER['HTTPS'] ?? '';
+    $isHttps = ($forwardedProto === 'https') || (!empty($https) && strtolower((string) $https) !== 'off');
+    $scheme = $isHttps ? 'https' : 'http';
+    $baseUrl = $scheme . '://' . $host;
+
+    if ($requestedPath === '/robots.txt') {
+        header('Content-Type: text/plain; charset=utf-8');
+        echo SitemapHelper::renderRobotsTxt($baseUrl);
+        exit;
+    }
+
+    header('Content-Type: application/xml; charset=utf-8');
+    echo SitemapHelper::renderSitemapXml($baseUrl);
+    exit;
+}
+
 // Check for manual vite mode overrides (?vite=prod or ?vite=dev)
 $viteModeQuery = $_GET['vite'] ?? null;
 $forceProd = ($viteModeQuery === 'prod');
@@ -239,9 +259,48 @@ if (strpos($requestedPath, '/dist/') === 0) {
 // For all other requests, serve the app. 
 // In development with Vite, we use the root index.html.
 // In production, we use dist/index.html.
-if ($useDevMode) {
-    readfile(__DIR__ . '/index.html');
-} else {
-    readfile(__DIR__ . '/dist/index.html');
+$appHtmlPath = $useDevMode ? (__DIR__ . '/index.html') : (__DIR__ . '/dist/index.html');
+$html = @file_get_contents($appHtmlPath);
+if ($html === false) {
+    http_response_code(500);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "Unable to load application shell\n";
+    exit;
 }
+
+// Inject crawlable SEO tags server-side so bots can index marketing metadata
+// without relying on client-side JavaScript execution.
+try {
+    require_once __DIR__ . '/includes/helpers/SpaSeoHelper.php';
+    $seoTags = SpaSeoHelper::renderTagsForPath($requestedPath);
+    $initialRoom = SpaSeoHelper::resolveRoomNumberForPath($requestedPath);
+    if (!empty($seoTags) && stripos($html, '</head>') !== false) {
+        $patterns = [
+            '/<title\b[^>]*>.*?<\/title>\s*/is',
+            '/<meta\s+name=["\']description["\'][^>]*>\s*/i',
+            '/<meta\s+name=["\']keywords["\'][^>]*>\s*/i',
+            '/<link\s+rel=["\']canonical["\'][^>]*>\s*/i',
+            '/<meta\s+property=["\']og:title["\'][^>]*>\s*/i',
+            '/<meta\s+property=["\']og:description["\'][^>]*>\s*/i',
+            '/<meta\s+property=["\']og:image["\'][^>]*>\s*/i',
+            '/<meta\s+property=["\']og:url["\'][^>]*>\s*/i',
+            '/<meta\s+property=["\']og:type["\'][^>]*>\s*/i',
+            '/<meta\s+name=["\']twitter:card["\'][^>]*>\s*/i',
+            '/<meta\s+name=["\']twitter:title["\'][^>]*>\s*/i',
+            '/<meta\s+name=["\']twitter:description["\'][^>]*>\s*/i',
+            '/<meta\s+name=["\']twitter:image["\'][^>]*>\s*/i',
+            '/<script\s+type=["\']application\/ld\+json["\'][^>]*>.*?<\/script>\s*/is',
+        ];
+        $html = preg_replace($patterns, '', $html) ?? $html;
+        if ($initialRoom !== null && $initialRoom !== '') {
+            $bootScript = '<script>window.__WF_INITIAL_ROOM=' . json_encode((string) $initialRoom) . ';window.__WF_INITIAL_ROOM_CONSUMED=false;</script>';
+            $seoTags .= "\n" . $bootScript;
+        }
+        $html = preg_replace('/<\/head>/i', $seoTags . "\n</head>", $html, 1);
+    }
+} catch (Throwable $e) {
+    error_log('[router] SEO injection failed: ' . $e->getMessage());
+}
+
+echo $html;
 exit;

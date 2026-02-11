@@ -88,7 +88,14 @@ export const useAppEffects = ({
 
         const params = new URLSearchParams(window.location.search);
         const roomId = params.get('room_id') || params.get('room');
-        if (roomId && !isRoomOpen && !isRoomLoading) {
+        const initialRoom = (window as any).__WF_INITIAL_ROOM as string | undefined;
+        const initialRoomConsumed = Boolean((window as any).__WF_INITIAL_ROOM_CONSUMED);
+        const effectiveRoomId = roomId || (!initialRoomConsumed ? initialRoom : null);
+
+        if (!roomId && initialRoom && !initialRoomConsumed) {
+            (window as any).__WF_INITIAL_ROOM_CONSUMED = true;
+        }
+        if (effectiveRoomId && !isRoomOpen && !isRoomLoading) {
             const fullPageRoomUrls: Record<string, string> = {
                 'A': '/',           // Landing page
                 '0': '/room_main',  // Main room
@@ -96,10 +103,10 @@ export const useAppEffects = ({
                 'X': '/admin/settings' // Settings
             };
 
-            if (fullPageRoomUrls[roomId] && !is_bare) {
-                window.location.href = fullPageRoomUrls[roomId];
-            } else if (!is_bare || !fullPageRoomUrls[roomId]) {
-                openRoom(roomId);
+            if (fullPageRoomUrls[effectiveRoomId] && !is_bare) {
+                window.location.href = fullPageRoomUrls[effectiveRoomId];
+            } else if (!is_bare || !fullPageRoomUrls[effectiveRoomId]) {
+                openRoom(effectiveRoomId);
             }
         }
     }, [authMode, setAuthMode, isRoomOpen, isRoomLoading, openRoom, is_bare]);

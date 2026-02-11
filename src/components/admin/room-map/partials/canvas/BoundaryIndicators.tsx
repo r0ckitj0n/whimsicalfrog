@@ -4,12 +4,14 @@ interface BoundaryIndicatorsProps {
     dims: { w: number, h: number };
     headerHeight: number;
     footerHeight: number;
+    stretchToFill?: boolean;
 }
 
 export const BoundaryIndicators: React.FC<BoundaryIndicatorsProps> = ({
     dims,
     headerHeight,
-    footerHeight
+    footerHeight,
+    stretchToFill = false
 }) => {
     return (
         <>
@@ -17,7 +19,7 @@ export const BoundaryIndicators: React.FC<BoundaryIndicatorsProps> = ({
             <svg
                 className="absolute inset-0 w-full h-full pointer-events-none z-[5] overflow-visible"
                 viewBox={`0 0 ${dims.w} ${dims.h}`}
-                preserveAspectRatio="xMinYMin meet"
+                preserveAspectRatio={stretchToFill ? 'none' : 'xMinYMin meet'}
             >
                 <defs>
                     <pattern id="headerHatch" patternUnits="userSpaceOnUse" width="12" height="12" patternTransform="rotate(45)">
@@ -35,7 +37,7 @@ export const BoundaryIndicators: React.FC<BoundaryIndicatorsProps> = ({
             <svg
                 className="absolute inset-0 w-full h-full pointer-events-none z-[5] overflow-visible"
                 viewBox={`0 0 ${dims.w} ${dims.h}`}
-                preserveAspectRatio="xMinYMin meet"
+                preserveAspectRatio={stretchToFill ? 'none' : 'xMinYMin meet'}
             >
                 <defs>
                     <pattern id="footerHatch" patternUnits="userSpaceOnUse" width="12" height="12" patternTransform="rotate(45)">

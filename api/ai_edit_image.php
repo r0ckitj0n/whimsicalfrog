@@ -330,7 +330,12 @@ try {
         throw new RuntimeException('OpenAI API key is missing in AI settings');
     }
 
-    $requestedModel = trim((string) ($input['model'] ?? $settings['openai_image_model'] ?? 'dall-e-2'));
+    $requestedModel = trim((string) (
+        $input['model']
+        ?? $settings['openai_image_edit_model']
+        ?? $settings['openai_image_model']
+        ?? 'gpt-image-1'
+    ));
     $model = wf_resolve_openai_edit_model($requestedModel);
 
     if ($targetType === 'background') {

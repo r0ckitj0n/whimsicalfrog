@@ -130,6 +130,12 @@ body[data-page^='admin'] .admin-modal-overlay .admin-modal.admin-modal-fullscree
   max-height: var(--admin-modal-content-height, 95vh) !important;
 }
 
+/* Room Manager needs a fixed panel height so Placement side/canvas columns can scroll independently. */
+body[data-page^='admin'] .admin-modal-overlay .admin-modal.admin-modal-fullscreen.wf-room-manager-modal {
+  height: var(--admin-modal-content-height, 95vh) !important;
+  max-height: var(--admin-modal-content-height, 95vh) !important;
+}
+
 body[data-page^='admin'] .admin-modal-overlay .admin-modal.admin-modal-fullscreen>.modal-body {
   flex: 1 1 0% !important;
   min-height: 0 !important;

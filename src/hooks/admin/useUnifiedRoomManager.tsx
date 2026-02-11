@@ -68,6 +68,7 @@ export const useUnifiedRoomManager = ({
         if (!roomId) {
             boundariesTab.setAreas([]);
             visuals.setPreviewImage(null);
+            backgrounds.fetchBackgroundsForRoom('');
             return;
         }
 

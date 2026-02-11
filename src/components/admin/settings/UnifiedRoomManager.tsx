@@ -151,7 +151,7 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
     const modalContent = (
         <div className="admin-modal-overlay over-header show topmost" onClick={(e) => e.target === e.currentTarget && void attemptClose()}>
             <div
-                className="admin-modal admin-modal-content show bg-white rounded-lg shadow-xl overflow-hidden flex flex-col admin-modal-fullscreen"
+                className="admin-modal admin-modal-content show bg-white rounded-lg shadow-xl overflow-hidden flex flex-col admin-modal-fullscreen wf-room-manager-modal"
                 style={{ '--admin-modal-content-height': '95vh' } as React.CSSProperties}
             >
                 {/* Header */}

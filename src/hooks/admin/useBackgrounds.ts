@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { ApiClient } from '../../core/ApiClient.js';
 import logger from '../../core/logger.js';
 import type { IBackground, IBackgroundRoomOption, IBackgroundsResponse } from '../../types/backgrounds.js';
@@ -16,6 +16,7 @@ export const useBackgrounds = () => {
     const [rooms, setRooms] = useState<IRoomOption[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const latestRoomFetchId = useRef(0);
 
     const fetchRooms = useCallback(async () => {
         try {
@@ -62,22 +63,30 @@ export const useBackgrounds = () => {
     }, []);
 
     const fetchBackgroundsForRoom = useCallback(async (room: string) => {
+        const requestId = ++latestRoomFetchId.current;
         setIsLoading(true);
         setError(null);
+        // Clear previous room visuals immediately to avoid stale cross-room display.
+        setBackgrounds([]);
+        setActiveBackground(null);
         try {
             const [listRes, activeRes] = await Promise.all([
                 ApiClient.get<IBackgroundsResponse>('/api/backgrounds.php', { room }),
                 ApiClient.get<IBackgroundsResponse>('/api/backgrounds.php', { room, active_only: true })
             ]);
 
+            if (requestId !== latestRoomFetchId.current) return;
             setBackgrounds(listRes?.data?.backgrounds || listRes?.backgrounds || []);
             setActiveBackground(activeRes?.data?.background || activeRes?.background || null);
         } catch (err: unknown) {
+            if (requestId !== latestRoomFetchId.current) return;
             const message = err instanceof Error ? err.message : 'Unknown error';
             logger.error('fetchBackgroundsForRoom failed', err);
             setError(message);
         } finally {
-            setIsLoading(false);
+            if (requestId === latestRoomFetchId.current) {
+                setIsLoading(false);
+            }
         }
     }, []);
 

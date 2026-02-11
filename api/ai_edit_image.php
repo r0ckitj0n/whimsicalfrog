@@ -52,7 +52,14 @@ function wf_openai_images_edits_request(string $apiKey, array $postFields): arra
     ];
 }
 
-function wf_openai_edit_image(string $apiKey, string $model, string $prompt, string $sourceImageAbs, string $targetType = 'item'): array
+function wf_openai_edit_image(
+    string $apiKey,
+    string $model,
+    string $prompt,
+    string $sourceImageAbs,
+    string $targetType = 'item',
+    string $maskImageAbs = ''
+): array
 {
     $file = new CURLFile($sourceImageAbs, mime_content_type($sourceImageAbs) ?: 'image/png', basename($sourceImageAbs));
     $isGptImage = wf_is_gpt_image_model($model);
@@ -62,6 +69,9 @@ function wf_openai_edit_image(string $apiKey, string $model, string $prompt, str
         'n' => '1',
         'image' => $file
     ];
+    if ($maskImageAbs !== '' && is_file($maskImageAbs)) {
+        $postFields['mask'] = new CURLFile($maskImageAbs, 'image/png', basename($maskImageAbs));
+    }
     if (!$isGptImage) {
         // DALL-E models support response_format; GPT Image models always return base64.
         $postFields['response_format'] = 'b64_json';
@@ -249,6 +259,114 @@ function wf_edited_image_to_temp(array $openAiResponse): string
     throw new RuntimeException('OpenAI image edit response had no b64_json or url payload');
 }
 
+function wf_open_image_resource_for_compare(string $path)
+{
+    $info = @getimagesize($path);
+    $type = (int) ($info[2] ?? 0);
+    switch ($type) {
+        case IMAGETYPE_JPEG:
+            return @imagecreatefromjpeg($path);
+        case IMAGETYPE_PNG:
+            return @imagecreatefrompng($path);
+        case IMAGETYPE_GIF:
+            return @imagecreatefromgif($path);
+        case IMAGETYPE_WEBP:
+            if (function_exists('imagecreatefromwebp')) {
+                return @imagecreatefromwebp($path);
+            }
+            return false;
+        default:
+            return false;
+    }
+}
+
+function wf_image_delta_ratio(string $sourceAbs, string $editedAbs): float
+{
+    $a = wf_open_image_resource_for_compare($sourceAbs);
+    $b = wf_open_image_resource_for_compare($editedAbs);
+    if (!$a || !$b) {
+        if ($a) {
+            imagedestroy($a);
+        }
+        if ($b) {
+            imagedestroy($b);
+        }
+        return 1.0;
+    }
+
+    $w = 96;
+    $h = 96;
+    $ra = imagecreatetruecolor($w, $h);
+    $rb = imagecreatetruecolor($w, $h);
+    imagecopyresampled($ra, $a, 0, 0, 0, 0, $w, $h, imagesx($a), imagesy($a));
+    imagecopyresampled($rb, $b, 0, 0, 0, 0, $w, $h, imagesx($b), imagesy($b));
+    imagedestroy($a);
+    imagedestroy($b);
+
+    $sum = 0.0;
+    $count = 0;
+    for ($y = 0; $y < $h; $y++) {
+        for ($x = 0; $x < $w; $x++) {
+            $ca = imagecolorat($ra, $x, $y);
+            $cb = imagecolorat($rb, $x, $y);
+
+            $ar = ($ca >> 16) & 0xFF;
+            $ag = ($ca >> 8) & 0xFF;
+            $ab = $ca & 0xFF;
+            $br = ($cb >> 16) & 0xFF;
+            $bg = ($cb >> 8) & 0xFF;
+            $bb = $cb & 0xFF;
+
+            $sum += abs($ar - $br) + abs($ag - $bg) + abs($ab - $bb);
+            $count += 3;
+        }
+    }
+    imagedestroy($ra);
+    imagedestroy($rb);
+
+    if ($count === 0) {
+        return 1.0;
+    }
+
+    return $sum / ($count * 255.0);
+}
+
+function wf_create_full_edit_mask(string $sourceAbs): array
+{
+    $info = @getimagesize($sourceAbs);
+    $width = (int) ($info[0] ?? 0);
+    $height = (int) ($info[1] ?? 0);
+    if ($width <= 0 || $height <= 0) {
+        throw new RuntimeException('Unable to create edit mask: invalid source dimensions');
+    }
+
+    $mask = imagecreatetruecolor($width, $height);
+    if (!$mask) {
+        throw new RuntimeException('Unable to allocate image mask');
+    }
+    imagealphablending($mask, false);
+    imagesavealpha($mask, true);
+    $transparent = imagecolorallocatealpha($mask, 0, 0, 0, 127);
+    imagefill($mask, 0, 0, $transparent);
+
+    $tmp = tempnam(sys_get_temp_dir(), 'wf-ai-edit-mask-');
+    if ($tmp === false) {
+        imagedestroy($mask);
+        throw new RuntimeException('Failed to allocate temp path for AI edit mask');
+    }
+    if (!imagepng($mask, $tmp, 1)) {
+        imagedestroy($mask);
+        @unlink($tmp);
+        throw new RuntimeException('Failed to write AI edit mask');
+    }
+    imagedestroy($mask);
+
+    return [
+        'path' => $tmp,
+        'cleanup' => $tmp
+    ];
+}
+
 function wf_resolve_local_image_abs(string $sourceImageUrl): string
 {
     $sourceImageUrl = trim($sourceImageUrl);
@@ -375,6 +493,7 @@ try {
     }
     $editedTemp = '';
     $uploadSourceTemp = '';
+    $maskTemp = '';
     $derivedPaths = [];
     $responseData = null;
     $responseMessage = '';
@@ -393,8 +512,42 @@ try {
                 . 'If asked to upscale, return a sharper, higher-detail version while keeping composition coherent.';
         }
 
-        $openAiResponse = wf_openai_edit_image($apiKey, $model, $effectiveInstructions, $uploadSourcePath, $targetType);
+        if ($targetType === 'background') {
+            $maskPrepared = wf_create_full_edit_mask($uploadSourcePath);
+            $maskTemp = (string) ($maskPrepared['cleanup'] ?? '');
+        }
+
+        $openAiResponse = wf_openai_edit_image(
+            $apiKey,
+            $model,
+            $effectiveInstructions,
+            $uploadSourcePath,
+            $targetType,
+            $maskTemp
+        );
         $editedTemp = wf_edited_image_to_temp($openAiResponse);
+
+        // Guard against no-op outputs: retry once with stricter prompt if result is near-identical.
+        $delta = wf_image_delta_ratio($uploadSourcePath, $editedTemp);
+        if ($delta < 0.012) {
+            @unlink($editedTemp);
+            $editedTemp = '';
+            $retryPrompt = $effectiveInstructions
+                . "\n\n"
+                . 'Previous attempt was too similar to the source image. '
+                . 'Make the requested edits clearly and visibly, not subtly. '
+                . 'If asked to remove subjects, they must be removed. '
+                . 'If asked to upscale, increase detail and sharpness significantly.';
+            $retryResponse = wf_openai_edit_image(
+                $apiKey,
+                $model,
+                $retryPrompt,
+                $uploadSourcePath,
+                $targetType,
+                $maskTemp
+            );
+            $editedTemp = wf_edited_image_to_temp($retryResponse);
+        }
 
         if ($targetType === 'item') {
             $sku = trim((string) ($input['item_sku'] ?? ''));
@@ -521,7 +674,7 @@ try {
             $responseMessage = 'Edited background image saved';
         }
     } finally {
-        $pathsToDelete = array_merge([$editedTemp, $uploadSourceTemp], $derivedPaths);
+        $pathsToDelete = array_merge([$editedTemp, $uploadSourceTemp, $maskTemp], $derivedPaths);
         foreach ($pathsToDelete as $path) {
             if (is_string($path) && $path !== '' && file_exists($path)) {
                 @unlink($path);

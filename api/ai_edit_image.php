@@ -13,17 +13,13 @@ require_once __DIR__ . '/../includes/backgrounds/manager.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-function wf_openai_edit_image(string $apiKey, string $model, string $prompt, string $sourceImageAbs): array
+function wf_is_gpt_image_model(string $model): bool
 {
-    $file = new CURLFile($sourceImageAbs, mime_content_type($sourceImageAbs) ?: 'image/png', basename($sourceImageAbs));
-    $postFields = [
-        'model' => $model,
-        'prompt' => $prompt,
-        'n' => '1',
-        'response_format' => 'b64_json',
-        'image' => $file
-    ];
+    return str_starts_with($model, 'gpt-image-');
+}
 
+function wf_openai_images_edits_request(string $apiKey, array $postFields): array
+{
     $ch = curl_init('https://api.openai.com/v1/images/edits');
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
@@ -50,6 +46,62 @@ function wf_openai_edit_image(string $apiKey, string $model, string $prompt, str
         throw new RuntimeException('OpenAI image edit returned invalid JSON');
     }
 
+    return [
+        'status' => $status,
+        'decoded' => $decoded
+    ];
+}
+
+function wf_openai_edit_image(string $apiKey, string $model, string $prompt, string $sourceImageAbs, string $targetType = 'item'): array
+{
+    $file = new CURLFile($sourceImageAbs, mime_content_type($sourceImageAbs) ?: 'image/png', basename($sourceImageAbs));
+    $isGptImage = wf_is_gpt_image_model($model);
+    $postFields = [
+        'model' => $model,
+        'prompt' => $prompt,
+        'n' => '1',
+        'image' => $file
+    ];
+    if (!$isGptImage) {
+        // DALL-E models support response_format; GPT Image models always return base64.
+        $postFields['response_format'] = 'b64_json';
+    } else {
+        // Improve edit fidelity/clarity for GPT image edits.
+        $postFields['quality'] = 'high';
+        $postFields['size'] = $targetType === 'background' ? '1536x1024' : 'auto';
+        $postFields['output_format'] = 'png';
+        if ($model === 'gpt-image-1') {
+            $postFields['input_fidelity'] = 'high';
+        }
+    }
+
+    $result = wf_openai_images_edits_request($apiKey, $postFields);
+    $status = (int) ($result['status'] ?? 0);
+    $decoded = (array) ($result['decoded'] ?? []);
+
+    if ($status >= 400 && $isGptImage) {
+        $msg = strtolower((string) ($decoded['error']['message'] ?? $decoded['error'] ?? ''));
+        $retryable =
+            str_contains($msg, 'unknown parameter') ||
+            str_contains($msg, 'unsupported parameter') ||
+            str_contains($msg, 'input_fidelity') ||
+            str_contains($msg, 'output_format') ||
+            str_contains($msg, 'quality') ||
+            str_contains($msg, 'size');
+
+        if ($retryable) {
+            $fallbackFields = [
+                'model' => $model,
+                'prompt' => $prompt,
+                'n' => '1',
+                'image' => $file
+            ];
+            $result = wf_openai_images_edits_request($apiKey, $fallbackFields);
+            $status = (int) ($result['status'] ?? 0);
+            $decoded = (array) ($result['decoded'] ?? []);
+        }
+    }
+
     if ($status >= 400) {
         $msg = (string) ($decoded['error']['message'] ?? $decoded['error'] ?? 'Unknown OpenAI error');
         throw new RuntimeException('OpenAI image edit failed (HTTP ' . $status . '): ' . $msg);
@@ -61,11 +113,18 @@ function wf_openai_edit_image(string $apiKey, string $model, string $prompt, str
 function wf_resolve_openai_edit_model(string $requestedModel): string
 {
     $normalized = strtolower(trim($requestedModel));
-    // The /v1/images/edits endpoint currently accepts dall-e-2.
-    if ($normalized !== 'dall-e-2') {
-        return 'dall-e-2';
+    $allowed = [
+        'dall-e-2',
+        'gpt-image-1',
+        'gpt-image-1-mini',
+        'gpt-image-1.5'
+    ];
+    if (in_array($normalized, $allowed, true)) {
+        return $normalized;
     }
-    return $normalized;
+
+    // Prefer GPT image edits by default when model setting is unknown.
+    return 'gpt-image-1';
 }
 
 function wf_prepare_openai_edit_source_image(string $sourceImageAbs): array
@@ -325,7 +384,16 @@ try {
         $uploadSourcePath = (string) ($preparedSource['path'] ?? $sourceImageAbs);
         $uploadSourceTemp = (string) ($preparedSource['cleanup'] ?? '');
 
-        $openAiResponse = wf_openai_edit_image($apiKey, $model, $instructions, $uploadSourcePath);
+        $effectiveInstructions = trim($instructions);
+        if ($targetType === 'background') {
+            $effectiveInstructions = $effectiveInstructions
+                . "\n\n"
+                . 'Apply these edits decisively so the output is visibly different from the source image. '
+                . 'Preserve the room style and perspective unless explicitly changed. '
+                . 'If asked to upscale, return a sharper, higher-detail version while keeping composition coherent.';
+        }
+
+        $openAiResponse = wf_openai_edit_image($apiKey, $model, $effectiveInstructions, $uploadSourcePath, $targetType);
         $editedTemp = wf_edited_image_to_temp($openAiResponse);
 
         if ($targetType === 'item') {

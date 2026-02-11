@@ -57,8 +57,7 @@ function wf_openai_edit_image(
     string $model,
     string $prompt,
     string $sourceImageAbs,
-    string $targetType = 'item',
-    string $maskImageAbs = ''
+    string $targetType = 'item'
 ): array
 {
     $file = new CURLFile($sourceImageAbs, mime_content_type($sourceImageAbs) ?: 'image/png', basename($sourceImageAbs));
@@ -69,16 +68,14 @@ function wf_openai_edit_image(
         'n' => '1',
         'image' => $file
     ];
-    if ($maskImageAbs !== '' && is_file($maskImageAbs)) {
-        $postFields['mask'] = new CURLFile($maskImageAbs, 'image/png', basename($maskImageAbs));
-    }
     if (!$isGptImage) {
         // DALL-E models support response_format; GPT Image models always return base64.
         $postFields['response_format'] = 'b64_json';
     } else {
         // Improve edit fidelity/clarity for GPT image edits.
         $postFields['quality'] = 'high';
-        $postFields['size'] = $targetType === 'background' ? '1536x1024' : 'auto';
+        // Preserve source composition/aspect by not forcing background dimensions.
+        $postFields['size'] = 'auto';
         $postFields['output_format'] = 'png';
         if ($model === 'gpt-image-1') {
             $postFields['input_fidelity'] = 'high';
@@ -331,42 +328,6 @@ function wf_image_delta_ratio(string $sourceAbs, string $editedAbs): float
     return $sum / ($count * 255.0);
 }
 
-function wf_create_full_edit_mask(string $sourceAbs): array
-{
-    $info = @getimagesize($sourceAbs);
-    $width = (int) ($info[0] ?? 0);
-    $height = (int) ($info[1] ?? 0);
-    if ($width <= 0 || $height <= 0) {
-        throw new RuntimeException('Unable to create edit mask: invalid source dimensions');
-    }
-
-    $mask = imagecreatetruecolor($width, $height);
-    if (!$mask) {
-        throw new RuntimeException('Unable to allocate image mask');
-    }
-    imagealphablending($mask, false);
-    imagesavealpha($mask, true);
-    $transparent = imagecolorallocatealpha($mask, 0, 0, 0, 127);
-    imagefill($mask, 0, 0, $transparent);
-
-    $tmp = tempnam(sys_get_temp_dir(), 'wf-ai-edit-mask-');
-    if ($tmp === false) {
-        imagedestroy($mask);
-        throw new RuntimeException('Failed to allocate temp path for AI edit mask');
-    }
-    if (!imagepng($mask, $tmp, 1)) {
-        imagedestroy($mask);
-        @unlink($tmp);
-        throw new RuntimeException('Failed to write AI edit mask');
-    }
-    imagedestroy($mask);
-
-    return [
-        'path' => $tmp,
-        'cleanup' => $tmp
-    ];
-}
-
 function wf_resolve_local_image_abs(string $sourceImageUrl): string
 {
     $sourceImageUrl = trim($sourceImageUrl);
@@ -493,7 +454,6 @@ try {
     }
     $editedTemp = '';
     $uploadSourceTemp = '';
-    $maskTemp = '';
     $derivedPaths = [];
     $responseData = null;
     $responseMessage = '';
@@ -505,18 +465,12 @@ try {
 
         $effectiveInstructions = trim($instructions);
 
-        if ($targetType === 'background') {
-            $maskPrepared = wf_create_full_edit_mask($uploadSourcePath);
-            $maskTemp = (string) ($maskPrepared['cleanup'] ?? '');
-        }
-
         $openAiResponse = wf_openai_edit_image(
             $apiKey,
             $model,
             $effectiveInstructions,
             $uploadSourcePath,
-            $targetType,
-            $maskTemp
+            $targetType
         );
         $editedTemp = wf_edited_image_to_temp($openAiResponse);
 
@@ -531,8 +485,7 @@ try {
                 $model,
                 $retryPrompt,
                 $uploadSourcePath,
-                $targetType,
-                $maskTemp
+                $targetType
             );
             $editedTemp = wf_edited_image_to_temp($retryResponse);
         }
@@ -662,7 +615,7 @@ try {
             $responseMessage = 'Edited background image saved';
         }
     } finally {
-        $pathsToDelete = array_merge([$editedTemp, $uploadSourceTemp, $maskTemp], $derivedPaths);
+        $pathsToDelete = array_merge([$editedTemp, $uploadSourceTemp], $derivedPaths);
         foreach ($pathsToDelete as $path) {
             if (is_string($path) && $path !== '' && file_exists($path)) {
                 @unlink($path);

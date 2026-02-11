@@ -32,13 +32,14 @@ export const CustomerEditorModal: React.FC<CustomerEditorModalProps> = ({
     const [mode, setMode] = useState<'view' | 'edit'>(initialMode);
     const [addresses, setAddresses] = useState<ICustomerAddress[]>([]);
     const [editingAddress, setEditingAddress] = useState<Partial<ICustomerAddress> | null>(null);
+    const resolvedUserId = customer?.id ?? user_id;
 
     const loadData = useCallback(async () => {
         const data = await fetchCustomerDetails(user_id);
         if (data) {
             setCustomer(data);
             setOriginalCustomer({ ...data }); // Store a copy for dirty checking
-            const addr = await fetchCustomerAddresses(user_id);
+            const addr = await fetchCustomerAddresses(data.id);
             setAddresses(addr);
         }
     }, [user_id, fetchCustomerDetails, fetchCustomerAddresses]);
@@ -58,7 +59,7 @@ export const CustomerEditorModal: React.FC<CustomerEditorModalProps> = ({
 
     const handleSaveProfile = async (): Promise<boolean> => {
         if (!customer) return false;
-        const res = await updateCustomer(user_id, customer);
+        const res = await updateCustomer(resolvedUserId, customer);
         if (res.success) {
             setOriginalCustomer({ ...customer }); // Sync original on success
             onSaved();
@@ -90,9 +91,9 @@ export const CustomerEditorModal: React.FC<CustomerEditorModalProps> = ({
             return;
         }
 
-        const res = await saveAddress({ ...editingAddress, user_id: user_id });
+        const res = await saveAddress({ ...editingAddress, user_id: resolvedUserId });
         if (res.success) {
-            const addr = await fetchCustomerAddresses(user_id);
+            const addr = await fetchCustomerAddresses(resolvedUserId);
             setAddresses(addr);
             setEditingAddress(null);
             if (window.WFToast) window.WFToast.success('Address saved successfully');
@@ -114,7 +115,7 @@ export const CustomerEditorModal: React.FC<CustomerEditorModalProps> = ({
         if (confirmed) {
             const res = await deleteAddress(id);
             if (res.success) {
-                const addr = await fetchCustomerAddresses(user_id);
+                const addr = await fetchCustomerAddresses(resolvedUserId);
                 setAddresses(addr);
                 if (window.WFToast) window.WFToast.success('Address deleted');
             }

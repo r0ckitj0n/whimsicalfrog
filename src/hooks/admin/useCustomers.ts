@@ -35,7 +35,7 @@ export const useCustomers = () => {
             if (Array.isArray(res)) {
                 // If the server returns a list even with an ID, find the specific one
                 const found = res.find(c => String(c.id) === String(id));
-                return found || (res.length > 0 ? res[0] : null);
+                return found || null;
             }
             return res;
         } catch (err) {

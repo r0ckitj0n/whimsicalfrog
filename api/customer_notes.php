@@ -16,10 +16,16 @@ if ($method !== 'GET' && $method !== 'POST') {
 }
 requireAdmin(true);
 
+function wf_is_valid_customer_user_id($value): bool
+{
+    $id = trim((string) $value);
+    return $id !== '' && preg_match('/^[A-Za-z0-9_-]{1,64}$/', $id) === 1;
+}
+
 try {
     if ($method === 'GET') {
         $user_id = $_GET['user_id'] ?? null;
-        if (!$user_id || !ctype_digit((string)$user_id)) {
+        if (!wf_is_valid_customer_user_id($user_id)) {
             Response::error('user_id is required', null, 400);
         }
 
@@ -54,7 +60,7 @@ try {
         $note_text = trim((string)($data['note_text'] ?? ''));
         $author = trim((string)($data['author_username'] ?? 'Admin'));
 
-        if (!$user_id || !ctype_digit((string)$user_id) || $note_text === '') {
+        if (!wf_is_valid_customer_user_id($user_id) || $note_text === '') {
             Response::error('user_id and note_text are required', null, 400);
         }
         if (strlen($note_text) > 2000) {

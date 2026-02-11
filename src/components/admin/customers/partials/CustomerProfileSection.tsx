@@ -16,6 +16,7 @@ export const CustomerProfileSection: React.FC<CustomerProfileSectionProps> = ({ 
 
     const renderField = (label: string, name: keyof ICustomer, type: string = 'text', options?: { value: string, label: string }[]) => {
         const value = customer[name] as string || '';
+        const selectValue = name === 'role' ? value.toLowerCase().trim() : value;
         const isReadonly = mode === 'view';
 
         return (
@@ -31,7 +32,7 @@ export const CustomerProfileSection: React.FC<CustomerProfileSectionProps> = ({ 
                             id={String(name)}
                             name={String(name)}
                             className="form-select w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)] outline-none transition-all"
-                            value={value}
+                            value={selectValue}
                             onChange={handleChange}
                             required={['first_name', 'last_name', 'email', 'username'].includes(String(name))}
                         >

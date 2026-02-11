@@ -301,9 +301,9 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
 
     return (
         <div className="p-8 lg:p-10 flex-1 min-h-0 overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 h-full min-h-0">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 h-full min-h-0">
                 {/* Active Look */}
-                <div className="space-y-6 h-full min-h-0 flex flex-col">
+                <div className="space-y-6 h-full min-h-0 flex flex-col lg:col-span-3">
                     <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2">Active Look</h4>
                     {backgrounds.activeBackground ? (
                         <div className="relative group rounded-3xl overflow-hidden border-4 border-white shadow-xl bg-white">
@@ -343,9 +343,22 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                 </div>
 
                 {/* Create New Background */}
-                <div className="space-y-6 h-full min-h-0 flex flex-col">
+                <div className="space-y-6 h-full min-h-0 flex flex-col lg:col-span-6">
                     <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2">Create New Background</h4>
                     <div className="space-y-6 overflow-y-auto pr-1 flex-1 min-h-0">
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Scale Mode</label>
+                            <select
+                                value={selectedScaleMode}
+                                onChange={(e) => setSelectedScaleMode(e.target.value as 'modal' | 'fullscreen' | 'fixed')}
+                                className="w-full text-xs font-bold p-2.5 border border-slate-200 rounded-lg bg-white"
+                                disabled={isGenerating}
+                            >
+                                <option value="fixed">Fixed (portrait)</option>
+                                <option value="fullscreen">Full Page (wide)</option>
+                                <option value="modal">Modal (4:3)</option>
+                            </select>
+                        </div>
                         <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
                         <div className="flex items-center justify-between gap-2">
                             <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Generate With AI (OpenAI)</div>
@@ -372,19 +385,6 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                                         {template.template_name}
                                     </option>
                                 ))}
-                            </select>
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Scale Mode</label>
-                            <select
-                                value={selectedScaleMode}
-                                onChange={(e) => setSelectedScaleMode(e.target.value as 'modal' | 'fullscreen' | 'fixed')}
-                                className="w-full text-xs font-bold p-2.5 border border-slate-200 rounded-lg bg-white"
-                                disabled={isGenerating}
-                            >
-                                <option value="modal">Modal (4:3)</option>
-                                <option value="fullscreen">Full Page (wide)</option>
-                                <option value="fixed">Fixed (portrait)</option>
                             </select>
                         </div>
                         <div className="max-h-56 overflow-auto pr-1">
@@ -475,7 +475,7 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                 </div>
 
                 {/* Library */}
-                <div className="space-y-6 h-full min-h-0 flex flex-col overflow-hidden">
+                <div className="space-y-6 h-full min-h-0 flex flex-col overflow-hidden lg:col-span-3">
                     <div className="flex items-center justify-between border-b border-gray-50 pb-2">
                         <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Room Library</h4>
                         <button

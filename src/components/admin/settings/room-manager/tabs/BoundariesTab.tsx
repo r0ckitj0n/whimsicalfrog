@@ -68,12 +68,18 @@ export const BoundariesTab: React.FC<BoundariesTabProps> = ({
     isEditMode,
     previewKey
 }) => {
-    const resolvedBackgroundUrl = bgUrl || getImageUrl(activeBackground || {});
+    const normalizedBgUrl = String(bgUrl || '').trim();
+    const activeBackgroundUrl = activeBackground ? getImageUrl(activeBackground) : '';
+    const isLibraryManagedPath = /^(\/?images\/backgrounds\/|backgrounds\/)/i.test(normalizedBgUrl);
+    const hasCustomBackgroundOverride = normalizedBgUrl !== '' && !isLibraryManagedPath;
+    const resolvedBackgroundUrl = hasCustomBackgroundOverride
+        ? normalizedBgUrl
+        : (activeBackgroundUrl || normalizedBgUrl);
 
     return (
         <div className="flex-1 h-full flex overflow-hidden min-h-0">
             <MapSidebar
-                bgUrl={resolvedBackgroundUrl}
+                bgUrl={normalizedBgUrl}
                 onBgUrlChange={onBgUrlChange}
                 iconPanelColor={iconPanelColor}
                 onIconPanelColorChange={onIconPanelColorChange}

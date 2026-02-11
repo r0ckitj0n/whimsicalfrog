@@ -17,6 +17,42 @@ class SpaSeoHelper
         return self::renderTags($seo);
     }
 
+    public static function renderRoomDiscoverabilityNav(): string
+    {
+        $map = wf_get_room_slug_map();
+        $byRoom = is_array($map['by_room'] ?? null) ? $map['by_room'] : [];
+        if (empty($byRoom)) {
+            return '';
+        }
+
+        $paths = [];
+        foreach ($byRoom as $roomNumber => $_slug) {
+            $path = wf_room_canonical_path((string) $roomNumber);
+            if ($path === null || $path === '') {
+                continue;
+            }
+            $paths[$path] = (string) $roomNumber;
+        }
+
+        if (empty($paths)) {
+            return '';
+        }
+
+        ksort($paths, SORT_NATURAL | SORT_FLAG_CASE);
+
+        // Hidden from visual layout while still present in DOM for crawlers and assistive tech.
+        $style = 'position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;border:0!important;white-space:nowrap!important;';
+        $html = '<nav aria-label="Room URLs" data-wf-seo-nav="rooms" style="' . $style . '"><ul>';
+        foreach ($paths as $path => $roomNumber) {
+            $safePath = self::escape($path);
+            $label = self::escape('Room ' . $roomNumber);
+            $html .= '<li><a href="' . $safePath . '">' . $label . '</a></li>';
+        }
+        $html .= '</ul></nav>';
+
+        return $html;
+    }
+
     private static function buildSeoPayload(string $path): array
     {
         $roomNumber = self::resolveRoomNumberForPath($path);

@@ -273,6 +273,7 @@ if ($html === false) {
 try {
     require_once __DIR__ . '/includes/helpers/SpaSeoHelper.php';
     $seoTags = SpaSeoHelper::renderTagsForPath($requestedPath);
+    $discoverabilityNav = SpaSeoHelper::renderRoomDiscoverabilityNav();
     $initialRoom = SpaSeoHelper::resolveRoomNumberForPath($requestedPath);
     if (!empty($seoTags) && stripos($html, '</head>') !== false) {
         $patterns = [
@@ -297,6 +298,9 @@ try {
             $seoTags .= "\n" . $bootScript;
         }
         $html = preg_replace('/<\/head>/i', $seoTags . "\n</head>", $html, 1);
+    }
+    if (!empty($discoverabilityNav) && stripos($html, '</body>') !== false) {
+        $html = preg_replace('/<\/body>/i', $discoverabilityNav . "\n</body>", $html, 1);
     }
 } catch (Throwable $e) {
     error_log('[router] SEO injection failed: ' . $e->getMessage());

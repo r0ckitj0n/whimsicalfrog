@@ -6,6 +6,9 @@ export interface IRoomImageGenerationRequest {
     model?: string;
     size?: '1024x1024' | '1536x1024' | '1024x1536';
     background_name?: string;
+    prompt_override?: string;
+    generate_prompt_only?: boolean;
+    refine_prompt_with_ai?: boolean;
 }
 
 export interface IRoomImageGenerationResult {

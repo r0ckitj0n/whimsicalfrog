@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useMarketingManager, MarketingData } from './useMarketingManager.js';
 import { useAIGenerationOrchestrator } from '../useAIGenerationOrchestrator.js';
 import { generateMarketingSuggestion } from './generateCostSuggestion.js';
+import { useAICostEstimateConfirm } from '../useAICostEstimateConfirm.js';
 
 interface UseMarketingModalParams {
     sku: string;
@@ -30,6 +31,7 @@ export const useMarketingModal = ({
         setMarketingData
     } = useMarketingManager();
     const { generateInfoOnly } = useAIGenerationOrchestrator();
+    const { confirmWithEstimate } = useAICostEstimateConfirm();
 
     // Local editable state
     const [editedTitle, setEditedTitle] = useState('');
@@ -68,6 +70,23 @@ export const useMarketingModal = ({
     }, [marketingData, dataSource]);
 
     const handleGenerateAll = useCallback(async () => {
+        const confirmed = await confirmWithEstimate({
+            action_key: 'inventory_generate_marketing',
+            action_label: 'Generate marketing content with AI',
+            operations: [
+                { key: 'info_from_images', label: 'Image analysis + item info' },
+                { key: 'marketing_generation', label: 'Marketing generation' }
+            ],
+            context: {
+                image_count: 1,
+                name_length: itemName.length,
+                description_length: itemDescription.length,
+                category_length: category.length
+            },
+            confirmText: 'Generate'
+        });
+        if (!confirmed) return;
+
         setApplyStatus({ message: 'Generating AI content... This may take 10-30 seconds.', success: true });
         const result = await generateMarketingSuggestion({
             sku,
@@ -93,7 +112,7 @@ export const useMarketingModal = ({
             setApplyStatus({ message: 'Failed to generate content. Check console for details.', success: false });
             setTimeout(() => setApplyStatus(null), 5000);
         }
-    }, [sku, itemName, itemDescription, category, generateMarketing, generateInfoOnly]);
+    }, [category, confirmWithEstimate, generateInfoOnly, generateMarketing, itemDescription, itemName, sku]);
 
     const handleRefreshFromDb = useCallback(async () => {
         setApplyStatus({ message: 'Refreshing saved marketing data...', success: true });

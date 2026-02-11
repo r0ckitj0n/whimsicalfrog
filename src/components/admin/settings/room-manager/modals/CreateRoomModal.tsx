@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ApiClient } from '../../../../../core/ApiClient.js';
 import { useAIPromptTemplates } from '../../../../../hooks/admin/useAIPromptTemplates.js';
+import { useAICostEstimateConfirm } from '../../../../../hooks/admin/useAICostEstimateConfirm.js';
 import {
     DEFAULT_ROOM_IMAGE_VARIABLE_VALUES,
     getRoomImageVariableOptions,
@@ -178,6 +179,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPromptPreview, setShowPromptPreview] = useState(false);
     const [settingsTemplateKey, setSettingsTemplateKey] = useState<string>('');
+    const { confirmWithEstimate } = useAICostEstimateConfirm();
     const {
         templates,
         variables,
@@ -406,6 +408,24 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         window.WFToast?.success?.('Step 1/3 complete: Room created');
 
         if (form.generate_image) {
+            const confirmed = await confirmWithEstimate({
+                action_key: 'create_room_generate_image',
+                action_label: 'Generate initial room image with AI',
+                operations: [
+                    { key: 'room_image_generation', label: 'Room image generation', image_generations: 1 }
+                ],
+                context: {
+                    prompt_length: generatedPromptText.length
+                },
+                confirmText: 'Generate Image'
+            });
+            if (!confirmed) {
+                setIsSubmitting(false);
+                window.WFToast?.info?.('Room created without AI image generation.');
+                onClose();
+                return;
+            }
+
             window.WFToast?.info?.('Step 2/3: Generating background image...');
             const genRes = await onGenerateBackground({
                 room_number: form.room_number.trim(),

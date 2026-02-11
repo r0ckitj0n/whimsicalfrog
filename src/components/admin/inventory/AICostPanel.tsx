@@ -5,6 +5,7 @@ import { getPriceTierMultiplier } from '../../../hooks/admin/inventory-ai/usePri
 import { toastSuccess, toastError } from '../../../core/toast.js';
 import { generateCostSuggestion } from '../../../hooks/admin/inventory-ai/generateCostSuggestion.js';
 import { useAIGenerationOrchestrator } from '../../../hooks/admin/useAIGenerationOrchestrator.js';
+import { useAICostEstimateConfirm } from '../../../hooks/admin/useAICostEstimateConfirm.js';
 import { formatTime } from '../../../core/date-utils.js';
 import { QualityTierControl } from './QualityTierControl.js';
 
@@ -55,6 +56,7 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
     const cached_cost_suggestion = propCachedSuggestion ?? hookCachedSuggestion;
     const { populateFromSuggestion, confidence: savedConfidence, appliedAt: savedAt, fetchBreakdown } = useCostBreakdown(sku);
     const { generateInfoOnly } = useAIGenerationOrchestrator();
+    const { confirmWithEstimate } = useAICostEstimateConfirm();
     const [isApplying, setIsApplying] = React.useState(false);
 
     const runImageFirstSuggestion = async (targetTier: string) => {
@@ -81,6 +83,23 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
     };
 
     const handleSuggest = async () => {
+        const confirmed = await confirmWithEstimate({
+            action_key: 'inventory_generate_cost',
+            action_label: 'Generate cost suggestion with AI',
+            operations: [
+                { key: 'info_from_images', label: 'Image analysis + item info' },
+                { key: 'cost_estimation', label: 'Cost suggestion' }
+            ],
+            context: {
+                image_count: Math.max(imageUrls.length, primaryImageUrl ? 1 : 0),
+                name_length: name.length,
+                description_length: description.length,
+                category_length: category.length
+            },
+            confirmText: 'Generate'
+        });
+        if (!confirmed) return;
+
         await runImageFirstSuggestion(tier);
     };
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ApiClient } from '../../../../../core/ApiClient.js';
 import { useAIPromptTemplates } from '../../../../../hooks/admin/useAIPromptTemplates.js';
+import { useAICostEstimateConfirm } from '../../../../../hooks/admin/useAICostEstimateConfirm.js';
 import {
     DEFAULT_ROOM_IMAGE_VARIABLE_VALUES,
     getRoomImageVariableOptions,
@@ -173,7 +174,9 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
         }, {} as Record<RoomImageAestheticFieldKey, string>);
     });
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
     const [showPromptPreview, setShowPromptPreview] = useState(false);
+    const [generatedPromptText, setGeneratedPromptText] = useState('');
     const [generationMessage, setGenerationMessage] = useState<{ type: 'error' | 'success' | 'info'; text: string } | null>(null);
     const [settingsTemplateKey, setSettingsTemplateKey] = useState<string>('');
     const {
@@ -185,6 +188,7 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
         fetchVariables,
         fetchDropdownOptions
     } = useAIPromptTemplates();
+    const { confirmWithEstimate } = useAICostEstimateConfirm();
 
     const roomTemplates = useMemo(
         () => templates.filter(t => t.context_type === 'room_generation' && !!t.is_active),
@@ -247,13 +251,83 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
         () => roomTemplates.find((template) => template.template_key === selectedTemplateKey) || null,
         [roomTemplates, selectedTemplateKey]
     );
-    const generatedPromptText = useMemo(() => {
+    const draftPromptText = useMemo(() => {
         const basePrompt = selectedTemplate?.prompt_text || '';
         if (!basePrompt) return '';
         const promptBody = resolveTemplateText(basePrompt, resolvedVariables);
         const priorityBlock = buildPriorityInstructionBlock(resolvedVariables);
         return `${priorityBlock}${promptBody}`;
     }, [resolvedVariables, selectedTemplate?.prompt_text]);
+
+    useEffect(() => {
+        setGeneratedPromptText('');
+    }, [selectedTemplateKey, resolvedVariables, imageSize, roomNumber]);
+
+    const handleGeneratePrompt = async (openPreview: boolean = true, skipConfirm: boolean = false): Promise<string | null> => {
+        setGenerationMessage(null);
+        if (!roomNumber) {
+            const message = 'Select a room first';
+            window.WFToast?.error?.(message);
+            setGenerationMessage({ type: 'error', text: message });
+            return null;
+        }
+        if (!selectedTemplateKey) {
+            const message = 'Select an AI template';
+            window.WFToast?.error?.(message);
+            setGenerationMessage({ type: 'error', text: message });
+            return null;
+        }
+
+        if (!skipConfirm) {
+            const confirmed = await confirmWithEstimate({
+                action_key: 'room_generate_prompt',
+                action_label: 'Generate room prompt with AI',
+                operations: [
+                    { key: 'room_prompt_refinement', label: 'Room prompt refinement' }
+                ],
+                context: {
+                    prompt_length: draftPromptText.length
+                },
+                confirmText: 'Generate Prompt'
+            });
+            if (!confirmed) return null;
+        }
+
+        try {
+            setIsGeneratingPrompt(true);
+            setGenerationMessage({ type: 'info', text: 'Generating prompt...' });
+            const res = await ApiClient.post<import('../../../../../types/room-generation.js').IRoomImageGenerationResponse>('/api/generate_room_image.php', {
+                room_number: roomNumber,
+                template_key: selectedTemplateKey,
+                variables: resolvedVariables,
+                provider: 'openai',
+                size: imageSize,
+                generate_prompt_only: true,
+                refine_prompt_with_ai: true
+            });
+            if (!res?.success) {
+                throw new Error(res?.error || 'Failed to generate prompt');
+            }
+
+            const promptText = String(res?.data?.prompt_text || res?.prompt_text || '').trim();
+            if (!promptText) {
+                throw new Error('AI returned an empty prompt');
+            }
+            setGeneratedPromptText(promptText);
+            setGenerationMessage({ type: 'success', text: 'Prompt generated.' });
+            if (openPreview) {
+                setShowPromptPreview(true);
+            }
+            return promptText;
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Failed to generate prompt';
+            window.WFToast?.error?.(message);
+            setGenerationMessage({ type: 'error', text: message });
+            return null;
+        } finally {
+            setIsGeneratingPrompt(false);
+        }
+    };
 
     const handleGenerate = async () => {
         setGenerationMessage(null);
@@ -270,16 +344,41 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
             return;
         }
 
+        const willRefinePrompt = generatedPromptText.trim().length === 0;
+        const confirmed = await confirmWithEstimate({
+            action_key: willRefinePrompt ? 'room_generate_background' : 'room_generate_background_only',
+            action_label: 'Generate room image with AI',
+            operations: willRefinePrompt
+                ? [
+                    { key: 'room_prompt_refinement', label: 'Room prompt refinement' },
+                    { key: 'room_image_generation', label: 'Room image generation', image_generations: 1 }
+                ]
+                : [
+                    { key: 'room_image_generation', label: 'Room image generation', image_generations: 1 }
+                ],
+            context: {
+                prompt_length: (generatedPromptText.trim() || draftPromptText).length
+            },
+            confirmText: 'Generate Image'
+        });
+        if (!confirmed) return;
+
         try {
             setIsGenerating(true);
             setGenerationMessage({ type: 'info', text: 'Generating room image...' });
+            const promptToUse = generatedPromptText.trim() || (await handleGeneratePrompt(false, true)) || '';
+            if (!promptToUse) {
+                return;
+            }
+
             const result = await onGenerateBackground({
                 room_number: roomNumber,
                 template_key: selectedTemplateKey,
                 variables: resolvedVariables,
                 provider: 'openai',
                 size: imageSize,
-                background_name: roomName ? `${roomNumber} - ${roomName}` : roomNumber
+                background_name: roomName ? `${roomNumber} - ${roomName}` : roomNumber,
+                prompt_override: promptToUse
             });
 
             if (!result.success) {
@@ -346,29 +445,16 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                 <div className="space-y-6 h-full min-h-0 flex flex-col">
                     <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2">Create New Background</h4>
                     <div className="space-y-6 overflow-y-auto pr-1 flex-1 min-h-0">
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Scale Mode</label>
-                            <select
-                                value={selectedScaleMode}
-                                onChange={(e) => setSelectedScaleMode(e.target.value as 'modal' | 'fullscreen' | 'fixed')}
-                                className="w-full text-xs font-bold p-2.5 border border-slate-200 rounded-lg bg-white"
-                                disabled={isGenerating}
-                            >
-                                <option value="fixed">Fixed (portrait)</option>
-                                <option value="fullscreen">Full Page (wide)</option>
-                                <option value="modal">Modal (4:3)</option>
-                            </select>
-                        </div>
                         <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
                         <div className="flex items-center justify-between gap-2">
                             <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Generate With AI (OpenAI)</div>
                             <button
                                 type="button"
-                                onClick={() => setShowPromptPreview(true)}
-                                disabled={!selectedTemplateKey || !generatedPromptText}
+                                onClick={() => void handleGeneratePrompt(true)}
+                                disabled={!selectedTemplateKey || templatesLoading || isGenerating || isGeneratingPrompt}
                                 className="btn btn-secondary px-3 py-2 text-[10px] font-black uppercase tracking-widest disabled:opacity-60"
                             >
-                                Preview Prompt
+                                {isGeneratingPrompt ? 'Generating...' : 'Generate Prompt'}
                             </button>
                         </div>
                         <div className="space-y-1.5">
@@ -393,6 +479,21 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                                     <section key={group.title} className="rounded-xl border border-slate-200 p-3 bg-slate-50/40">
                                         <h5 className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2">{group.title}</h5>
                                         <div className="grid grid-cols-1 gap-2">
+                                            {group.title === 'Scene Setup' && (
+                                                <div className="space-y-1">
+                                                    <label className="text-[10px] font-bold text-slate-500">Scale Mode</label>
+                                                    <select
+                                                        value={selectedScaleMode}
+                                                        onChange={(e) => setSelectedScaleMode(e.target.value as 'modal' | 'fullscreen' | 'fixed')}
+                                                        className="w-full text-[11px] p-2 border border-slate-200 rounded-lg bg-white"
+                                    disabled={isGenerating || isGeneratingPrompt}
+                                                    >
+                                                        <option value="fixed">Fixed (portrait)</option>
+                                                        <option value="fullscreen">Full Page (wide)</option>
+                                                        <option value="modal">Modal (4:3)</option>
+                                                    </select>
+                                                </div>
+                                            )}
                                             {group.fields.map((fieldKey) => {
                                                 const field = ROOM_IMAGE_AESTHETIC_FIELDS.find((f) => f.key === fieldKey);
                                                 if (!field) return null;
@@ -566,7 +667,7 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                 <div className="fixed inset-0 z-[var(--wf-z-modal)] bg-black/45 backdrop-blur-sm p-4 flex items-center justify-center">
                     <div className="w-full max-w-3xl max-h-[85vh] bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col">
                         <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
-                            <h5 className="text-xs font-black uppercase tracking-widest text-slate-700">Resolved Prompt Preview</h5>
+                            <h5 className="text-xs font-black uppercase tracking-widest text-slate-700">Generated Prompt Preview</h5>
                             <button
                                 type="button"
                                 onClick={() => setShowPromptPreview(false)}
@@ -576,7 +677,7 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                         </div>
                         <div className="p-4 overflow-auto">
                             <pre className="text-[11px] leading-relaxed whitespace-pre-wrap break-words text-slate-700 font-mono">
-                                {generatedPromptText || 'No prompt available. Select a template first.'}
+                                {generatedPromptText || draftPromptText || 'No prompt available. Select a template first.'}
                             </pre>
                         </div>
                         <div className="px-4 py-3 border-t border-slate-200 flex justify-end">

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useAISuggestions } from './useAISuggestions.js';
 import { useAIContentGenerator } from './useAIContentGenerator.js';
 import { useAIGenerationOrchestrator, type GenerationContext } from './useAIGenerationOrchestrator.js';
+import { useAICostEstimateConfirm } from './useAICostEstimateConfirm.js';
 import { CostSuggestion, PriceSuggestion } from './useInventoryAI.js';
 import { MarketingData } from './inventory-ai/useMarketingManager.js';
 import { AiManager } from '../../core/ai/AiManager.js';
@@ -41,6 +42,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
         generateInfoOnly,
         generatePriceOnly
     } = useAIGenerationOrchestrator();
+    const { confirmWithEstimate } = useAICostEstimateConfirm();
 
     // LOCAL cached suggestions that we pass as props to the panels
     const [cachedCostSuggestion, setCachedCostSuggestion] = useState<CostSuggestion | null>(null);
@@ -268,6 +270,24 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
 
     const handleGenerate = async () => {
         if (!currentItem) return;
+        const confirmed = await confirmWithEstimate({
+            action_key: 'ai_suggestions_generate_all',
+            action_label: 'Generate all suggestions with AI',
+            operations: [
+                { key: 'info_from_images', label: 'Image analysis + item info' },
+                { key: 'cost_estimation', label: 'Cost suggestion' },
+                { key: 'marketing_generation', label: 'Marketing generation' },
+                { key: 'price_estimation', label: 'Price suggestion' }
+            ],
+            context: {
+                image_count: Math.max(resolvedImageUrls.length, resolvedPrimaryImageUrl ? 1 : 0),
+                name_length: localFormData.name.length,
+                description_length: localFormData.description.length,
+                category_length: localFormData.category.length
+            },
+            confirmText: 'Generate All'
+        });
+        if (!confirmed) return;
 
         const primaryImageUrl = resolvedPrimaryImageUrl || `/images/items/${currentItem.sku}A.webp`;
 
@@ -424,6 +444,22 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
 
     const handleGenerateItemInfo = async () => {
         if (!currentItem) return;
+        const confirmed = await confirmWithEstimate({
+            action_key: 'ai_suggestions_generate_info',
+            action_label: 'Generate item information with AI',
+            operations: [
+                { key: 'info_from_images', label: 'Image analysis + item info' },
+                { key: 'marketing_generation', label: 'Marketing refinement' }
+            ],
+            context: {
+                image_count: Math.max(resolvedImageUrls.length, resolvedPrimaryImageUrl ? 1 : 0),
+                name_length: localFormData.name.length,
+                description_length: localFormData.description.length,
+                category_length: localFormData.category.length
+            },
+            confirmText: 'Generate'
+        });
+        if (!confirmed) return;
 
         const primaryImageUrl = resolvedPrimaryImageUrl || `/images/items/${currentItem.sku}A.webp`;
         const infoLockedWords = lockedWords;

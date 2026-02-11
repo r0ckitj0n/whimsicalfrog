@@ -306,6 +306,87 @@ function wf_openai_generate_image(string $apiKey, string $model, string $prompt,
     throw new RuntimeException($lastError);
 }
 
+function wf_openai_generate_prompt(string $apiKey, string $model, string $templateKey, array $resolvedVariables, string $basePrompt): string
+{
+    $variablesJson = (string) json_encode($resolvedVariables, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $inputText = <<<TXT
+Template key: {$templateKey}
+
+Resolved variables (JSON):
+{$variablesJson}
+
+Resolved template draft:
+{$basePrompt}
+TXT;
+
+    $body = [
+        'model' => $model,
+        'instructions' => 'You are an expert prompt engineer for image generation. Return only the final production-ready image prompt text. Do not include JSON, markdown, commentary, or labels.',
+        'input' => [[
+            'role' => 'user',
+            'content' => [[
+                'type' => 'input_text',
+                'text' => $inputText
+            ]]
+        ]],
+        'temperature' => 0.35,
+        'max_output_tokens' => 1200
+    ];
+
+    $ch = curl_init('https://api.openai.com/v1/responses');
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => [
+            'Authorization: Bearer ' . $apiKey,
+            'Content-Type: application/json'
+        ],
+        CURLOPT_TIMEOUT => 120,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_POSTFIELDS => json_encode($body, JSON_UNESCAPED_SLASHES)
+    ]);
+
+    $raw = curl_exec($ch);
+    $curlErr = curl_error($ch);
+    $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($raw === false) {
+        throw new RuntimeException('OpenAI prompt generation failed: ' . $curlErr);
+    }
+
+    $decoded = json_decode((string) $raw, true);
+    if (!is_array($decoded)) {
+        throw new RuntimeException('OpenAI prompt generation returned invalid JSON');
+    }
+    if ($status >= 400) {
+        $message = (string) ($decoded['error']['message'] ?? $decoded['error'] ?? 'Unknown OpenAI error');
+        throw new RuntimeException('OpenAI prompt generation failed (HTTP ' . $status . '): ' . $message);
+    }
+
+    $text = '';
+    if (isset($decoded['output_text']) && is_string($decoded['output_text'])) {
+        $text = trim($decoded['output_text']);
+    }
+    if ($text === '' && !empty($decoded['output']) && is_array($decoded['output'])) {
+        foreach ($decoded['output'] as $outputEntry) {
+            $contentArr = is_array($outputEntry['content'] ?? null) ? $outputEntry['content'] : [];
+            foreach ($contentArr as $contentEntry) {
+                $candidate = trim((string) ($contentEntry['text'] ?? ''));
+                if ($candidate !== '') {
+                    $text = $candidate;
+                    break 2;
+                }
+            }
+        }
+    }
+    if ($text === '') {
+        throw new RuntimeException('OpenAI prompt generation returned an empty prompt');
+    }
+
+    return $text;
+}
+
 function wf_download_image_to_temp(string $url): string
 {
     $tmp = tempnam(sys_get_temp_dir(), 'wf-img-url-');
@@ -359,6 +440,9 @@ try {
     $provider = strtolower(trim((string) ($input['provider'] ?? 'openai')));
     $size = trim((string) ($input['size'] ?? '1536x1024'));
     $backgroundNameInput = trim((string) ($input['background_name'] ?? ''));
+    $promptOverride = trim((string) ($input['prompt_override'] ?? ''));
+    $generatePromptOnly = !empty($input['generate_prompt_only']);
+    $refinePromptWithAi = !empty($input['refine_prompt_with_ai']) || $generatePromptOnly;
 
     if ($roomParam === '' || !preg_match('/^[0-9a-zA-Z]+$/', $roomParam)) {
         Response::error('room_number is required (alphanumeric)', null, 422);
@@ -402,7 +486,7 @@ try {
 
     $promptBody = wf_resolve_prompt_text((string) ($template['prompt_text'] ?? ''), $resolved);
     $priorityBlock = wf_build_priority_instruction_block($resolved);
-    $prompt = $priorityBlock . $promptBody;
+    $resolvedTemplatePrompt = $priorityBlock . $promptBody;
 
     $settingsRows = Database::queryAll("SELECT setting_key, setting_value FROM business_settings WHERE category = 'ai'");
     $settings = [];
@@ -419,6 +503,15 @@ try {
     if ($model === '') {
         $model = 'gpt-image-1';
     }
+    $textModel = trim((string) ($settings['openai_model'] ?? 'gpt-4o-mini'));
+    if ($textModel === '') {
+        $textModel = 'gpt-4o-mini';
+    }
+
+    $prompt = $promptOverride !== '' ? $promptOverride : $resolvedTemplatePrompt;
+    if ($promptOverride === '' && $refinePromptWithAi) {
+        $prompt = wf_openai_generate_prompt($apiKey, $textModel, $templateKey, $resolved, $resolvedTemplatePrompt);
+    }
 
     $roomType = str_starts_with(strtolower($roomParam), 'room') ? 'room' . substr($roomParam, 4) : 'room' . $roomParam;
     $rawRoomNumber = preg_replace('/^room/i', '', $roomType);
@@ -430,6 +523,16 @@ try {
     $roomNumberForLog = $roomNumber;
     $modelForLog = $model;
     $providerForLog = $provider;
+
+    if ($generatePromptOnly) {
+        Response::success([
+            'template_key' => $templateKey,
+            'provider' => $provider,
+            'model' => $textModel,
+            'prompt_text' => $prompt,
+            'resolved_variables' => $resolved
+        ], 'Prompt generated');
+    }
 
     $apiResponse = wf_openai_generate_image($apiKey, $model, $prompt, $size);
     $first = $apiResponse['data'][0] ?? null;

@@ -17,6 +17,7 @@ export type {
 } from './payment.js';
 export type { PaymentMethod, ShippingMethod } from './payment.js';
 export type * from './ai.js';
+export type * from './ai-cost-estimate.js';
 export type * from './ai-prompts.js';
 export type * from './room-generation.js';
 export type * from './newsletter.js';

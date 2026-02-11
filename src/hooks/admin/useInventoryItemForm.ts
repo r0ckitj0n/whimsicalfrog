@@ -5,6 +5,7 @@ import { useInventoryAI } from './useInventoryAI.js';
 import { useCostBreakdown } from './useCostBreakdown.js';
 import { usePriceBreakdown } from './usePriceBreakdown.js';
 import { useAIGenerationOrchestrator, type GenerationStep, type GenerationContext } from './useAIGenerationOrchestrator.js';
+import { useAICostEstimateConfirm } from './useAICostEstimateConfirm.js';
 import { IInventoryItem, IItemDetails, ISkuRegenerateResponse } from '../../types/inventory.js';
 import type { MarketingData } from './inventory-ai/useMarketingManager.js';
 import type { IAISuggestionsParams, IAISuggestionsResponse } from '../../types/ai.js';
@@ -75,6 +76,7 @@ export const useInventoryItemForm = ({
         orchestrateFullGeneration,
         generateInfoOnly
     } = useAIGenerationOrchestrator();
+    const { confirmWithEstimate } = useAICostEstimateConfirm();
 
     const isReadOnly = mode === 'view';
     const isAdding = mode === 'add';
@@ -464,12 +466,50 @@ export const useInventoryItemForm = ({
         }
     };
 
-    const handleGenerateAll = async () => {
+    const handleGenerateAll = async (options?: { skipConfirm?: boolean }) => {
+        if (!options?.skipConfirm) {
+            const confirmed = await confirmWithEstimate({
+                action_key: 'inventory_generate_all',
+                action_label: 'Generate all item data with AI',
+                operations: [
+                    { key: 'info_from_images', label: 'Image analysis + item info' },
+                    { key: 'cost_estimation', label: 'Cost suggestion' },
+                    { key: 'marketing_generation', label: 'Marketing generation' },
+                    { key: 'price_estimation', label: 'Price suggestion' }
+                ],
+                context: {
+                    image_count: Math.max(imageUrls.length, primaryImage ? 1 : 0),
+                    name_length: formData.name.length,
+                    description_length: formData.description.length,
+                    category_length: formData.category.length
+                },
+                confirmText: 'Generate All'
+            });
+            if (!confirmed) return;
+        }
+
         // Redirection to the new chain logic
         return triggerGenerationChain();
     };
 
     const handleGenerateInfoAndMarketing = async () => {
+        const confirmed = await confirmWithEstimate({
+            action_key: 'inventory_generate_info_marketing',
+            action_label: 'Generate item info and marketing with AI',
+            operations: [
+                { key: 'info_from_images', label: 'Image analysis + item info' },
+                { key: 'marketing_generation', label: 'Marketing generation' }
+            ],
+            context: {
+                image_count: Math.max(imageUrls.length, primaryImage ? 1 : 0),
+                name_length: formData.name.length,
+                description_length: formData.description.length,
+                category_length: formData.category.length
+            },
+            confirmText: 'Generate'
+        });
+        if (!confirmed) return;
+
         if (!localSku) {
             window.WFToast?.error?.('SKU is required for AI analysis');
             return;

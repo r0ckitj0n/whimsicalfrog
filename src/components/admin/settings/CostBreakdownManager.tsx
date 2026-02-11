@@ -12,6 +12,7 @@ import { IItemDetailsResponse } from '../../../types/inventory.js';
 import { QualityTierControl } from '../inventory/QualityTierControl.js';
 import { generateCostSuggestion } from '../../../hooks/admin/inventory-ai/generateCostSuggestion.js';
 import { useAIGenerationOrchestrator } from '../../../hooks/admin/useAIGenerationOrchestrator.js';
+import { useAICostEstimateConfirm } from '../../../hooks/admin/useAICostEstimateConfirm.js';
 
 interface CostBreakdownManagerProps {
     sku?: string;
@@ -47,6 +48,7 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
     const { items, isLoadingItems } = useAIContentGenerator();
     const { fetch_cost_suggestion } = useInventoryAI();
     const { generateInfoOnly } = useAIGenerationOrchestrator();
+    const { confirmWithEstimate } = useAICostEstimateConfirm();
     const [activeCategory, setActiveCategory] = useState<CostCategory>(COST_CATEGORY.MATERIALS);
 
     useEffect(() => {
@@ -109,6 +111,23 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
             if (window.WFToast) window.WFToast.error('Could not find details for selected item');
             return;
         }
+
+        const confirmed = await confirmWithEstimate({
+            action_key: 'cost_breakdown_generate_all',
+            action_label: 'Generate cost analysis with AI',
+            operations: [
+                { key: 'info_from_images', label: 'Image analysis + item info' },
+                { key: 'cost_estimation', label: 'Cost suggestion' }
+            ],
+            context: {
+                image_count: 1,
+                name_length: currentItem.name.length,
+                description_length: String(currentItem.description || '').length,
+                category_length: String(currentItem.category || '').length
+            },
+            confirmText: 'Generate'
+        });
+        if (!confirmed) return;
 
         setIsGeneratingCost(true);
         try {

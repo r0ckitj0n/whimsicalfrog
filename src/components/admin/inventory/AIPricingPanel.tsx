@@ -8,6 +8,7 @@ import { formatTime } from '../../../core/date-utils.js';
 import { QualityTierControl } from './QualityTierControl.js';
 import { generatePriceSuggestion } from '../../../hooks/admin/inventory-ai/generateCostSuggestion.js';
 import { useAIGenerationOrchestrator } from '../../../hooks/admin/useAIGenerationOrchestrator.js';
+import { useAICostEstimateConfirm } from '../../../hooks/admin/useAICostEstimateConfirm.js';
 
 interface AIPricingPanelProps {
     sku: string;
@@ -56,6 +57,7 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
 
     const { populateFromSuggestion, confidence: savedConfidence, appliedAt: savedAt, fetchBreakdown } = usePriceBreakdown(sku);
     const { generateInfoOnly } = useAIGenerationOrchestrator();
+    const { confirmWithEstimate } = useAICostEstimateConfirm();
 
     const [isApplying, setIsApplying] = React.useState(false);
 
@@ -84,6 +86,23 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
     };
 
     const handleSuggest = async () => {
+        const confirmed = await confirmWithEstimate({
+            action_key: 'inventory_generate_price',
+            action_label: 'Generate price suggestion with AI',
+            operations: [
+                { key: 'info_from_images', label: 'Image analysis + item info' },
+                { key: 'price_estimation', label: 'Price suggestion' }
+            ],
+            context: {
+                image_count: Math.max(imageUrls.length, primaryImageUrl ? 1 : 0),
+                name_length: name.length,
+                description_length: description.length,
+                category_length: category.length
+            },
+            confirmText: 'Generate'
+        });
+        if (!confirmed) return;
+
         await runImageFirstSuggestion(tier);
     };
 

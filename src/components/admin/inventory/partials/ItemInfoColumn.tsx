@@ -91,6 +91,7 @@ export const ItemInfoColumn: React.FC<ItemInfoColumnProps> = ({
             }
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Failed to submit image tweak';
+            if (message === 'AI image edit canceled') return;
             window.WFToast?.error?.(message);
         }
     };

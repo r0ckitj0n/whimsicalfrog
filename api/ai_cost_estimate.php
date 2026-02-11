@@ -35,8 +35,8 @@ function wf_estimate_rates(string $provider, string $model): array
     $modelLower = strtolower($model);
 
     $rates = [
-        'input_per_million' => 5.0,
-        'output_per_million' => 15.0,
+        'input_per_million' => 2.5,
+        'output_per_million' => 10.0,
         'image_generation_per_image' => 0.04
     ];
 
@@ -49,32 +49,72 @@ function wf_estimate_rates(string $provider, string $model): array
     }
 
     if ($provider === 'openai') {
-        if (strpos($modelLower, 'mini') !== false) {
-            $rates['input_per_million'] = 0.6;
-            $rates['output_per_million'] = 2.4;
-        } elseif (strpos($modelLower, 'gpt-5') !== false) {
-            $rates['input_per_million'] = 1.25;
-            $rates['output_per_million'] = 10.0;
-        } elseif (strpos($modelLower, '4o') !== false) {
-            $rates['input_per_million'] = 2.5;
-            $rates['output_per_million'] = 10.0;
+        if (strpos($modelLower, 'gpt-image') !== false) {
+            $rates['input_per_million'] = 5.0;
+            $rates['output_per_million'] = 15.0;
+            $rates['image_generation_per_image'] = 0.055;
+            return $rates;
         }
 
-        if (strpos($modelLower, 'gpt-image') !== false) {
-            $rates['image_generation_per_image'] = 0.04;
+        if (strpos($modelLower, 'gpt-5.2-codex') !== false) {
+            $rates['input_per_million'] = 1.5;
+            $rates['output_per_million'] = 12.0;
+        } elseif (strpos($modelLower, 'gpt-5.2') !== false || strpos($modelLower, 'gpt-5') !== false) {
+            $rates['input_per_million'] = 1.25;
+            $rates['output_per_million'] = 10.0;
+        } elseif (strpos($modelLower, 'gpt-4o-mini') !== false) {
+            $rates['input_per_million'] = 0.6;
+            $rates['output_per_million'] = 2.4;
+        } elseif (strpos($modelLower, 'gpt-4o') !== false) {
+            $rates['input_per_million'] = 2.5;
+            $rates['output_per_million'] = 10.0;
+        } elseif (strpos($modelLower, 'gpt-4-turbo') !== false) {
+            $rates['input_per_million'] = 6.0;
+            $rates['output_per_million'] = 18.0;
+        } elseif (strpos($modelLower, 'gpt-3.5') !== false) {
+            $rates['input_per_million'] = 0.5;
+            $rates['output_per_million'] = 1.5;
         }
         return $rates;
     }
 
     if ($provider === 'anthropic') {
+        if (strpos($modelLower, 'haiku') !== false) {
+            return [
+                'input_per_million' => 1.0,
+                'output_per_million' => 5.0,
+                'image_generation_per_image' => 0.03
+            ];
+        }
+        if (strpos($modelLower, 'sonnet') !== false) {
+            return [
+                'input_per_million' => 3.0,
+                'output_per_million' => 15.0,
+                'image_generation_per_image' => 0.03
+            ];
+        }
         return [
-            'input_per_million' => 3.0,
-            'output_per_million' => 15.0,
+            'input_per_million' => 4.0,
+            'output_per_million' => 20.0,
             'image_generation_per_image' => 0.03
         ];
     }
 
     if ($provider === 'google') {
+        if (strpos($modelLower, 'flash') !== false) {
+            return [
+                'input_per_million' => 0.6,
+                'output_per_million' => 2.4,
+                'image_generation_per_image' => 0.025
+            ];
+        }
+        if (strpos($modelLower, 'pro') !== false) {
+            return [
+                'input_per_million' => 1.8,
+                'output_per_million' => 7.0,
+                'image_generation_per_image' => 0.03
+            ];
+        }
         return [
             'input_per_million' => 1.0,
             'output_per_million' => 4.0,
@@ -83,6 +123,13 @@ function wf_estimate_rates(string $provider, string $model): array
     }
 
     if ($provider === 'meta') {
+        if (strpos($modelLower, '405b') !== false || strpos($modelLower, '70b') !== false) {
+            return [
+                'input_per_million' => 0.9,
+                'output_per_million' => 1.2,
+                'image_generation_per_image' => 0.03
+            ];
+        }
         return [
             'input_per_million' => 0.6,
             'output_per_million' => 0.8,
@@ -137,6 +184,13 @@ function wf_default_operation_catalog(int $defaultImageCount): array
             'output_tokens' => 0,
             'image_count' => 0,
             'image_generations' => 1
+        ],
+        'image_edit_generation' => [
+            'label' => 'Image edit generation',
+            'input_tokens' => 800,
+            'output_tokens' => 0,
+            'image_count' => 1,
+            'image_generations' => 1
         ]
     ];
 }
@@ -153,6 +207,8 @@ function wf_default_operations_for_action(string $actionKey): array
         'room_generate_background' => ['room_prompt_refinement', 'room_image_generation'],
         'room_generate_background_only' => ['room_image_generation'],
         'create_room_generate_image' => ['room_image_generation'],
+        'item_image_submit_to_ai' => ['image_edit_generation'],
+        'background_image_submit_to_ai' => ['image_edit_generation'],
         'cost_breakdown_generate_all' => ['info_from_images', 'cost_estimation'],
         'ai_suggestions_generate_all' => ['info_from_images', 'cost_estimation', 'marketing_generation', 'price_estimation'],
         'ai_suggestions_generate_info' => ['info_from_images', 'marketing_generation']

@@ -68,6 +68,64 @@ function wf_resolve_openai_edit_model(string $requestedModel): string
     return $normalized;
 }
 
+function wf_prepare_openai_edit_source_image(string $sourceImageAbs): array
+{
+    $mime = strtolower((string) (mime_content_type($sourceImageAbs) ?: ''));
+    if ($mime === 'image/png') {
+        return [
+            'path' => $sourceImageAbs,
+            'cleanup' => ''
+        ];
+    }
+
+    $info = @getimagesize($sourceImageAbs);
+    $type = (int) ($info[2] ?? 0);
+    $image = null;
+    switch ($type) {
+        case IMAGETYPE_JPEG:
+            $image = @imagecreatefromjpeg($sourceImageAbs);
+            break;
+        case IMAGETYPE_WEBP:
+            if (!function_exists('imagecreatefromwebp')) {
+                throw new RuntimeException('Server lacks WEBP support required to convert source image');
+            }
+            $image = @imagecreatefromwebp($sourceImageAbs);
+            break;
+        case IMAGETYPE_GIF:
+            $image = @imagecreatefromgif($sourceImageAbs);
+            break;
+        case IMAGETYPE_PNG:
+            $image = @imagecreatefrompng($sourceImageAbs);
+            break;
+        default:
+            throw new RuntimeException('Unsupported source image type for AI edit upload');
+    }
+
+    if (!$image) {
+        throw new RuntimeException('Failed to read source image for AI edit upload');
+    }
+
+    imagealphablending($image, false);
+    imagesavealpha($image, true);
+
+    $tmp = tempnam(sys_get_temp_dir(), 'wf-ai-edit-src-png-');
+    if ($tmp === false) {
+        imagedestroy($image);
+        throw new RuntimeException('Failed to create temp PNG for AI edit upload');
+    }
+    if (!@imagepng($image, $tmp, 1)) {
+        imagedestroy($image);
+        @unlink($tmp);
+        throw new RuntimeException('Failed to convert source image to PNG for AI edit upload');
+    }
+    imagedestroy($image);
+
+    return [
+        'path' => $tmp,
+        'cleanup' => $tmp
+    ];
+}
+
 function wf_download_to_temp(string $url): string
 {
     $tmp = tempnam(sys_get_temp_dir(), 'wf-ai-edit-url-');
@@ -154,6 +212,58 @@ function wf_resolve_local_image_abs(string $sourceImageUrl): string
     return $absolute;
 }
 
+function wf_try_resolve_local_image_abs(string $sourceImageUrl): string
+{
+    try {
+        return wf_resolve_local_image_abs($sourceImageUrl);
+    } catch (Throwable $e) {
+        return '';
+    }
+}
+
+function wf_try_resolve_background_png_source_abs(int $backgroundId, string $sourceImageUrl): string
+{
+    if ($backgroundId > 0) {
+        $row = Database::queryOne(
+            'SELECT image_filename, png_filename FROM backgrounds WHERE id = ? LIMIT 1',
+            [$backgroundId]
+        );
+        if (is_array($row)) {
+            $candidates = [];
+            $pngFilename = trim((string) ($row['png_filename'] ?? ''));
+            if ($pngFilename !== '') {
+                $candidates[] = '/images/' . ltrim($pngFilename, '/');
+            }
+
+            $imageFilename = trim((string) ($row['image_filename'] ?? ''));
+            if ($imageFilename !== '' && strtolower((string) pathinfo($imageFilename, PATHINFO_EXTENSION)) === 'png') {
+                $candidates[] = '/images/' . ltrim($imageFilename, '/');
+            }
+
+            foreach ($candidates as $candidate) {
+                $abs = wf_try_resolve_local_image_abs($candidate);
+                if ($abs !== '') {
+                    return $abs;
+                }
+            }
+        }
+    }
+
+    $path = parse_url($sourceImageUrl, PHP_URL_PATH);
+    $path = is_string($path) ? $path : '';
+    if ($path !== '' && str_ends_with(strtolower($path), '.webp')) {
+        $pngPath = preg_replace('/\.webp$/i', '.png', $path);
+        if (is_string($pngPath) && $pngPath !== '') {
+            $abs = wf_try_resolve_local_image_abs($pngPath);
+            if ($abs !== '') {
+                return $abs;
+            }
+        }
+    }
+
+    return '';
+}
+
 Response::validateMethod('POST');
 AuthHelper::requireAdmin(403, 'Admin access required');
 
@@ -163,6 +273,7 @@ try {
     $input = json_decode(file_get_contents('php://input'), true) ?? [];
     $targetType = trim((string) ($input['target_type'] ?? ''));
     $sourceImageUrl = trim((string) ($input['source_image_url'] ?? ''));
+    $sourceBackgroundId = (int) ($input['source_background_id'] ?? 0);
     $instructions = trim((string) ($input['instructions'] ?? ''));
 
     if (!in_array($targetType, ['item', 'background'], true)) {
@@ -186,14 +297,26 @@ try {
     $requestedModel = trim((string) ($input['model'] ?? $settings['openai_image_model'] ?? 'dall-e-2'));
     $model = wf_resolve_openai_edit_model($requestedModel);
 
-    $sourceImageAbs = wf_resolve_local_image_abs($sourceImageUrl);
+    if ($targetType === 'background') {
+        $sourceImageAbs = wf_try_resolve_background_png_source_abs($sourceBackgroundId, $sourceImageUrl);
+        if ($sourceImageAbs === '') {
+            $sourceImageAbs = wf_resolve_local_image_abs($sourceImageUrl);
+        }
+    } else {
+        $sourceImageAbs = wf_resolve_local_image_abs($sourceImageUrl);
+    }
     $editedTemp = '';
+    $uploadSourceTemp = '';
     $derivedPaths = [];
     $responseData = null;
     $responseMessage = '';
 
     try {
-        $openAiResponse = wf_openai_edit_image($apiKey, $model, $instructions, $sourceImageAbs);
+        $preparedSource = wf_prepare_openai_edit_source_image($sourceImageAbs);
+        $uploadSourcePath = (string) ($preparedSource['path'] ?? $sourceImageAbs);
+        $uploadSourceTemp = (string) ($preparedSource['cleanup'] ?? '');
+
+        $openAiResponse = wf_openai_edit_image($apiKey, $model, $instructions, $uploadSourcePath);
         $editedTemp = wf_edited_image_to_temp($openAiResponse);
 
         if ($targetType === 'item') {
@@ -321,7 +444,7 @@ try {
             $responseMessage = 'Edited background image saved';
         }
     } finally {
-        $pathsToDelete = array_merge([$editedTemp], $derivedPaths);
+        $pathsToDelete = array_merge([$editedTemp, $uploadSourceTemp], $derivedPaths);
         foreach ($pathsToDelete as $path) {
             if (is_string($path) && $path !== '' && file_exists($path)) {
                 @unlink($path);

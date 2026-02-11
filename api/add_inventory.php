@@ -156,6 +156,139 @@ function wf_table_exists(string $tableName): bool
     return ((int)($row['c'] ?? 0)) > 0;
 }
 
+function wf_table_has_column(string $tableName, string $columnName): bool
+{
+    if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $tableName)) {
+        return false;
+    }
+    if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $columnName)) {
+        return false;
+    }
+
+    $row = Database::queryOne(
+        "SELECT COUNT(*) AS c
+         FROM information_schema.columns
+         WHERE table_schema = DATABASE()
+           AND table_name = ?
+           AND column_name = ?",
+        [$tableName, $columnName]
+    );
+
+    return ((int)($row['c'] ?? 0)) > 0;
+}
+
+function wf_should_retarget_item_image_path(string $path, string $sourceSku): bool
+{
+    $trimmed = trim($path);
+    if ($trimmed === '') {
+        return false;
+    }
+
+    $normalized = ltrim(str_replace('\\', '/', $trimmed), '/');
+    if ($normalized === '') {
+        return false;
+    }
+
+    $basename = basename($normalized);
+    return stripos($basename, $sourceSku) === 0;
+}
+
+function wf_retarget_item_image_path(string $path, string $sourceSku, string $targetSku): string
+{
+    $normalized = ltrim(str_replace('\\', '/', trim($path)), '/');
+    $dir = dirname($normalized);
+    if ($dir === '.' || $dir === '/') {
+        $dir = '';
+    }
+
+    $basename = basename($normalized);
+    $remainder = substr($basename, strlen($sourceSku));
+    $newBase = $targetSku . $remainder;
+
+    return $dir === '' ? $newBase : ($dir . '/' . $newBase);
+}
+
+function wf_migrate_temp_sku_image_files(string $sourceSku, string $targetSku): void
+{
+    if (!wf_table_exists('item_images')) {
+        return;
+    }
+
+    $hasOriginalPath = wf_table_has_column('item_images', 'original_path');
+    $selectColumns = $hasOriginalPath ? 'id, image_path, original_path' : 'id, image_path';
+    $rows = Database::queryAll(
+        "SELECT {$selectColumns} FROM item_images WHERE sku = ? ORDER BY id ASC",
+        [$targetSku]
+    );
+
+    if (empty($rows)) {
+        return;
+    }
+
+    $projectRoot = dirname(__DIR__);
+    foreach ($rows as $row) {
+        $id = (int)($row['id'] ?? 0);
+        if ($id <= 0) {
+            continue;
+        }
+
+        $fieldsToUpdate = [];
+        $pathFields = ['image_path'];
+        if ($hasOriginalPath) {
+            $pathFields[] = 'original_path';
+        }
+
+        foreach ($pathFields as $field) {
+            $currentPath = (string)($row[$field] ?? '');
+            if (!wf_should_retarget_item_image_path($currentPath, $sourceSku)) {
+                continue;
+            }
+
+            $newPath = wf_retarget_item_image_path($currentPath, $sourceSku, $targetSku);
+            if ($newPath === '' || $newPath === $currentPath) {
+                continue;
+            }
+
+            $oldAbs = $projectRoot . '/' . ltrim(str_replace('\\', '/', trim($currentPath)), '/');
+            $newAbs = $projectRoot . '/' . ltrim($newPath, '/');
+            $oldExists = file_exists($oldAbs);
+            $newExists = file_exists($newAbs);
+
+            if ($oldExists && !$newExists) {
+                $destDir = dirname($newAbs);
+                if (!is_dir($destDir) && !mkdir($destDir, 0755, true) && !is_dir($destDir)) {
+                    throw new Exception('Failed to create destination directory for image migration: ' . $destDir);
+                }
+                if (!rename($oldAbs, $newAbs)) {
+                    throw new Exception('Failed to rename image file during SKU migration: ' . $oldAbs . ' -> ' . $newAbs);
+                }
+            } elseif ($oldExists && $newExists) {
+                if (!unlink($oldAbs)) {
+                    throw new Exception('Failed to remove duplicate temp image file during SKU migration: ' . $oldAbs);
+                }
+            }
+
+            if ($newExists || file_exists($newAbs)) {
+                $fieldsToUpdate[$field] = $newPath;
+            }
+        }
+
+        if (!empty($fieldsToUpdate)) {
+            $setClauses = [];
+            $params = [];
+            foreach ($fieldsToUpdate as $column => $value) {
+                $setClauses[] = "`{$column}` = ?";
+                $params[] = $value;
+            }
+            $params[] = $id;
+            Database::execute(
+                "UPDATE item_images SET " . implode(', ', $setClauses) . " WHERE id = ?",
+                $params
+            );
+        }
+    }
+}
+
 function wf_migrate_temp_sku_records(string $sourceSku, string $targetSku): void
 {
     if ($sourceSku === '' || $targetSku === '' || $sourceSku === $targetSku) {
@@ -209,6 +342,8 @@ function wf_migrate_temp_sku_records(string $sourceSku, string $targetSku): void
     if (wf_table_exists('items')) {
         Database::execute("DELETE FROM items WHERE sku = ?", [$sourceSku]);
     }
+
+    wf_migrate_temp_sku_image_files($sourceSku, $targetSku);
 
     // Normalize image metadata for target SKU after migration.
     if (wf_table_exists('item_images')) {

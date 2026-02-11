@@ -110,7 +110,8 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                 target_type: 'background',
                 source_image_url: preview_image.url,
                 instructions,
-                room_number: String(preview_image.room_number || selectedRoom || '')
+                room_number: String(preview_image.room_number || selectedRoom || ''),
+                source_background_id: Number(preview_image.source_background_id || 0)
             });
             window.WFToast?.success?.('AI-edited background saved to Room Library');
             setImageTweakPrompt('');

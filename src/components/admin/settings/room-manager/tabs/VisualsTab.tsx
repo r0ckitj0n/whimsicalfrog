@@ -469,7 +469,10 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                         />
                     </div>
                     <input id="bg-upload-input" type="file" className="hidden" accept="image/*" onChange={onBackgroundUpload} />
-                    <div className="space-y-4 overflow-y-auto overscroll-contain pr-1 flex-1 min-h-0">
+                    <div
+                        className="space-y-4 overflow-y-scroll overscroll-contain pr-1 flex-1 min-h-0 wf-scrollbar"
+                        style={{ maxHeight: 'calc(var(--admin-modal-content-height, 95vh) - 13rem)' }}
+                    >
                         {backgrounds.backgrounds.map((bg: IBackground) => {
                             const is_active = backgrounds.activeBackground?.id === bg.id;
                             return (

@@ -106,14 +106,37 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
         }
 
         try {
-            await submitImageEdit({
+            const res = await submitImageEdit({
                 target_type: 'background',
                 source_image_url: preview_image.url,
                 instructions,
                 room_number: String(preview_image.room_number || selectedRoom || ''),
                 source_background_id: Number(preview_image.source_background_id || 0)
             });
-            window.WFToast?.success?.('AI-edited background saved to Room Library');
+
+            const editedBackgroundId = Number(res?.data?.background?.id || 0);
+            const roomToApply = String(preview_image.room_number || selectedRoom || '');
+            if (editedBackgroundId > 0 && roomToApply) {
+                const applied = await backgrounds.applyBackground(roomToApply, editedBackgroundId);
+                if (!applied) {
+                    window.WFToast?.error?.('Edited background was saved, but could not be applied automatically.');
+                } else {
+                    window.WFToast?.success?.('AI edit applied to the room background.');
+                }
+            } else {
+                window.WFToast?.success?.('AI-edited background saved to Room Library');
+            }
+
+            const editedImageUrl = String(res?.data?.background?.image_url || '').trim();
+            if (editedImageUrl !== '') {
+                setPreviewImage(prev => prev ? ({
+                    ...prev,
+                    url: editedImageUrl,
+                    name: String(res?.data?.background?.name || prev.name || 'Edited background'),
+                    source_background_id: editedBackgroundId > 0 ? editedBackgroundId : prev.source_background_id
+                }) : prev);
+            }
+
             setImageTweakPrompt('');
             if (selectedRoom) {
                 await backgrounds.fetchBackgroundsForRoom(selectedRoom);

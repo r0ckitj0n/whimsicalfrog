@@ -88,30 +88,59 @@ try {
                     if (AreaMappingSchemaHelper::hasColumn('room_maps', 'is_active'))
                         $where .= ' AND is_active = 1';
                     $map = Database::queryOne("SELECT coordinates FROM room_maps WHERE $where ORDER BY updated_at DESC LIMIT 1", [$room]);
-                    $coords = $map ? json_decode($map['coordinates'], true) : [];
+                    $rawCoords = $map['coordinates'] ?? '[]';
+                    $coords = $rawCoords;
 
-                    // Handle double-encoded coordinates (legacy bug fix)
-                    if (is_string($coords)) {
-                        $coords = json_decode($coords, true);
-                    }
-
-                    // Normalize various coordinate formats
-                    if (is_array($coords)) {
-                        if (isset($coords['rectangles'])) {
-                            $coords = $coords['rectangles'];
-                        } elseif (isset($coords['polygons'])) {
-                            $coords = $coords['polygons'];
+                    // Decode nested legacy payloads (double/triple encoded JSON).
+                    for ($i = 0; $i < 4 && is_string($coords); $i++) {
+                        $decoded = json_decode($coords, true);
+                        if (json_last_error() !== JSON_ERROR_NONE) {
+                            break;
                         }
-                        // Ensure each coordinate has a selector field
-                        $coords = array_values(array_map(function ($coord, $idx) {
-                            if (!isset($coord['selector']) || empty($coord['selector'])) {
-                                $coord['selector'] = $coord['id'] ?? ('area-' . ($idx + 1));
-                            }
-                            return $coord;
-                        }, (array) $coords, array_keys((array) $coords)));
+                        $coords = $decoded;
                     }
 
-                    Response::success(['coordinates' => array_values((array) $coords)]);
+                    if (is_array($coords) && isset($coords['rectangles']) && is_string($coords['rectangles'])) {
+                        $decodedRects = json_decode($coords['rectangles'], true);
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            $coords['rectangles'] = $decodedRects;
+                        }
+                    }
+                    if (is_array($coords) && isset($coords['polygons']) && is_string($coords['polygons'])) {
+                        $decodedPolygons = json_decode($coords['polygons'], true);
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            $coords['polygons'] = $decodedPolygons;
+                        }
+                    }
+
+                    $list = [];
+                    if (is_array($coords)) {
+                        if (isset($coords['rectangles']) && is_array($coords['rectangles'])) {
+                            $list = $coords['rectangles'];
+                        } elseif (isset($coords['polygons']) && is_array($coords['polygons'])) {
+                            $list = $coords['polygons'];
+                        } elseif (isset($coords['coordinates']) && is_array($coords['coordinates'])) {
+                            $list = $coords['coordinates'];
+                        } elseif (array_values($coords) === $coords) {
+                            $list = $coords;
+                        }
+                    }
+
+                    // Ensure each coordinate is an array row with a selector.
+                    $normalized = [];
+                    $idx = 0;
+                    foreach ($list as $coord) {
+                        if (!is_array($coord)) {
+                            continue;
+                        }
+                        if (!isset($coord['selector']) || $coord['selector'] === '') {
+                            $coord['selector'] = $coord['id'] ?? ('area-' . ($idx + 1));
+                        }
+                        $normalized[] = $coord;
+                        $idx++;
+                    }
+
+                    Response::success(['coordinates' => array_values($normalized)]);
                     break;
 
                 case 'get_mappings':

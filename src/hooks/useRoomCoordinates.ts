@@ -24,6 +24,49 @@ export const useRoomCoordinates = (roomType: string = '0') => {
     const [renderContext, setRenderContext] = useState<string>(defaultContext);
     const [roomSettings, setRoomSettings] = useState<IRoomSettings>({});
 
+    const normalizeApiCoordinates = useCallback((raw: unknown): IDoorCoordinate[] => {
+        let parsed = raw;
+
+        for (let i = 0; i < 4 && typeof parsed === 'string'; i += 1) {
+            try {
+                parsed = JSON.parse(parsed);
+            } catch {
+                break;
+            }
+        }
+
+        const obj = (parsed && typeof parsed === 'object' && !Array.isArray(parsed))
+            ? parsed as Record<string, unknown>
+            : null;
+
+        const list = Array.isArray(parsed)
+            ? parsed
+            : (Array.isArray(obj?.rectangles)
+                ? obj?.rectangles
+                : (Array.isArray(obj?.polygons)
+                    ? obj?.polygons
+                    : (Array.isArray(obj?.coordinates)
+                        ? obj?.coordinates
+                        : [])));
+
+        if (!Array.isArray(list)) {
+            return [];
+        }
+
+        return list
+            .map((entry, idx) => {
+                if (!entry || typeof entry !== 'object') return null;
+                const coord = entry as Partial<IDoorCoordinate> & { id?: string | number };
+                const rawSelector = coord.selector || coord.id || `area-${idx + 1}`;
+                const cleanSelector = String(rawSelector).replace(/^\.+/, '');
+                return {
+                    ...coord,
+                    selector: `.${cleanSelector}`
+                } as IDoorCoordinate;
+            })
+            .filter((coord): coord is IDoorCoordinate => !!coord);
+    }, []);
+
     // Compute originalSize from database settings instead of hardcoding
     const originalSize = useMemo(() => {
         const context = renderContext;
@@ -118,26 +161,15 @@ export const useRoomCoordinates = (roomType: string = '0') => {
                 room: apiRoom
             });
 
-            const coords = Array.isArray(data.coordinates) ? data.coordinates : (data.data && Array.isArray(data.data.coordinates) ? data.data.coordinates : []);
-
-            if (coords.length) {
-                setCoordinates(coords.map((coord, idx) => {
-                    // Handle missing selector - fallback to id or generate one
-                    const rawSelector = coord.selector || coord.id || `area-${idx + 1}`;
-                    const cleanSelector = String(rawSelector).replace(/^\.+/, '');
-                    return {
-                        ...coord,
-                        selector: `.${cleanSelector}`
-                    };
-                }));
-            }
+            const coords = normalizeApiCoordinates(data.coordinates ?? data.data?.coordinates ?? []);
+            setCoordinates(coords);
         } catch (err) {
             console.error('[useRoomCoordinates] Failed to fetch coordinates', err);
             logger.error('[useRoomCoordinates] Failed to fetch coordinates', err);
         } finally {
             setIsLoading(false);
         }
-    }, [roomType]);
+    }, [roomType, normalizeApiCoordinates]);
 
     useEffect(() => {
         fetchCoordinates();

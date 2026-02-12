@@ -53,8 +53,13 @@ export const useShopUI = ({ categories, isVisible }: UseShopUIProps) => {
             const catSlug = cat.slug || 'uncategorized';
             if (activeCategory !== CATEGORY.ALL && activeCategory !== catSlug) return;
             cat.items.forEach(item => {
+                const stock = Number((item as Item & { stock_quantity?: number }).stock ?? (item as Item & { stock_quantity?: number }).stock_quantity ?? 0);
+                const normalizedItem: Item = {
+                    ...item,
+                    stock: Number.isFinite(stock) ? stock : 0
+                };
                 if (!query || item.item_name.toLowerCase().includes(query) || item.sku.toLowerCase().includes(query) || item.description.toLowerCase().includes(query) || cat.label.toLowerCase().includes(query)) {
-                    results.push({ item, categoryLabel: cat.label, categorySlug: cat.slug });
+                    results.push({ item: normalizedItem, categoryLabel: cat.label, categorySlug: cat.slug });
                 }
             });
         });

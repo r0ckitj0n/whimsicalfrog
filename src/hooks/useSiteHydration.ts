@@ -228,8 +228,10 @@ export const useSiteHydration = () => {
                 // Handle auth if needed (though AuthProvider might handle its own fetch)
                 // For now, site_settings and shop_data are the main ones needed here.
 
-                // Always try to load specialized data from DOM after bootstrap
-                loadFromDOM();
+                // Only fall back to DOM for data the bootstrap API did not provide.
+                if (!data.site_settings || !data.shop_data || !data.about_data || !data.contact_data) {
+                    loadFromDOM();
+                }
             } catch (e) {
                 console.error('[SiteHydration] API fetch failed, falling back to DOM', e);
                 loadFromDOM();

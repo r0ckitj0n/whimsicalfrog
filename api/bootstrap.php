@@ -101,6 +101,28 @@ try {
         require_once __DIR__ . '/../includes/image_helper.php';
         require_once __DIR__ . '/../includes/business_settings_helper.php';
 
+        // Canonical active/live SKU filter from items table (single source of truth).
+        // This prevents stale/legacy category payloads from showing inactive items.
+        $activeInventoryBySku = [];
+        $restrictShopToActiveInventory = false;
+        try {
+            $activeRows = Database::queryAll(
+                "SELECT sku, COALESCE(stock_quantity, 0) AS stock_quantity
+                 FROM items
+                 WHERE status = 'live' AND is_active = 1 AND is_archived = 0"
+            );
+            foreach ($activeRows as $row) {
+                $sku = (string) ($row['sku'] ?? '');
+                if ($sku === '') {
+                    continue;
+                }
+                $activeInventoryBySku[$sku] = (int) ($row['stock_quantity'] ?? 0);
+            }
+            $restrictShopToActiveInventory = true;
+        } catch (\Throwable $e) {
+            error_log('[bootstrap] active inventory filter unavailable: ' . $e->getMessage());
+        }
+
         $processed_categories = [];
         foreach ($categories as $slug => $catData) {
             $processedItems = [];
@@ -111,13 +133,21 @@ try {
                 }
 
                 $sku = $item['sku'] ?? 'NO-SKU';
+                if ($restrictShopToActiveInventory) {
+                    if (!isset($activeInventoryBySku[$sku])) {
+                        continue;
+                    }
+                }
                 $primaryImageData = function_exists('getPrimaryImageBySku') ? getPrimaryImageBySku($sku) : null;
+                $resolvedStock = $restrictShopToActiveInventory
+                    ? ($activeInventoryBySku[$sku] ?? 0)
+                    : (int) ($item['stock'] ?? 0);
 
                 $processedItems[] = [
                     'sku' => $sku,
                     'item_name' => $item['item_name'],
                     'price' => $item['price'],
-                    'stock' => (int) ($item['stock'] ?? 0),
+                    'stock' => (int) $resolvedStock,
                     'description' => $item['description'] ?? 'No description available',
                     'custom_button_text' => $item['custom_button_text'] ?? getRandomCartButtonText(),
                     'image_url' => $primaryImageData ? $primaryImageData['image_path'] : ($item['image_url'] ?? null)

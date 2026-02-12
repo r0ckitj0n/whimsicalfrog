@@ -36,7 +36,8 @@ export const POSView: React.FC = () => {
         if (typeof item.is_active !== 'undefined') {
             return item.is_active === true || item.is_active === 1;
         }
-        return (item.status || '').toLowerCase() === 'active';
+        const normalizedStatus = (item.status || '').toLowerCase();
+        return normalizedStatus === 'active' || normalizedStatus === 'live';
     }), [items]);
 
     const categories = useMemo(() => Array.from(new Set(activeItems.map(i => i.category).filter(Boolean))), [activeItems]);

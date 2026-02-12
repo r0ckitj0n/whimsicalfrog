@@ -19,15 +19,26 @@ export const usePOS = () => {
     const [pricing, setPricing] = useState<IPOSPricing | null>(null);
     const [error, setError] = useState<string | null>(null);
 
+    const normalizeItem = useCallback((item: IPOSItem): IPOSItem => {
+        const rawStock = (item.stock ?? item.stock_quantity ?? 0) as unknown;
+        const normalizedStock = Number(rawStock);
+        return {
+            ...item,
+            stock: Number.isFinite(normalizedStock) ? normalizedStock : 0
+        };
+    }, []);
+
+    const normalizeItems = useCallback((data: IPOSItem[]): IPOSItem[] => data.map(normalizeItem), [normalizeItem]);
+
     const fetchItems = useCallback(async () => {
         // Try to hydrate from DOM first if available
         const posDataEl = document.getElementById('pos-data');
         if (posDataEl && !items.length) {
             try {
                 const data = JSON.parse(posDataEl.textContent || '[]');
-                setItems(data);
-                setIsLoading(false);
-                return;
+                if (Array.isArray(data)) {
+                    setItems(normalizeItems(data));
+                }
             } catch (e) {
                 logger.warn('[usePOS] Failed to parse pos-data from DOM', e);
             }
@@ -37,14 +48,14 @@ export const usePOS = () => {
         try {
             const res = await ApiClient.get<IInventoryResponse | IPOSItem[]>('/api/inventory.php');
             const data = Array.isArray(res) ? res : (res && Array.isArray(res.data) ? res.data : []);
-            setItems(data);
+            setItems(normalizeItems(data));
         } catch (err) {
             logger.error('[usePOS] Failed to fetch items', err);
             setError('Failed to load items');
         } finally {
             setIsLoading(false);
         }
-    }, [items.length]);
+    }, [items.length, normalizeItems]);
 
     useEffect(() => {
         const posCart = createCartStore({

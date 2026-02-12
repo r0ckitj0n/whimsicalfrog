@@ -140,14 +140,16 @@ class AreaMappingActionHelper
             return ['success' => true, 'message' => 'Mapping already removed'];
         }
         $isActive = (int)($row['is_active'] ?? 0) === 1;
-        if (!$isActive) {
-            return ['success' => true, 'message' => 'Mapping already removed'];
+        if ($isActive) {
+            $result = Database::execute("UPDATE area_mappings SET is_active = 0 WHERE id = ? LIMIT 1", [$id]);
+            return $result > 0
+                ? ['success' => true, 'message' => 'Area mapping removed successfully']
+                : ['success' => true, 'message' => 'Mapping already removed'];
         }
 
-        $result = Database::execute("UPDATE area_mappings SET is_active = 0 WHERE id = ? LIMIT 1", [$id]);
-        return $result > 0
-            ? ['success' => true, 'message' => 'Area mapping removed successfully']
-            : ['success' => true, 'message' => 'Mapping already removed'];
+        // If already inactive, hard-delete so it disappears from raw listings (list_room_raw includes inactive rows).
+        Database::execute("DELETE FROM area_mappings WHERE id = ? LIMIT 1", [$id]);
+        return ['success' => true, 'message' => 'Area mapping permanently deleted'];
     }
 
     /**

@@ -1,6 +1,11 @@
 /* Global Modal Overlay Styles (Vite-managed) */
 
 @layer components.global-modals {
+  .wf-modal-overlay.global-modal,
+  .wf-modal-overlay.component-modal {
+    z-index: calc(var(--z-overlay-topmost) + 20) !important;
+  }
+
   .modal-overlay {
     position: fixed;
     inset: 0;

@@ -387,6 +387,24 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             return;
         }
 
+        if (form.generate_image) {
+            const confirmed = await confirmWithEstimate({
+                action_key: 'create_room_generate_image',
+                action_label: 'Generate initial room image with AI',
+                operations: [
+                    { key: 'room_image_generation', label: 'Room image generation', image_generations: 1 }
+                ],
+                context: {
+                    prompt_length: generatedPromptText.length
+                },
+                confirmText: 'Generate Image'
+            });
+            if (!confirmed) {
+                window.WFToast?.info?.('Room creation canceled.');
+                return;
+            }
+        }
+
         setIsSubmitting(true);
         window.WFToast?.info?.('Step 1/3: Creating room...');
         const createRes = await onCreateRoom({
@@ -408,24 +426,6 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         window.WFToast?.success?.('Step 1/3 complete: Room created');
 
         if (form.generate_image) {
-            const confirmed = await confirmWithEstimate({
-                action_key: 'create_room_generate_image',
-                action_label: 'Generate initial room image with AI',
-                operations: [
-                    { key: 'room_image_generation', label: 'Room image generation', image_generations: 1 }
-                ],
-                context: {
-                    prompt_length: generatedPromptText.length
-                },
-                confirmText: 'Generate Image'
-            });
-            if (!confirmed) {
-                setIsSubmitting(false);
-                window.WFToast?.info?.('Room created without AI image generation.');
-                onClose();
-                return;
-            }
-
             window.WFToast?.info?.('Step 2/3: Generating background image...');
             const genRes = await onGenerateBackground({
                 room_number: form.room_number.trim(),

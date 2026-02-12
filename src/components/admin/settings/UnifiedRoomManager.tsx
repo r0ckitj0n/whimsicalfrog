@@ -381,8 +381,8 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                                 data-help-id="common-close"
                             />
                         </div>
-                        <div className="flex-1 min-h-0 p-4 bg-slate-100/60">
-                            <img src={preview_image.url} className="max-h-full max-w-full object-contain rounded-2xl mx-auto" />
+                        <div className="flex-1 min-h-0 p-4 bg-slate-100/60 overflow-y-auto overflow-x-hidden">
+                            <img src={preview_image.url} className="max-w-full h-auto object-contain rounded-2xl mx-auto" />
                         </div>
                     </div>
                 </div>

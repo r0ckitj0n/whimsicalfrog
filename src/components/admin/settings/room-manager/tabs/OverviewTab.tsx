@@ -2,6 +2,10 @@ import React from 'react';
 import { IRoomData, IRoomOverview } from '../../../../../types/index.js';
 import { ApiClient } from '../../../../../core/ApiClient.js';
 import { useAICostEstimateConfirm } from '../../../../../hooks/admin/useAICostEstimateConfirm.js';
+import {
+    DEFAULT_ROOM_IMAGE_VARIABLE_VALUES,
+    resolveRoomGenerationVariables
+} from '../../../../../hooks/admin/room-manager/roomImageGenerationConfig.js';
 import { OverviewCategoryEditor } from '../../../categories/partials/OverviewCategoryEditor.js';
 import { CreateRoomModal } from '../modals/CreateRoomModal.js';
 import { EditRoomModal } from '../modals/EditRoomModal.js';
@@ -57,16 +61,28 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         setIsRegenerating(true);
         try {
             window.WFToast?.info?.('Step 1/3: Loading original room prompt...');
-            const promptRes = await ApiClient.get<IRoomGenerationHistoryPromptResponse>('/api/room_generation_history.php', {
-                room_number: roomNumber
-            });
-            const promptRow = promptRes?.data?.prompt || promptRes?.prompt;
-            const originalPrompt = String(promptRow?.prompt_text || '').trim();
-            if (!originalPrompt) {
-                window.WFToast?.error?.('No original prompt found for this room');
-                return;
+            let promptRow: IRoomGenerationHistoryPromptResponse['prompt'] | null = null;
+            let originalPrompt = '';
+            let useHistoryPrompt = false;
+
+            try {
+                const promptRes = await ApiClient.get<IRoomGenerationHistoryPromptResponse>('/api/room_generation_history.php', {
+                    room_number: roomNumber
+                });
+                promptRow = promptRes?.data?.prompt || promptRes?.prompt || null;
+                originalPrompt = String(promptRow?.prompt_text || '').trim();
+                useHistoryPrompt = originalPrompt.length > 0;
+            } catch (historyErr: unknown) {
+                const historyMessage = historyErr instanceof Error ? historyErr.message : '';
+                if (!historyMessage.includes('No successful room background generation prompt found')) {
+                    throw historyErr;
+                }
             }
-            window.WFToast?.success?.('Step 1/3 complete: Original prompt loaded');
+            if (useHistoryPrompt) {
+                window.WFToast?.success?.('Step 1/3 complete: Original prompt loaded');
+            } else {
+                window.WFToast?.info?.('Step 1/3 complete: No original prompt found; using default room generation flow');
+            }
 
             const confirmed = await confirmWithEstimate({
                 action_key: 'create_room_generate_image',
@@ -92,14 +108,27 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                     : '1024x1024';
 
             const roomName = String(roomForm.room_name || editingRoom?.room_name || '').trim();
+            const doorLabel = String(roomForm.door_label || editingRoom?.door_label || roomName || roomNumber).trim();
+            const description = String(roomForm.description || editingRoom?.description || '').trim();
+            const displayOrder = Number(roomForm.display_order || editingRoom?.display_order || 0);
+            const fallbackVariables = resolveRoomGenerationVariables({
+                roomNumber,
+                roomName,
+                doorLabel,
+                displayOrder,
+                description,
+                values: DEFAULT_ROOM_IMAGE_VARIABLE_VALUES
+            });
+
             window.WFToast?.info?.('Step 2/3: Generating background image...');
             const result = await onGenerateBackground({
                 room_number: roomNumber,
-                template_key: String(promptRow?.template_key || 'room_staging_empty_shelves_v1').trim(),
+                template_key: String(promptRow?.template_key || 'room_staging_empty_shelves_v1').trim() || 'room_staging_empty_shelves_v1',
+                variables: useHistoryPrompt ? undefined : fallbackVariables,
                 provider: 'openai',
                 size,
                 background_name: roomName ? `${roomNumber} - ${roomName}` : roomNumber,
-                prompt_override: originalPrompt
+                prompt_override: useHistoryPrompt ? originalPrompt : undefined
             });
 
             if (!result.success) {

@@ -55,14 +55,15 @@ export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEdit
 
     const handleSaveBoundaries = useCallback(async () => {
         if (!selectedRoom) return;
+        const editingMap = boundaries.savedMaps.find((m: IRoomMap) => String(m.id) === String(currentMapId));
         const name = await promptModal({
             title: 'Save Map',
             message: 'Enter map name:',
-            input: { defaultValue: `Map ${new Date().toLocaleString()}` }
+            input: { defaultValue: editingMap?.map_name || `Map ${new Date().toLocaleString()}` }
         });
         if (!name) return;
         const latestAreas = areasRef.current;
-        const res = await boundaries.saveMap(selectedRoom, name, latestAreas);
+        const res = await boundaries.saveMap(selectedRoom, name, latestAreas, currentMapId);
         if (res.success) {
             if (window.WFToast) window.WFToast.success('Map saved');
             if (res.map && res.map.coordinates) {
@@ -80,7 +81,7 @@ export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEdit
             }
             await boundaries.fetchSavedMaps(selectedRoom);
         }
-    }, [selectedRoom, promptModal, boundaries, setAreas]);
+    }, [selectedRoom, promptModal, boundaries, setAreas, currentMapId]);
 
     const handleSaveSettings = useCallback(async (onSuccess?: () => void) => {
         if (!selectedRoom) return;

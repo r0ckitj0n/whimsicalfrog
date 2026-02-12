@@ -103,6 +103,48 @@ try {
                 if ($mapName === '') {
                     $mapName = 'Unnamed Map';
                 }
+                $mapId = (int)($input['map_id'] ?? $input['id'] ?? 0);
+
+                if ($mapId > 0) {
+                    $existingById = Database::queryOne(
+                        "SELECT id, room_number, is_active FROM room_maps WHERE id = ? LIMIT 1",
+                        [$mapId]
+                    );
+                    if (!$existingById) {
+                        Response::error('Map not found');
+                    }
+
+                    $existingRoom = RoomMapHelper::normalizeRoomNumber($existingById['room_number'] ?? '');
+                    if ($rn === '') {
+                        $rn = $existingRoom;
+                    }
+                    if ($existingRoom === '' || $rn !== $existingRoom) {
+                        Response::error('Selected room does not match map room');
+                    }
+
+                    $ok = Database::execute(
+                        "UPDATE room_maps SET coordinates = ?, map_name = ?, updated_at = NOW() WHERE id = ? AND room_number = ?",
+                        [$coordinates, $mapName, $mapId, $rn]
+                    );
+                    if ($ok) {
+                        if ($mapName !== '') {
+                            Database::execute(
+                                "DELETE FROM room_maps WHERE room_number = ? AND map_name = ? AND id <> ?",
+                                [$rn, $mapName, $mapId]
+                            );
+                        }
+                        ensureRoomHasActiveMap($rn);
+                        $savedMap = Database::queryOne(
+                            "SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps WHERE id = ? LIMIT 1",
+                            [$mapId]
+                        );
+                        if ($savedMap) {
+                            $savedMap['coordinates'] = decodeRoomMapCoordinates($savedMap['coordinates']);
+                        }
+                        Response::success(['map_id' => $mapId, 'updated_existing' => true, 'map' => $savedMap]);
+                    }
+                    Response::error('Save failed');
+                }
 
                 $existing = Database::queryOne(
                     "SELECT id FROM room_maps WHERE room_number = ? AND map_name = ? ORDER BY updated_at DESC LIMIT 1",

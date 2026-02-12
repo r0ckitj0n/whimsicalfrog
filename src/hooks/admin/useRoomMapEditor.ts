@@ -82,12 +82,13 @@ export const useRoomMapEditor = (): IRoomMapEditorHook => {
         }
     }, [normalizeSavedMap]);
 
-    const saveMap = async (room: string, name: string, areas: IMapArea[]) => {
+    const saveMap = async (room: string, name: string, areas: IMapArea[], mapId?: string | number) => {
         try {
             const res = await ApiClient.post<{ success: boolean; message?: string; error?: string; map_id?: string | number; updated_existing?: boolean; map?: IRoomMap }>('/api/room_maps.php', {
                 action: 'save',
                 room,
                 map_name: name,
+                map_id: mapId,
                 coordinates: JSON.stringify({ rectangles: areas })
             });
             if (res.success) {

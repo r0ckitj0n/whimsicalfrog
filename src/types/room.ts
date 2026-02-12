@@ -264,7 +264,7 @@ export interface IRoomMapEditorHook {
     fetchRooms: () => Promise<void>;
     fetchSavedMaps: (room: string) => Promise<void>;
     loadActiveMap: (room: string) => Promise<IRoomMap | null>;
-    saveMap: (room: string, name: string, areas: IMapArea[]) => Promise<{ success: boolean; message?: string; error?: string; map_id?: string | number; updated_existing?: boolean; map?: IRoomMap }>;
+    saveMap: (room: string, name: string, areas: IMapArea[], mapId?: string | number) => Promise<{ success: boolean; message?: string; error?: string; map_id?: string | number; updated_existing?: boolean; map?: IRoomMap }>;
     deleteMap: (id: string | number) => Promise<{ success: boolean; error?: string }>;
     renameMap: (id: string | number, newName: string) => Promise<{ success: boolean; error?: string }>;
     activateMap: (id: string | number, room: string) => Promise<{ success: boolean; error?: string }>;

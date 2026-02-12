@@ -22,7 +22,7 @@ interface OverviewTabProps {
     onStartEdit: (room: IRoomData) => void;
     onCancelEdit: () => void;
     onCreateRoom: (room: Partial<IRoomData>) => Promise<{ success: boolean; error?: string; room_number?: string }>;
-    onGenerateBackground: (request: IRoomImageGenerationRequest) => Promise<{ success: boolean; error?: string }>;
+    onGenerateBackground: (request: IRoomImageGenerationRequest) => Promise<{ success: boolean; data?: import('../../../../../types/room-generation.js').IRoomImageGenerationResponse['data']; error?: string }>;
     isProtectedRoom: (room: IRoomData) => boolean;
 }
 
@@ -110,13 +110,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             window.WFToast?.success?.('Step 2/3 complete: Background image regenerated');
             window.WFToast?.info?.('Step 3/3: Deploying regenerated background...');
 
-            const listRes = await ApiClient.get<{
-                success?: boolean;
-                data?: { backgrounds?: Array<{ id: number }> };
-                backgrounds?: Array<{ id: number }>;
-            }>('/api/backgrounds.php', { room: roomNumber });
-            const backgroundsList = listRes?.data?.backgrounds || listRes?.backgrounds || [];
-            const newestBackgroundId = Number(backgroundsList[0]?.id || 0);
+            const newestBackgroundId = Number(result.data?.background?.id || 0);
             if (newestBackgroundId > 0) {
                 await ApiClient.post('/api/backgrounds.php', {
                     action: 'apply',
@@ -125,7 +119,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                 });
                 window.WFToast?.success?.('Step 3/3 complete: Regenerated background deployed');
             } else {
-                window.WFToast?.info?.('Image generated, but auto-deploy could not find the new background.');
+                window.WFToast?.info?.('Image generated, but auto-deploy did not receive a background ID.');
             }
         } catch (err: unknown) {
             window.WFToast?.error?.(err instanceof Error ? err.message : 'Failed to regenerate room background');

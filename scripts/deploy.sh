@@ -255,6 +255,7 @@ mirror $MIRROR_FLAGS \
   --exclude-glob fix_clown_frog_image.sql \
   --exclude-glob images/.htaccess \
   --exclude-glob images/items/.htaccess \
+  --exclude-glob "images/backgrounds/**" \
   --exclude-glob config/my.cnf \
   --exclude-glob config/secret.key \
   --exclude-glob "* [0-9].*" \
@@ -411,17 +412,18 @@ EOL
   # Secondary passes are unnecessary in full-replace mode
   if [ "${WF_FULL_REPLACE:-0}" != "1" ]; then
     if [ "$MODE" != "dist-only" ]; then
-      # Perform a second, targeted mirror for images/backgrounds WITHOUT --ignore-time
+      # Perform a second, targeted mirror for images/backgrounds WITHOUT --ignore-time.
       # Rationale: when replacing background files with the same size but different content,
       # the size-only comparison (from --ignore-time) may skip the upload. This pass uses
       # mtime to ensure changed files are uploaded.
+      # IMPORTANT: no --delete here so server-generated AI backgrounds are preserved.
       echo -e "${GREEN}🖼️  Ensuring background images are updated (mtime-based)...${NC}"
       cat > deploy_backgrounds.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
 set cmd:fail-exit yes
 open sftp://$USER:$PASS@$HOST
-mirror --reverse --delete --verbose --only-newer --no-perms \
+mirror --reverse --verbose --only-newer --no-perms \
   images/backgrounds images/backgrounds
 bye
 EOL

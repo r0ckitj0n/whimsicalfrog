@@ -41,7 +41,7 @@ interface VisualsTabProps {
     onApplyBackground: (bgId: number) => Promise<void>;
     onDeleteBackground: (bgId: number, name: string) => Promise<void>;
     onBackgroundUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
-    onGenerateBackground: (request: IRoomImageGenerationRequest) => Promise<{ success: boolean; error?: string }>;
+    onGenerateBackground: (request: IRoomImageGenerationRequest) => Promise<{ success: boolean; data?: import('../../../../../types/room-generation.js').IRoomImageGenerationResponse['data']; error?: string }>;
     getImageUrl: (bg: { webp_filename?: string; image_filename?: string }) => string;
 }
 
@@ -387,8 +387,15 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                 setGenerationMessage({ type: 'error', text: message });
                 return;
             }
-            window.WFToast?.success?.('AI room background generated and saved to library');
-            setGenerationMessage({ type: 'success', text: 'AI room background generated and saved to library.' });
+            const generatedBackgroundId = Number(result.data?.background?.id || 0);
+            if (generatedBackgroundId > 0) {
+                await onApplyBackground(generatedBackgroundId);
+                window.WFToast?.success?.('AI room background generated and deployed');
+                setGenerationMessage({ type: 'success', text: 'AI room background generated and deployed.' });
+            } else {
+                window.WFToast?.success?.('AI room background generated and saved to library');
+                setGenerationMessage({ type: 'success', text: 'AI room background generated and saved to library.' });
+            }
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'AI image generation failed';
             window.WFToast?.error?.(message);

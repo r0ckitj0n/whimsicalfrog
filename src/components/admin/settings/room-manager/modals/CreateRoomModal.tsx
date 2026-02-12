@@ -24,7 +24,7 @@ interface CreateRoomModalProps {
     roomsData: IRoomData[];
     onClose: () => void;
     onCreateRoom: (room: Partial<IRoomData>) => Promise<{ success: boolean; error?: string; room_number?: string }>;
-    onGenerateBackground: (request: IRoomImageGenerationRequest) => Promise<{ success: boolean; error?: string }>;
+    onGenerateBackground: (request: IRoomImageGenerationRequest) => Promise<{ success: boolean; data?: import('../../../../../types/room-generation.js').IRoomImageGenerationResponse['data']; error?: string }>;
 }
 
 interface CreateRoomFormState {

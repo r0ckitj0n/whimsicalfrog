@@ -3,6 +3,7 @@ import { MappingForm } from '../../area-mapper/MappingForm.js';
 import { UnifiedMappingsTable } from '../../area-mapper/UnifiedMappingsTable.js';
 import { IAreaMappingsHook } from '../../../../../types/room.js';
 import { IAreaMapping } from '../../../../../types/index.js';
+import { useModalContext } from '../../../../../context/ModalContext.js';
 
 interface ShortcutsTabProps {
     mappings: IAreaMappingsHook;
@@ -35,6 +36,8 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
     onToggleMappingActive,
     isGeneratingImage
 }) => {
+    const { confirm } = useModalContext();
+
     return (
         <div className="p-8 lg:p-10 overflow-y-auto flex-1">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -61,7 +64,24 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
                         roomOptions={mappings.roomOptions}
                         onEdit={onContentEdit}
                         onToggleActive={onToggleMappingActive}
-                        onDelete={(id: number) => mappings.deleteMapping(id, selectedRoom)}
+                        onDelete={async (id: number) => {
+                            const confirmed = await confirm({
+                                title: 'Delete Shortcut Mapping',
+                                message: 'Delete this shortcut mapping? Active mappings will be deactivated; already-inactive mappings will be permanently removed.',
+                                confirmText: 'Delete',
+                                cancelText: 'Cancel',
+                                confirmStyle: 'danger',
+                                iconKey: 'warning'
+                            });
+                            if (!confirmed) return;
+
+                            const ok = await mappings.deleteMapping(id, selectedRoom);
+                            if (!ok) {
+                                window.WFToast?.error?.('Failed to delete mapping');
+                            } else {
+                                window.WFToast?.success?.('Mapping deleted');
+                            }
+                        }}
                         onConvert={onContentConvert}
                     />
                 </div>

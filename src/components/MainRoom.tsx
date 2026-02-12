@@ -174,7 +174,8 @@ export const MainRoom: React.FC = () => {
                                     className="block"
                                     style={{
                                         width: '100%',
-                                        height: 'auto',
+                                        height: '100%',
+                                        objectFit: 'contain',
                                         maxWidth: '100%',
                                         transition: 'filter 0.3s ease',
                                         willChange: 'filter'

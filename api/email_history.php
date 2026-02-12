@@ -208,6 +208,7 @@ try {
     }
     $sel[] = $_eh_has('status') ? 'status' : "'' AS status";
     $sel[] = $_eh_has('error_message') ? 'error_message' : 'NULL AS error_message';
+    $sel[] = $_eh_has('content') ? 'content' : "'' AS content";
     if ($_eh_has('sent_at')) {
       $sel[] = 'sent_at';
     } elseif ($_eh_has('created_at')) {
@@ -256,6 +257,7 @@ try {
         'type' => normalize_email_type($r['email_type'] ?? '', $r['subject'] ?? ''),
         'status' => $r['status'] ?? WF_Constants::EMAIL_STATUS_SENT,
         'error_message' => $r['error_message'] ?? null,
+        'content' => resolve_content($r['content'] ?? '', $r),
         'sent_at' => $r['sent_at'] ?? null,
         'order_id' => normalize_order_id($r['order_id'] ?? null, $r['subject'] ?? ''),
         'created_by' => $r['created_by'] ?? null,

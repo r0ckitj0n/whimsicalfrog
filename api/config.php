@@ -7,6 +7,7 @@
 require_once __DIR__ . '/../includes/config_helper.php';
 require_once __DIR__ . '/../includes/database/DatabaseEnv.php';
 DatabaseEnv::ensureEnvLoaded();
+date_default_timezone_set('UTC');
 
 $isLocalhost = wf_detect_environment();
 $dbCfg = wf_load_db_config($isLocalhost);

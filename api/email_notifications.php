@@ -42,20 +42,62 @@ function sendOrderConfirmationEmails($order_id, $pdo)
         }
 
         if (isset($templates[WF_Constants::EMAIL_TYPE_ORDER_CONFIRMATION]) && $customerEmail !== '') {
-            // Avoid sending customer "thank you" template to the configured admin mailbox.
+            // Avoid duplicate sends when customer recipient is exactly the admin mailbox.
             $sameAsAdminRecipient = is_string($adminEmail) && $adminEmail !== '' && strcasecmp($customerEmail, $adminEmail) === 0;
-            $role = strtolower(trim((string) ($order['role'] ?? '')));
-            $isAdminPurchaser = in_array($role, [
-                WF_Constants::ROLE_ADMIN,
-                WF_Constants::ROLE_SUPERADMIN,
-                WF_Constants::ROLE_DEVOPS,
-                'administrator'
-            ], true);
-            if ($sameAsAdminRecipient || $isAdminPurchaser) {
-                error_log("Skipped order_confirmation for order {$order_id}: recipient is admin mailbox or admin purchaser");
+            if ($sameAsAdminRecipient) {
+                $skipReason = "Skipped order_confirmation for order {$order_id}: recipient matches admin mailbox";
+                error_log($skipReason);
+                EmailHelper::logEmail(
+                    $customerEmail,
+                    "Skipped customer order confirmation for {$order_id}",
+                    WF_Constants::EMAIL_STATUS_FAILED,
+                    $skipReason,
+                    (string) $order_id,
+                    [
+                        'from_email' => (string) BusinessSettings::getBusinessEmail(),
+                        'content' => '',
+                        'email_type' => WF_Constants::EMAIL_TYPE_ORDER_CONFIRMATION,
+                        'created_by' => WF_Constants::ROLE_SYSTEM,
+                        'is_html' => true
+                    ]
+                );
             } else {
                 $results['customer'] = sendTemplatedEmail($templates[WF_Constants::EMAIL_TYPE_ORDER_CONFIRMATION], $customerEmail, $vars, WF_Constants::EMAIL_TYPE_ORDER_CONFIRMATION);
             }
+        } elseif (!isset($templates[WF_Constants::EMAIL_TYPE_ORDER_CONFIRMATION])) {
+            $message = "No active order_confirmation template assigned for order {$order_id}";
+            error_log($message);
+            EmailHelper::logEmail(
+                $customerEmail !== '' ? $customerEmail : 'unknown-recipient',
+                "Missing customer order confirmation template for {$order_id}",
+                WF_Constants::EMAIL_STATUS_FAILED,
+                $message,
+                (string) $order_id,
+                [
+                    'from_email' => (string) BusinessSettings::getBusinessEmail(),
+                    'content' => '',
+                    'email_type' => WF_Constants::EMAIL_TYPE_ORDER_CONFIRMATION,
+                    'created_by' => WF_Constants::ROLE_SYSTEM,
+                    'is_html' => true
+                ]
+            );
+        } elseif ($customerEmail === '') {
+            $message = "Order {$order_id} has no customer email; cannot send confirmation";
+            error_log($message);
+            EmailHelper::logEmail(
+                'unknown-recipient',
+                "Missing customer email for {$order_id}",
+                WF_Constants::EMAIL_STATUS_FAILED,
+                $message,
+                (string) $order_id,
+                [
+                    'from_email' => (string) BusinessSettings::getBusinessEmail(),
+                    'content' => '',
+                    'email_type' => WF_Constants::EMAIL_TYPE_ORDER_CONFIRMATION,
+                    'created_by' => WF_Constants::ROLE_SYSTEM,
+                    'is_html' => true
+                ]
+            );
         }
     } catch (Exception $e) {
         error_log("Email error: " . $e->getMessage());

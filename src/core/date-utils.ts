@@ -3,7 +3,15 @@
  * Automatically respects the business timezone for all formatting.
  */
 
-let businessTimezone = 'America/New_York'; // Default fallback
+const browserTz = (() => {
+    try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York';
+    } catch {
+        return 'America/New_York';
+    }
+})();
+
+let businessTimezone = browserTz; // Default to viewer's local timezone
 let businessLocale = 'en-US';
 let businessCurrency = 'USD';
 let businessDstEnabled = true;

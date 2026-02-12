@@ -32,11 +32,12 @@ export const SiteCoreBridge = () => {
         if (typeof window === 'undefined') return;
 
         void (async () => {
+            const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York';
             try {
                 const res = await ApiClient.get<{ success?: boolean; settings?: Record<string, unknown> }>('/api/business_settings.php?action=get_business_info');
                 const settings = res?.settings || (res as Record<string, unknown> | undefined) || {};
                 setBusinessFormatting({
-                    timezone: (settings.business_timezone as string) || 'America/New_York',
+                    timezone: (settings.business_timezone as string) || browserTimezone,
                     locale: (settings.business_locale as string) || 'en-US',
                     currency: (settings.business_currency as string) || 'USD',
                     dstEnabled: typeof settings.business_dst_enabled === 'boolean'
@@ -45,6 +46,7 @@ export const SiteCoreBridge = () => {
                 });
             } catch (err) {
                 logger.warn('[SiteCoreBridge] Failed to load business formatting settings', err);
+                setBusinessFormatting({ timezone: browserTimezone });
             }
         })();
 

@@ -282,7 +282,7 @@ class EmailHelper
     public static function test($testEmail, $testMessage = 'This is a test email.')
     {
         $subject = 'Email Configuration Test';
-        $body = $testMessage . "\n\nSent at: " . date('Y-m-d H:i:s');
+        $body = $testMessage . "\n\nSent at: " . gmdate('Y-m-d H:i:s') . " UTC";
         return self::send($testEmail, $subject, $body, ['is_html' => false]);
     }
 
@@ -332,8 +332,8 @@ class EmailHelper
             if (!empty($columns['is_html'])) $insert['is_html'] = $isHtml;
             if (!empty($columns['headers_json'])) $insert['headers_json'] = $headersJson;
             if (!empty($columns['attachments_json'])) $insert['attachments_json'] = $attachmentsJson;
-            if (!empty($columns['sent_at'])) $insert['sent_at'] = date('Y-m-d H:i:s');
-            if (!empty($columns['created_at'])) $insert['created_at'] = date('Y-m-d H:i:s');
+            if (!empty($columns['sent_at'])) $insert['sent_at'] = gmdate('Y-m-d H:i:s');
+            if (!empty($columns['created_at'])) $insert['created_at'] = gmdate('Y-m-d H:i:s');
 
             if (empty($insert)) {
                 return false;

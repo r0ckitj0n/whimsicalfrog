@@ -16,8 +16,10 @@ class EmailNotificationHelper {
             $customer_name = $order['username'] ?? 'Valued Customer';
         }
 
-        $orderDate = date('F j, Y g:i A', strtotime($order['date'] ?? 'now'));
-        $orderTotal = '$' . number_format((float)$order['total'], 2);
+        $orderCreatedRaw = (string) ($order['created_at'] ?? '');
+        $orderTs = $orderCreatedRaw !== '' ? strtotime($orderCreatedRaw . ' UTC') : false;
+        $orderDate = $orderTs ? date('F j, Y g:i A', $orderTs) : date('F j, Y g:i A');
+        $orderTotal = '$' . number_format((float) ($order['total_amount'] ?? 0), 2);
 
         $shipping_address = 'Not specified';
         if (!empty($order['shipping_address'])) {
@@ -54,8 +56,9 @@ class EmailNotificationHelper {
         return [
             'customer_name' => $customer_name,
             'customer_email' => $order['email'] ?? 'N/A',
-            'order_id' => $order['id'],
-            'order.created_at' => $orderDate,
+            'order_id' => (string) ($order['id'] ?? ''),
+            'order_date' => $orderDate,
+            'order_created_at' => $orderDate,
             'order_total' => $orderTotal,
             'items' => $itemsListHtml,
             'items_text' => $itemsListText,

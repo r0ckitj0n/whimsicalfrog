@@ -108,7 +108,25 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             }
 
             window.WFToast?.success?.('Step 2/3 complete: Background image regenerated');
-            window.WFToast?.success?.('Step 3/3 complete: Room setup finished');
+            window.WFToast?.info?.('Step 3/3: Deploying regenerated background...');
+
+            const listRes = await ApiClient.get<{
+                success?: boolean;
+                data?: { backgrounds?: Array<{ id: number }> };
+                backgrounds?: Array<{ id: number }>;
+            }>('/api/backgrounds.php', { room: roomNumber });
+            const backgroundsList = listRes?.data?.backgrounds || listRes?.backgrounds || [];
+            const newestBackgroundId = Number(backgroundsList[0]?.id || 0);
+            if (newestBackgroundId > 0) {
+                await ApiClient.post('/api/backgrounds.php', {
+                    action: 'apply',
+                    room: roomNumber,
+                    background_id: newestBackgroundId
+                });
+                window.WFToast?.success?.('Step 3/3 complete: Regenerated background deployed');
+            } else {
+                window.WFToast?.info?.('Image generated, but auto-deploy could not find the new background.');
+            }
         } catch (err: unknown) {
             window.WFToast?.error?.(err instanceof Error ? err.message : 'Failed to regenerate room background');
         } finally {

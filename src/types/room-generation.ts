@@ -43,3 +43,24 @@ export interface IRoomImageGenerationResponse {
     message?: string;
     error?: string;
 }
+
+export interface IRoomGenerationHistoryPrompt {
+    id: number;
+    template_key: string;
+    prompt_text: string;
+    variables_json?: string | null;
+    provider?: string | null;
+    model?: string | null;
+    output_type?: string | null;
+    created_at?: string | null;
+}
+
+export interface IRoomGenerationHistoryPromptResponse {
+    success: boolean;
+    data?: {
+        prompt: IRoomGenerationHistoryPrompt;
+    };
+    prompt?: IRoomGenerationHistoryPrompt;
+    error?: string;
+    message?: string;
+}

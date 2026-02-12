@@ -1,8 +1,11 @@
 import React from 'react';
 import { IRoomData, IRoomOverview } from '../../../../../types/index.js';
+import { ApiClient } from '../../../../../core/ApiClient.js';
 import { OverviewCategoryEditor } from '../../../categories/partials/OverviewCategoryEditor.js';
 import { CreateRoomModal } from '../modals/CreateRoomModal.js';
+import { EditRoomModal } from '../modals/EditRoomModal.js';
 import type { IRoomImageGenerationRequest } from '../../../../../types/room-generation.js';
+import type { IRoomGenerationHistoryPromptResponse } from '../../../../../types/room-generation.js';
 
 interface OverviewTabProps {
     roomsData: IRoomData[];
@@ -40,6 +43,57 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
     isProtectedRoom
 }) => {
     const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
+    const [isRegenerating, setIsRegenerating] = React.useState(false);
+
+    const handleRegenerateBackground = React.useCallback(async () => {
+        const roomNumber = String(editingRoom?.room_number || roomForm.room_number || '').trim();
+        if (!roomNumber) {
+            window.WFToast?.error?.('Room number is required');
+            return;
+        }
+
+        setIsRegenerating(true);
+        try {
+            const promptRes = await ApiClient.get<IRoomGenerationHistoryPromptResponse>('/api/room_generation_history.php', {
+                room_number: roomNumber
+            });
+            const promptRow = promptRes?.data?.prompt || promptRes?.prompt;
+            const originalPrompt = String(promptRow?.prompt_text || '').trim();
+            if (!originalPrompt) {
+                window.WFToast?.error?.('No original prompt found for this room');
+                return;
+            }
+
+            const renderContext = String(roomForm.render_context || editingRoom?.render_context || 'modal');
+            const size: IRoomImageGenerationRequest['size'] = renderContext === 'fullscreen'
+                ? '1536x1024'
+                : renderContext === 'fixed'
+                    ? '1024x1536'
+                    : '1024x1024';
+
+            const roomName = String(roomForm.room_name || editingRoom?.room_name || '').trim();
+            const result = await onGenerateBackground({
+                room_number: roomNumber,
+                template_key: String(promptRow?.template_key || 'room_staging_empty_shelves_v1').trim(),
+                provider: 'openai',
+                model: String(promptRow?.model || '').trim() || undefined,
+                size,
+                background_name: roomName ? `${roomNumber} - ${roomName}` : roomNumber,
+                prompt_override: originalPrompt
+            });
+
+            if (!result.success) {
+                window.WFToast?.error?.(result.error || 'Failed to regenerate room background');
+                return;
+            }
+
+            window.WFToast?.success?.('Background regenerated from the original room prompt');
+        } catch (err: unknown) {
+            window.WFToast?.error?.(err instanceof Error ? err.message : 'Failed to regenerate room background');
+        } finally {
+            setIsRegenerating(false);
+        }
+    }, [editingRoom, roomForm.render_context, roomForm.room_name, roomForm.room_number, onGenerateBackground]);
 
     return (
         <div className="h-full flex flex-col min-h-0 overflow-hidden">
@@ -56,85 +110,6 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                         </button>
                     )}
                 </div>
-
-                {/* Create/Edit Form */}
-                {(isCreating || editingRoom) && (
-                    <div className="mb-6 p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                        <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">
-                                {isCreating ? 'Create New Room' : `Edit Room: ${editingRoom?.room_name}`}
-                            </h4>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={onCancelEdit}
-                                    className="px-3 py-1 text-[10px] font-bold text-slate-400 hover:text-slate-600 uppercase tracking-widest"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={onSaveRoom}
-                                    className="px-3 py-1 bg-blue-500 text-white text-[10px] font-bold rounded-lg hover:bg-blue-600 uppercase tracking-widest shadow-sm transition-all"
-                                    data-help-id="common-save"
-                                >
-                                    {isCreating ? 'Create Room' : 'Save Changes'}
-                                </button>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Room Number *</label>
-                                <input
-                                    type="text"
-                                    value={roomForm.room_number || ''}
-                                    onChange={e => setRoomForm(prev => ({ ...prev, room_number: e.target.value }))}
-                                    disabled={!isCreating}
-                                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:bg-slate-100 disabled:text-slate-400"
-                                    placeholder="e.g., 7"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Room Name *</label>
-                                <input
-                                    type="text"
-                                    value={roomForm.room_name || ''}
-                                    onChange={e => setRoomForm(prev => ({ ...prev, room_name: e.target.value }))}
-                                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                    placeholder="e.g., Holiday Collection"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Door Label *</label>
-                                <input
-                                    type="text"
-                                    value={roomForm.door_label || ''}
-                                    onChange={e => setRoomForm(prev => ({ ...prev, door_label: e.target.value }))}
-                                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                    placeholder="e.g., Holidays"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Display Order</label>
-                                <input
-                                    type="number"
-                                    value={roomForm.display_order || 0}
-                                    onChange={e => setRoomForm(prev => ({ ...prev, display_order: parseInt(e.target.value) || 0 }))}
-                                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
-                        </div>
-                        <div className="mt-4">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Description</label>
-                            <textarea
-                                value={roomForm.description || ''}
-                                onChange={e => setRoomForm(prev => ({ ...prev, description: e.target.value }))}
-                                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 resize-none"
-                                rows={2}
-                                placeholder="Optional description..."
-                            />
-                        </div>
-
-                    </div>
-                )}
 
                 {/* Rooms Table */}
                 <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
@@ -247,6 +222,16 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                 onClose={() => setIsCreateModalOpen(false)}
                 onCreateRoom={onCreateRoom}
                 onGenerateBackground={onGenerateBackground}
+            />
+            <EditRoomModal
+                isOpen={Boolean(editingRoom)}
+                editingRoom={editingRoom}
+                roomForm={roomForm}
+                setRoomForm={setRoomForm}
+                onClose={onCancelEdit}
+                onSaveRoom={onSaveRoom}
+                onRegenerateBackground={handleRegenerateBackground}
+                isRegenerating={isRegenerating}
             />
         </div>
     );

@@ -1,6 +1,7 @@
 import React from 'react';
 import { IRoomData, IRoomOverview } from '../../../../../types/index.js';
 import { ApiClient } from '../../../../../core/ApiClient.js';
+import { useAICostEstimateConfirm } from '../../../../../hooks/admin/useAICostEstimateConfirm.js';
 import { OverviewCategoryEditor } from '../../../categories/partials/OverviewCategoryEditor.js';
 import { CreateRoomModal } from '../modals/CreateRoomModal.js';
 import { EditRoomModal } from '../modals/EditRoomModal.js';
@@ -44,6 +45,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
 }) => {
     const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
     const [isRegenerating, setIsRegenerating] = React.useState(false);
+    const { confirmWithEstimate } = useAICostEstimateConfirm();
 
     const handleRegenerateBackground = React.useCallback(async () => {
         const roomNumber = String(editingRoom?.room_number || roomForm.room_number || '').trim();
@@ -54,6 +56,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
 
         setIsRegenerating(true);
         try {
+            window.WFToast?.info?.('Step 1/3: Loading original room prompt...');
             const promptRes = await ApiClient.get<IRoomGenerationHistoryPromptResponse>('/api/room_generation_history.php', {
                 room_number: roomNumber
             });
@@ -61,6 +64,23 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             const originalPrompt = String(promptRow?.prompt_text || '').trim();
             if (!originalPrompt) {
                 window.WFToast?.error?.('No original prompt found for this room');
+                return;
+            }
+            window.WFToast?.success?.('Step 1/3 complete: Original prompt loaded');
+
+            const confirmed = await confirmWithEstimate({
+                action_key: 'create_room_generate_image',
+                action_label: 'Regenerate room image with original prompt',
+                operations: [
+                    { key: 'room_image_generation', label: 'Room image generation', image_generations: 1 }
+                ],
+                context: {
+                    prompt_length: originalPrompt.length
+                },
+                confirmText: 'Regenerate Image'
+            });
+            if (!confirmed) {
+                window.WFToast?.info?.('Room background regeneration canceled.');
                 return;
             }
 
@@ -72,11 +92,11 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                     : '1024x1024';
 
             const roomName = String(roomForm.room_name || editingRoom?.room_name || '').trim();
+            window.WFToast?.info?.('Step 2/3: Generating background image...');
             const result = await onGenerateBackground({
                 room_number: roomNumber,
                 template_key: String(promptRow?.template_key || 'room_staging_empty_shelves_v1').trim(),
                 provider: 'openai',
-                model: String(promptRow?.model || '').trim() || undefined,
                 size,
                 background_name: roomName ? `${roomNumber} - ${roomName}` : roomNumber,
                 prompt_override: originalPrompt
@@ -87,13 +107,14 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                 return;
             }
 
-            window.WFToast?.success?.('Background regenerated from the original room prompt');
+            window.WFToast?.success?.('Step 2/3 complete: Background image regenerated');
+            window.WFToast?.success?.('Step 3/3 complete: Room setup finished');
         } catch (err: unknown) {
             window.WFToast?.error?.(err instanceof Error ? err.message : 'Failed to regenerate room background');
         } finally {
             setIsRegenerating(false);
         }
-    }, [editingRoom, roomForm.render_context, roomForm.room_name, roomForm.room_number, onGenerateBackground]);
+    }, [confirmWithEstimate, editingRoom, roomForm.render_context, roomForm.room_name, roomForm.room_number, onGenerateBackground]);
 
     return (
         <div className="h-full flex flex-col min-h-0 overflow-hidden">

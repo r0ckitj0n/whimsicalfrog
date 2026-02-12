@@ -100,41 +100,61 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
             window.WFToast?.error?.('Enter tweak instructions first');
             return;
         }
-        if (preview_image.target_type !== 'background') {
-            window.WFToast?.error?.('Preview is missing background metadata for AI tweak');
-            return;
-        }
 
         try {
+            const targetType = preview_image.target_type === 'shortcut_sign' ? 'shortcut_sign' : 'background';
+            const effectiveInstructions = targetType === 'shortcut_sign'
+                ? `${instructions}\nKeep this as a small isolated sign asset with transparent background and no scene/environment.`
+                : instructions;
             const res = await submitImageEdit({
-                target_type: 'background',
-                source_image_url: preview_image.url,
-                instructions,
+                target_type: targetType,
+                source_image_url: String(preview_image.source_shortcut_image_url || preview_image.url),
+                instructions: effectiveInstructions,
                 room_number: String(preview_image.room_number || selectedRoom || ''),
                 source_background_id: Number(preview_image.source_background_id || 0)
             });
 
-            const editedBackgroundId = Number(res?.data?.background?.id || 0);
-            const roomToApply = String(preview_image.room_number || selectedRoom || '');
-            if (editedBackgroundId > 0 && roomToApply) {
-                const applied = await backgrounds.applyBackground(roomToApply, editedBackgroundId);
-                if (!applied) {
-                    window.WFToast?.error?.('Edited background was saved, but could not be applied automatically.');
+            if (targetType === 'background') {
+                const editedBackgroundId = Number(res?.data?.background?.id || 0);
+                const roomToApply = String(preview_image.room_number || selectedRoom || '');
+                if (editedBackgroundId > 0 && roomToApply) {
+                    const applied = await backgrounds.applyBackground(roomToApply, editedBackgroundId);
+                    if (!applied) {
+                        window.WFToast?.error?.('Edited background was saved, but could not be applied automatically.');
+                    } else {
+                        window.WFToast?.success?.('AI edit applied to the room background.');
+                    }
                 } else {
-                    window.WFToast?.success?.('AI edit applied to the room background.');
+                    window.WFToast?.success?.('AI-edited background saved to Room Library');
+                }
+
+                const editedImageUrl = String(res?.data?.background?.image_url || '').trim();
+                if (editedImageUrl !== '') {
+                    setPreviewImage(prev => prev ? ({
+                        ...prev,
+                        url: editedImageUrl,
+                        name: String(res?.data?.background?.name || prev.name || 'Edited background'),
+                        source_background_id: editedBackgroundId > 0 ? editedBackgroundId : prev.source_background_id
+                    }) : prev);
                 }
             } else {
-                window.WFToast?.success?.('AI-edited background saved to Room Library');
-            }
+                const editedSignUrl = String(res?.data?.shortcut_sign?.image_url || '').trim();
+                if (editedSignUrl === '') {
+                    throw new Error('AI edit did not return a sign image');
+                }
 
-            const editedImageUrl = String(res?.data?.background?.image_url || '').trim();
-            if (editedImageUrl !== '') {
+                setNewMapping(prev => ({
+                    ...prev,
+                    content_image: editedSignUrl,
+                    link_image: editedSignUrl
+                }));
                 setPreviewImage(prev => prev ? ({
                     ...prev,
-                    url: editedImageUrl,
-                    name: String(res?.data?.background?.name || prev.name || 'Edited background'),
-                    source_background_id: editedBackgroundId > 0 ? editedBackgroundId : prev.source_background_id
+                    url: editedSignUrl,
+                    source_shortcut_image_url: editedSignUrl,
+                    name: String(res?.data?.shortcut_sign?.name || prev.name || 'Edited shortcut sign')
                 }) : prev);
+                window.WFToast?.success?.('AI-edited shortcut sign applied');
             }
 
             setImageTweakPrompt('');
@@ -251,9 +271,18 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                                     destinationOptions={destinationOptions}
                                     onContentSave={handleContentSave}
                                     onContentUpload={handleContentUpload}
+                                    onGenerateContentImage={shortcuts.handleGenerateContentImage}
+                                    onPreviewContentImage={(url) => setPreviewImage({
+                                        url,
+                                        name: 'Shortcut Sign',
+                                        target_type: 'shortcut_sign',
+                                        room_number: selectedRoom,
+                                        source_shortcut_image_url: url
+                                    })}
                                     onContentEdit={handleContentEdit}
                                     onContentConvert={handleContentConvert}
                                     onToggleMappingActive={shortcuts.handleToggleMappingActive}
+                                    isGeneratingImage={shortcuts.isGeneratingImage}
                                 />
                             )}
 

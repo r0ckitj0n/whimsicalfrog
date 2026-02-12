@@ -12,9 +12,12 @@ interface ShortcutsTabProps {
     destinationOptions: React.ReactNode[];
     onContentSave: (e?: React.FormEvent) => Promise<void>;
     onContentUpload: (e: React.ChangeEvent<HTMLInputElement>, field: 'content_image' | 'link_image') => Promise<void>;
+    onGenerateContentImage: () => Promise<void>;
+    onPreviewContentImage: (url: string) => void;
     onContentEdit: (mapping: IAreaMapping) => void;
     onContentConvert: (area: string, sku: string) => Promise<void>;
     onToggleMappingActive: (id: number, currentActive: boolean | number) => Promise<void>;
+    isGeneratingImage: boolean;
 }
 
 export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
@@ -25,9 +28,12 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
     destinationOptions,
     onContentSave,
     onContentUpload,
+    onGenerateContentImage,
+    onPreviewContentImage,
     onContentEdit,
     onContentConvert,
-    onToggleMappingActive
+    onToggleMappingActive,
+    isGeneratingImage
 }) => {
     return (
         <div className="p-8 lg:p-10 overflow-y-auto flex-1">
@@ -42,6 +48,9 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
                         items={mappings.unrepresentedItems}
                         onSubmit={onContentSave}
                         onUpload={onContentUpload}
+                        onGenerateImage={onGenerateContentImage}
+                        onPreviewImage={onPreviewContentImage}
+                        isGeneratingImage={isGeneratingImage}
                         isLoading={mappings.isLoading}
                     />
                 </div>

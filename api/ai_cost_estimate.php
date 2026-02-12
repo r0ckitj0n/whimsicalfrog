@@ -207,8 +207,10 @@ function wf_default_operations_for_action(string $actionKey): array
         'room_generate_background' => ['room_prompt_refinement', 'room_image_generation'],
         'room_generate_background_only' => ['room_image_generation'],
         'create_room_generate_image' => ['room_image_generation'],
+        'shortcut_generate_sign_image' => ['room_image_generation'],
         'item_image_submit_to_ai' => ['image_edit_generation'],
         'background_image_submit_to_ai' => ['image_edit_generation'],
+        'shortcut_image_submit_to_ai' => ['image_edit_generation'],
         'cost_breakdown_generate_all' => ['info_from_images', 'cost_estimation'],
         'ai_suggestions_generate_all' => ['info_from_images', 'cost_estimation', 'marketing_generation', 'price_estimation'],
         'ai_suggestions_generate_info' => ['info_from_images', 'marketing_generation']

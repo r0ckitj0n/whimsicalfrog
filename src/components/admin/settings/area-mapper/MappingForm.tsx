@@ -13,6 +13,9 @@ interface MappingFormProps {
     items: IItem[];
     isLoading: boolean;
     onUpload: (e: React.ChangeEvent<HTMLInputElement>, field: 'content_image' | 'link_image') => void;
+    onGenerateImage: () => Promise<void>;
+    onPreviewImage: (url: string) => void;
+    isGeneratingImage: boolean;
 }
 
 export const MappingForm: React.FC<MappingFormProps> = ({
@@ -24,7 +27,10 @@ export const MappingForm: React.FC<MappingFormProps> = ({
     destinationOptions,
     items,
     isLoading,
-    onUpload
+    onUpload,
+    onGenerateImage,
+    onPreviewImage,
+    isGeneratingImage
 }) => {
     return (
         <form onSubmit={onSubmit} className="p-4 bg-gray-50 border rounded-xl space-y-4">
@@ -150,12 +156,24 @@ export const MappingForm: React.FC<MappingFormProps> = ({
                     <div className="flex gap-4 items-start">
                         <div className="w-20 h-20 border-2 border-dashed rounded-lg flex items-center justify-center bg-white overflow-hidden flex-shrink-0">
                             {mapping.content_image || mapping.image_url || mapping.link_image ? (
-                                <img
-                                    src={mapping.content_image || mapping.image_url || mapping.link_image}
-                                    alt={`Content preview`}
-                                    className="w-full h-full object-contain"
-                                    loading="lazy"
-                                />
+                                <button
+                                    type="button"
+                                    className="w-full h-full"
+                                    onClick={() => {
+                                        const imageUrl = String(mapping.content_image || mapping.image_url || mapping.link_image || '').trim();
+                                        if (imageUrl !== '') {
+                                            onPreviewImage(imageUrl);
+                                        }
+                                    }}
+                                    title="View larger"
+                                >
+                                    <img
+                                        src={mapping.content_image || mapping.image_url || mapping.link_image}
+                                        alt="Content preview"
+                                        className="w-full h-full object-contain cursor-zoom-in"
+                                        loading="lazy"
+                                    />
+                                </button>
                             ) : (
                                 <span className="text-2xl text-gray-300">🖼️</span>
                             )}
@@ -174,6 +192,15 @@ export const MappingForm: React.FC<MappingFormProps> = ({
                                 >
                                     Upload Image
                                 </label>
+                                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest text-center">or</p>
+                                <button
+                                    type="button"
+                                    onClick={() => void onGenerateImage()}
+                                    disabled={isLoading || isGeneratingImage}
+                                    className="btn btn-secondary w-full text-center transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-60"
+                                >
+                                    {isGeneratingImage ? 'Generating...' : 'Generate Image'}
+                                </button>
                                 {(mapping.content_image || mapping.link_image) && (
                                     <button
                                         type="button"

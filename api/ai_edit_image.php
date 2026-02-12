@@ -312,8 +312,8 @@ try {
     $sourceBackgroundId = (int) ($input['source_background_id'] ?? 0);
     $instructions = trim((string) ($input['instructions'] ?? ''));
 
-    if (!in_array($targetType, ['item', 'background'], true)) {
-        Response::error('target_type must be item or background', null, 422);
+    if (!in_array($targetType, ['item', 'background', 'shortcut_sign'], true)) {
+        Response::error('target_type must be item, background, or shortcut_sign', null, 422);
     }
     if ($instructions === '') {
         Response::error('instructions are required', null, 422);
@@ -438,7 +438,7 @@ try {
                 ]
             ];
             $responseMessage = 'Edited item image saved';
-        } else {
+        } elseif ($targetType === 'background') {
             $roomRaw = trim((string) ($input['room_number'] ?? ''));
             if ($roomRaw === '' || preg_match('/^[0-9a-zA-Z]+$/', $roomRaw) !== 1) {
                 Response::error('room_number is required (alphanumeric)', null, 422);
@@ -490,6 +490,45 @@ try {
                 ]
             ];
             $responseMessage = 'Edited background image saved';
+        } else {
+            $roomRaw = trim((string) ($input['room_number'] ?? ''));
+            if ($roomRaw === '' || preg_match('/^[0-9a-zA-Z]+$/', $roomRaw) !== 1) {
+                Response::error('room_number is required (alphanumeric)', null, 422);
+            }
+            $roomNumber = normalizeRoomNumber($roomRaw);
+            $safeRoom = ImageUploadHelper::slugify('room' . $roomNumber);
+            $safeBase = ImageUploadHelper::slugify('ai-edit-sign-' . $roomNumber);
+            $unique = $safeBase . '-' . $safeRoom . '-' . substr(uniqid('', true), -6);
+
+            $imagesRoot = realpath(__DIR__ . '/../images') ?: (__DIR__ . '/../images');
+            $signsDir = $imagesRoot . '/signs';
+            ImageUploadHelper::ensureDir($signsDir);
+
+            $pngRel = 'signs/' . $unique . '.png';
+            $webpRel = 'signs/' . $unique . '.webp';
+            $pngAbs = $imagesRoot . '/' . $pngRel;
+            $webpAbs = $imagesRoot . '/' . $webpRel;
+
+            ImageUploadHelper::resizeFillToPng($editedTemp, $pngAbs, 500, 500);
+            if (!function_exists('imagewebp')) {
+                throw new RuntimeException('WEBP support is required for shortcut sign edits');
+            }
+            ImageUploadHelper::convertToWebP($pngAbs, $webpAbs, 92);
+            if (!file_exists($pngAbs) || !file_exists($webpAbs)) {
+                throw new RuntimeException('Failed to save edited shortcut sign files');
+            }
+
+            $name = 'AI Edited Sign ' . date('Y-m-d H:i');
+            $responseData = [
+                'target_type' => 'shortcut_sign',
+                'shortcut_sign' => [
+                    'name' => $name,
+                    'image_url' => '/images/' . $webpRel,
+                    'png_url' => '/images/' . $pngRel,
+                    'webp_url' => '/images/' . $webpRel
+                ]
+            ];
+            $responseMessage = 'Edited shortcut sign image saved';
         }
     } finally {
         $pathsToDelete = array_merge([$editedTemp, $uploadSourceTemp], $derivedPaths);

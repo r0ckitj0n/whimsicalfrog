@@ -254,6 +254,7 @@ export interface IAreaMappingsHook {
     toggleMappingActive: (room: string, id: number, currentActive: boolean | number) => Promise<boolean>;
     deleteMapping: (id: number, room: string) => Promise<boolean>;
     uploadImage: (file: File) => Promise<string | null>;
+    generateShortcutImage: (request: import('./room-shortcuts.js').IGenerateShortcutImageRequest) => Promise<import('./room-shortcuts.js').IGenerateShortcutImageResult | null>;
 }
 
 export interface IRoomMapEditorHook {
@@ -306,16 +307,18 @@ export interface IRoomVisualsHook {
     preview_image: {
         url: string;
         name: string;
-        target_type?: 'background';
+        target_type?: 'background' | 'shortcut_sign';
         room_number?: string;
         source_background_id?: number;
+        source_shortcut_image_url?: string;
     } | null;
     setPreviewImage: React.Dispatch<React.SetStateAction<{
         url: string;
         name: string;
-        target_type?: 'background';
+        target_type?: 'background' | 'shortcut_sign';
         room_number?: string;
         source_background_id?: number;
+        source_shortcut_image_url?: string;
     } | null>>;
     getImageUrl: (bg: { webp_filename?: string; image_filename?: string }) => string;
 }
@@ -327,7 +330,9 @@ export interface IRoomShortcutsHook {
     handleContentConvert: (area: string, sku: string) => Promise<void>;
     handleToggleMappingActive: (id: number, currentActive: boolean | number) => Promise<void>;
     handleContentUpload: (e: React.ChangeEvent<HTMLInputElement>, field: 'content_image' | 'link_image') => Promise<void>;
+    handleGenerateContentImage: () => Promise<void>;
     handleContentEdit: (mapping: import('./admin.js').IAreaMapping) => void;
+    isGeneratingImage: boolean;
     isContentDirty: boolean;
 }
 

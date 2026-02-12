@@ -1,12 +1,15 @@
 import { useState, useCallback, useMemo } from 'react';
 import { IAreaMapping } from '../../../types/admin.js';
 import { IAreaMappingsHook, IRoomShortcutsHook } from '../../../types/room.js';
+import { useAICostEstimateConfirm } from '../useAICostEstimateConfirm.js';
 
 export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHook): IRoomShortcutsHook => {
+    const { confirmWithEstimate } = useAICostEstimateConfirm();
     const [newMapping, setNewMapping] = useState<Partial<IAreaMapping>>({
         mapping_type: 'item',
         area_selector: ''
     });
+    const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
     const handleContentSave = useCallback(async (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -50,6 +53,57 @@ export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHo
         setNewMapping(mapping);
     }, []);
 
+    const handleGenerateContentImage = useCallback(async () => {
+        if (!selectedRoom) {
+            window.WFToast?.error?.('Select a room first');
+            return;
+        }
+
+        const contentTarget = String(newMapping.content_target || '').trim();
+        if (contentTarget === '') {
+            window.WFToast?.error?.('Select a destination first');
+            return;
+        }
+
+        const confirmed = await confirmWithEstimate({
+            action_key: 'shortcut_generate_sign_image',
+            action_label: 'Generate shortcut sign image with AI',
+            operations: [
+                { key: 'room_image_generation', label: 'Shortcut sign image generation', image_generations: 1 }
+            ],
+            context: {
+                prompt_length: (String(newMapping.link_label || '').trim().length || 24)
+            },
+            confirmText: 'Generate Image'
+        });
+        if (!confirmed) return;
+
+        try {
+            setIsGeneratingImage(true);
+            window.WFToast?.info?.('Generating shortcut sign image...');
+            const generated = await mappings.generateShortcutImage({
+                room_number: selectedRoom,
+                content_target: contentTarget,
+                link_label: String(newMapping.link_label || '').trim()
+            });
+            if (!generated?.image_url) {
+                throw new Error('AI did not return a generated image');
+            }
+
+            setNewMapping((prev) => ({
+                ...prev,
+                content_image: generated.image_url,
+                link_image: generated.image_url
+            }));
+            window.WFToast?.success?.('Shortcut sign image generated');
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Failed to generate shortcut sign image';
+            window.WFToast?.error?.(message);
+        } finally {
+            setIsGeneratingImage(false);
+        }
+    }, [confirmWithEstimate, mappings, newMapping.content_target, newMapping.link_label, selectedRoom]);
+
     const isContentDirty = useMemo(() =>
         !!newMapping.area_selector || !!newMapping.item_sku || !!newMapping.category_id || !!newMapping.content_target
         , [newMapping]);
@@ -61,7 +115,9 @@ export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHo
         handleContentConvert,
         handleToggleMappingActive,
         handleContentUpload,
+        handleGenerateContentImage,
         handleContentEdit,
+        isGeneratingImage,
         isContentDirty
     };
 };

@@ -1,4 +1,4 @@
-export type TAiImageEditTarget = 'item' | 'background';
+export type TAiImageEditTarget = 'item' | 'background' | 'shortcut_sign';
 
 export interface IAiImageEditRequest {
     target_type: TAiImageEditTarget;
@@ -27,6 +27,12 @@ export interface IAiImageEditResponse {
             webp_filename?: string;
             is_active: 0 | 1;
             image_url: string;
+            webp_url?: string | null;
+        };
+        shortcut_sign?: {
+            name: string;
+            image_url: string;
+            png_url: string;
             webp_url?: string | null;
         };
     };

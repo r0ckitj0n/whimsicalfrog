@@ -12,7 +12,7 @@ import {
     RoomImageAestheticFieldKey
 } from '../../../../../hooks/admin/room-manager/roomImageGenerationConfig.js';
 import type { IBackgroundsHook, IBackground } from '../../../../../types/backgrounds.js';
-import type { IRoomData } from '../../../../../types/room.js';
+import type { IRoomData, IRoomVisualsHook } from '../../../../../types/room.js';
 import type { IRoomImageGenerationRequest } from '../../../../../types/room-generation.js';
 import {
     AUTOGENERATE_LABEL,
@@ -24,20 +24,8 @@ interface VisualsTabProps {
     backgrounds: IBackgroundsHook;
     selectedRoom: string;
     selectedRoomData: IRoomData | null;
-    previewImage: {
-        url: string;
-        name: string;
-        target_type?: 'background';
-        room_number?: string;
-        source_background_id?: number;
-    } | null;
-    setPreviewImage: React.Dispatch<React.SetStateAction<{
-        url: string;
-        name: string;
-        target_type?: 'background';
-        room_number?: string;
-        source_background_id?: number;
-    } | null>>;
+    previewImage: IRoomVisualsHook['preview_image'];
+    setPreviewImage: IRoomVisualsHook['setPreviewImage'];
     onApplyBackground: (bgId: number) => Promise<void>;
     onDeleteBackground: (bgId: number, name: string) => Promise<void>;
     onBackgroundUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;

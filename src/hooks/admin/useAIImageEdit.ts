@@ -9,9 +9,14 @@ export const useAIImageEdit = () => {
 
     const submitImageEdit = useCallback(async (payload: IAiImageEditRequest): Promise<IAiImageEditResponse> => {
         const isBackground = payload.target_type === 'background';
+        const isShortcutSign = payload.target_type === 'shortcut_sign';
         const confirmed = await confirmWithEstimate({
-            action_key: isBackground ? 'background_image_submit_to_ai' : 'item_image_submit_to_ai',
-            action_label: isBackground ? 'Submit background image edit to AI' : 'Submit item image edit to AI',
+            action_key: isBackground
+                ? 'background_image_submit_to_ai'
+                : (isShortcutSign ? 'shortcut_image_submit_to_ai' : 'item_image_submit_to_ai'),
+            action_label: isBackground
+                ? 'Submit background image edit to AI'
+                : (isShortcutSign ? 'Submit shortcut sign image edit to AI' : 'Submit item image edit to AI'),
             operations: [
                 { key: 'image_edit_generation', label: 'Image edit generation', image_count: 1, image_generations: 1 }
             ],

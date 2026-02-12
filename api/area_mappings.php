@@ -47,6 +47,7 @@ $allowedGetActions = [
 ];
 $allowedPostActions = [
     'upload_content_image',
+    'generate_shortcut_image',
     'add_mapping',
     'update_mapping',
     'delete_mapping',
@@ -180,6 +181,8 @@ try {
             requireAdmin(true);
             if ($action === 'upload_content_image') {
                 Response::success(['image_url' => AreaMappingUploadHelper::handleUpload()]);
+            } elseif ($action === 'generate_shortcut_image') {
+                Response::success(AreaMappingUploadHelper::handleGenerateShortcutImage($input));
             } elseif ($action === 'add_mapping') {
                 Response::success(AreaMappingActionHelper::addMapping($input));
             } elseif ($action === 'update_mapping') {

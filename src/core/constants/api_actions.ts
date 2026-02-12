@@ -8,6 +8,7 @@ export const API_ACTION = {
     GET_DOOR_DESTINATIONS: 'door_sign_destinations',
     GET_ROOM_COORDINATES: 'get_room_coordinates',
     UPLOAD_CONTENT_IMAGE: 'upload_content_image',
+    GENERATE_SHORTCUT_IMAGE: 'generate_shortcut_image',
     GET_GLOBAL_GENDERS: 'get_global_genders',
     GET_GLOBAL_SIZES: 'get_global_sizes',
     GET_GLOBAL_COLORS: 'get_global_colors',

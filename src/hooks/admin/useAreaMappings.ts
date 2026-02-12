@@ -12,6 +12,7 @@ import {
     IMappingsResponse,
     IAreaMappingsHook
 } from '../../types/room.js';
+import type { IGenerateShortcutImageRequest, IGenerateShortcutImageResponse } from '../../types/room-shortcuts.js';
 
 export const useAreaMappings = (): IAreaMappingsHook => {
     const [isLoading, setIsLoading] = useState(false);
@@ -243,6 +244,33 @@ export const useAreaMappings = (): IAreaMappingsHook => {
         }
     }, []);
 
+    const generateShortcutImage = useCallback(async (request: IGenerateShortcutImageRequest) => {
+        try {
+            const res = await ApiClient.post<IGenerateShortcutImageResponse>('/api/area_mappings.php', {
+                action: API_ACTION.GENERATE_SHORTCUT_IMAGE,
+                ...request
+            });
+            if (res?.success && (res.image_url || res.data?.image_url)) {
+                return {
+                    image_url: String(res.image_url || res.data?.image_url || ''),
+                    png_url: String(res.png_url || res.data?.png_url || ''),
+                    webp_url: (res.webp_url || res.data?.webp_url || null) as string | null,
+                    room_number: String(res.room_number || res.data?.room_number || ''),
+                    target_room_number: String(res.target_room_number || res.data?.target_room_number || ''),
+                    prompt_text: String(res.prompt_text || res.data?.prompt_text || ''),
+                    provider: String(res.provider || res.data?.provider || ''),
+                    model: String(res.model || res.data?.model || '')
+                };
+            }
+            throw new Error(res?.error || res?.message || 'Failed to generate shortcut image');
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Unknown error';
+            logger.error('generateShortcutImage failed', err);
+            setError(message);
+            return null;
+        }
+    }, []);
+
     return {
         isLoading,
         error,
@@ -261,6 +289,7 @@ export const useAreaMappings = (): IAreaMappingsHook => {
         saveMapping,
         toggleMappingActive,
         deleteMapping,
-        uploadImage
+        uploadImage,
+        generateShortcutImage
     };
 };

@@ -20,6 +20,7 @@ export type * from './ai.js';
 export type * from './ai-cost-estimate.js';
 export type * from './ai-prompts.js';
 export type * from './room-generation.js';
+export type * from './room-shortcuts.js';
 export type * from './newsletter.js';
 // dashboard.ts has IDashboardMetrics which conflicts with admin.ts, use dashboard version
 export type {

@@ -333,7 +333,12 @@ try {
     $ops = wf_coerce_operations(is_array($operationsInput) ? $operationsInput : [], $actionKey, $defaultImageCount);
 
     $aiEstimate = ['success' => false, 'line_items' => [], 'assumptions' => []];
-    if ($provider !== 'jons_ai') {
+    $forceHeuristicActions = [
+        'shortcut_generate_sign_image',
+        'shortcut_image_submit_to_ai'
+    ];
+    $shouldUseHeuristicOnly = in_array($actionKey, $forceHeuristicActions, true);
+    if ($provider !== 'jons_ai' && !$shouldUseHeuristicOnly) {
         try {
             $aiEstimate = wf_try_ai_estimate($ops, $context, $aiProviders);
         } catch (Throwable $estimateErr) {
@@ -386,7 +391,9 @@ try {
     $assumptions = [];
     $assumptions[] = 'Preflight estimates are approximate and can vary with prompt length, retries, and provider-side billing changes.';
     $assumptions[] = 'Includes the operations requested by this action and combines them into one total.';
-    if (!$aiEstimate['success']) {
+    if ($shouldUseHeuristicOnly) {
+        $assumptions[] = 'Used fast heuristic estimate for responsive shortcut image UX.';
+    } elseif (!$aiEstimate['success']) {
         $assumptions[] = 'Used heuristic token estimates because live AI estimation was unavailable.';
     } else {
         foreach ($aiEstimate['assumptions'] as $assumption) {

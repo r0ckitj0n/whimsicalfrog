@@ -11,15 +11,49 @@ export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHo
     });
     const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
+    const validateMappingForSave = useCallback((mapping: Partial<IAreaMapping>): string | null => {
+        const areaSelector = String(mapping.area_selector || '').trim();
+        const mappingType = String(mapping.mapping_type || '').trim();
+        const contentTarget = String(mapping.content_target || '').trim();
+
+        if (areaSelector === '' || mappingType === '') {
+            return 'Area Selector and Mapping Type are required';
+        }
+
+        if (['content', 'page', 'modal'].includes(mappingType) && contentTarget === '') {
+            return 'Destination is required for Shortcut/Page/Modal mappings';
+        }
+
+        if (mappingType === 'link' && String(mapping.link_url || '').trim() === '') {
+            return 'Destination URL is required for External Link mappings';
+        }
+
+        if (mappingType === 'category' && !mapping.category_id) {
+            return 'Category is required for Category mappings';
+        }
+
+        if (mappingType === 'item' && String(mapping.item_sku || '').trim() === '') {
+            return 'Item is required for Item mappings';
+        }
+
+        return null;
+    }, []);
+
     const handleContentSave = useCallback(async (e?: React.FormEvent) => {
         e?.preventDefault();
         if (!selectedRoom) return;
+        const validationError = validateMappingForSave(newMapping);
+        if (validationError) {
+            window.WFToast?.error?.(validationError);
+            return;
+        }
+
         const success = await mappings.saveMapping({ ...newMapping, room_number: selectedRoom });
         if (success) {
             setNewMapping({ mapping_type: 'item', area_selector: '' });
             if (window.WFToast) window.WFToast.success('Mapping saved');
         }
-    }, [selectedRoom, newMapping, mappings]);
+    }, [selectedRoom, newMapping, mappings, validateMappingForSave]);
 
     const handleContentConvert = useCallback(async (area: string, sku: string) => {
         if (!selectedRoom) return;
@@ -64,6 +98,11 @@ export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHo
             window.WFToast?.error?.('Select a destination first');
             return;
         }
+        const validationError = validateMappingForSave(newMapping);
+        if (validationError) {
+            window.WFToast?.error?.(validationError);
+            return;
+        }
 
         const confirmed = await confirmWithEstimate({
             action_key: 'shortcut_generate_sign_image',
@@ -90,19 +129,27 @@ export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHo
                 throw new Error('AI did not return a generated image');
             }
 
-            setNewMapping((prev) => ({
-                ...prev,
+            const mappingToSave: Partial<IAreaMapping> = {
+                ...newMapping,
+                room_number: selectedRoom,
                 content_image: generated.image_url,
                 link_image: generated.image_url
-            }));
-            window.WFToast?.success?.('Shortcut sign image generated');
+            };
+
+            const success = await mappings.saveMapping(mappingToSave);
+            if (!success) {
+                throw new Error('Sign was generated, but saving the mapping failed');
+            }
+
+            setNewMapping({ mapping_type: 'item', area_selector: '' });
+            window.WFToast?.success?.('Shortcut sign image generated and saved');
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Failed to generate shortcut sign image';
             window.WFToast?.error?.(message);
         } finally {
             setIsGeneratingImage(false);
         }
-    }, [confirmWithEstimate, mappings, newMapping.content_target, newMapping.link_label, selectedRoom]);
+    }, [confirmWithEstimate, mappings, newMapping, selectedRoom, validateMappingForSave]);
 
     const isContentDirty = useMemo(() =>
         !!newMapping.area_selector || !!newMapping.item_sku || !!newMapping.category_id || !!newMapping.content_target

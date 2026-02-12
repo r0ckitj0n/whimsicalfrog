@@ -45,7 +45,6 @@ export const MappingForm: React.FC<MappingFormProps> = ({
                     onChange={e => setMapping({ ...mapping, area_selector: e.target.value })}
                     className="w-full p-2 border rounded-lg text-sm bg-white"
                     required
-                    disabled={!!mapping.id}
                 >
                     <option value="">Select Area...</option>
                     <option value="-beginning-">Auto-place @ Start</option>

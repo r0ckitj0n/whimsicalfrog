@@ -11,7 +11,66 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 requireAdmin(true);
 
+/**
+ * Normalize and validate a repository-local image path.
+ */
+function wf_resolve_local_image_path(string $rawPath): ?string
+{
+    $rawPath = trim($rawPath);
+    if ($rawPath === '') {
+        return null;
+    }
+
+    $relative = ltrim($rawPath, '/');
+    if ($relative === '' || strpos($relative, '..') !== false) {
+        return null;
+    }
+
+    $abs = realpath(__DIR__ . '/../' . $relative);
+    if ($abs === false) {
+        return null;
+    }
+
+    $root = realpath(__DIR__ . '/..');
+    if ($root === false || strpos($abs, $root) !== 0) {
+        return null;
+    }
+
+    return $abs;
+}
+
+/**
+ * Generate potential image path variants (e.g., webp/png pairs).
+ */
+function wf_expand_image_variants(array $paths): array
+{
+    $expanded = [];
+
+    foreach ($paths as $path) {
+        $path = trim((string) $path);
+        if ($path === '') {
+            continue;
+        }
+
+        $expanded[$path] = true;
+        $lower = strtolower($path);
+        if (str_ends_with($lower, '.webp')) {
+            $expanded[substr($path, 0, -5) . '.png'] = true;
+            $expanded[substr($path, 0, -5) . '.jpg'] = true;
+            $expanded[substr($path, 0, -5) . '.jpeg'] = true;
+            continue;
+        }
+        if (str_ends_with($lower, '.png') || str_ends_with($lower, '.jpg') || str_ends_with($lower, '.jpeg')) {
+            $extLen = str_ends_with($lower, '.jpeg') ? 5 : 4;
+            $expanded[substr($path, 0, -$extLen) . '.webp'] = true;
+        }
+    }
+
+    return array_keys($expanded);
+}
+
 try {
+    $pdo = null;
     // Get POST data
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true);
@@ -38,26 +97,75 @@ try {
         throw $e;
     }
 
-    // Check if item exists
-    $row = Database::queryOne('SELECT COUNT(*) AS c FROM items WHERE sku = ?', [$sku]);
-    if ((int)($row['c'] ?? 0) === 0) {
+    // Check if item exists and gather direct image_url reference.
+    $itemRow = Database::queryOne('SELECT sku, image_url FROM items WHERE sku = ? LIMIT 1', [$sku]);
+    if (!$itemRow) {
         Response::notFound('Item not found');
     }
 
-    // Delete item
+    // Gather all image paths tied to the SKU before deleting DB rows.
+    $imageRows = Database::queryAll(
+        'SELECT image_path, original_path FROM item_images WHERE sku = ?',
+        [$sku]
+    );
+    $candidatePaths = [];
+    foreach ($imageRows as $imageRow) {
+        $candidatePaths[] = (string) ($imageRow['image_path'] ?? '');
+        $candidatePaths[] = (string) ($imageRow['original_path'] ?? '');
+    }
+    $candidatePaths[] = (string) ($itemRow['image_url'] ?? '');
+    $candidatePaths = wf_expand_image_variants($candidatePaths);
+
+    // Delete database rows in a transaction (metadata first, then item).
+    Database::beginTransaction();
+    Database::execute('DELETE FROM item_images WHERE sku = ?', [$sku]);
     $affected = Database::execute('DELETE FROM items WHERE sku = ?', [$sku]);
 
-    if ($affected !== false) {
-        // Return success response
-        Response::success(['message' => 'Item deleted successfully', 'sku' => $sku]);
-    } else {
+    if ($affected === false || $affected < 1) {
+        Database::rollBack();
         throw new Exception('Failed to delete item');
     }
+    Database::commit();
+
+    // Best-effort file cleanup after commit so DB state remains authoritative.
+    $deletedFiles = [];
+    $missingFiles = [];
+    $failedFiles = [];
+
+    foreach ($candidatePaths as $candidatePath) {
+        $absPath = wf_resolve_local_image_path($candidatePath);
+        if ($absPath === null) {
+            continue;
+        }
+        if (!is_file($absPath)) {
+            $missingFiles[] = $candidatePath;
+            continue;
+        }
+        if (@unlink($absPath)) {
+            $deletedFiles[] = $candidatePath;
+            continue;
+        }
+        $failedFiles[] = $candidatePath;
+    }
+
+    Response::success([
+        'message' => 'Item deleted successfully',
+        'sku' => $sku,
+        'deleted_image_files' => array_values(array_unique($deletedFiles)),
+        'missing_image_files' => array_values(array_unique($missingFiles)),
+        'failed_image_files' => array_values(array_unique($failedFiles))
+    ]);
 
 } catch (PDOException $e) {
+    if ($pdo instanceof PDO && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     // Handle database errors
     Response::serverError('Database connection failed', $e->getMessage());
 } catch (Exception $e) {
+    if ($pdo instanceof PDO && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     // Handle general errors
     Response::serverError('An unexpected error occurred', $e->getMessage());
 }

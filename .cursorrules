@@ -42,6 +42,36 @@ This is the consolidated **portable** ruleset for the Whimsical Frog repository.
 ### Tooling
 - Repo rules are documented here and synced into `.windsurfrules` by `scripts/dev.sh`.
 
+## Database Schema Sync Protocol (Local -> Live)
+
+> **MANDATE:** Any change that adds a table/column/index to local MySQL must be synced to live MySQL immediately using add-only schema sync, without full DB overwrite.
+
+### Required workflow for schema changes
+1. Apply and validate schema change locally.
+2. Run local hygiene/tests.
+3. Run add-only live sync dry run for impacted table(s):
+   - `php scripts/db/sync_local_schema_to_live.php --table=<table_name>`
+4. Apply live sync for impacted table(s):
+   - `php scripts/db/sync_local_schema_to_live.php --table=<table_name> --apply`
+5. Verify on live by checking table structure and endpoint behavior.
+
+### Guardrails
+- Never use full database restore to push routine schema additions.
+- Sync script is add-only:
+  - Allowed: `CREATE TABLE` (if missing), `ADD COLUMN`, `ADD INDEX`.
+  - Not allowed: drop/rename/overwrite existing columns or destructive schema changes.
+- If live DB host credentials are unreachable, stop and surface the exact connection error, then request corrected live DB access details before proceeding.
+
+### Live DB Access Constraint (Whimsical Frog)
+- This environment may block direct DB connections from non-server sources.
+- When direct local->live DB connectivity fails or is restricted, schema patches MUST be executed server-side via website API endpoints.
+- Required server-side method:
+  1. Build SQL patch file locally.
+  2. Execute via `POST /api/database_maintenance.php?action=restore_database` with multipart `backup_file` and `admin_token`.
+  3. Prefer idempotent SQL (information_schema checks + conditional ALTER) so reruns are safe.
+- Preferred command for email logs patch:
+  - `bash scripts/db/deploy_email_logs_schema_patch.sh`
+
 ## Security Baseline (Non-Negotiable)
 
 ### Endpoint Security

@@ -32,15 +32,22 @@ export const POSView: React.FC = () => {
     const [selectedSku, setSelectedSku] = useState('');
     const [squareModalOpen, setSquareModalOpen] = useState(false);
 
-    const categories = useMemo(() => Array.from(new Set(items.map(i => i.category).filter(Boolean))), [items]);
+    const activeItems = useMemo(() => items.filter((item) => {
+        if (typeof item.is_active !== 'undefined') {
+            return item.is_active === true || item.is_active === 1;
+        }
+        return (item.status || '').toLowerCase() === 'active';
+    }), [items]);
 
-    const filteredItems = useMemo(() => items.filter(item => {
+    const categories = useMemo(() => Array.from(new Set(activeItems.map(i => i.category).filter(Boolean))), [activeItems]);
+
+    const filteredItems = useMemo(() => activeItems.filter(item => {
         const matchesSearch = !searchQuery ||
             item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             item.sku.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesCategory = !selectedCategory || item.category === selectedCategory;
         return matchesSearch && matchesCategory;
-    }), [items, searchQuery, selectedCategory]);
+    }), [activeItems, searchQuery, selectedCategory]);
 
     // Keyboard Shortcuts
     useEffect(() => {

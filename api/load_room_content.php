@@ -141,6 +141,7 @@ try {
                 $htmlContent .= sprintf(
                     '<div class="room-item room-item-icon %s %s" data-sku="%s" data-item=\'%s\' data-action="openItemModal" data-params=\'{"sku":"%s"}\' %s %s>
                     <img src="%s" alt="%s" loading="lazy">
+                    %s
                 </div>',
                     $selectorClass,
                     $stock <= 0 ? 'sold-out' : '',
@@ -150,7 +151,8 @@ try {
                     $coordAttrs,
                     $inlineStyle,
                     htmlspecialchars($imgUrl),
-                    htmlspecialchars($name)
+                    htmlspecialchars($name),
+                    $stock <= 0 ? '<span class="room-item-oos-badge">Out of Stock</span>' : ''
                 );
             } elseif ($type === 'category') {
                 $categoryId = $mapping['category_id'] ?? '';

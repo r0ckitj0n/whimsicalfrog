@@ -97,6 +97,25 @@
     z-index: var(--wf-z-sticky);
 }
 
+.room-modal-body .room-item-icon .room-item-oos-badge,
+.room-overlay-wrapper .room-item-icon .room-item-oos-badge {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: var(--brand-error, #dc2626);
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 4px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 1;
+}
+
 /* Close & Nav Buttons */
 .room-modal-close,
 .room-modal-nav {

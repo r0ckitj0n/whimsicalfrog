@@ -56,7 +56,7 @@ export const ItemGrid: React.FC<ItemGridProps> = ({
                             disabled={item.stock <= 0}
                             className={`group flex flex-col text-left bg-white border border-gray-100 rounded-3xl p-3 transition-all duration-300 hover:shadow-xl hover:border-[var(--brand-primary)]/30 hover:-translate-y-1 active:scale-95 ${item.stock <= 0 ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
                         >
-                            <div className="aspect-square bg-gray-50 rounded-2xl mb-3 overflow-hidden border border-black/5 p-4 flex items-center justify-center">
+                            <div className="relative aspect-square bg-gray-50 rounded-2xl mb-3 overflow-hidden border border-black/5 p-4 flex items-center justify-center">
                                 {(item.primary_image?.image_path || item.image_url) ? (
                                     <img
                                         src={item.primary_image?.image_path || item.image_url}
@@ -66,6 +66,11 @@ export const ItemGrid: React.FC<ItemGridProps> = ({
                                     />
                                 ) : (
                                     <div className="admin-action-btn btn-icon--shopping-cart text-5xl opacity-10" data-help-id="pos-item-no-image" />
+                                )}
+                                {item.stock <= 0 && (
+                                    <span className="absolute top-2 left-2 px-2 py-1 rounded-md bg-[var(--brand-error)] text-white text-[10px] font-black uppercase tracking-wide shadow-md">
+                                        Out of Stock
+                                    </span>
                                 )}
                             </div>
                             <div className="flex-1 min-w-0 space-y-1 px-1">

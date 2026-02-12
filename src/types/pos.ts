@@ -23,6 +23,7 @@ export interface IPOSItem {
     is_on_sale: boolean;
     sale_discount_percentage: number;
     status: string;
+    is_active?: boolean | number;
 }
 
 export interface IPOSPricing {

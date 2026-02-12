@@ -575,10 +575,16 @@ try {
     $webpAbs = $imagesRoot . '/' . $webpRel;
 
     ImageUploadHelper::resizeFillToPng($sourcePath, $pngAbs, 1280, 896);
+    if (!file_exists($pngAbs) || (int) @filesize($pngAbs) <= 0) {
+        throw new RuntimeException('Generated PNG output is missing or empty');
+    }
 
     if (function_exists('imagewebp')) {
         try {
             ImageUploadHelper::convertToWebP($pngAbs, $webpAbs, 92);
+            if (!file_exists($webpAbs) || (int) @filesize($webpAbs) <= 0) {
+                $webpRel = '';
+            }
         } catch (Throwable $e) {
             error_log('generate_room_image webp conversion failed: ' . $e->getMessage());
             $webpRel = '';

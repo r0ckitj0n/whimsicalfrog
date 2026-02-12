@@ -455,7 +455,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         <>
             <div
                 className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
-                style={{ zIndex: 'calc(var(--z-overlay-topmost) + 1)' }}
+                style={{ zIndex: 'var(--wf-z-modal)' }}
                 onClick={(e) => e.target === e.currentTarget && onClose()}
             >
                 <div className="relative w-full max-w-5xl bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden">

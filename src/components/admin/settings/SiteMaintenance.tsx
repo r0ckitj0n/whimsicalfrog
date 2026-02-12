@@ -6,8 +6,9 @@ import { useSiteMaintenance, IBackupDetails, IScanResult } from '../../../hooks/
 import { StatusTab } from './site-maintenance/StatusTab.js';
 import { DatabaseTab } from './site-maintenance/DatabaseTab.js';
 import { BackupTab } from './site-maintenance/BackupTab.js';
+import { CleanupTab } from './site-maintenance/CleanupTab.js';
 
-export type TabType = 'status' | 'database' | 'backup';
+export type TabType = 'status' | 'database' | 'backup' | 'cleanup';
 
 interface SiteMaintenanceProps {
     onClose?: () => void;
@@ -42,7 +43,8 @@ export const SiteMaintenance: React.FC<SiteMaintenanceProps> = ({ onClose, initi
     const tabs: { id: TabType; label: string }[] = [
         { id: 'status', label: 'System Status' },
         { id: 'database', label: 'Database' },
-        { id: 'backup', label: 'Backups' }
+        { id: 'backup', label: 'Backups' },
+        { id: 'cleanup', label: 'Cleanup' }
     ];
 
     const modalContent = (
@@ -124,6 +126,10 @@ export const SiteMaintenance: React.FC<SiteMaintenanceProps> = ({ onClose, initi
                                     backupResult={backupResult}
                                     setBackupResult={setBackupResult}
                                 />
+                            )}
+
+                            {activeTab === 'cleanup' && (
+                                <CleanupTab isLoading={isLoading} />
                             )}
                         </div>
                     </div>

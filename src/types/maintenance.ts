@@ -92,6 +92,50 @@ export interface IDbQueryResults {
     executionTime?: number;
 }
 
+// Image Cleanup Types
+export interface IImageCleanupArchivedFile {
+    rel_path: string; // e.g. images/signs/foo.webp
+    archived_rel_path: string; // e.g. backups/image_cleanup/.../images/signs/foo.webp
+    bytes: number;
+}
+
+export interface IImageCleanupReport {
+    job_id: string;
+    started_at: string;
+    finished_at?: string;
+    archive_root_rel: string; // backups/image_cleanup/<timestamp>-<jobid>
+    dry_run: boolean;
+    total_files: number;
+    referenced_files: number;
+    archived_files: IImageCleanupArchivedFile[];
+    skipped_whitelist: string[];
+    errors: string[];
+}
+
+export interface IImageCleanupStartResponse {
+    success: boolean;
+    job_id?: string;
+    error?: string;
+    message?: string;
+}
+
+export interface IImageCleanupStepResponse {
+    success: boolean;
+    job_id?: string;
+    phase?: 'init' | 'building_references' | 'archiving' | 'complete' | 'error';
+    status?: string;
+    progress?: {
+        processed: number;
+        total: number;
+        archived: number;
+        referenced: number;
+        whitelisted: number;
+    };
+    report?: IImageCleanupReport;
+    error?: string;
+    message?: string;
+}
+
 // ============================================================================
 // API Response Interfaces
 // ============================================================================
@@ -130,5 +174,4 @@ export interface IHealthItemResponse {
         };
     };
 }
-
 

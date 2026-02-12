@@ -256,6 +256,7 @@ mirror $MIRROR_FLAGS \
   --exclude-glob images/.htaccess \
   --exclude-glob images/items/.htaccess \
   --exclude-glob "images/backgrounds/**" \
+  --exclude-glob "images/signs/**" \
   --exclude-glob config/my.cnf \
   --exclude-glob config/secret.key \
   --exclude-glob "* [0-9].*" \
@@ -445,7 +446,7 @@ set sftp:auto-confirm yes
 set ssl:verify-certificate no
 set cmd:fail-exit yes
 open sftp://$USER:$PASS@$HOST
-mirror --reverse --delete --verbose --overwrite --no-perms \
+mirror --reverse --verbose --overwrite --no-perms \
   images/signs images/signs
 bye
 EOL

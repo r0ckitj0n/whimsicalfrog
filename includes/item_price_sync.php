@@ -44,7 +44,8 @@ function wf_sync_item_retail_price_from_factors(string $sku): void
     $row = Database::queryOne(
         "SELECT COUNT(*) AS c, COALESCE(SUM(amount), 0) AS total
          FROM price_factors
-         WHERE sku = ?",
+         WHERE sku = ?
+           AND LOWER(COALESCE(type, '')) NOT IN ('analysis', 'meta')",
         [$sku]
     );
     $count = (int) ($row['c'] ?? 0);
@@ -57,4 +58,3 @@ function wf_sync_item_retail_price_from_factors(string $sku): void
 
     Database::execute("UPDATE items SET retail_price = ? WHERE sku = ?", [$total, $sku]);
 }
-

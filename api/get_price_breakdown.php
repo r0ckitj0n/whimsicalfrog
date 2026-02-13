@@ -21,7 +21,12 @@ try {
     $aiConfidence = $item ? (float) ($item['ai_price_confidence'] ?? 0) : 0;
     $aiAt = $item ? $item['ai_price_at'] : null;
 
-    $total = array_reduce($factors, fn($sum, $f) => $sum + (float) $f['amount'], 0);
+    // Only sum contributing factors. Analysis/meta rows should not affect stored retail.
+    $total = array_reduce($factors, function ($sum, $f) {
+        $type = strtolower(trim((string) ($f['type'] ?? '')));
+        if ($type === 'analysis' || $type === 'meta') return $sum;
+        return $sum + (float) ($f['amount'] ?? 0);
+    }, 0.0);
 
     Response::success([
         'factors' => array_map(function ($f) {

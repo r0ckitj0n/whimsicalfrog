@@ -51,17 +51,18 @@ export const usePriceBreakdown = (sku: string) => {
     const applySuggestionLocally = useCallback((suggestion: PriceSuggestion) => {
         setPendingSuggestion(suggestion);
 
-        // Map suggestion components to IPriceFactor format
-        const newFactors: IPriceFactor[] = (suggestion.components || []).map((comp, idx) => ({
-            id: -(idx + 1), // temp IDs
+        // Persisted backend stores a single "final" factor (components are not additive).
+        const suggested = Number(suggestion.suggested_price || 0);
+        const newFactors: IPriceFactor[] = [{
+            id: -1,
             sku,
-            label: comp.label || 'AI Component',
-            amount: comp.amount || 0,
-            type: comp.type || 'ai',
-            explanation: comp.explanation || '',
+            label: 'AI Suggested Retail',
+            amount: Number.isFinite(suggested) ? Number(suggested.toFixed(2)) : 0,
+            type: 'final',
+            explanation: String(suggestion.reasoning || ''),
             source: 'ai',
             created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
-        }));
+        }];
 
         setFactors(newFactors); // Update factors state
         setConfidence(typeof suggestion.confidence === 'number' ? suggestion.confidence : (suggestion.confidence ? parseFloat(String(suggestion.confidence)) : null));
@@ -70,7 +71,7 @@ export const usePriceBreakdown = (sku: string) => {
         setBreakdown({
             factors: newFactors, // Use newFactors for breakdown
             totals: {
-                total: suggestion.suggested_price || 0,
+                total: Number.isFinite(suggested) ? suggested : 0,
                 stored: breakdown.totals.stored
             }
         });

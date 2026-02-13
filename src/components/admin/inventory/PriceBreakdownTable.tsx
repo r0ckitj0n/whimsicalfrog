@@ -78,16 +78,19 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
         setEditValue('');
     };
 
-    const pendingFactors: IPriceFactor[] = (cachedSuggestion?.components || []).map((comp, idx) => ({
-        id: -(idx + 1),
-        sku,
-        label: comp.label || 'AI Component',
-        amount: comp.amount || 0,
-        type: comp.type || 'ai',
-        explanation: comp.explanation || '',
-        source: 'ai',
-        created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
-    }));
+    const pendingSuggested = Number((cachedSuggestion as any)?.suggested_price || 0);
+    const pendingFactors: IPriceFactor[] = cachedSuggestion
+        ? [{
+            id: -1,
+            sku,
+            label: 'AI Suggested Retail',
+            amount: Number.isFinite(pendingSuggested) ? Number(pendingSuggested.toFixed(2)) : 0,
+            type: 'final',
+            explanation: String((cachedSuggestion as any)?.reasoning || ''),
+            source: 'ai',
+            created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+        }]
+        : [];
 
     const displayFactors = breakdown.factors.length > 0 ? breakdown.factors : pendingFactors;
     const isPendingOnly = breakdown.factors.length === 0 && pendingFactors.length > 0;

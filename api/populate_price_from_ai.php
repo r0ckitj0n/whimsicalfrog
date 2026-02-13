@@ -78,38 +78,26 @@ try {
         WHERE sku = ?
     ", $params);
 
-    // 3. Insert new price factors
-    $components = $suggestion['components'] ?? [];
-
-    if (is_array($components)) {
-        foreach ($components as $comp) {
-            if (!is_array($comp)) {
-                continue;
-            }
-            $label = trim((string)($comp['label'] ?? 'AI Price Component'));
-            if ($label === '' || strlen($label) > 255) {
-                $label = 'AI Price Component';
-            }
-            $type = trim((string)($comp['type'] ?? 'analysis'));
-            if ($type === '' || strlen($type) > 60) {
-                $type = 'analysis';
-            }
-            $explanation = trim((string)($comp['explanation'] ?? ''));
-            if (strlen($explanation) > 2000) {
-                $explanation = substr($explanation, 0, 2000);
-            }
-            Database::execute("
-                INSERT INTO price_factors (sku, label, amount, type, explanation, source)
-                VALUES (?, ?, ?, ?, ?, 'ai')
-            ", [
-                $sku,
-                $label,
-                (float) ($comp['amount'] ?? 0),
-                $type,
-                $explanation,
-            ]);
-        }
+    // 3. Insert new price factors.
+    // IMPORTANT: Suggestion components may contain alternative anchors (cost-plus, market research, etc.)
+    // that are not additive and must not be summed into the stored retail price.
+    // We persist a single "final" factor that matches suggestion.suggested_price.
+    $suggestedPrice = (float) ($suggestion['suggested_price'] ?? 0);
+    if ($suggestedPrice <= 0) {
+        throw new Exception('Invalid suggested_price from AI suggestion.');
     }
+    $suggestedPrice = round($suggestedPrice, 2);
+
+    $reasoning = trim((string) ($suggestion['reasoning'] ?? ''));
+    if (strlen($reasoning) > 2000) {
+        $reasoning = substr($reasoning, 0, 2000);
+    }
+
+    Database::execute(
+        "INSERT INTO price_factors (sku, label, amount, type, explanation, source)
+         VALUES (?, 'AI Suggested Retail', ?, 'final', ?, 'ai')",
+        [$sku, $suggestedPrice, $reasoning]
+    );
 
     // Keep items.retail_price consistent with the breakdown.
     wf_sync_item_retail_price_from_factors($sku);

@@ -10,7 +10,8 @@ import {
     IRoomOption,
     IAreaOption,
     IMappingsResponse,
-    IAreaMappingsHook
+    IAreaMappingsHook,
+    IDeleteAreaMappingResponse
 } from '../../types/room.js';
 import type {
     IGenerateShortcutImageRequest,
@@ -176,10 +177,10 @@ export const useAreaMappings = (): IAreaMappingsHook => {
         }
     }, [fetchMappings]);
 
-    const deleteMapping = useCallback(async (id: number, room: string) => {
+    const deleteMapping = useCallback(async (id: number, room: string): Promise<IDeleteAreaMappingResponse> => {
         setIsLoading(true);
         try {
-            const res = await ApiClient.post<{ success: boolean; message?: string }>('/api/area_mappings.php', {
+            const res = await ApiClient.post<IDeleteAreaMappingResponse>('/api/area_mappings.php', {
                 action: API_ACTION.DELETE_MAPPING,
                 id
             });
@@ -189,15 +190,14 @@ export const useAreaMappings = (): IAreaMappingsHook => {
                 if (window.roomModalManager?.invalidateRoom) {
                     window.roomModalManager.invalidateRoom(room);
                 }
-                return true;
-            } else {
-                throw new Error(res?.message || 'Failed to delete mapping');
+                return res;
             }
+            return res || { success: false, message: 'Failed to delete mapping' };
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Unknown error';
             logger.error('deleteMapping failed', err);
             setError(message);
-            return false;
+            return { success: false, message };
         } finally {
             setIsLoading(false);
         }

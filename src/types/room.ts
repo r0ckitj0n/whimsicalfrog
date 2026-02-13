@@ -234,6 +234,13 @@ export interface IMappingsResponse {
     category?: string;
 }
 
+export interface IDeleteAreaMappingResponse {
+    success: boolean;
+    action?: 'deactivated' | 'deleted' | 'noop';
+    message?: string;
+    error?: string;
+}
+
 // Orchestration Hook Interfaces
 export interface IAreaMappingsHook {
     isLoading: boolean;
@@ -252,7 +259,7 @@ export interface IAreaMappingsHook {
     fetchAvailableAreas: (room: string) => Promise<void>;
     saveMapping: (mapping: Partial<import('./admin.js').IAreaMapping>) => Promise<boolean>;
     toggleMappingActive: (room: string, id: number, currentActive: boolean | number) => Promise<boolean>;
-    deleteMapping: (id: number, room: string) => Promise<boolean>;
+    deleteMapping: (id: number, room: string) => Promise<IDeleteAreaMappingResponse>;
     uploadImage: (file: File) => Promise<string | null>;
     generateShortcutImage: (request: import('./room-shortcuts.js').IGenerateShortcutImageRequest) => Promise<import('./room-shortcuts.js').IGenerateShortcutImageResult | null>;
     fetchShortcutSignAssets: (mappingId: number, room: string) => Promise<import('./room-shortcuts.js').IShortcutSignAsset[]>;

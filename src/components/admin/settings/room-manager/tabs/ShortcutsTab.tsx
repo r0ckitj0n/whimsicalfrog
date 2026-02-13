@@ -109,11 +109,15 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
                             });
                             if (!confirmed) return;
 
-                            const ok = await mappings.deleteMapping(id, selectedRoom);
-                            if (!ok) {
-                                window.WFToast?.error?.('Failed to delete mapping');
+                            const res = await mappings.deleteMapping(id, selectedRoom);
+                            if (!res?.success) {
+                                window.WFToast?.error?.(res?.message || 'Failed to delete mapping');
+                            } else if (res.action === 'deactivated') {
+                                window.WFToast?.success?.('Mapping deactivated (delete again to permanently remove)');
+                            } else if (res.action === 'deleted') {
+                                window.WFToast?.success?.('Mapping permanently deleted');
                             } else {
-                                window.WFToast?.success?.('Mapping deleted');
+                                window.WFToast?.success?.(res.message || 'Mapping removed');
                             }
                         }}
                         onConvert={onContentConvert}

@@ -47,10 +47,21 @@ if (!function_exists('str_ends_with')) {
 }
 
 // Includes
-require_once __DIR__ . '/../includes/logging_config.php';
-require_once __DIR__ . '/../includes/database.php';
-require_once __DIR__ . '/../includes/logger.php';
-require_once __DIR__ . '/../includes/error_logger.php';
+$wfIncludes = [
+    __DIR__ . '/../includes/logging_config.php',
+    __DIR__ . '/../includes/database.php',
+    __DIR__ . '/../includes/logger.php',
+    __DIR__ . '/../includes/error_logger.php',
+];
+
+foreach ($wfIncludes as $wfInc) {
+    // Some deployments may omit optional logging files; the site should still run.
+    if (!file_exists($wfInc)) {
+        error_log('[api/config] Missing include: ' . $wfInc);
+        continue;
+    }
+    require_once $wfInc;
+}
 
 // Environment already loaded via DatabaseEnv above
 

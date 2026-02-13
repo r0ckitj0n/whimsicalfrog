@@ -68,6 +68,22 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
                         }}
                         onDeleteSavedImage={async (assetId) => {
                             if (newMapping.id) {
+                                const assets = (newMapping.shortcut_images || []) as Array<{ id: number; is_active?: number | string }>;
+                                const target = assets.find(a => Number(a.id) === Number(assetId)) || null;
+                                const isActive = Number(target?.is_active) === 1;
+
+                                const confirmed = await confirm({
+                                    title: 'Delete Sign Image',
+                                    message: isActive
+                                        ? 'Delete this active sign image? The shortcut will switch to another available image.'
+                                        : 'Delete this sign image? If it is active, the shortcut will switch to another available image.',
+                                    confirmText: 'Delete',
+                                    cancelText: 'Cancel',
+                                    confirmStyle: 'danger',
+                                    iconKey: 'warning'
+                                });
+                                if (!confirmed) return;
+
                                 await onDeleteSavedImage(newMapping as IAreaMapping, assetId);
                             }
                         }}

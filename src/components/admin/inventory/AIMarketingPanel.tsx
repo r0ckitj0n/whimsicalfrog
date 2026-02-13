@@ -96,10 +96,10 @@ export const AIMarketingPanel: React.FC<AIMarketingPanelProps> = ({
         uniqueSellingPoints.length > 0 ||
         valuePropositions.length > 0;
 
-    const renderMetricRow = (label: string, value?: string | number, helper?: string) => {
+    const renderMetricRow = (rowKey: string, label: string, value?: string | number, helper?: string) => {
         if (value === undefined || value === null || value === '') return null;
         return (
-            <div className="flex flex-col py-2 border-b last:border-0">
+            <div key={rowKey} className="flex flex-col py-2 border-b last:border-0">
                 <div className="flex items-center justify-between gap-2">
                     <span className="text-gray-800 text-sm font-semibold">{label}</span>
                     <span className="text-sm font-bold text-gray-900 text-right">{String(value)}</span>
@@ -113,37 +113,37 @@ export const AIMarketingPanel: React.FC<AIMarketingPanelProps> = ({
         );
     };
 
-    const renderListRow = (label: string, items?: string[]) => {
+    const renderListRow = (rowKey: string, label: string, items?: string[]) => {
         if (!items || items.length === 0) return null;
-        return renderMetricRow(label, items.join(', '));
+        return renderMetricRow(rowKey, label, items.join(', '));
     };
 
     const firstOrEmpty = (items?: string[]) => (items && items.length > 0 ? items[0] : '');
 
-    const metrics: React.ReactNode[] = [
-        renderMetricRow('Suggested Title', suggestedTitle),
-        renderMetricRow('Suggested Description', suggestedDescription),
-        renderListRow('Keywords', keywords),
-        renderMetricRow('Target Audience', marketing.target_audience),
-        renderMetricRow('Top Selling Point', firstOrEmpty(sellingPoints)),
-        renderMetricRow('Top Marketing Channel', firstOrEmpty(marketingChannels)),
-        renderMetricRow('Top SEO Keyword', firstOrEmpty(seoKeywords)),
-        renderListRow('Selling Points', sellingPoints),
-        renderListRow('Marketing Channels', marketingChannels),
-        renderListRow('SEO Keywords', seoKeywords),
-        renderListRow('Competitive Advantages', competitiveAdvantages),
-        renderListRow('Customer Benefits', customerBenefits),
-        renderListRow('Emotional Triggers', emotionalTriggers),
-        renderListRow('Urgency Factors', urgencyFactors),
-        renderListRow('Calls To Action', callsToAction),
-        renderListRow('Conversion Triggers', conversionTriggers),
-        renderMetricRow('Search Intent', marketing.search_intent),
-        renderMetricRow('Seasonal Relevance', marketing.seasonal_relevance),
-        renderMetricRow('Demographic Target', marketing.demographic_targeting),
-        renderMetricRow('Psychographic Profile', marketing.psychographic_profile),
-        renderListRow('Unique Selling Points', uniqueSellingPoints),
-        renderListRow('Value Proposition', valuePropositions),
-        renderMetricRow('Confidence', `${Math.round((marketing.confidence_score || 0) * 100)}%`),
+    const metrics = [
+        renderMetricRow('suggested-title', 'Suggested Title', suggestedTitle),
+        renderMetricRow('suggested-description', 'Suggested Description', suggestedDescription),
+        renderListRow('keywords', 'Keywords', keywords),
+        renderMetricRow('target-audience', 'Target Audience', marketing.target_audience),
+        renderMetricRow('top-selling-point', 'Top Selling Point', firstOrEmpty(sellingPoints)),
+        renderMetricRow('top-marketing-channel', 'Top Marketing Channel', firstOrEmpty(marketingChannels)),
+        renderMetricRow('top-seo-keyword', 'Top SEO Keyword', firstOrEmpty(seoKeywords)),
+        renderListRow('selling-points', 'Selling Points', sellingPoints),
+        renderListRow('marketing-channels', 'Marketing Channels', marketingChannels),
+        renderListRow('seo-keywords', 'SEO Keywords', seoKeywords),
+        renderListRow('competitive-advantages', 'Competitive Advantages', competitiveAdvantages),
+        renderListRow('customer-benefits', 'Customer Benefits', customerBenefits),
+        renderListRow('emotional-triggers', 'Emotional Triggers', emotionalTriggers),
+        renderListRow('urgency-factors', 'Urgency Factors', urgencyFactors),
+        renderListRow('calls-to-action', 'Calls To Action', callsToAction),
+        renderListRow('conversion-triggers', 'Conversion Triggers', conversionTriggers),
+        renderMetricRow('search-intent', 'Search Intent', marketing.search_intent),
+        renderMetricRow('seasonal-relevance', 'Seasonal Relevance', marketing.seasonal_relevance),
+        renderMetricRow('demographic-target', 'Demographic Target', marketing.demographic_targeting),
+        renderMetricRow('psychographic-profile', 'Psychographic Profile', marketing.psychographic_profile),
+        renderListRow('unique-selling-points', 'Unique Selling Points', uniqueSellingPoints),
+        renderListRow('value-propositions', 'Value Proposition', valuePropositions),
+        renderMetricRow('confidence', 'Confidence', `${Math.round((marketing.confidence_score || 0) * 100)}%`),
         marketing.recommendation_reasoning ? (
             <div className="flex flex-col py-2" key="ai-reasoning">
                 <div className="flex items-center justify-between gap-2">
@@ -154,7 +154,7 @@ export const AIMarketingPanel: React.FC<AIMarketingPanelProps> = ({
                 </p>
             </div>
         ) : null
-    ].filter(Boolean);
+    ].filter((node): node is React.ReactElement => Boolean(node));
 
     const midpoint = Math.ceil(metrics.length / 2);
     const leftMetrics = metrics.slice(0, midpoint);

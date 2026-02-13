@@ -134,12 +134,36 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
 
         // Add explicit mappings first
         for (const m of explicitMappings) {
-            slotMap.set(m.area_selector, {
-                area: m.area_selector,
-                status: 'explicit',
-                explicit: m,
-                live: undefined
-            });
+            const key = m.area_selector;
+            const existing = slotMap.get(key);
+            const curActive = m.is_active === true || m.is_active === 1;
+
+            if (!existing || !existing.explicit) {
+                slotMap.set(key, {
+                    area: key,
+                    status: 'explicit',
+                    explicit: m,
+                    live: undefined
+                });
+                continue;
+            }
+
+            // Prefer the active explicit mapping when there are multiple rows for the same area selector.
+            // list_room_raw can contain historical inactive rows; editing should default to the active row.
+            const prev = existing.explicit;
+            const prevActive = prev.is_active === true || prev.is_active === 1;
+
+            if (curActive && !prevActive) {
+                existing.explicit = m;
+                continue;
+            }
+            if (curActive === prevActive) {
+                const prevId = Number(prev.id || 0);
+                const curId = Number(m.id || 0);
+                if (curId > prevId) {
+                    existing.explicit = m;
+                }
+            }
         }
 
         // Add derived mappings (override live if explicit exists, or create new)

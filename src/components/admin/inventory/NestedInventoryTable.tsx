@@ -86,7 +86,7 @@ export const NestedInventoryTable: React.FC<NestedInventoryTableProps> = ({ sku,
                         <button
                             type="button"
                             onClick={ensureColorSizes}
-                            className="admin-action-btn btn-icon--plus"
+                            className="admin-action-btn btn-icon--add"
                             data-help-id="inventory-action-ensure-sizes"
                         />
                         <button

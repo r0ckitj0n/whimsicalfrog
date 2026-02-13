@@ -6,11 +6,18 @@
 
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/../includes/session_bootstrap.php';
+require_once __DIR__ . '/../includes/session.php';
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/../includes/item_colors/manager.php';
+
+// Ensure we start the session using the canonical SessionManager configuration.
+if (class_exists('SessionManager')) {
+    SessionManager::init();
+} elseif (session_status() !== PHP_SESSION_ACTIVE) {
+    @session_start();
+}
 
 function wf_colors_is_admin(): bool
 {

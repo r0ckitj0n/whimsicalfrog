@@ -6,12 +6,20 @@
 
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/../includes/session_bootstrap.php';
+require_once __DIR__ . '/../includes/session.php';
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/../includes/item_sizes/manager.php';
 require_once __DIR__ . '/../includes/item_sizes/stock_tools.php';
+
+// Ensure we start the session using the canonical SessionManager configuration.
+// This avoids "logged in on some endpoints but not others" when save_path/cookie params drift.
+if (class_exists('SessionManager')) {
+    SessionManager::init();
+} elseif (session_status() !== PHP_SESSION_ACTIVE) {
+    @session_start();
+}
 
 function wf_sizes_is_admin(): bool
 {

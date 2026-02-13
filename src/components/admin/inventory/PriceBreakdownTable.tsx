@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { usePriceBreakdown } from '../../../hooks/admin/usePriceBreakdown.js';
 import type { PriceSuggestion } from '../../../hooks/admin/useInventoryAI.js';
 import type { IPriceFactor } from '../../../hooks/admin/usePriceBreakdown.js';
+import { toCents, fromCents, distributeEvenNonNegative } from '../../../core/money.js';
 
 interface PriceBreakdownTableProps {
     sku: string;
@@ -34,7 +35,7 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
     cachedSuggestion = null,
     onDirtyStateChange
 }) => {
-    const { breakdown, is_busy: isPriceLoading, error, fetchBreakdown, populateFromSuggestion, applySuggestionLocally, updateFactor } = usePriceBreakdown(sku);
+    const { breakdown, is_busy: isPriceLoading, error, fetchBreakdown, populateFromSuggestion, applySuggestionLocally, updateFactor, updateFactorsBulk } = usePriceBreakdown(sku);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editValue, setEditValue] = useState<string>('');
     const [isEditingCurrent, setIsEditingCurrent] = useState(false);
@@ -93,24 +94,53 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
 
     if (!sku) return null;
 
-    const currentRetailValue = typeof currentPrice === 'number'
-        ? currentPrice
-        : (breakdown.totals?.stored ?? 0);
+    // Header total should always reflect the breakdown sum.
+    const currentRetailValue = Number(breakdown.totals?.total ?? 0);
 
     const startEditCurrent = () => {
-        if (isReadOnly || !onCurrentPriceChange) return;
+        if (isReadOnly) return;
         setIsEditingCurrent(true);
         setCurrentEditValue(currentRetailValue.toFixed(2));
     };
 
-    const commitEditCurrent = () => {
-        if (!onCurrentPriceChange) {
+    const commitEditCurrent = async () => {
+        const value = parseFloat(currentEditValue);
+        if (Number.isNaN(value) || value < 0) {
             setIsEditingCurrent(false);
+            setCurrentEditValue('');
             return;
         }
-        const value = parseFloat(currentEditValue);
-        if (!Number.isNaN(value)) {
-            onCurrentPriceChange(value);
+
+        // If we're showing pending AI-only rows (negative ids), we cannot persist updates yet.
+        if (isPendingOnly) {
+            window.WFToast?.info?.('Save item to persist the AI pricing breakdown before editing the total.');
+            setIsEditingCurrent(false);
+            setCurrentEditValue('');
+            return;
+        }
+
+        const currentFactors = breakdown.factors || [];
+        const factorIds = currentFactors.map((f) => f.id).filter((id) => typeof id === 'number' && id > 0);
+        if (factorIds.length !== currentFactors.length || currentFactors.length === 0) {
+            window.WFToast?.error?.('Cannot edit total: pricing breakdown factors are not persisted yet.');
+            setIsEditingCurrent(false);
+            setCurrentEditValue('');
+            return;
+        }
+
+        const currentCents = currentFactors.map((f) => toCents(f.amount));
+        const targetCents = toCents(value);
+        const nextCents = distributeEvenNonNegative(currentCents, targetCents);
+
+        const updates = currentFactors
+            .map((f, idx) => ({ id: f.id, amount: fromCents(nextCents[idx] ?? 0) }))
+            .filter((u, idx) => Math.abs((breakdown.factors[idx]?.amount ?? 0) - u.amount) > 0.001);
+
+        if (updates.length > 0) {
+            const ok = await updateFactorsBulk(updates);
+            if (!ok) {
+                window.WFToast?.error?.('Failed to update pricing breakdown total.');
+            }
         }
         setIsEditingCurrent(false);
         setCurrentEditValue('');
@@ -133,9 +163,9 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
                                 className="w-24 text-right border border-white/30 bg-white/95 rounded px-2 py-1 text-sm font-bold text-slate-900 focus:ring-1 focus:ring-white/40 focus:border-white/40"
                                 value={currentEditValue}
                                 onChange={(e) => setCurrentEditValue(e.target.value)}
-                                onBlur={commitEditCurrent}
+                                onBlur={() => { void commitEditCurrent(); }}
                                 onKeyDown={(e) => {
-                                    if (e.key === 'Enter') commitEditCurrent();
+                                    if (e.key === 'Enter') void commitEditCurrent();
                                     if (e.key === 'Escape') {
                                         setIsEditingCurrent(false);
                                         setCurrentEditValue('');

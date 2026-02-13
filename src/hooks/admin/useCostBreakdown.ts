@@ -3,6 +3,7 @@ import { ApiClient } from '../../core/ApiClient.js';
 import logger from '../../core/logger.js';
 import { ICostBreakdown, ICostItem } from '../../types/index.js';
 import { CostSuggestion } from './useInventoryAI.js';
+import type { IUpdateCostFactorsBulkRequest, IUpdateCostFactorsBulkResponse } from '../../types/admin.js';
 
 type CostBreakdownResponse = ICostBreakdown;
 
@@ -175,6 +176,28 @@ export const useCostBreakdown = (sku: string) => {
         }
     }, [sku, fetchBreakdown]);
 
+    const updateCostFactorsBulk = useCallback(async (updates: Array<{ id: number; cost: number; label?: string }>) => {
+        if (!sku) return false;
+        if (!Array.isArray(updates) || updates.length === 0) return true;
+        setIsLoading(true);
+        try {
+            const payload: IUpdateCostFactorsBulkRequest = { sku, updates };
+            const res = await ApiClient.post<IUpdateCostFactorsBulkResponse>('/api/update_cost_factors_bulk.php', payload);
+            if (res?.success) {
+                await fetchBreakdown();
+                return true;
+            }
+            throw new Error(res?.error || res?.message || 'Failed to bulk update cost factors');
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Unknown error';
+            logger.error('updateCostFactorsBulk failed', err);
+            setError(message);
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [sku, fetchBreakdown]);
+
     const clearBreakdown = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -292,6 +315,7 @@ export const useCostBreakdown = (sku: string) => {
         fetchBreakdown,
         saveCostFactor,
         updateCostFactor,
+        updateCostFactorsBulk,
         deleteCostFactor,
         clearBreakdown,
         populateFromSuggestion,

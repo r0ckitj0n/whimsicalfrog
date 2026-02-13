@@ -3,6 +3,7 @@ import { useCostBreakdown } from '../../../hooks/admin/useCostBreakdown.js';
 import { ICostBreakdown, ICostItem } from '../../../types/index.js';
 
 import { COST_CATEGORY } from '../../../core/constants.js';
+import { toCents, fromCents, distributeEvenNonNegative } from '../../../core/money.js';
 
 interface CostBreakdownTableProps {
     sku: string;
@@ -43,6 +44,7 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
         fetchBreakdown,
         saveCostFactor,
         updateCostFactor,
+        updateCostFactorsBulk,
         clearBreakdown,
         populateFromSuggestion,
         applySuggestionLocally
@@ -151,19 +153,41 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
         return null; // Avoid accidentally updating some random row for AI temp ids.
     };
 
-    const handleFactorChange = (category: string, value: string, existingId?: string, existingLabel?: string) => {
-        const cost = parseFloat(value);
-        if (Number.isNaN(cost)) return;
+    const computeCategoryTotalCents = (items: ICostItem[]): number =>
+        items.reduce((sum, it) => sum + toCents(it.cost), 0);
 
-        const label = String(existingLabel || category).trim();
-        const normalizedId = normalizeIdForUpdate(existingId);
+    const updateCategoryTotal = async (category: string, targetTotal: number) => {
+        const targetCents = toCents(targetTotal);
+        const itemsArray = breakdown[category as keyof ICostBreakdown];
+        const items = Array.isArray(itemsArray) ? (itemsArray as ICostItem[]) : [];
 
-        if (normalizedId) {
-            void updateCostFactor(category, normalizedId, cost, label);
+        if (items.length === 0) {
+            // No DB rows yet. Create one manual factor representing the category total.
+            const label = `Manual ${category}`;
+            await saveCostFactor(category, fromCents(targetCents), label);
             return;
         }
 
-        void saveCostFactor(category, cost, label);
+        const ids = items.map((it) => normalizeIdForUpdate(String(it.id)));
+        const canBulkUpdate = ids.every((id) => id !== null);
+        if (!canBulkUpdate) {
+            window.WFToast?.error?.('Cannot edit totals for pending AI rows. Save item to persist breakdown first.');
+            return;
+        }
+
+        const currentCents = items.map((it) => toCents(it.cost));
+        const nextCents = distributeEvenNonNegative(currentCents, targetCents);
+
+        const updates = items.map((it, idx) => ({
+            id: Number(normalizeIdForUpdate(String(it.id)) || 0),
+            cost: fromCents(nextCents[idx] ?? 0),
+            label: it.label
+        })).filter((u, idx) => Math.abs((items[idx]?.cost ?? 0) - u.cost) > 0.001);
+
+        if (updates.length > 0) {
+            const ok = await updateCostFactorsBulk(updates);
+            if (!ok) window.WFToast?.error?.('Failed to update cost breakdown.');
+        }
     };
 
     const categories = [
@@ -187,7 +211,7 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
     const commitEditCategory = (category: string, existingId?: string, existingLabel?: string) => {
         const amount = parseFloat(editValue);
         if (!isNaN(amount)) {
-            handleFactorChange(category, String(amount), existingId, existingLabel);
+            void updateCategoryTotal(category, amount);
         }
         setEditingCategory(null);
         setEditValue('');
@@ -195,25 +219,46 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
 
     if (!sku) return null;
 
-    const currentCostValue = typeof currentPrice === 'number'
-        ? currentPrice
-        : (breakdown.totals?.stored ?? 0);
+    // Header total should always reflect the breakdown sum.
+    const currentCostValue = Number(breakdown.totals?.total ?? 0);
 
     const startEditCurrent = () => {
-        if (isReadOnly || !onCurrentPriceChange) return;
+        if (isReadOnly) return;
         setIsEditingCurrent(true);
         setCurrentEditValue(currentCostValue.toFixed(2));
     };
 
-    const commitEditCurrent = () => {
-        if (!onCurrentPriceChange) {
+    const commitEditCurrent = async () => {
+        const value = parseFloat(currentEditValue);
+        if (Number.isNaN(value) || value < 0) {
             setIsEditingCurrent(false);
+            setCurrentEditValue('');
             return;
         }
-        const value = parseFloat(currentEditValue);
-        if (!Number.isNaN(value)) {
-            onCurrentPriceChange(value);
-        }
+
+        const targetTotalCents = toCents(value);
+        const currentTotals = [
+            toCents(breakdown.totals?.materials ?? computeCategoryTotalCents(Array.isArray(breakdown.materials) ? breakdown.materials : [])),
+            toCents(breakdown.totals?.labor ?? computeCategoryTotalCents(Array.isArray(breakdown.labor) ? breakdown.labor : [])),
+            toCents(breakdown.totals?.energy ?? computeCategoryTotalCents(Array.isArray(breakdown.energy) ? breakdown.energy : [])),
+            toCents(breakdown.totals?.equipment ?? computeCategoryTotalCents(Array.isArray(breakdown.equipment) ? breakdown.equipment : []))
+        ];
+
+        const nextTotals = distributeEvenNonNegative(currentTotals, targetTotalCents);
+        const nextByCategory: Record<string, number> = {
+            [COST_CATEGORY.MATERIALS]: fromCents(nextTotals[0] ?? 0),
+            [COST_CATEGORY.LABOR]: fromCents(nextTotals[1] ?? 0),
+            [COST_CATEGORY.ENERGY]: fromCents(nextTotals[2] ?? 0),
+            [COST_CATEGORY.EQUIPMENT]: fromCents(nextTotals[3] ?? 0)
+        };
+
+        // Apply per-category redistribution (each category may have multiple factors).
+        // Do sequentially to keep fetch/refresh behavior predictable.
+        await updateCategoryTotal(COST_CATEGORY.MATERIALS, nextByCategory[COST_CATEGORY.MATERIALS]);
+        await updateCategoryTotal(COST_CATEGORY.LABOR, nextByCategory[COST_CATEGORY.LABOR]);
+        await updateCategoryTotal(COST_CATEGORY.ENERGY, nextByCategory[COST_CATEGORY.ENERGY]);
+        await updateCategoryTotal(COST_CATEGORY.EQUIPMENT, nextByCategory[COST_CATEGORY.EQUIPMENT]);
+
         setIsEditingCurrent(false);
         setCurrentEditValue('');
     };
@@ -235,9 +280,9 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
                                 className="w-24 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold focus:ring-1 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/20"
                                 value={currentEditValue}
                                 onChange={(e) => setCurrentEditValue(e.target.value)}
-                                onBlur={commitEditCurrent}
+                                onBlur={() => { void commitEditCurrent(); }}
                                 onKeyDown={(e) => {
-                                    if (e.key === 'Enter') commitEditCurrent();
+                                    if (e.key === 'Enter') void commitEditCurrent();
                                     if (e.key === 'Escape') {
                                         setIsEditingCurrent(false);
                                         setCurrentEditValue('');
@@ -269,10 +314,8 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
                         const itemsArray = breakdown[cat.id as keyof ICostBreakdown];
                         // Handle both array format and totals object
                         const items = Array.isArray(itemsArray) ? itemsArray : [];
-                        const firstItem = items[0] as ICostItem | undefined;
-                        const firstId = firstItem?.id?.toString();
-                        const firstLabel = firstItem?.label?.toString() || '';
-                        const displayValue = firstItem?.cost ? firstItem.cost.toFixed(2) : '';
+                        const categoryTotal = items.reduce((sum: number, it: any) => sum + (Number(it?.cost) || 0), 0);
+                        const displayValue = categoryTotal.toFixed(2);
 
                         return (
                             <div key={cat.id} className="flex flex-col py-2 border-b last:border-0">
@@ -288,9 +331,9 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
                                                     className="w-20 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold focus:ring-1 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/20"
                                                     value={editValue}
                                                     onChange={(e) => setEditValue(e.target.value)}
-                                                    onBlur={() => commitEditCategory(cat.id, firstId, firstLabel)}
+                                                    onBlur={() => commitEditCategory(cat.id)}
                                                     onKeyDown={(e) => {
-                                                        if (e.key === 'Enter') commitEditCategory(cat.id, firstId, firstLabel);
+                                                        if (e.key === 'Enter') commitEditCategory(cat.id);
                                                         if (e.key === 'Escape') {
                                                             setEditingCategory(null);
                                                             setEditValue('');

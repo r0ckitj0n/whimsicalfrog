@@ -124,6 +124,20 @@ export interface IPriceBreakdown {
     };
 }
 
+export interface IUpdatePriceFactorsBulkRequest {
+    sku: string;
+    updates: Array<{
+        id: number;
+        amount: number;
+    }>;
+}
+
+export interface IUpdatePriceFactorsBulkResponse {
+    success: boolean;
+    error?: string;
+    message?: string;
+}
+
 // ============================================================================
 // Additional API Response Interfaces
 // ============================================================================
@@ -153,5 +167,4 @@ export interface IAISuggestionsParams {
     cost_price?: number | string;
     tier?: string;
 }
-
 

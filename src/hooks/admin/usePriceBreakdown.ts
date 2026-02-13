@@ -3,6 +3,7 @@ import { ApiClient } from '../../core/ApiClient.js';
 import logger from '../../core/logger.js';
 import { PriceSuggestion } from './useInventoryAI.js';
 import type { IPriceFactor, IPriceBreakdown } from '../../types/ai.js';
+import type { IUpdatePriceFactorsBulkRequest, IUpdatePriceFactorsBulkResponse } from '../../types/ai.js';
 
 // Re-export for backward compatibility
 export type { IPriceFactor, IPriceBreakdown } from '../../types/ai.js';
@@ -123,6 +124,28 @@ export const usePriceBreakdown = (sku: string) => {
         }
     }, [sku, fetchBreakdown]);
 
+    const updateFactorsBulk = useCallback(async (updates: Array<{ id: number; amount: number }>) => {
+        if (!sku) return false;
+        if (!Array.isArray(updates) || updates.length === 0) return true;
+        setIsBusy(true);
+        try {
+            const payload: IUpdatePriceFactorsBulkRequest = { sku, updates };
+            const res = await ApiClient.post<IUpdatePriceFactorsBulkResponse>('/api/update_price_factors_bulk.php', payload);
+            if (res?.success) {
+                await fetchBreakdown();
+                return true;
+            }
+            return false;
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Unknown error';
+            logger.error('updateFactorsBulk failed', err);
+            setError(message);
+            return false;
+        } finally {
+            setIsBusy(false);
+        }
+    }, [sku, fetchBreakdown]);
+
     return {
         breakdown,
         is_busy, // Changed from isLoading to is_busy
@@ -134,6 +157,7 @@ export const usePriceBreakdown = (sku: string) => {
         populateFromSuggestion,
         applySuggestionLocally,
         updateFactor,
+        updateFactorsBulk,
         hasPendingSuggestion: !!pendingSuggestion,
         isDirty
     };

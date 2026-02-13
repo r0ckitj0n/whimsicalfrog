@@ -58,6 +58,21 @@ export interface ICostBreakdown {
     };
 }
 
+export interface IUpdateCostFactorsBulkRequest {
+    sku: string;
+    updates: Array<{
+        id: number;
+        cost: number;
+        label?: string;
+    }>;
+}
+
+export interface IUpdateCostFactorsBulkResponse {
+    success: boolean;
+    error?: string;
+    message?: string;
+}
+
 export interface IAreaMapping {
     id: number;
     room_number: number | string;
@@ -188,4 +203,3 @@ export interface IAutomationPlaybookResponse {
         setting_value: string | IAutomationPlaybook[];
     }>;
 }
-

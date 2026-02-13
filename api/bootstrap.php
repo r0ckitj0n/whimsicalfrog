@@ -177,6 +177,17 @@ try {
         $about_data['content'] = $defaultStory;
     }
 
+    // Contact form CSRF (stored in session; submitted back via /api/contact_submit.php).
+    // Keep stable for the session to avoid invalidating an in-progress form.
+    try {
+        if (empty($_SESSION['contact_csrf'])) {
+            $_SESSION['contact_csrf'] = bin2hex(random_bytes(16));
+        }
+    } catch (\Throwable $e) {
+        // If token generation fails, leave it unset; the submit endpoint will reject non-local requests.
+        error_log('[bootstrap] contact_csrf init failed: ' . $e->getMessage());
+    }
+
     $contact_data = [
         'name' => base64_encode(wf_site_name()),
         'email' => base64_encode(wf_business_email()),
@@ -185,7 +196,8 @@ try {
         'hours' => base64_encode(class_exists('BusinessSettings') ? (string) BusinessSettings::get('business_hours', '') : ''),
         'owner' => base64_encode(class_exists('BusinessSettings') ? (string) BusinessSettings::get('business_owner', '') : ''),
         'site' => base64_encode(class_exists('BusinessSettings') ? (string) BusinessSettings::getSiteUrl() : ''),
-        'social' => wf_social_links()
+        'social' => wf_social_links(),
+        'csrf' => (string) ($_SESSION['contact_csrf'] ?? '')
     ];
 
     // 5. Determine background based on current page

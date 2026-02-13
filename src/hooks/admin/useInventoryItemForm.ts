@@ -115,6 +115,7 @@ export const useInventoryItemForm = ({
     const [localSku, setLocalSku] = useState(sku || '');
     const [sourceTempSku, setSourceTempSku] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [breakdownRefreshTrigger, setBreakdownRefreshTrigger] = useState(0);
     const [lockedFields, setLockedFields] = useState<Record<string, boolean>>({});
     const [lockedWords, setLockedWords] = useState<Record<string, string>>({});
     const [cachedMarketingData, setCachedMarketingData] = useState<MarketingData | null>(null);
@@ -608,7 +609,7 @@ export const useInventoryItemForm = ({
         setCachedPriceSuggestion
     ]);
 
-    const handleSave = useCallback(async (): Promise<boolean> => {
+    const handleSave = useCallback(async (options?: { costBreakdownTotal?: number; priceBreakdownTotal?: number }): Promise<boolean> => {
         if (isReadOnly || isSaving) return false;
         if (isAdding && !localSku) {
             if (window.WFToast) window.WFToast.error('SKU is required');
@@ -663,9 +664,36 @@ export const useInventoryItemForm = ({
                 suggestedRetail > 0 &&
                 Math.abs(currentRetail - originalRetail) <= 0.001;
 
-            const dataToSave = shouldBackfillRetailFromSuggestion
+            const originalCost = Number((item as any)?.cost_price) || 0;
+            const currentCost = Number(formData.cost_price) || 0;
+            const breakdownCostTotal = options?.costBreakdownTotal;
+            const breakdownRetailTotal = options?.priceBreakdownTotal;
+
+            const shouldSyncCostFromBreakdown =
+                !lockedFields.cost_price &&
+                typeof breakdownCostTotal === 'number' &&
+                Number.isFinite(breakdownCostTotal) &&
+                breakdownCostTotal >= 0 &&
+                Math.abs(currentCost - originalCost) <= 0.001 &&
+                Math.abs(breakdownCostTotal - originalCost) > 0.001;
+
+            const shouldSyncRetailFromBreakdown =
+                !lockedFields.retail_price &&
+                typeof breakdownRetailTotal === 'number' &&
+                Number.isFinite(breakdownRetailTotal) &&
+                breakdownRetailTotal >= 0 &&
+                Math.abs(currentRetail - originalRetail) <= 0.001 &&
+                Math.abs(breakdownRetailTotal - originalRetail) > 0.001;
+
+            let dataToSave = shouldBackfillRetailFromSuggestion
                 ? { ...formData, retail_price: Number(suggestedRetail.toFixed(2)) }
                 : formData;
+            if (shouldSyncCostFromBreakdown) {
+                dataToSave = { ...dataToSave, cost_price: Number(breakdownCostTotal.toFixed(2)) };
+            }
+            if (shouldSyncRetailFromBreakdown) {
+                dataToSave = { ...dataToSave, retail_price: Number(breakdownRetailTotal.toFixed(2)) };
+            }
 
             // Main fields handling
             for (const [field, value] of Object.entries(dataToSave)) {
@@ -723,6 +751,7 @@ export const useInventoryItemForm = ({
                 setIsDirty(false);
                 onSaved?.();
                 refresh();
+                setBreakdownRefreshTrigger(prev => prev + 1);
                 return true;
             } else {
                 if (window.WFToast) window.WFToast.info('No changes to save');
@@ -791,7 +820,6 @@ export const useInventoryItemForm = ({
         setIsDirty(true);
     };
 
-    const [breakdownRefreshTrigger, setBreakdownRefreshTrigger] = useState(0);
     const handleBreakdownApplied = () => {
         setBreakdownRefreshTrigger(prev => prev + 1);
         setIsDirty(true);

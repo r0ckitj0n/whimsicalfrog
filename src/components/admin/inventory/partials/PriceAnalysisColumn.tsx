@@ -20,6 +20,7 @@ interface PriceAnalysisColumnProps {
     tier: string;
     onTierChange: (tier: string) => void;
     breakdownRefreshTrigger: number;
+    onBreakdownDirtyStateChange?: (state: { isDirty: boolean; total: number; stored: number }) => void;
     /** Fields that are locked from AI overwrites */
     lockedFields?: Record<string, boolean>;
     /** Toggle lock status for a field */
@@ -40,6 +41,7 @@ export const PriceAnalysisColumn: React.FC<PriceAnalysisColumnProps> = ({
     tier,
     onTierChange,
     breakdownRefreshTrigger,
+    onBreakdownDirtyStateChange,
     lockedFields = {},
     onToggleFieldLock,
     cachedSuggestion = null,
@@ -96,6 +98,7 @@ export const PriceAnalysisColumn: React.FC<PriceAnalysisColumnProps> = ({
                         onCurrentPriceChange={onCurrentRetailChange || onApplyPrice}
                         tier={tier}
                         cachedSuggestion={cachedSuggestion}
+                        onDirtyStateChange={onBreakdownDirtyStateChange}
                     />
                 </div>
             </div>

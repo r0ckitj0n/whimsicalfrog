@@ -139,7 +139,11 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             window.WFToast?.success?.('Step 2/3 complete: Background image regenerated');
             window.WFToast?.info?.('Step 3/3: Deploying regenerated background...');
 
-            const newestBackgroundId = Number(result.data?.background?.id || 0);
+            const newestBackgroundId = Number(
+                result.data?.background?.id
+                || (result as unknown as { background?: { id?: number | string } }).background?.id
+                || 0
+            );
             if (newestBackgroundId > 0) {
                 await ApiClient.post('/api/backgrounds.php', {
                     action: 'apply',

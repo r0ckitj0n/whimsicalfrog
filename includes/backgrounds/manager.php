@@ -40,9 +40,59 @@ function saveBackground($data) {
 function applyBackground($room, $id) {
     Database::beginTransaction();
     try {
+        $room = normalizeRoomNumber($room);
+        if ($room === '' || !ctype_digit((string)$id)) {
+            throw new Exception('Missing room or background id');
+        }
+
+        $bg = Database::queryOne(
+            "SELECT id, room_number, image_filename, png_filename, webp_filename FROM backgrounds WHERE id = ? LIMIT 1",
+            [$id]
+        );
+        if (!$bg) {
+            throw new Exception('Background not found');
+        }
+        if (normalizeRoomNumber((string)($bg['room_number'] ?? '')) !== $room) {
+            throw new Exception('Background does not belong to the selected room');
+        }
+
         Database::execute("UPDATE backgrounds SET is_active = 0 WHERE room_number = ?", [$room]);
-        Database::execute("UPDATE backgrounds SET is_active = 1 WHERE id = ?", [$id]);
+        $updated = Database::execute("UPDATE backgrounds SET is_active = 1 WHERE id = ? AND room_number = ? LIMIT 1", [$id, $room]);
+        if ($updated <= 0) {
+            throw new Exception('Failed to activate background for room');
+        }
+
+        // Sync room_settings.background_url so room modal rendering stays consistent with the deployed background.
+        $pickRel = trim((string)($bg['webp_filename'] ?? ''));
+        if ($pickRel === '') $pickRel = trim((string)($bg['png_filename'] ?? ''));
+        if ($pickRel === '') $pickRel = trim((string)($bg['image_filename'] ?? ''));
+        $url = '';
+        if ($pickRel !== '') {
+            if (preg_match('/^https?:\\/\\//i', $pickRel)) {
+                $url = $pickRel;
+            } elseif (str_starts_with($pickRel, '/images/')) {
+                $url = $pickRel;
+            } elseif (str_starts_with($pickRel, 'images/')) {
+                $url = '/' . $pickRel;
+            } else {
+                $url = '/images/' . ltrim($pickRel, '/');
+            }
+        }
+        Database::execute(
+            "UPDATE room_settings SET background_url = ? WHERE room_number = ?",
+            [$url, $room]
+        );
         Database::commit();
+
+        // Invalidate get_background microcache (APCu or filesystem).
+        $ck = 'room_bg:' . $room;
+        if (function_exists('apcu_delete')) {
+            @apcu_delete($ck);
+        }
+        $cacheFile = sys_get_temp_dir() . '/wf_cache_' . md5($ck) . '.json';
+        if (is_file($cacheFile)) {
+            @unlink($cacheFile);
+        }
     } catch (Exception $e) {
         Database::rollBack();
         throw $e;

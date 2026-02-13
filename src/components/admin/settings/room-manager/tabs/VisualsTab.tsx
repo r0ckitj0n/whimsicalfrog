@@ -375,7 +375,11 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                 setGenerationMessage({ type: 'error', text: message });
                 return;
             }
-            const generatedBackgroundId = Number(result.data?.background?.id || 0);
+            const generatedBackgroundId = Number(
+                result.data?.background?.id
+                || (result as unknown as { background?: { id?: number | string } }).background?.id
+                || 0
+            );
             if (generatedBackgroundId > 0) {
                 await onApplyBackground(generatedBackgroundId);
                 window.WFToast?.success?.('AI room background generated and deployed');

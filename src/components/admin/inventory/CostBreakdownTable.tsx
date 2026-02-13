@@ -16,6 +16,11 @@ interface CostBreakdownTableProps {
     tier?: string;
     /** Optional raw breakdown from AI generation (simple key-value pairs) */
     cachedBreakdown?: Record<string, unknown> | null;
+    /**
+     * Signals whether the breakdown total differs from the stored item cost.
+     * Used by the parent modal to show a header save button and/or sync prices.
+     */
+    onDirtyStateChange?: (state: { isDirty: boolean; total: number; stored: number }) => void;
 }
 
 export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
@@ -28,9 +33,19 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
     currentPrice,
     onCurrentPriceChange,
     tier = 'standard',
-    cachedBreakdown
+    cachedBreakdown,
+    onDirtyStateChange
 }) => {
-    const { breakdown: hookBreakdown, isLoading, error, fetchBreakdown, saveCostFactor, clearBreakdown, populateFromSuggestion, applySuggestionLocally } = useCostBreakdown(sku);
+    const {
+        breakdown: hookBreakdown,
+        isLoading,
+        error,
+        fetchBreakdown,
+        saveCostFactor,
+        clearBreakdown,
+        populateFromSuggestion,
+        applySuggestionLocally
+    } = useCostBreakdown(sku);
 
     useEffect(() => {
         if (sku) {
@@ -96,6 +111,15 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
         }
         return hookBreakdown;
     }, [cachedBreakdown, hookBreakdown, sku]);
+
+    useEffect(() => {
+        if (!onDirtyStateChange) return;
+        const total = Number(breakdown.totals?.total || 0);
+        const stored = Number(breakdown.totals?.stored || 0);
+        const isDirtyFromTotals = Math.abs(total - stored) > 0.001;
+        const hasCached = !!(cachedBreakdown && Object.keys(cachedBreakdown).length > 0);
+        onDirtyStateChange({ isDirty: isDirtyFromTotals || hasCached, total, stored });
+    }, [onDirtyStateChange, breakdown.totals?.total, breakdown.totals?.stored, cachedBreakdown]);
 
     const handleFactorChange = (category: string, value: string, existingId?: string) => {
         const cost = parseFloat(value);

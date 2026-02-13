@@ -57,7 +57,7 @@ $raw = file_get_contents('php://input');
 $input = json_decode($raw, true) ?? $_POST;
 
 if ($isDiag || ($isLocal && !empty($input['diag']))) {
-    Response::json([
+    json_response(200, [
         'success' => true,
         'mode' => 'diagnostic',
         'session_active' => session_status() === PHP_SESSION_ACTIVE,

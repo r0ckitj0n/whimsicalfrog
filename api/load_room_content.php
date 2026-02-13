@@ -46,8 +46,14 @@ try {
     // For now, we'll keep the core orchestration here.
 
     $metadata = getRoomMetadata($room_number, $pdo);
+    // Prefer active background; if none active, fall back to the most recent background
+    // so the room modal never renders with a blank/white background.
     $bgMeta = Database::queryOne(
-        "SELECT name, image_filename, webp_filename FROM backgrounds WHERE room_number = ? AND is_active = 1 LIMIT 1",
+        "SELECT name, image_filename, webp_filename
+         FROM backgrounds
+         WHERE room_number = ?
+         ORDER BY is_active DESC, id DESC
+         LIMIT 1",
         [$room_number]
     ) ?: null;
 

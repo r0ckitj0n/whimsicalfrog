@@ -166,7 +166,18 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
     }, [isAdding, activeSku, refresh]);
 
     const isLoading = detailsLoading && !isAdding;
-    const showSaveAction = isAdding ? hasUploadedImage : isDirty;
+    const [costBreakdownState, setCostBreakdownState] = useState<{ isDirty: boolean; total: number; stored: number }>({
+        isDirty: false,
+        total: 0,
+        stored: 0
+    });
+    const [priceBreakdownState, setPriceBreakdownState] = useState<{ isDirty: boolean; total: number; stored: number }>({
+        isDirty: false,
+        total: 0,
+        stored: 0
+    });
+    const modalIsDirty = isDirty || costBreakdownState.isDirty || priceBreakdownState.isDirty;
+    const showSaveAction = isAdding ? hasUploadedImage : modalIsDirty;
     const [costTier, setCostTier] = useState('standard');
     const [priceTier, setPriceTier] = useState('standard');
     const [storedMarketingData, setStoredMarketingData] = useState<MarketingData | null>(null);
@@ -298,7 +309,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
 
     const attemptClose = async () => {
         if (isSaving) return;
-        if (!isDirty) {
+        if (!modalIsDirty) {
             onClose();
             return;
         }
@@ -314,7 +325,10 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
         });
 
         if (shouldSave) {
-            const didSave = await handleSave();
+            const didSave = await handleSave({
+                costBreakdownTotal: costBreakdownState.isDirty ? costBreakdownState.total : undefined,
+                priceBreakdownTotal: priceBreakdownState.isDirty ? priceBreakdownState.total : undefined
+            });
             if (didSave && !isAdding) onClose();
             return;
         }
@@ -422,14 +436,19 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                         )}
                         {showSaveAction && (
                             <button
-                                onClick={handleSave}
+                                onClick={() => {
+                                    void handleSave({
+                                        costBreakdownTotal: costBreakdownState.isDirty ? costBreakdownState.total : undefined,
+                                        priceBreakdownTotal: priceBreakdownState.isDirty ? priceBreakdownState.total : undefined
+                                    });
+                                }}
                                 disabled={isSaving}
-                                className={`admin-action-btn ${isAdding ? '' : 'dirty-only'} btn-icon--save ${(isAdding || isDirty) ? 'is-dirty' : ''} ${isSaving ? 'is-loading' : ''}`}
+                                className={`admin-action-btn ${isAdding ? '' : 'dirty-only'} btn-icon--save ${(isAdding || modalIsDirty) ? 'is-dirty' : ''} ${isSaving ? 'is-loading' : ''}`}
                                 data-help-id={isAdding ? 'inventory-item-create' : 'inventory-item-save'}
                                 data-emoji="💾"
                                 aria-label={isAdding ? 'Create item' : 'Save item'}
                                 title={isAdding ? 'Create item' : 'Save item'}
-                                style={(isAdding || isDirty) ? { animation: 'wf-save-pulse 1.5s infinite' } : undefined}
+                                style={(isAdding || modalIsDirty) ? { animation: 'wf-save-pulse 1.5s infinite' } : undefined}
                             >
                                 <span aria-hidden="true" className="text-[10px] font-bold uppercase tracking-wide">
                                     {isAdding ? 'Create' : 'Save'}
@@ -522,6 +541,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                                 onApplyCost={handleApplyCost}
                                 onCurrentCostChange={handleApplyCost}
                                 onBreakdownApplied={handleBreakdownApplied}
+                                onBreakdownDirtyStateChange={setCostBreakdownState}
                                 tier={costTier}
                                 onTierChange={(tier) => {
                                     setCostTier(tier);
@@ -543,6 +563,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                                 onApplyPrice={handleApplyPrice}
                                 onCurrentRetailChange={handleApplyPrice}
                                 onBreakdownApplied={handleBreakdownApplied}
+                                onBreakdownDirtyStateChange={setPriceBreakdownState}
                                 tier={priceTier}
                                 onTierChange={(tier) => {
                                     setPriceTier(tier);

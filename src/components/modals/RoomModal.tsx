@@ -61,9 +61,11 @@ export const RoomModal: React.FC<RoomModalProps> = ({
 
     const getBgUrl = (bg: RoomBackground | null) => {
         if (!bg) return '';
-        const file = bg.webp_filename || bg.image_filename;
+        const file = String(bg.webp_filename || bg.image_filename || '').trim();
         if (!file) return '';
         if (file.startsWith('https') || file.startsWith('http') || file.startsWith('/')) return file;
+        // Handle stored values like `images/backgrounds/foo.webp` (missing leading slash).
+        if (file.startsWith('images/')) return `/${file}`;
         if (file.startsWith('backgrounds/')) return `/images/${file}`;
         return `/images/backgrounds/${file}`;
     };

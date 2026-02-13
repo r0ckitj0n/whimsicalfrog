@@ -100,6 +100,8 @@ export const useBackgrounds = () => {
             });
             if (res) {
                 await fetchBackgroundsForRoom(room);
+                // Room modal HTML embeds background URL; invalidate so next open reflects the deployed background.
+                window.roomModalManager?.invalidateRoom?.(room);
                 return true;
             } else {
                 throw new Error('Failed to apply background');
@@ -171,7 +173,17 @@ export const useBackgrounds = () => {
                 await fetchBackgroundsForRoom(room);
             }
 
-            return { success: true, data: res.data };
+            // ApiClient/JsonResponseParser may hoist `data.*` fields to the top level, leaving `data` undefined.
+            const normalizedData: IRoomImageGenerationResponse['data'] = res.data || {
+                background: res.background,
+                history_id: res.history_id ?? null,
+                template_key: res.template_key,
+                provider: res.provider,
+                model: res.model,
+                prompt_text: res.prompt_text,
+                resolved_variables: res.resolved_variables
+            };
+            return { success: true, data: normalizedData };
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Failed to generate room background';
             logger.error('generateRoomBackground failed', err);

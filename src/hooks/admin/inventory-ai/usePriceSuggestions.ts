@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { AiManager } from '../../../core/ai/AiManager.js';
 import logger from '../../../core/logger.js';
+import { ageInDays } from '../../../core/date-utils.js';
 
 export interface PriceComponent {
     type: string;
@@ -174,6 +175,21 @@ export const usePriceSuggestions = () => {
         return data;
     }, []);
 
+    const fetch_stored_price_suggestion = useCallback(async (sku: string): Promise<PriceSuggestion | null> => {
+        if (!sku) return null;
+        try {
+            const data = await AiManager.getStoredPricingSuggestion(sku);
+            if (!data || typeof data !== 'object') return null;
+            const normalized = normalizePriceSuggestionData(data as unknown as Record<string, unknown>);
+            if (!normalized) return null;
+            normalized._cachedAt = Date.now();
+            return normalized;
+        } catch (err) {
+            logger.error('fetch_stored_price_suggestion failed', err);
+            return null;
+        }
+    }, [normalizePriceSuggestionData]);
+
     const fetch_price_suggestion = useCallback(async (params: {
         sku: string;
         name: string;
@@ -182,7 +198,25 @@ export const usePriceSuggestions = () => {
         cost_price: string | number;
         tier?: string;
         useImages?: boolean;
+        forceRefresh?: boolean;
     }) => {
+        const ttlDays = 7;
+        let staleStored: PriceSuggestion | null = null;
+        if (!params.forceRefresh) {
+            const stored = await fetch_stored_price_suggestion(params.sku);
+            const storedAgeDays = ageInDays(stored?.created_at ?? null);
+            if (stored && stored.success && Number.isFinite(storedAgeDays ?? NaN) && (storedAgeDays as number) >= 0) {
+                if ((storedAgeDays as number) < ttlDays) {
+                    const requestedTier = params.tier || 'standard';
+                    const updated = retier_price_suggestion(stored, requestedTier) || stored;
+                    updated._cachedAt = Date.now();
+                    setCachedPriceSuggestion(updated);
+                    return updated;
+                }
+                staleStored = stored;
+            }
+        }
+
         setIsBusy(true);
         try {
             const data = await AiManager.getPricingSuggestion({
@@ -224,17 +258,18 @@ export const usePriceSuggestions = () => {
             return null;
         } catch (err) {
             logger.error('fetch_price_suggestion failed', err);
-            return null;
+            return staleStored;
         } finally {
             setIsBusy(false);
         }
-    }, [normalizePriceSuggestionData, retier_price_suggestion]);
+    }, [fetch_stored_price_suggestion, normalizePriceSuggestionData, retier_price_suggestion]);
 
     return {
         is_busy,
         cached_price_suggestion,
         setCachedPriceSuggestion,
         fetch_price_suggestion,
+        fetch_stored_price_suggestion,
         retier_price_suggestion
     };
 };

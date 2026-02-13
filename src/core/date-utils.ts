@@ -28,6 +28,28 @@ function parseMySqlDateAsUtc(input: string) {
     return new Date(trimmed);
 }
 
+/**
+ * Parse ISO or MySQL datetime strings into a Date.
+ * MySQL datetimes are treated as UTC for stable age comparisons.
+ */
+export function parseDateForAge(input: string | null | undefined): Date {
+    if (!input) return new Date(NaN);
+    return parseMySqlDateAsUtc(String(input));
+}
+
+/**
+ * Returns age in days for a given datetime string or Date.
+ * Useful for cache TTL checks (e.g., "older than 7 days").
+ */
+export function ageInDays(input: string | number | Date | null | undefined): number | null {
+    const d = input instanceof Date
+        ? input
+        : (typeof input === 'string' ? parseMySqlDateAsUtc(input) : (typeof input === 'number' ? new Date(input) : new Date(NaN)));
+    const ms = d.getTime();
+    if (!Number.isFinite(ms)) return null;
+    return (Date.now() - ms) / (24 * 60 * 60 * 1000);
+}
+
 function parseGmtOffsetToMinutes(offsetLabel: string): number | null {
     const match = offsetLabel.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/i);
     if (!match) return null;

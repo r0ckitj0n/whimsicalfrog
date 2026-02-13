@@ -87,31 +87,36 @@ try {
         return 0.0;
     };
 
-    // Heuristic fallback: only use it when AI output is missing/invalid or clearly lower confidence.
-    $heuristic = PricingHeuristics::analyze($name, $description, $category, $cost_price, Database::getInstance());
-
     $aiPrice = isset($pricingData['price']) ? (float) $pricingData['price'] : 0.0;
-    $aiConf = $toConfidence($pricingData['confidence'] ?? 0.0);
-    $heurPrice = isset($heuristic['price']) ? (float) $heuristic['price'] : 0.0;
-    $heurConf = $toConfidence($heuristic['confidence'] ?? 0.0);
-
-    if ($aiPrice <= 0.0 && $heurPrice > 0.0) {
-        $pricingData = $heuristic;
-        $pricingData['reasoning'] = ($pricingData['reasoning'] ?? '') . ' • AI output unavailable, market-average fallback applied.';
-        $fallbackUsed = true;
-        $fallbackKind = 'heuristic';
-        $fallbackReason = 'AI output was unavailable or invalid (price <= 0). Market-average heuristic fallback applied.';
-        if (!empty($diagnostics['provider_error'])) {
-            $providerName = (string) ($diagnostics['provider'] ?? ($aiProviders->getSettings()['ai_provider'] ?? 'unknown'));
-            $fallbackReason .= " Provider error from '{$providerName}': " . (string) $diagnostics['provider_error'];
+    if ($aiPrice <= 0.0) {
+        // Per project policy: do not silently "fallback price" when a stored suggestion exists.
+        // If we have something already in DB, keep it and let the client display it (stale-cache path).
+        if (!empty($sku)) {
+            $existing = Database::queryOne(
+                "SELECT suggested_price, created_at FROM price_suggestions WHERE sku = ? ORDER BY created_at DESC LIMIT 1",
+                [$sku]
+            );
+            if ($existing) {
+                Response::serverError('AI price generation failed; keeping existing stored price suggestion.');
+            }
         }
-    } else if ($heurPrice > 0.0 && ($heurConf >= ($aiConf + 0.20))) {
-        $pricingData = $heuristic;
-        $pricingData['reasoning'] = ($pricingData['reasoning'] ?? '') . ' • Heuristic selected due to higher confidence.';
-        $fallbackUsed = true;
-        $fallbackKind = 'confidence_override';
-        $fallbackReason = 'Heuristic pricing selected because it exceeded AI confidence by >= 0.20 ('
-            . 'heuristic=' . number_format($heurConf, 2) . ', ai=' . number_format($aiConf, 2) . ').';
+
+        // No stored suggestion exists -> last-resort fallback.
+        $heuristic = PricingHeuristics::analyze($name, $description, $category, $cost_price, Database::getInstance());
+        $heurPrice = isset($heuristic['price']) ? (float) $heuristic['price'] : 0.0;
+        if ($heurPrice > 0.0) {
+            $pricingData = $heuristic;
+            $pricingData['reasoning'] = ($pricingData['reasoning'] ?? '') . ' • AI output unavailable, market-average fallback applied.';
+            $fallbackUsed = true;
+            $fallbackKind = 'heuristic';
+            $fallbackReason = 'AI output was unavailable or invalid (price <= 0). Market-average heuristic fallback applied.';
+            if (!empty($diagnostics['provider_error'])) {
+                $providerName = (string) ($diagnostics['provider'] ?? ($aiProviders->getSettings()['ai_provider'] ?? 'unknown'));
+                $fallbackReason .= " Provider error from '{$providerName}': " . (string) $diagnostics['provider_error'];
+            }
+        } else {
+            Response::serverError('AI price generation failed and no heuristic fallback was available.');
+        }
     }
 
     // Apply tier multiplier
@@ -139,7 +144,8 @@ try {
         $pricingData['reasoning'] .= ' • Tier adjustment distributed to components.';
     }
 
-    if (!empty($sku)) {
+    // Persist only when this is a real AI-generated price (not heuristic fallback).
+    if (!empty($sku) && $fallbackKind !== 'heuristic') {
         try {
             Database::execute("
                 INSERT INTO price_suggestions (

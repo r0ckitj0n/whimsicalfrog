@@ -4,9 +4,9 @@ import { useCostBreakdown } from '../../../hooks/admin/useCostBreakdown.js';
 import { getPriceTierMultiplier } from '../../../hooks/admin/inventory-ai/usePriceSuggestions.js';
 import { toastSuccess, toastError } from '../../../core/toast.js';
 import { generateCostSuggestion } from '../../../hooks/admin/inventory-ai/generateCostSuggestion.js';
-import { useAIGenerationOrchestrator } from '../../../hooks/admin/useAIGenerationOrchestrator.js';
 import { useAICostEstimateConfirm } from '../../../hooks/admin/useAICostEstimateConfirm.js';
 import { formatTime } from '../../../core/date-utils.js';
+import { ageInDays } from '../../../core/date-utils.js';
 import { QualityTierControl } from './QualityTierControl.js';
 
 import { CostSuggestion } from '../../../hooks/admin/useInventoryAI.js';
@@ -49,13 +49,13 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
         is_busy,
         cached_cost_suggestion: hookCachedSuggestion,
         fetch_cost_suggestion,
+        fetch_stored_ai_cost_suggestion,
         retier_cost_suggestion,
         setCachedCostSuggestion
     } = useInventoryAI();
     // Prefer prop over hook state - allows parent to pass in orchestrated suggestions
     const cached_cost_suggestion = propCachedSuggestion ?? hookCachedSuggestion;
     const { populateFromSuggestion, confidence: savedConfidence, appliedAt: savedAt, fetchBreakdown } = useCostBreakdown(sku);
-    const { generateInfoOnly } = useAIGenerationOrchestrator();
     const { confirmWithEstimate } = useAICostEstimateConfirm();
     const [isApplying, setIsApplying] = React.useState(false);
 
@@ -71,7 +71,6 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
             imageUrls,
             imageData: primaryImageUrl,
             fetchCostSuggestion: fetch_cost_suggestion,
-            generateInfoOnly,
             onSuggestionGenerated: (nextSuggestion) => {
                 setCachedCostSuggestion(nextSuggestion);
                 onSuggestionUpdated?.(nextSuggestion);
@@ -83,11 +82,21 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
     };
 
     const handleSuggest = async () => {
+        // Fast path: if we have a stored AI cost suggestion newer than 7 days, use it instantly and skip AI.
+        const stored = await fetch_stored_ai_cost_suggestion(sku, tier);
+        const storedAgeDays = ageInDays(stored?.created_at ?? null);
+        if (stored && Number.isFinite(storedAgeDays ?? NaN) && (storedAgeDays as number) >= 0 && (storedAgeDays as number) < 7) {
+            setCachedCostSuggestion(stored);
+            onSuggestionUpdated?.(stored);
+            if (!isReadOnly && onApplyCost) onApplyCost(stored.suggested_cost);
+            if (window.WFToast?.info) window.WFToast.info('Using stored cost suggestion (fresh).');
+            return;
+        }
+
         const confirmed = await confirmWithEstimate({
             action_key: 'inventory_generate_cost',
             action_label: 'Generate cost suggestion with AI',
             operations: [
-                { key: 'info_from_images', label: 'Image analysis + item info' },
                 { key: 'cost_estimation', label: 'Cost suggestion' }
             ],
             context: {
@@ -100,7 +109,14 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
         });
         if (!confirmed) return;
 
-        await runImageFirstSuggestion(tier);
+        const suggestion = await runImageFirstSuggestion(tier);
+        if (!suggestion && stored) {
+            setCachedCostSuggestion(stored);
+            onSuggestionUpdated?.(stored);
+            if (!isReadOnly && onApplyCost) onApplyCost(stored.suggested_cost);
+            const when = stored.created_at ? ` (${formatTime(stored.created_at)})` : '';
+            if (window.WFToast?.warning) window.WFToast.warning(`AI cost refresh failed; using last stored cost suggestion${when}.`);
+        }
     };
 
     const handleTierChange = (newTier: string) => {

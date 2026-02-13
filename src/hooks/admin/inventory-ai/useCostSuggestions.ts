@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react';
 import { AiManager } from '../../../core/ai/AiManager.js';
 import logger from '../../../core/logger.js';
 import { getPriceTierMultiplier } from './usePriceSuggestions.js';
+import { ApiClient } from '../../../core/ApiClient.js';
+import { ageInDays } from '../../../core/date-utils.js';
 
 export interface CostSuggestion {
     suggested_cost: number;
@@ -46,6 +48,43 @@ export const useCostSuggestions = () => {
         return normalized;
     };
 
+    const fetch_stored_ai_cost_suggestion = useCallback(async (sku: string, tier: string = 'standard'): Promise<CostSuggestion | null> => {
+        if (!sku) return null;
+        try {
+            const res = await ApiClient.get<{
+                success?: boolean;
+                suggested_cost?: number;
+                reasoning?: string;
+                confidence?: number | null;
+                breakdown?: Record<string, unknown>;
+                analysis?: Record<string, unknown>;
+                created_at?: string | null;
+            }>('/api/get_ai_cost_suggestion.php', { sku });
+
+            if (!res?.success) return null;
+            const tiered_cost = Number(res.suggested_cost || 0);
+            const mult = getPriceTierMultiplier(tier || 'standard') || 1;
+            const baseline_cost = mult > 0 ? Number((tiered_cost / mult).toFixed(2)) : tiered_cost;
+
+            return {
+                suggested_cost: Number(tiered_cost.toFixed(2)),
+                baseline_cost,
+                confidence: (res.confidence ?? 'N/A') as string | number | null,
+                created_at: res.created_at ?? null,
+                breakdown: normalizeBreakdown(res.breakdown || {}),
+                analysis: (res.analysis || {}) as Record<string, unknown>,
+                reasoning: String(res.reasoning || ''),
+                fallback_used: false,
+                fallback_reason: '',
+                fallback_kind: '',
+                _cachedAt: Date.now()
+            };
+        } catch (err) {
+            logger.error('fetch_stored_ai_cost_suggestion failed', err);
+            return null;
+        }
+    }, [normalizeBreakdown]);
+
     const fetch_cost_suggestion = useCallback(async (params: {
         sku?: string;
         name: string;
@@ -54,7 +93,22 @@ export const useCostSuggestions = () => {
         tier?: string;
         useImages?: boolean;
         imageData?: string;
+        forceRefresh?: boolean;
     }) => {
+        const ttlDays = 7;
+        let staleStored: CostSuggestion | null = null;
+        if (!params.forceRefresh && params.sku) {
+            const stored = await fetch_stored_ai_cost_suggestion(params.sku, params.tier || 'standard');
+            const storedAgeDays = ageInDays(stored?.created_at ?? null);
+            if (stored && Number.isFinite(storedAgeDays ?? NaN) && (storedAgeDays as number) >= 0) {
+                if ((storedAgeDays as number) < ttlDays) {
+                    setCachedCostSuggestion(stored);
+                    return stored;
+                }
+                staleStored = stored;
+            }
+        }
+
         setIsBusy(true);
         try {
             const data = await AiManager.getCostSuggestion({
@@ -69,41 +123,22 @@ export const useCostSuggestions = () => {
 
             if (data && data.success) {
                 const res_data = data as unknown as Record<string, unknown>;
-                let base_cost = Number(res_data.suggested_cost);
-                if (!Number.isFinite(base_cost) || base_cost <= 0) base_cost = 0;
+                let tiered_cost = Number(res_data.suggested_cost);
+                if (!Number.isFinite(tiered_cost) || tiered_cost <= 0) tiered_cost = 0;
 
-                const mult = getPriceTierMultiplier(params.tier || 'standard');
-                const final_cost = Number((base_cost * mult).toFixed(2));
+                const mult = getPriceTierMultiplier(params.tier || 'standard') || 1;
+                // Backend already applies tier scaling; keep an untiered baseline for later retier operations.
+                const baseline_cost = mult > 0 ? Number((tiered_cost / mult).toFixed(2)) : tiered_cost;
 
-                // Normalize and scale breakdown items proportionately
+                // Keep breakdown as returned (already tier-scaled by backend).
                 const rawBreakdown = normalizeBreakdown((res_data.breakdown || {}) as Record<string, unknown>);
-                const scaledBreakdown: Record<string, unknown> = {};
-
-                Object.entries(rawBreakdown).forEach(([key, val]) => {
-                    if (typeof val === 'number') {
-                        scaledBreakdown[key] = Number((val * mult).toFixed(2));
-                    } else if (Array.isArray(val)) {
-                        scaledBreakdown[key] = val.map(item => {
-                            if (typeof item === 'object' && item !== null) {
-                                const itemObj = { ...item } as Record<string, unknown>;
-                                if (typeof itemObj.cost === 'number') {
-                                    itemObj.cost = Number((itemObj.cost * mult).toFixed(2));
-                                }
-                                return itemObj;
-                            }
-                            return item;
-                        });
-                    } else {
-                        scaledBreakdown[key] = val;
-                    }
-                });
 
                 const suggestion: CostSuggestion = {
-                    suggested_cost: final_cost,
-                    baseline_cost: base_cost,
+                    suggested_cost: Number(tiered_cost.toFixed(2)),
+                    baseline_cost,
                     confidence: (res_data.confidence as string | number | null) || 'N/A',
                     created_at: (res_data.created_at || res_data.created_at || Date.now()) as string | number | null,
-                    breakdown: scaledBreakdown,
+                    breakdown: rawBreakdown,
                     analysis: (res_data.analysis || {}) as Record<string, unknown>,
                     reasoning: (res_data.reasoning as string) || '',
                     fallback_used: Boolean((res_data as any).fallback_used),
@@ -117,11 +152,11 @@ export const useCostSuggestions = () => {
             return null;
         } catch (err) {
             logger.error('fetch_cost_suggestion failed', err);
-            return null;
+            return staleStored;
         } finally {
             setIsBusy(false);
         }
-    }, [normalizeBreakdown]);
+    }, [fetch_stored_ai_cost_suggestion, normalizeBreakdown]);
 
     const retier_cost_suggestion = useCallback((source: CostSuggestion, targetTier: string, currentTier: string = 'standard'): CostSuggestion | null => {
         if (!source) return null;
@@ -180,6 +215,7 @@ export const useCostSuggestions = () => {
         cached_cost_suggestion,
         setCachedCostSuggestion,
         fetch_cost_suggestion,
+        fetch_stored_ai_cost_suggestion,
         retier_cost_suggestion
     };
 };

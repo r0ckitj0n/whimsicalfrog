@@ -5,9 +5,9 @@ import { PriceComponent } from '../../../hooks/admin/inventory-ai/usePriceSugges
 import { getPriceTierMultiplier } from '../../../hooks/admin/inventory-ai/usePriceSuggestions.js';
 import { toastSuccess, toastError } from '../../../core/toast.js';
 import { formatTime } from '../../../core/date-utils.js';
+import { ageInDays } from '../../../core/date-utils.js';
 import { QualityTierControl } from './QualityTierControl.js';
 import { generatePriceSuggestion } from '../../../hooks/admin/inventory-ai/generateCostSuggestion.js';
-import { useAIGenerationOrchestrator } from '../../../hooks/admin/useAIGenerationOrchestrator.js';
 import { useAICostEstimateConfirm } from '../../../hooks/admin/useAICostEstimateConfirm.js';
 
 interface AIPricingPanelProps {
@@ -48,6 +48,7 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
         is_busy,
         cached_price_suggestion: hookCachedSuggestion,
         fetch_price_suggestion,
+        fetch_stored_price_suggestion,
         retier_price_suggestion,
         setCachedPriceSuggestion
     } = useInventoryAI();
@@ -56,7 +57,6 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
     const cached_price_suggestion = propCachedSuggestion ?? hookCachedSuggestion;
 
     const { populateFromSuggestion, confidence: savedConfidence, appliedAt: savedAt, fetchBreakdown } = usePriceBreakdown(sku);
-    const { generateInfoOnly } = useAIGenerationOrchestrator();
     const { confirmWithEstimate } = useAICostEstimateConfirm();
 
     const [isApplying, setIsApplying] = React.useState(false);
@@ -74,7 +74,6 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
             imageUrls,
             imageData: primaryImageUrl,
             fetchPriceSuggestion: fetch_price_suggestion,
-            generateInfoOnly,
             onSuggestionGenerated: (nextSuggestion) => {
                 setCachedPriceSuggestion(nextSuggestion);
                 onSuggestionUpdated?.(nextSuggestion);
@@ -86,11 +85,22 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
     };
 
     const handleSuggest = async () => {
+        // Fast path: if we have a stored suggestion newer than 7 days, use it instantly and skip AI.
+        const stored = await fetch_stored_price_suggestion(sku);
+        const storedAgeDays = ageInDays(stored?.created_at ?? null);
+        if (stored && stored.success && Number.isFinite(storedAgeDays ?? NaN) && (storedAgeDays as number) >= 0 && (storedAgeDays as number) < 7) {
+            const updated = retier_price_suggestion(stored, tier) || stored;
+            setCachedPriceSuggestion(updated);
+            onSuggestionUpdated?.(updated);
+            if (!isReadOnly && onApplyPrice) onApplyPrice(updated.suggested_price);
+            if (window.WFToast?.info) window.WFToast.info('Using stored price suggestion (fresh).');
+            return;
+        }
+
         const confirmed = await confirmWithEstimate({
             action_key: 'inventory_generate_price',
             action_label: 'Generate price suggestion with AI',
             operations: [
-                { key: 'info_from_images', label: 'Image analysis + item info' },
                 { key: 'price_estimation', label: 'Price suggestion' }
             ],
             context: {
@@ -103,7 +113,16 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
         });
         if (!confirmed) return;
 
-        await runImageFirstSuggestion(tier);
+        const suggestion = await runImageFirstSuggestion(tier);
+        if (!suggestion && stored) {
+            // If we had something stored (even if stale) and AI refresh failed, prefer the stored result.
+            const updated = retier_price_suggestion(stored, tier) || stored;
+            setCachedPriceSuggestion(updated);
+            onSuggestionUpdated?.(updated);
+            if (!isReadOnly && onApplyPrice) onApplyPrice(updated.suggested_price);
+            const when = stored.created_at ? ` (${formatTime(stored.created_at)})` : '';
+            if (window.WFToast?.warning) window.WFToast.warning(`AI price refresh failed; using last stored price suggestion${when}.`);
+        }
     };
 
     const handleTierChange = (newTier: string) => {

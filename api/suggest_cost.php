@@ -92,18 +92,34 @@ try {
         $fallbackReason = "Primary provider '{$providerName}' failed: {$providerErr}. Used local fallback provider.";
     }
 
-    // Default to market-average heuristic for cost suggestions only when AI output is missing/invalid.
-    $heuristic = CostHeuristics::analyze($name, $description, $category, Database::getInstance(), $qualityTier);
     $aiCost = isset($costData['cost']) ? (float) $costData['cost'] : 0.0;
-    if ($aiCost <= 0.0 && !empty($heuristic['cost'])) {
-        $costData = $heuristic;
-        $costData['reasoning'] = ($costData['reasoning'] ?? '') . ' • AI output unavailable, market-average fallback applied.';
-        $fallbackUsed = true;
-        $fallbackKind = 'heuristic';
-        $fallbackReason = 'AI output was unavailable or invalid (cost <= 0). Market-average heuristic fallback applied.';
-        if (!empty($diagnostics['provider_error'])) {
-            $providerName = (string) ($diagnostics['provider'] ?? ($aiProviders->getSettings()['ai_provider'] ?? 'unknown'));
-            $fallbackReason .= " Provider error from '{$providerName}': " . (string) $diagnostics['provider_error'];
+    if ($aiCost <= 0.0) {
+        // Per project policy: do not silently "fallback cost" when a stored suggestion exists.
+        // If we have something already in DB, keep it and let the client display it (stale-cache path).
+        if (!empty($sku)) {
+            $existing = Database::queryOne(
+                "SELECT suggested_cost, created_at FROM cost_suggestions WHERE sku = ? ORDER BY created_at DESC LIMIT 1",
+                [$sku]
+            );
+            if ($existing) {
+                Response::serverError('AI cost generation failed; keeping existing stored cost suggestion.');
+            }
+        }
+
+        // No stored suggestion exists -> last-resort fallback.
+        $heuristic = CostHeuristics::analyze($name, $description, $category, Database::getInstance(), $qualityTier);
+        if (!empty($heuristic['cost'])) {
+            $costData = $heuristic;
+            $costData['reasoning'] = ($costData['reasoning'] ?? '') . ' • AI output unavailable, market-average fallback applied.';
+            $fallbackUsed = true;
+            $fallbackKind = 'heuristic';
+            $fallbackReason = 'AI output was unavailable or invalid (cost <= 0). Market-average heuristic fallback applied.';
+            if (!empty($diagnostics['provider_error'])) {
+                $providerName = (string) ($diagnostics['provider'] ?? ($aiProviders->getSettings()['ai_provider'] ?? 'unknown'));
+                $fallbackReason .= " Provider error from '{$providerName}': " . (string) $diagnostics['provider_error'];
+            }
+        } else {
+            Response::serverError('AI cost generation failed and no heuristic fallback was available.');
         }
     }
 
@@ -136,7 +152,8 @@ try {
         : (strtolower($confidenceLabel) === 'high' ? 0.9
             : (strtolower($confidenceLabel) === 'low' ? 0.2 : 0.5));
 
-    if (!empty($sku)) {
+    // Persist only when this is a real AI-generated cost (not heuristic fallback).
+    if (!empty($sku) && $fallbackKind !== 'heuristic') {
         try {
             $analysis = $costData['analysis'] ?? [];
             $breakdown = $costData['breakdown'] ?? [];

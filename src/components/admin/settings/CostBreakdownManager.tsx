@@ -11,8 +11,8 @@ import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesClo
 import { IItemDetailsResponse } from '../../../types/inventory.js';
 import { QualityTierControl } from '../inventory/QualityTierControl.js';
 import { generateCostSuggestion } from '../../../hooks/admin/inventory-ai/generateCostSuggestion.js';
-import { useAIGenerationOrchestrator } from '../../../hooks/admin/useAIGenerationOrchestrator.js';
 import { useAICostEstimateConfirm } from '../../../hooks/admin/useAICostEstimateConfirm.js';
+import { ageInDays } from '../../../core/date-utils.js';
 
 interface CostBreakdownManagerProps {
     sku?: string;
@@ -46,8 +46,7 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
     } = useCostBreakdown(selectedSku);
 
     const { items, isLoadingItems } = useAIContentGenerator();
-    const { fetch_cost_suggestion } = useInventoryAI();
-    const { generateInfoOnly } = useAIGenerationOrchestrator();
+    const { fetch_cost_suggestion, fetch_stored_ai_cost_suggestion } = useInventoryAI();
     const { confirmWithEstimate } = useAICostEstimateConfirm();
     const [activeCategory, setActiveCategory] = useState<CostCategory>(COST_CATEGORY.MATERIALS);
 
@@ -116,7 +115,6 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
             action_key: 'cost_breakdown_generate_all',
             action_label: 'Generate cost analysis with AI',
             operations: [
-                { key: 'info_from_images', label: 'Image analysis + item info' },
                 { key: 'cost_estimation', label: 'Cost suggestion' }
             ],
             context: {
@@ -128,6 +126,16 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
             confirmText: 'Generate'
         });
         if (!confirmed) return;
+
+        // Fast path: if we have a stored AI cost suggestion newer than 7 days, use it instantly and skip AI.
+        const stored = await fetch_stored_ai_cost_suggestion(currentItem.sku, costTier);
+        const storedAgeDays = ageInDays(stored?.created_at ?? null);
+        if (stored && Number.isFinite(storedAgeDays ?? NaN) && (storedAgeDays as number) >= 0 && (storedAgeDays as number) < 7) {
+            applySuggestionLocally(stored);
+            setHasUserChanges(true);
+            window.WFToast?.info?.('Using stored AI cost suggestion (fresh).');
+            return;
+        }
 
         setIsGeneratingCost(true);
         try {
@@ -141,7 +149,6 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
                 primaryImageUrl: `/images/items/${currentItem.sku}A.webp`,
                 imageData: `/images/items/${currentItem.sku}A.webp`,
                 fetchCostSuggestion: fetch_cost_suggestion,
-                generateInfoOnly,
                 onSuggestionGenerated: (suggestion) => {
                     applySuggestionLocally(suggestion);
                     setHasUserChanges(true);

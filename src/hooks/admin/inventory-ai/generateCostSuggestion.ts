@@ -34,6 +34,8 @@ interface SharedGenerationParams<TSuggestion> {
         preferredImage?: string;
         imageUrls?: string[];
     }) => Promise<TSuggestion | null>;
+    /** When true, do not abort if no item image is available. */
+    allowNoImage?: boolean;
     onSuggestionGenerated?: (suggestion: TSuggestion) => void;
     onApplied?: () => void;
     startToast: string;
@@ -220,6 +222,7 @@ const runImageFirstSuggestion = async <TSuggestion>({
     imageData,
     generateInfoOnly,
     runSuggestion,
+    allowNoImage = false,
     onSuggestionGenerated,
     onApplied,
     startToast,
@@ -238,7 +241,7 @@ const runImageFirstSuggestion = async <TSuggestion>({
         });
         const preferredImage = resolvedImageUrls[0];
 
-        if (!preferredImage) {
+        if (!preferredImage && !allowNoImage) {
             toastError('No usable item image found. Tried PNG, WebP, and JPEG/JPG. Upload an item image and try again.');
             return null;
         }
@@ -273,7 +276,7 @@ const runImageFirstSuggestion = async <TSuggestion>({
             description: nextDescription,
             category: nextCategory,
             tier,
-            preferredImage,
+            preferredImage: preferredImage || undefined,
             imageUrls: resolvedImageUrls
         });
 
@@ -319,6 +322,7 @@ export const generateCostSuggestion = async ({
         imageUrls,
         imageData,
         generateInfoOnly,
+        allowNoImage: true,
         runSuggestion: async ({ sku: nextSku, name: nextName, description: nextDescription, category: nextCategory, tier: nextTier, preferredImage }) => {
             return fetchCostSuggestion({
                 sku: nextSku,
@@ -343,13 +347,14 @@ export const generateCostSuggestion = async ({
     if (suggestion.fallback_used) {
         const reason = (suggestion.fallback_reason || '').trim();
         const kind = String((suggestion.fallback_kind || '')).trim();
-        const prefix = kind === 'heuristic'
-            ? "AI cost couldn't be generated."
-            : 'Fallback cost generation was used.';
-        if (window.WFToast?.warning) {
-            window.WFToast.warning(`${prefix} Fallback costs are in effect.${reason ? ` Reason: ${reason}` : ''}`);
+        if (kind === 'provider_fallback') {
+            const msg = `Primary AI provider failed; used local provider instead.${reason ? ` Reason: ${reason}` : ''}`;
+            if (window.WFToast?.info) window.WFToast.info(msg);
+            else toastSuccess(msg);
         } else {
-            toastError(`${prefix} Fallback costs are in effect.${reason ? ` Reason: ${reason}` : ''}`);
+            const msg = `AI cost couldn't be generated. Fallback costs are in effect.${reason ? ` Reason: ${reason}` : ''}`;
+            if (window.WFToast?.warning) window.WFToast.warning(msg);
+            else toastError(msg);
         }
     } else {
         toastSuccess(showApplyingToast ? 'Cost preview ready (unsaved).' : 'Cost suggestion generated');
@@ -389,6 +394,7 @@ export const generatePriceSuggestion = async ({
         imageUrls,
         imageData,
         generateInfoOnly,
+        allowNoImage: true,
         runSuggestion: async ({ sku: nextSku, name: nextName, description: nextDescription, category: nextCategory, tier: nextTier }) => {
             return fetchPriceSuggestion({
                 sku: nextSku,
@@ -412,13 +418,14 @@ export const generatePriceSuggestion = async ({
     if ((suggestion as any).fallback_used) {
         const reason = String((suggestion as any).fallback_reason || '').trim();
         const kind = String((suggestion as any).fallback_kind || '').trim();
-        const prefix = kind === 'heuristic'
-            ? "AI price couldn't be generated."
-            : 'Fallback price generation was used.';
-        if (window.WFToast?.warning) {
-            window.WFToast.warning(`${prefix} Fallback pricing is in effect.${reason ? ` Reason: ${reason}` : ''}`);
+        if (kind === 'provider_fallback') {
+            const msg = `Primary AI provider failed; used local provider instead.${reason ? ` Reason: ${reason}` : ''}`;
+            if (window.WFToast?.info) window.WFToast.info(msg);
+            else toastSuccess(msg);
         } else {
-            toastError(`${prefix} Fallback pricing is in effect.${reason ? ` Reason: ${reason}` : ''}`);
+            const msg = `AI price couldn't be generated. Fallback pricing is in effect.${reason ? ` Reason: ${reason}` : ''}`;
+            if (window.WFToast?.warning) window.WFToast.warning(msg);
+            else toastError(msg);
         }
     } else {
         toastSuccess('Price suggestion generated');

@@ -11,6 +11,7 @@ export const useInventoryAI = () => {
         cached_price_suggestion,
         setCachedPriceSuggestion,
         fetch_price_suggestion,
+        fetch_stored_price_suggestion,
         retier_price_suggestion
     } = usePriceSuggestions();
 
@@ -19,6 +20,7 @@ export const useInventoryAI = () => {
         cached_cost_suggestion,
         setCachedCostSuggestion,
         fetch_cost_suggestion,
+        fetch_stored_ai_cost_suggestion,
         retier_cost_suggestion
     } = useCostSuggestions();
 
@@ -62,6 +64,8 @@ export const useInventoryAI = () => {
         cached_cost_suggestion,
         fetch_price_suggestion,
         fetch_cost_suggestion,
+        fetch_stored_price_suggestion,
+        fetch_stored_ai_cost_suggestion,
         fetch_all_suggestions,
         generateMarketing,
         retier_price_suggestion,

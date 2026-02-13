@@ -1,6 +1,9 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useAttributesManager, TabId, ISizeTemplate, IColorTemplate } from '../../../hooks/admin/useAttributesManager.js';
+import { ApiClient } from '../../../core/ApiClient.js';
+import { AUTH } from '../../../core/constants.js';
+import type { ISanmarColorsImportResponse } from '../../../types/sanmar.js';
 
 import { SizeTemplateEditor } from './attributes/SizeTemplateEditor.js';
 import { ColorTemplateEditor } from './attributes/ColorTemplateEditor.js';
@@ -55,6 +58,7 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
         handleDeleteGlobalColor,
         handleDeleteGlobalSize,
         handleAddGlobalColor,
+        handleUpdateGlobalColor,
         handleAddGlobalSize,
         handleAddGender,
         handleEditSize,
@@ -69,6 +73,32 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
         themedPrompt,
         themedConfirm
     } = useAttributesManager();
+
+    const runSanmarImport = async () => {
+        const ok = await themedConfirm({
+            title: 'Import SanMar Colors',
+            message: 'This will fetch SanMar Digital Color Guide PDFs and sync SM- colors + refresh the "Sanmar" color template. Continue?',
+            confirmText: 'Import Now',
+            confirmStyle: 'primary',
+            iconKey: 'download'
+        });
+        if (!ok) return;
+
+        try {
+            const res = await ApiClient.post<ISanmarColorsImportResponse>(`/api/sanmar_import.php?action=import_colors&admin_token=${AUTH.ADMIN_TOKEN}`, {});
+            if (res?.success) {
+                const extracted = res?.data?.stats?.extracted_base_colors ?? 0;
+                const added = res?.data?.stats?.global_colors?.added ?? 0;
+                if (window.WFToast) window.WFToast.success(`SanMar import complete (${extracted} colors, +${added} new)`);
+                await fetchAll();
+            } else {
+                if (window.WFToast) window.WFToast.error(res?.error || res?.message || 'SanMar import failed');
+            }
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : 'SanMar import failed';
+            if (window.WFToast) window.WFToast.error(msg);
+        }
+    };
 
     const tabs = ([
         { id: 'assignments', label: 'Assignments' },
@@ -128,6 +158,16 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
                     </div>
 
                     <div className="flex items-center gap-2">
+                        {activeTab === 'global-colors' && !editingColor && !editingSize && (
+                            <button
+                                type="button"
+                                onClick={() => { void runSanmarImport(); }}
+                                className="px-4 py-2 rounded-full text-xs font-black border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition"
+                                data-help-id="attributes-import-sanmar"
+                            >
+                                Import Sanmar
+                            </button>
+                        )}
                         {(editingSize || editingColor) && (
                             <button
                                 onClick={handleSaveTemplate}
@@ -211,7 +251,14 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
 
                                 <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                                     {activeTab === 'genders' && <GenderTab genders={genders} onAdd={handleAddGender} onDelete={handleDeleteGender} />}
-                                    {activeTab === 'global-colors' && <GlobalColorsTab colors={colors} onAdd={handleAddGlobalColor} onDelete={handleDeleteGlobalColor} />}
+                                    {activeTab === 'global-colors' && (
+                                        <GlobalColorsTab
+                                            colors={colors}
+                                            onAdd={handleAddGlobalColor}
+                                            onDelete={handleDeleteGlobalColor}
+                                            onUpdate={handleUpdateGlobalColor}
+                                        />
+                                    )}
                                     {activeTab === 'global-sizes' && <GlobalSizesTab sizes={sizes} onAdd={handleAddGlobalSize} onDelete={handleDeleteGlobalSize} />}
                                     {activeTab === 'assignments' && (
                                         <OptionAssignmentsTab

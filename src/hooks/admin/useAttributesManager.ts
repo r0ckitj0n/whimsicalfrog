@@ -165,6 +165,13 @@ export const useAttributesManager = () => {
         }
     }, [themedPrompt, saveColor]);
 
+    const handleUpdateGlobalColor = useCallback(async (payload: { id: number; color_code?: string; color_name?: string; category?: string }) => {
+        if (!payload?.id) return;
+        const res = await saveColor(payload);
+        if (res?.success && window.WFToast) window.WFToast.success('Global color updated');
+        if (!res?.success && window.WFToast) window.WFToast.error(res?.message || 'Failed to update global color');
+    }, [saveColor]);
+
     const handleAddGlobalSize = useCallback(async () => {
         const name = await themedPrompt({
             title: 'Add Global Size',
@@ -311,6 +318,7 @@ export const useAttributesManager = () => {
         materialsApi,
         cascadeApi,
         themedPrompt,
-        themedConfirm
+        themedConfirm,
+        handleUpdateGlobalColor
     };
 };

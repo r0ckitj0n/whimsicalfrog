@@ -37,18 +37,23 @@ SKIP_BUILD="${WF_SKIP_RELEASE_BUILD:-0}"
 PURGE="${WF_PURGE_REMOTE:-0}"
 STRICT_VERIFY="${WF_STRICT_VERIFY:-0}"
 UPLOAD_VENDOR="${WF_UPLOAD_VENDOR:-0}"
-PRESERVE_IMAGES=0
+# Default safety: never delete anything under images/** on the remote.
+PRESERVE_IMAGES=1
+PURGE_IMAGES=0
 CODE_ONLY=0
 
 while [[ $# -gt 0 ]]; do
   case $1 in
     --code-only)
       CODE_ONLY=1
-      PRESERVE_IMAGES=1
       shift
       ;;
     --preserve-images|--no-delete-images)
       PRESERVE_IMAGES=1
+      shift
+      ;;
+    --purge-images)
+      PURGE_IMAGES=1
       shift
       ;;
     --purge)
@@ -92,10 +97,6 @@ if [[ "$CODE_ONLY" == "1" && "$MODE" == "env-only" ]]; then
 fi
 if [[ "$CODE_ONLY" == "1" && "$MODE" == "dist-only" ]]; then
   echo "Error: --code-only cannot be combined with --dist-only (use one or the other)." >&2
-  exit 2
-fi
-if [[ "$PRESERVE_IMAGES" == "1" && "$PURGE" == "1" ]]; then
-  echo "Error: --preserve-images/--code-only cannot be combined with --purge (purge deletes remote images)." >&2
   exit 2
 fi
 
@@ -225,12 +226,16 @@ if [ "$PURGE" = "1" ]; then
   if [ "${WF_DRY_RUN:-0}" = "1" ]; then
     echo -e "${YELLOW}DRY-RUN: Skipping remote purge${NC}"
   else
+    PURGE_IMAGE_DIRS=""
+    if [ "$PURGE_IMAGES" = "1" ]; then
+      PURGE_IMAGE_DIRS=" images"
+    fi
     cat > purge_remote.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
 set cmd:fail-exit no
 open sftp://$USER:$PASS@$HOST
-rm -r api dist images includes scripts src documentation Documentation vendor node_modules || true
+rm -r api dist${PURGE_IMAGE_DIRS} includes scripts src documentation Documentation vendor node_modules || true
 rm index.php .htaccess index.html favicon.ico manifest.json package.json package-lock.json || true
 bye
 EOL
@@ -436,7 +441,7 @@ EOL
     else
       echo -e "${YELLOW}⚠️  Failed to upload .env.live; continuing without updating live env${NC}"
     fi
-    rm -f upload_env.txt
+  rm -f upload_env.txt
   else
     echo -e "${YELLOW}⏭️  Skipping live .env upload (missing .env.live or WF_UPLOAD_LIVE_ENV!=1)${NC}"
   fi
@@ -466,13 +471,12 @@ EOL
 
   # Secondary passes are unnecessary in full-replace mode
   if [ "${WF_FULL_REPLACE:-0}" != "1" ]; then
-    if [ "$MODE" != "dist-only" ] && [ "$PRESERVE_IMAGES" != "1" ]; then
-      # Perform a second, targeted mirror for images/backgrounds WITHOUT --ignore-time.
-      # Rationale: when replacing background files with the same size but different content,
-      # the size-only comparison (from --ignore-time) may skip the upload. This pass uses
-      # mtime to ensure changed files are uploaded.
-      # IMPORTANT: no --delete here so server-generated AI backgrounds are preserved.
-      echo -e "${GREEN}🖼️  Ensuring background images are updated (mtime-based)...${NC}"
+    if [ "$MODE" != "dist-only" ]; then
+      # Preserve-images mode excludes images/** from the primary mirror so lftp --delete can never
+      # remove remote images. We still upload changed/new images via dedicated passes with no --delete.
+
+      # 1) backgrounds (mtime-based, no delete)
+      echo -e "${GREEN}🖼️  Ensuring background images are updated (mtime-based; no deletes)...${NC}"
       cat > deploy_backgrounds.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
@@ -491,10 +495,8 @@ EOL
       fi
       rm -f deploy_backgrounds.txt
 
-      # Perform a dedicated sync for signs with --overwrite.
-      # Rationale: sign assets are frequently replaced in-place (same filename), and
-      # same-size edits can be skipped by size/time heuristics in the primary mirror.
-      echo -e "${GREEN}🪧 Ensuring sign images are updated (force overwrite)...${NC}"
+      # 2) signs (force overwrite, no delete)
+      echo -e "${GREEN}🪧 Ensuring sign images are updated (force overwrite; no deletes)...${NC}"
       cat > deploy_signs.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
@@ -512,6 +514,28 @@ EOL
         echo -e "${YELLOW}⚠️  Sign image sync failed; continuing${NC}"
       fi
       rm -f deploy_signs.txt
+
+      # 3) remaining images (items/logos/etc) without --delete
+      echo -e "${GREEN}🖼️  Syncing other images (no deletes)...${NC}"
+      cat > deploy_images.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+set cmd:fail-exit yes
+open sftp://$USER:$PASS@$HOST
+mirror --reverse --verbose --only-newer --no-perms \
+  --exclude-glob "backgrounds/**" \
+  --exclude-glob "signs/**" \
+  images images
+bye
+EOL
+      if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+        echo -e "${YELLOW}DRY-RUN: Skipping images sync (no deletes)${NC}"
+      elif lftp -f deploy_images.txt; then
+        echo -e "${GREEN}✅ Other images synced (no deletes)${NC}"
+      else
+        echo -e "${YELLOW}⚠️  Image sync failed; continuing${NC}"
+      fi
+      rm -f deploy_images.txt
     fi
     if [ "$MODE" != "dist-only" ]; then
       # Perform a dedicated sync for includes subdirectories
@@ -633,89 +657,25 @@ if [ "$MODE" != "env-only" ]; then
   fi
   
   # Fix permissions automatically after deployment
-  if [ "$PRESERVE_IMAGES" != "1" ]; then
-    echo -e "${GREEN}🔧 Fixing image permissions on server...${NC}"
-    # Remove problematic .htaccess files and fix permissions via SFTP
-    cat > fix_permissions.txt << EOL
+  echo -e "${GREEN}🔧 Fixing image permissions on server...${NC}"
+  # Do not delete anything under images/** (you have an admin cleanup button for stale images).
+  cat > fix_permissions.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
 open sftp://$USER:$PASS@$HOST
-rm -f images/.htaccess
-rm -f images/items/.htaccess
 chmod 755 images/
 chmod 755 images/items/
 chmod 644 images/items/*
 bye
 EOL
 
-    if [ "${WF_DRY_RUN:-0}" = "1" ]; then
-      echo -e "${YELLOW}DRY-RUN: Skipping remote permissions fix${NC}"
-    else
-      lftp -f fix_permissions.txt > /dev/null 2>&1 || true
-    fi
-    rm fix_permissions.txt
+  if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+    echo -e "${YELLOW}DRY-RUN: Skipping remote permissions fix${NC}"
   else
-    echo -e "${YELLOW}⏭️  Preserving images: skipping remote permissions changes${NC}"
+    lftp -f fix_permissions.txt > /dev/null 2>&1 || true
   fi
+  rm fix_permissions.txt
   
-  # List duplicate-suffixed files on server (for visibility)
-  if [ "$PRESERVE_IMAGES" != "1" ]; then
-    echo -e "${GREEN}🧹 Listing duplicate-suffixed files on server (space-number)...${NC}"
-    cat > list_server_duplicates.txt << EOL
-set sftp:auto-confirm yes
-set ssl:verify-certificate no
-open sftp://$USER:$PASS@$HOST
-# images root
-cls -1 images/*\\ 2.* || true
-cls -1 images/*\\ 3.* || true
-# subdirs
-cls -1 images/items/*\\ 2.* || true
-cls -1 images/items/*\\ 3.* || true
-cls -1 images/backgrounds/*\\ 2.* || true
-cls -1 images/backgrounds/*\\ 3.* || true
-cls -1 images/logos/*\\ 2.* || true
-cls -1 images/logos/*\\ 3.* || true
-cls -1 images/signs/*\\ 2.* || true
-cls -1 images/signs/*\\ 3.* || true
-bye
-EOL
-    if [ "${WF_DRY_RUN:-0}" = "1" ]; then
-      echo -e "${YELLOW}DRY-RUN: Skipping remote duplicate listing${NC}"
-    else
-      lftp -f list_server_duplicates.txt || true
-    fi
-    rm list_server_duplicates.txt
-  else
-    echo -e "${YELLOW}⏭️  Preserving images: skipping duplicate listing/deletion under images/**${NC}"
-  fi
-  
-  # Delete duplicate-suffixed files on server
-  if [ "$PRESERVE_IMAGES" != "1" ]; then
-    echo -e "${GREEN}🧽 Removing duplicate-suffixed files on server...${NC}"
-    cat > delete_server_duplicates.txt << EOL
-set sftp:auto-confirm yes
-set ssl:verify-certificate no
-open sftp://$USER:$PASS@$HOST
-rm -f images/*\\ 2.* || true
-rm -f images/*\\ 3.* || true
-rm -f images/items/*\\ 2.* || true
-rm -f images/items/*\\ 3.* || true
-rm -f images/backgrounds/*\\ 2.* || true
-rm -f images/backgrounds/*\\ 3.* || true
-rm -f images/logos/*\\ 2.* || true
-rm -f images/logos/*\\ 3.* || true
-rm -f images/signs/*\\ 2.* || true
-rm -f images/signs/*\\ 3.* || true
-bye
-EOL
-    if [ "${WF_DRY_RUN:-0}" = "1" ]; then
-      echo -e "${YELLOW}DRY-RUN: Skipping remote duplicate deletion${NC}"
-    else
-      lftp -f delete_server_duplicates.txt || true
-    fi
-    rm delete_server_duplicates.txt
-  fi
-
   if [ "${STRICT_VERIFY}" = "1" ] && [ "$VERIFY_FAILED" != "0" ]; then
     echo -e "${RED}❌ Strict verification failed. Deployment is not healthy.${NC}"
     exit 1
@@ -749,7 +709,7 @@ echo -e "\n${GREEN}📊 Fast Deployment Summary:${NC}"
 echo -e "  • Files: ✅ Deployed to server"
 echo -e "  • Database: ⏭️  Skipped (use deploy_full.sh for database updates)"
 if [ "$PRESERVE_IMAGES" = "1" ]; then
-  echo -e "  • Images: ⏭️  Preserved (images/** not modified)"
+  echo -e "  • Images: ✅ Synced (no deletes under images/**)"
 else
   echo -e "  • Images: ✅ Included in deployment"
 fi

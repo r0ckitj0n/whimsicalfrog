@@ -92,7 +92,6 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
         handleSave,
         handleApplyCost,
         handleApplyPrice,
-        handleStockChange,
         handleCostSuggestionUpdated,
         handlePriceSuggestionUpdated,
         breakdownRefreshTrigger,
@@ -607,7 +606,6 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                                 isAdding={isAdding}
                                 mode={mode}
                                 isReadOnly={isReadOnly}
-                                onStockChange={handleStockChange}
                                 onOpenInventoryOptions={() => setIsInventoryOptionsOpen(true)}
                                 formData={formData}
                                 onFieldChange={handleFieldChange}

@@ -1,6 +1,5 @@
 import React from 'react';
 import { ImageGallery } from '../ImageGallery.js';
-import { NestedInventoryTable } from '../NestedInventoryTable.js';
 import { InventoryOptionsSummary } from '../InventoryOptionsSummary.js';
 import { FieldLockIcon } from '../FieldLockIcon.js';
 import type { IItemImage } from '../../../../types/inventory.js';
@@ -10,7 +9,6 @@ interface MediaAndVariantsSectionProps {
     isAdding: boolean;
     mode: 'edit' | 'view' | 'add' | '';
     isReadOnly: boolean;
-    onStockChange: (newTotal: number) => void;
     onOpenInventoryOptions?: () => void;
     formData: {
         weight_oz: number;
@@ -29,7 +27,6 @@ export const MediaAndVariantsSection: React.FC<MediaAndVariantsSectionProps> = (
     isAdding,
     mode,
     isReadOnly,
-    onStockChange,
     onOpenInventoryOptions,
     formData,
     onFieldChange,
@@ -164,13 +161,8 @@ export const MediaAndVariantsSection: React.FC<MediaAndVariantsSectionProps> = (
                     <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <p className="text-xs text-slate-600">
-                                Variant editor (inventory rows) and the configured option rules (from Inventory Options).
+                                View the configured option rules (from Inventory Options).
                             </p>
-                            <NestedInventoryTable
-                                sku={sku}
-                                isReadOnly={isReadOnly}
-                                onStockChange={onStockChange}
-                            />
                         </div>
                         <InventoryOptionsSummary sku={sku} isReadOnly={isReadOnly} />
                     </div>

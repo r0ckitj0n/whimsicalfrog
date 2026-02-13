@@ -42,7 +42,8 @@ export const useAttributesManager = () => {
     const categoriesApi = useCategoryList();
     const cascadeApi = useOptionCascadeConfigs();
 
-    const [activeTab, setActiveTab] = useState<TabId>('genders');
+    // Default to Assignments (the entry point for most workflows).
+    const [activeTab, setActiveTab] = useState<TabId>('assignments');
     const [editingSize, setEditingSize] = useState<ISizeTemplate | null>(null);
     const [localSize, setLocalSize] = useState<ISizeTemplate | null>(null);
     const [editingColor, setEditingColor] = useState<IColorTemplate | null>(null);

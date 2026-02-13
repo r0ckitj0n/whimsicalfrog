@@ -39,7 +39,8 @@ export const InventoryManager: React.FC = () => {
         if (res.success) {
             refresh();
         } else {
-            if (window.WFToast) window.WFToast.error(res.error || 'Update failed');
+            // Bubble up so the caller can show an error state/toast.
+            throw new Error(res.error || 'Update failed');
         }
     };
 

@@ -69,7 +69,8 @@ export const MODAL_TITLES: Record<string, string | TabTitles> = {
     [ADMIN_SECTION.ACTION_ICONS]: 'Icon Buttons',
     [ADMIN_SECTION.CSS_RULES]: 'CSS Override Rules',
     [ADMIN_SECTION.DB_STATUS]: 'DB Status Dashboard',
-    [ADMIN_SECTION.DB_QUERY_CONSOLE]: 'DB Query Console'
+    [ADMIN_SECTION.DB_QUERY_CONSOLE]: 'DB Query Console',
+    [ADMIN_SECTION.DB_MIGRATIONS_AUDIT]: 'DB Migrations Audit'
 };
 
 /**

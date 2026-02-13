@@ -73,6 +73,7 @@ class AreaMappingSignHelper
                     "UPDATE area_mappings SET content_image = ?, link_image = ? WHERE id = ? LIMIT 1",
                     [$imageUrl, $imageUrl, $mappingId]
                 );
+                $existing['is_active'] = 1;
             }
             return $existing;
         }
@@ -118,7 +119,7 @@ class AreaMappingSignHelper
         }
         $roomNumber = AreaMappingFetchHelper::normalizeRoomNumber($roomNumber);
         $rows = Database::queryAll(
-            "SELECT id, mapping_id, room_number, image_url, png_url, webp_url, source, is_active, created_at\n             FROM shortcut_sign_assets\n             WHERE mapping_id = ? AND room_number = ?\n             ORDER BY created_at DESC, id DESC",
+            "SELECT id, mapping_id, room_number, image_url, png_url, webp_url, source, CAST(is_active AS UNSIGNED) AS is_active, created_at\n             FROM shortcut_sign_assets\n             WHERE mapping_id = ? AND room_number = ?\n             ORDER BY created_at DESC, id DESC",
             [$mappingId, $roomNumber]
         );
         if (is_array($rows) && count($rows) > 0) {
@@ -143,7 +144,7 @@ class AreaMappingSignHelper
         }
 
         return Database::queryAll(
-            "SELECT id, mapping_id, room_number, image_url, png_url, webp_url, source, is_active, created_at\n             FROM shortcut_sign_assets\n             WHERE mapping_id = ? AND room_number = ?\n             ORDER BY created_at DESC, id DESC",
+            "SELECT id, mapping_id, room_number, image_url, png_url, webp_url, source, CAST(is_active AS UNSIGNED) AS is_active, created_at\n             FROM shortcut_sign_assets\n             WHERE mapping_id = ? AND room_number = ?\n             ORDER BY created_at DESC, id DESC",
             [$mappingId, $roomNumber]
         );
     }

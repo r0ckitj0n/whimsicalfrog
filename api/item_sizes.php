@@ -11,6 +11,7 @@ require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/../includes/item_sizes/manager.php';
+require_once __DIR__ . '/../includes/item_sizes/stock_tools.php';
 
 function wf_sizes_is_admin(): bool
 {
@@ -34,7 +35,10 @@ try {
         WF_Constants::ACTION_GET_ALL_SIZES,
         WF_Constants::ACTION_ADD_SIZE,
         WF_Constants::ACTION_UPDATE_SIZE,
-        WF_Constants::ACTION_DELETE_SIZE
+        WF_Constants::ACTION_DELETE_SIZE,
+        WF_Constants::ACTION_SYNC_STOCK,
+        WF_Constants::ACTION_DISTRIBUTE_GENERAL_STOCK_EVENLY,
+        WF_Constants::ACTION_ENSURE_COLOR_SIZES,
     ];
     if (!in_array($action, $allowedActions, true)) {
         Response::error('Invalid action', null, 400);
@@ -74,6 +78,28 @@ try {
             Database::execute("DELETE FROM item_sizes WHERE id = ?", [$id]);
             if (!empty($info['color_id'])) syncColorStockWithSizes(Database::getInstance(), $info['color_id']);
             Response::updated(['new_total_stock' => syncTotalStockWithSizes(Database::getInstance(), $info['item_sku'])]);
+            break;
+
+        case WF_Constants::ACTION_SYNC_STOCK:
+            if (!$isAdmin) Response::forbidden();
+            $sku = (string)($input['item_sku'] ?? ($_GET['item_sku'] ?? ''));
+            if ($sku === '') throw new Exception('SKU required');
+            Response::updated(['new_total_stock' => wf_item_sizes_sync_stock(Database::getInstance(), $sku)]);
+            break;
+
+        case WF_Constants::ACTION_DISTRIBUTE_GENERAL_STOCK_EVENLY:
+            if (!$isAdmin) Response::forbidden();
+            $sku = (string)($input['item_sku'] ?? ($_GET['item_sku'] ?? ''));
+            if ($sku === '') throw new Exception('SKU required');
+            Response::updated(['new_total_stock' => wf_item_sizes_distribute_evenly(Database::getInstance(), $sku)]);
+            break;
+
+        case WF_Constants::ACTION_ENSURE_COLOR_SIZES:
+            if (!$isAdmin) Response::forbidden();
+            $sku = (string)($input['item_sku'] ?? ($_GET['item_sku'] ?? ''));
+            if ($sku === '') throw new Exception('SKU required');
+            $res = wf_item_sizes_ensure_color_sizes(Database::getInstance(), $sku);
+            Response::updated($res);
             break;
 
         default:

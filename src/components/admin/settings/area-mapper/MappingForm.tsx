@@ -38,11 +38,11 @@ export const MappingForm: React.FC<MappingFormProps> = ({
     isGeneratingImage
 }) => {
     const assets = (mapping.shortcut_images || []) as IShortcutSignAsset[];
-    const activeAsset = assets.find(a => a.is_active === 1) || null;
+    const activeAsset = assets.find(a => Number(a.is_active) === 1) || null;
     const [selectedAssetId, setSelectedAssetId] = React.useState<number>(activeAsset?.id || assets[0]?.id || 0);
 
     React.useEffect(() => {
-        const nextActive = assets.find(a => a.is_active === 1) || assets[0] || null;
+        const nextActive = assets.find(a => Number(a.is_active) === 1) || assets[0] || null;
         setSelectedAssetId(prev => {
             if (prev && assets.some(a => a.id === prev)) return prev;
             return nextActive?.id || 0;
@@ -245,7 +245,7 @@ export const MappingForm: React.FC<MappingFormProps> = ({
                                         type="button"
                                         className="btn btn-primary px-2 py-1 text-[9px] font-black uppercase tracking-widest disabled:opacity-60"
                                         onClick={() => selectedAsset && void onDeploySavedImage(selectedAsset.id)}
-                                        disabled={!selectedAsset || selectedAsset.is_active === 1}
+                                        disabled={!selectedAsset || Number(selectedAsset.is_active) === 1}
                                     >
                                         Deploy
                                     </button>
@@ -269,10 +269,10 @@ export const MappingForm: React.FC<MappingFormProps> = ({
                             <div className="max-h-44 overflow-y-auto pr-1">
                                 {assets.length > 0 ? (
                                     <div className="grid grid-cols-4 gap-2">
-                                        {assets.map((asset) => {
-                                            const isActive = asset.is_active === 1;
-                                            const isSelected = asset.id === selectedAssetId;
-                                            return (
+                                    {assets.map((asset) => {
+                                        const isActive = Number(asset.is_active) === 1;
+                                        const isSelected = asset.id === selectedAssetId;
+                                        return (
                                                 <button
                                                     key={asset.id}
                                                     type="button"

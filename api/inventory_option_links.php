@@ -22,10 +22,36 @@ require_once __DIR__ . '/../includes/auth_helper.php';
 
 AuthHelper::requireAdmin();
 
+/**
+ * The inventory option links queries reference the `materials` table for labels.
+ * On some environments this table may not exist yet if the Materials admin UI
+ * (api/materials.php) hasn't been hit. Ensure it exists here to avoid HTTP 500s.
+ *
+ * Keep this schema aligned with api/materials.php.
+ */
+function ensure_materials_table(PDO $db): void
+{
+    $sql = <<<SQL
+CREATE TABLE IF NOT EXISTS materials (
+  id INT NOT NULL AUTO_INCREMENT,
+  material_name VARCHAR(128) NOT NULL,
+  description TEXT NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uniq_material_name (material_name),
+  KEY idx_active_sort (is_active, sort_order, material_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+SQL;
+    $db->exec($sql);
+}
+
 function ensure_inventory_option_links_table(PDO $db): void
 {
     $sql = <<<SQL
-CREATE TABLE IF NOT EXISTS inventory_option_links (
+	CREATE TABLE IF NOT EXISTS inventory_option_links (
   id INT NOT NULL AUTO_INCREMENT,
   option_type VARCHAR(32) NOT NULL,
   option_id INT NOT NULL,
@@ -74,6 +100,7 @@ function normalize_applies_to_type(string $t): string
 
 try {
     $db = Database::getInstance();
+    ensure_materials_table($db);
     ensure_inventory_option_links_table($db);
 
     $input = json_decode(file_get_contents('php://input'), true) ?? [];

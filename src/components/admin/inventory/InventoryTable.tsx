@@ -44,7 +44,8 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 await onUpdate(sku, { [field]: value });
                 if (window.WFToast) window.WFToast.success(`${field.replace('_', ' ')} updated successfully`);
             } catch (err) {
-                if (window.WFToast) window.WFToast.error(`Failed to update ${field}`);
+                const msg = err instanceof Error && err.message ? err.message : `Failed to update ${field}`;
+                if (window.WFToast) window.WFToast.error(msg);
             }
         }
         setEditingCell(null);

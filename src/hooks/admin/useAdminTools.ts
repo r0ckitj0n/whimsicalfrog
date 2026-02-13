@@ -19,6 +19,7 @@ export const useAdminTools = () => {
                 { name: 'Cron Job Manager', inline_modal: 'cron-manager', icon: '⏱️', desc: 'Manage scheduled background tasks.', tooltip: 'Poke the background gnomes.' },
                 { name: 'DB Query Console', inline_modal: 'db-query-console', icon: '💻', desc: 'Interactive SQL console for diagnostics.', tooltip: 'Play with fire. Try not to burn the house down.' },
                 { name: 'DB Status Dashboard', inline_modal: 'db-status', icon: '📊', desc: 'Current database health and rule counts.', tooltip: 'Checking if the foundation is made of sand.' },
+                { name: 'DB Migrations Audit', inline_modal: 'db-migrations-audit', icon: '🧱', desc: 'Report missing DB tables/columns expected by this build.', tooltip: 'Catch dev vs live drift before it bites.' },
                 { name: 'Session Viewer', inline_modal: 'session-viewer', icon: '👤', desc: 'Inspect current session and auth cookies.', tooltip: 'Stalk your guests (metaphorically).' },
                 { name: 'Site Maintenance', inline_modal: 'site-maintenance', icon: '🛡️', desc: 'Backups, database repair, and system configuration.', tooltip: 'Duct tape and WD-40 for your website.' },
                 { name: 'System Secrets', inline_modal: 'secrets', icon: '🔑', desc: 'Manage API keys and environment variables.', tooltip: "Shhh. Don't tell anyone." }

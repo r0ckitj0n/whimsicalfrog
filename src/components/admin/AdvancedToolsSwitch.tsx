@@ -11,6 +11,7 @@ const SiteMaintenance = lazy(() => import('./settings/SiteMaintenance.js').then(
 const ShoppingCartSettings = lazy(() => import('./settings/ShoppingCartSettings.js').then(m => ({ default: m.ShoppingCartSettings })));
 const DbStatus = lazy(() => import('./settings/DbStatus.js').then(m => ({ default: m.DbStatus })));
 const DbQueryConsole = lazy(() => import('./settings/DbQueryConsole.js').then(m => ({ default: m.DbQueryConsole })));
+const DbMigrationsAudit = lazy(() => import('./settings/DbMigrationsAudit.js').then(m => ({ default: m.DbMigrationsAudit })));
 const InventoryAudit = lazy(() => import('./settings/InventoryArchive.js').then(m => ({ default: m.InventoryArchive })));
 const CronManager = lazy(() => import('./settings/CronManager.js').then(m => ({ default: m.CronManager })));
 const SessionViewer = lazy(() => import('./settings/SessionViewer.js').then(m => ({ default: m.SessionViewer })));
@@ -114,6 +115,13 @@ export const AdvancedToolsSwitch: React.FC<AdvancedToolsSwitchProps> = ({
             {section === ADMIN_SECTION.DB_QUERY_CONSOLE && createPortal(
                 <div id="db-query-console-react-root">
                     <DbQueryConsole onClose={backToAdvancedTools} title={modalTitle} />
+                </div>,
+                document.body
+            )}
+
+            {section === ADMIN_SECTION.DB_MIGRATIONS_AUDIT && createPortal(
+                <div id="db-migrations-audit-react-root">
+                    <DbMigrationsAudit onClose={backToAdvancedTools} title={modalTitle} />
                 </div>,
                 document.body
             )}

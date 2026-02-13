@@ -47,7 +47,8 @@ export const ADMIN_SECTION = {
     SIZING_TOOLS: 'sizing-tools',
     MARKETING_CHECK: 'marketing-check',
     ADDRESS_CHECK: 'address-check',
-    CSS_CATALOG: 'css-catalog'
+    CSS_CATALOG: 'css-catalog',
+    DB_MIGRATIONS_AUDIT: 'db-migrations-audit'
 } as const;
 
 export type AdminSection = typeof ADMIN_SECTION[keyof typeof ADMIN_SECTION];

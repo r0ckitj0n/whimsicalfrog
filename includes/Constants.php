@@ -82,6 +82,9 @@ class WF_Constants
     const ACTION_ADD_SIZE = 'add_size';
     const ACTION_UPDATE_SIZE = 'update_size';
     const ACTION_DELETE_SIZE = 'delete_size';
+    const ACTION_SYNC_STOCK = 'sync_stock';
+    const ACTION_DISTRIBUTE_GENERAL_STOCK_EVENLY = 'distribute_general_stock_evenly';
+    const ACTION_ENSURE_COLOR_SIZES = 'ensure_color_sizes';
     const ACTION_GET_COLORS = 'get_colors';
     const ACTION_GET_ALL_COLORS = 'get_all_colors';
     const ACTION_ADD_COLOR = 'add_color';

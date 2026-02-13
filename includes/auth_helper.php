@@ -23,16 +23,35 @@ class AuthHelper
      */
     public static function isAdmin(): bool
     {
-        // Initialize session for session-based authentication
-        if (class_exists('SessionManager')) {
-            SessionManager::init();
+        // Fast-path: if a session is already active, do not re-init (avoids session lock churn).
+        if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['user'])) {
+            $userData = $_SESSION['user'];
+            if (is_string($userData)) {
+                $decoded = json_decode($userData, true);
+                if (is_array($decoded)) $userData = $decoded;
+            }
+            if (is_array($userData)) {
+                $role = strtolower(trim((string) ($userData['role'] ?? '')));
+                return in_array($role, [
+                    'admin',
+                    'superadmin',
+                    'devops',
+                    'administrator',
+                ], true);
+            }
         }
 
-        if (isAdmin()) {
-            return true;
+        // Session-based auth (may block if another request is holding the lock).
+        try {
+            if (class_exists('SessionManager')) {
+                SessionManager::init();
+            }
+        } catch (\Throwable $_ignored) {
+            // If session cannot be established, treat as non-admin.
+            return false;
         }
 
-        return false;
+        return isAdmin();
     }
 
     /**
@@ -43,16 +62,6 @@ class AuthHelper
      */
     public static function requireAdmin(int $httpCode = 403, string $message = 'Admin access required'): void
     {
-        // Initialize session to access user data (guarded for environments without SessionManager)
-        try {
-            if (class_exists('SessionManager')) {
-                SessionManager::init();
-            } elseif (session_status() === PHP_SESSION_NONE) {
-                @session_start();
-            }
-        } catch (\Throwable $____) {
-            // Non-fatal: proceed to auth check
-        }
         if (!self::isAdmin()) {
             if (class_exists('Response')) {
                 // Pass httpCode as third argument to set correct HTTP status code
@@ -64,6 +73,13 @@ class AuthHelper
                 echo json_encode(['success' => false, 'error' => $message]);
                 exit();
             }
+        }
+
+        // IMPORTANT: Release the PHP session lock ASAP after auth checks.
+        // Many API endpoints do not need to write to the session, but long-running requests
+        // (AI calls, large queries) can otherwise block concurrent requests and trigger 30s timeouts.
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            @session_write_close();
         }
     }
 

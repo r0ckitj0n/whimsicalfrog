@@ -11,6 +11,37 @@ class InventoryHelper
 {
     /** @var bool */
     private static $archiveColumnsEnsured = false;
+    /** @var array<string,bool>|null */
+    private static $itemsColumns = null;
+
+    private static function getItemsColumns(): array
+    {
+        if (is_array(self::$itemsColumns)) {
+            return self::$itemsColumns;
+        }
+
+        try {
+            $columns = Database::queryAll('SHOW COLUMNS FROM items');
+        } catch (\Throwable $e) {
+            error_log('[InventoryHelper] Unable to inspect items columns: ' . $e->getMessage());
+            self::$itemsColumns = [];
+            return self::$itemsColumns;
+        }
+
+        $existing = [];
+        foreach ($columns as $column) {
+            if (!isset($column['Field'])) continue;
+            $existing[strtolower((string) $column['Field'])] = true;
+        }
+        self::$itemsColumns = $existing;
+        return self::$itemsColumns;
+    }
+
+    private static function hasItemColumn(string $name): bool
+    {
+        $cols = self::getItemsColumns();
+        return isset($cols[strtolower($name)]);
+    }
 
     /**
      * Ensure the items table contains the columns required for archival operations.
@@ -154,6 +185,15 @@ class InventoryHelper
         }
 
         $prefix = $alias !== '' ? "$alias." : '';
+        if (!self::hasItemColumn('is_archived')) {
+            // If the archive flag doesn't exist yet (or cannot be inspected), avoid SQL errors.
+            // Treat "archived" as empty result set; treat "active" as no extra filter.
+            if ($status === WF_Constants::ITEM_STATUS_ARCHIVED) {
+                $where_conditions[] = "1=0";
+            }
+            return;
+        }
+
         if ($status === WF_Constants::ITEM_STATUS_ARCHIVED) {
             $where_conditions[] = "{$prefix}is_archived = 1";
         } else {
@@ -242,19 +282,29 @@ class InventoryHelper
             $queryParams[':category'] = $filters['category'];
         }
         if (!empty($filters['stock'])) {
-            $stockCondition = match ($filters['stock']) {
-                'low' => "i.stock_quantity <= i.reorder_point AND i.stock_quantity > 0",
-                'out' => "i.stock_quantity = 0",
-                'in' => "i.stock_quantity > 0",
-                default => "1=1"
-            };
+            $stockValue = (string) $filters['stock'];
+            if ($stockValue === 'low') {
+                $stockCondition = "i.stock_quantity <= i.reorder_point AND i.stock_quantity > 0";
+            } elseif ($stockValue === 'out') {
+                $stockCondition = "i.stock_quantity = 0";
+            } elseif ($stockValue === 'in') {
+                $stockCondition = "i.stock_quantity > 0";
+            } else {
+                $stockCondition = "1=1";
+            }
             $where_conditions[] = $stockCondition;
         }
+
+        $archiveSelectParts = [];
+        $archiveSelectParts[] = self::hasItemColumn('is_archived') ? 'i.is_archived' : '0 AS is_archived';
+        $archiveSelectParts[] = self::hasItemColumn('archived_at') ? 'i.archived_at' : 'NULL AS archived_at';
+        $archiveSelectParts[] = self::hasItemColumn('archived_by') ? 'i.archived_by' : 'NULL AS archived_by';
+        $archiveSelectSql = implode(', ', $archiveSelectParts);
 
         $sql = "SELECT i.sku, i.name, COALESCE(cat.name, i.category) AS category, i.description,
                        i.status, i.cost_price, i.retail_price, i.stock_quantity, i.reorder_point,
                        i.weight_oz, i.package_length_in, i.package_width_in, i.package_height_in,
-                       i.image_url, i.category_id, i.is_active, i.is_archived, i.archived_at, i.archived_by,
+                       i.image_url, i.category_id, i.is_active, {$archiveSelectSql},
                        COALESCE(img_count.image_count, 0) as image_count 
                 FROM items i 
                 LEFT JOIN categories cat ON i.category_id = cat.id

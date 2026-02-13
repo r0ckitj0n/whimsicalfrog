@@ -4,9 +4,12 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/../includes/inventory_helper.php';
 
 try {
+    AuthHelper::requireAdmin();
+
     // Create database connection using config
     try {
         Database::getInstance();

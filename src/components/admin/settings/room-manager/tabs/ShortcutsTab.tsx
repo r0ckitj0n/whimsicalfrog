@@ -14,7 +14,7 @@ interface ShortcutsTabProps {
     onContentSave: (e?: React.FormEvent) => Promise<void>;
     onContentUpload: (e: React.ChangeEvent<HTMLInputElement>, field: 'content_image' | 'link_image') => Promise<void>;
     onGenerateContentImage: () => Promise<void>;
-    onPreviewContentImage: (url: string) => void;
+    onPreviewContentImage: (mapping: IAreaMapping, url: string) => void;
     onContentEdit: (mapping: IAreaMapping) => void;
     onContentConvert: (area: string, sku: string) => Promise<void>;
     onToggleMappingActive: (id: number, currentActive: boolean | number) => Promise<void>;
@@ -52,7 +52,11 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
                         onSubmit={onContentSave}
                         onUpload={onContentUpload}
                         onGenerateImage={onGenerateContentImage}
-                        onPreviewImage={onPreviewContentImage}
+                        onPreviewImage={(url) => {
+                            if (newMapping.id) {
+                                onPreviewContentImage(newMapping as IAreaMapping, url);
+                            }
+                        }}
                         isGeneratingImage={isGeneratingImage}
                         isLoading={mappings.isLoading}
                     />
@@ -83,6 +87,14 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
                             }
                         }}
                         onConvert={onContentConvert}
+                        onPreviewImage={(mapping: IAreaMapping) => {
+                            const imageUrl = String(mapping.content_image || mapping.image_url || mapping.link_image || '').trim();
+                            if (!imageUrl) {
+                                window.WFToast?.error?.('No image available for this shortcut');
+                                return;
+                            }
+                            onPreviewContentImage(mapping, imageUrl);
+                        }}
                     />
                 </div>
             </div>

@@ -5,6 +5,7 @@ export interface IGenerateShortcutImageRequest {
     size?: '1024x1024';
     provider?: 'openai';
     model?: string;
+    mapping_id?: number;
 }
 
 export interface IGenerateShortcutImageResult {
@@ -31,4 +32,64 @@ export interface IGenerateShortcutImageResponse {
     model?: string;
     error?: string;
     message?: string;
+}
+
+export interface IShortcutSignAsset {
+    id: number;
+    mapping_id: number;
+    room_number: string;
+    image_url: string;
+    png_url?: string | null;
+    webp_url?: string | null;
+    source: string;
+    is_active: 0 | 1;
+    created_at?: string;
+}
+
+export interface IShortcutSignAssetsResponse {
+    success: boolean;
+    data?: {
+        assets: IShortcutSignAsset[];
+    };
+    assets?: IShortcutSignAsset[];
+    message?: string;
+    error?: string;
+}
+
+export interface IShortcutSignAssetActionResponse {
+    success: boolean;
+    asset?: IShortcutSignAsset;
+    assets?: IShortcutSignAsset[];
+    message?: string;
+    error?: string;
+}
+
+export interface IShortcutSignAsset {
+    id: number;
+    mapping_id: number;
+    room_number: string;
+    image_url: string;
+    png_url?: string | null;
+    webp_url?: string | null;
+    source: string;
+    is_active: 0 | 1;
+    created_at?: string;
+}
+
+export interface IShortcutSignAssetsResponse {
+    success: boolean;
+    data?: {
+        assets: IShortcutSignAsset[];
+    };
+    assets?: IShortcutSignAsset[];
+    message?: string;
+    error?: string;
+}
+
+export interface IShortcutSignAssetActionResponse {
+    success: boolean;
+    asset?: IShortcutSignAsset;
+    assets?: IShortcutSignAsset[];
+    message?: string;
+    error?: string;
 }

@@ -87,6 +87,7 @@ class AreaMappingUploadHelper
         $roomNumber = trim((string) ($input['room_number'] ?? $input['room'] ?? ''));
         $targetRaw = trim((string) ($input['content_target'] ?? ''));
         $linkLabel = trim((string) ($input['link_label'] ?? ''));
+        $mappingId = (int) ($input['mapping_id'] ?? 0);
         $size = trim((string) ($input['size'] ?? '1024x1024'));
         $provider = strtolower(trim((string) ($input['provider'] ?? 'openai')));
 
@@ -208,7 +209,7 @@ class AreaMappingUploadHelper
         }
 
         $pngUrl = '/' . ltrim($pngRel, '/');
-        return [
+        $result = [
             'image_url' => $webpUrl ?: $pngUrl,
             'png_url' => $pngUrl,
             'webp_url' => $webpUrl,
@@ -218,6 +219,25 @@ class AreaMappingUploadHelper
             'provider' => 'openai',
             'model' => $model
         ];
+
+        if ($mappingId > 0) {
+            try {
+                require_once __DIR__ . '/AreaMappingSignHelper.php';
+                AreaMappingSignHelper::recordAssetForMapping(
+                    $mappingId,
+                    $roomNumber,
+                    $result['image_url'],
+                    $result['png_url'] ?? null,
+                    $result['webp_url'] ?? null,
+                    'ai_generate',
+                    true
+                );
+            } catch (Throwable $e) {
+                error_log('shortcut sign asset record failed: ' . $e->getMessage());
+            }
+        }
+
+        return $result;
     }
 
     private static function resolveTargetRoomNumber(string $contentTarget): string

@@ -1,6 +1,8 @@
 <?php
 // includes/area_mappings/helpers/AreaMappingActionHelper.php
 
+require_once __DIR__ . '/AreaMappingSignHelper.php';
+
 class AreaMappingActionHelper
 {
     /**
@@ -60,6 +62,7 @@ class AreaMappingActionHelper
                  WHERE id = ?",
                 [$mappingType, $item_sku, $category_id, $linkUrl, $linkLabel, $linkIcon, $linkImage, $contentTarget, $contentImage, $effectiveOrder, $existing['id']]
             );
+            self::maybeRecordSignAsset((int) $existing['id'], $room_number, $contentImage, $linkImage, 'mapping_update');
             return ['message' => 'Area mapping updated successfully', 'id' => $existing['id']];
         } else {
             if (!$hasDisplayOrder || $displayOrder <= 0) {
@@ -71,7 +74,9 @@ class AreaMappingActionHelper
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
                 [$room_number, $areaSelector, $mappingType, $item_sku, $category_id, $linkUrl, $linkLabel, $linkIcon, $linkImage, $contentTarget, $contentImage, $displayOrder]
             );
-            return ['message' => 'Area mapping added successfully', 'id' => Database::lastInsertId()];
+            $newId = (int) Database::lastInsertId();
+            self::maybeRecordSignAsset($newId, $room_number, $contentImage, $linkImage, 'mapping_create');
+            return ['message' => 'Area mapping added successfully', 'id' => $newId];
         }
     }
 
@@ -121,6 +126,22 @@ class AreaMappingActionHelper
 
         $values[] = $id;
         $result = Database::execute("UPDATE area_mappings SET " . implode(', ', $updateFields) . " WHERE id = ?", $values);
+        if ($result > 0) {
+            $effectiveRoom = $room_number;
+            if ($effectiveRoom === null || $effectiveRoom === '') {
+                $row = Database::queryOne("SELECT room_number FROM area_mappings WHERE id = ? LIMIT 1", [$id]);
+                $effectiveRoom = (string) ($row['room_number'] ?? '');
+            }
+            if ($effectiveRoom !== '') {
+                self::maybeRecordSignAsset(
+                    (int) $id,
+                    $effectiveRoom,
+                    (string) ($input['content_image'] ?? ''),
+                    (string) ($input['link_image'] ?? ''),
+                    'mapping_update'
+                );
+            }
+        }
 
         return $result > 0
             ? ['success' => true, 'message' => 'Area mapping updated successfully']
@@ -251,5 +272,21 @@ class AreaMappingActionHelper
         }
 
         return '.area-1';
+    }
+
+    private static function maybeRecordSignAsset(int $mappingId, string $roomNumber, ?string $contentImage, ?string $linkImage, string $source): void
+    {
+        $imageUrl = trim((string) ($contentImage ?: $linkImage ?: ''));
+        if ($imageUrl === '') {
+            return;
+        }
+        if (!AreaMappingSignHelper::isSignImageUrl($imageUrl)) {
+            return;
+        }
+        try {
+            AreaMappingSignHelper::recordAssetForMapping($mappingId, $roomNumber, $imageUrl, null, null, $source, true);
+        } catch (Exception $e) {
+            error_log('shortcut sign asset record failed: ' . $e->getMessage());
+        }
     }
 }

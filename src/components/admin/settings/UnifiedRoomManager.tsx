@@ -11,6 +11,7 @@ import { CategoriesTab } from './room-manager/tabs/CategoriesTab.js';
 import { BoundariesTab } from './room-manager/tabs/BoundariesTab.js';
 import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 import { useAIImageEdit } from '../../../hooks/admin/useAIImageEdit.js';
+import { useModalContext } from '../../../context/ModalContext.js';
 
 interface UnifiedRoomManagerProps {
     onClose?: () => void;
@@ -80,6 +81,8 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
     } = useUnifiedRoomManager({ onClose, initialTab });
     const [imageTweakPrompt, setImageTweakPrompt] = React.useState('');
     const { isSubmitting: isSubmittingImageTweak, submitImageEdit } = useAIImageEdit();
+    const { confirm } = useModalContext();
+    const [isManagingShortcutImages, setIsManagingShortcutImages] = React.useState(false);
 
     // UI Wrappers to sync local state with roomForm
     const handleBgUrlChange = (val: string) => { setBgUrl(val); if (selectedRoom) setRoomForm(prev => ({ ...prev, background_url: val })); };
@@ -111,7 +114,8 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                 source_image_url: String(preview_image.source_shortcut_image_url || preview_image.url),
                 instructions: effectiveInstructions,
                 room_number: String(preview_image.room_number || selectedRoom || ''),
-                source_background_id: Number(preview_image.source_background_id || 0)
+                source_background_id: Number(preview_image.source_background_id || 0),
+                shortcut_mapping_id: Number(preview_image.shortcut_mapping_id || 0) || undefined
             });
 
             if (targetType === 'background') {
@@ -138,11 +142,29 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                     }) : prev);
                 }
             } else {
-                const editedSignUrl = String(res?.data?.shortcut_sign?.image_url || '').trim();
+                const signPayload = res?.data?.shortcut_sign || (res as unknown as { shortcut_sign?: { image_url?: string; name?: string } }).shortcut_sign;
+                const editedSignUrl = String(signPayload?.image_url || '').trim();
                 if (editedSignUrl === '') {
                     throw new Error('AI edit did not return a sign image');
                 }
 
+                const mappingId = Number(preview_image.shortcut_mapping_id || 0);
+                if (mappingId && selectedRoom) {
+                    const assets = await mappings.fetchShortcutSignAssets(mappingId, selectedRoom);
+                    setNewMapping(prev => ({
+                        ...prev,
+                        content_image: editedSignUrl,
+                        link_image: editedSignUrl,
+                        shortcut_images: assets
+                    }));
+                    setPreviewImage(prev => prev ? ({
+                        ...prev,
+                        url: editedSignUrl,
+                        source_shortcut_image_url: editedSignUrl,
+                        name: String(signPayload?.name || prev.name || 'Edited shortcut sign'),
+                        shortcut_images: assets
+                    }) : prev);
+                } else {
                 setNewMapping(prev => ({
                     ...prev,
                     content_image: editedSignUrl,
@@ -152,8 +174,9 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                     ...prev,
                     url: editedSignUrl,
                     source_shortcut_image_url: editedSignUrl,
-                    name: String(res?.data?.shortcut_sign?.name || prev.name || 'Edited shortcut sign')
+                    name: String(signPayload?.name || prev.name || 'Edited shortcut sign')
                 }) : prev);
+                }
                 window.WFToast?.success?.('AI-edited shortcut sign applied');
             }
 
@@ -165,6 +188,79 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
             const message = err instanceof Error ? err.message : 'Failed to submit image tweak';
             if (message === 'AI image edit canceled') return;
             window.WFToast?.error?.(message);
+        }
+    };
+
+    const handleDeployShortcutSign = async (assetId: number) => {
+        if (!preview_image?.shortcut_mapping_id || !selectedRoom) return;
+        setIsManagingShortcutImages(true);
+        try {
+            const ok = await mappings.setShortcutSignActive(preview_image.shortcut_mapping_id, assetId, selectedRoom);
+            if (!ok) {
+                window.WFToast?.error?.('Failed to deploy sign image');
+                return;
+            }
+            const assets = await mappings.fetchShortcutSignAssets(preview_image.shortcut_mapping_id, selectedRoom);
+            const active = assets.find(a => a.is_active === 1) || assets[0];
+            setPreviewImage(prev => prev ? ({
+                ...prev,
+                url: active?.image_url || prev.url,
+                source_shortcut_image_url: active?.image_url || prev.source_shortcut_image_url,
+                shortcut_images: assets
+            }) : prev);
+            setNewMapping(prev => ({
+                ...prev,
+                content_image: active?.image_url || prev.content_image,
+                link_image: active?.image_url || prev.link_image,
+                shortcut_images: assets
+            }));
+            window.WFToast?.success?.('Shortcut sign deployed');
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Failed to deploy sign image';
+            window.WFToast?.error?.(message);
+        } finally {
+            setIsManagingShortcutImages(false);
+        }
+    };
+
+    const handleDeleteShortcutSign = async (assetId: number) => {
+        if (!preview_image?.shortcut_mapping_id || !selectedRoom) return;
+        const confirmed = await confirm({
+            title: 'Delete Sign Image',
+            message: 'Delete this sign image? If it is active, the shortcut will switch to another available image.',
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            confirmStyle: 'danger',
+            iconKey: 'warning'
+        });
+        if (!confirmed) return;
+        setIsManagingShortcutImages(true);
+        try {
+            const ok = await mappings.deleteShortcutSignAsset(preview_image.shortcut_mapping_id, assetId, selectedRoom);
+            if (!ok) {
+                window.WFToast?.error?.('Failed to delete sign image');
+                return;
+            }
+            const assets = await mappings.fetchShortcutSignAssets(preview_image.shortcut_mapping_id, selectedRoom);
+            const active = assets.find(a => a.is_active === 1) || assets[0];
+            setPreviewImage(prev => prev ? ({
+                ...prev,
+                url: active?.image_url || '',
+                source_shortcut_image_url: active?.image_url || '',
+                shortcut_images: assets
+            }) : prev);
+            setNewMapping(prev => ({
+                ...prev,
+                content_image: active?.image_url || '',
+                link_image: active?.image_url || '',
+                shortcut_images: assets
+            }));
+            window.WFToast?.success?.('Sign image deleted');
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Failed to delete sign image';
+            window.WFToast?.error?.(message);
+        } finally {
+            setIsManagingShortcutImages(false);
         }
     };
 
@@ -272,13 +368,22 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                                     onContentSave={handleContentSave}
                                     onContentUpload={handleContentUpload}
                                     onGenerateContentImage={shortcuts.handleGenerateContentImage}
-                                    onPreviewContentImage={(url) => setPreviewImage({
-                                        url,
-                                        name: 'Shortcut Sign',
-                                        target_type: 'shortcut_sign',
-                                        room_number: selectedRoom,
-                                        source_shortcut_image_url: url
-                                    })}
+                                    onPreviewContentImage={async (mapping, url) => {
+                                        const mappingId = Number(mapping.id || 0);
+                                        let assets = mapping.shortcut_images || [];
+                                        if (mappingId && assets.length === 0) {
+                                            assets = await mappings.fetchShortcutSignAssets(mappingId, selectedRoom);
+                                        }
+                                        setPreviewImage({
+                                            url,
+                                            name: mapping.link_label || 'Shortcut Sign',
+                                            target_type: 'shortcut_sign',
+                                            room_number: selectedRoom,
+                                            source_shortcut_image_url: url,
+                                            shortcut_mapping_id: mappingId || undefined,
+                                            shortcut_images: assets
+                                        });
+                                    }}
                                     onContentEdit={handleContentEdit}
                                     onContentConvert={handleContentConvert}
                                     onToggleMappingActive={shortcuts.handleToggleMappingActive}
@@ -381,7 +486,71 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                                 data-help-id="common-close"
                             />
                         </div>
-                        <div className="flex-1 min-h-0 p-4 bg-slate-100/60 overflow-y-auto overflow-x-hidden">
+                        <div className="flex-1 min-h-0 p-4 bg-slate-100/60 overflow-y-auto overflow-x-hidden space-y-4">
+                            {preview_image.target_type === 'shortcut_sign' && (
+                                <div className="bg-white rounded-2xl border border-slate-200 p-4">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Shortcut Sign Images</h4>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                            {preview_image.shortcut_images?.length || 0} total
+                                        </span>
+                                    </div>
+                                    {preview_image.shortcut_images && preview_image.shortcut_images.length > 0 ? (
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                            {preview_image.shortcut_images.map(asset => {
+                                                const isActive = asset.is_active === 1;
+                                                return (
+                                                    <div
+                                                        key={asset.id}
+                                                        className={`relative group rounded-xl border-2 ${isActive ? 'border-[var(--brand-primary)] shadow-[0_0_0_2px_rgba(34,197,94,0.15)]' : 'border-slate-200'}`}
+                                                    >
+                                                        <img
+                                                            src={asset.image_url}
+                                                            alt={asset.source || 'Shortcut sign'}
+                                                            className="w-full h-32 object-contain bg-white rounded-lg p-2"
+                                                            loading="lazy"
+                                                        />
+                                                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-xl flex items-center justify-center gap-2">
+                                                            <button
+                                                                type="button"
+                                                                className="admin-action-btn btn-icon--view"
+                                                                onClick={() => setPreviewImage(prev => prev ? ({
+                                                                    ...prev,
+                                                                    url: asset.image_url,
+                                                                    source_shortcut_image_url: asset.image_url
+                                                                }) : prev)}
+                                                                title="View"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-primary px-2 py-1 text-[9px] font-black uppercase tracking-widest"
+                                                                onClick={() => void handleDeployShortcutSign(asset.id)}
+                                                                disabled={isManagingShortcutImages}
+                                                            >
+                                                                Deploy
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="admin-action-btn btn-icon--delete"
+                                                                onClick={() => void handleDeleteShortcutSign(asset.id)}
+                                                                title="Delete"
+                                                                disabled={isManagingShortcutImages}
+                                                            />
+                                                        </div>
+                                                        {isActive && (
+                                                            <div className="absolute top-2 left-2 text-[9px] font-black uppercase tracking-widest text-white bg-[var(--brand-primary)]/90 px-2 py-0.5 rounded-full">
+                                                                Active
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="text-xs text-slate-400 italic">No sign images stored for this shortcut yet.</div>
+                                    )}
+                                </div>
+                            )}
                             <img src={preview_image.url} className="max-w-full h-auto object-contain rounded-2xl mx-auto" />
                         </div>
                     </div>

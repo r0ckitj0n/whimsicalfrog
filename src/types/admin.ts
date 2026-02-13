@@ -1,4 +1,5 @@
 import { MappingType } from '../core/constants.js';
+import type { IShortcutSignAsset } from './room-shortcuts.js';
 
 export interface IDashboardMetrics {
     total_revenue: number;
@@ -82,6 +83,7 @@ export interface IAreaMapping {
     retail_price?: number;
     stock_quantity?: number;
     derived?: boolean;
+    shortcut_images?: IShortcutSignAsset[];
 }
 
 export interface IAdminTool {
@@ -186,5 +188,4 @@ export interface IAutomationPlaybookResponse {
         setting_value: string | IAutomationPlaybook[];
     }>;
 }
-
 

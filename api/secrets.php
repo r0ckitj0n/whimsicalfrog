@@ -11,7 +11,22 @@ require_once __DIR__ . '/../includes/secret_store.php';
 require_once __DIR__ . '/../includes/csrf.php';
 require_once __DIR__ . '/../includes/helpers/SecretsHelper.php';
 
-AuthHelper::requireAdmin();
+// Optional admin token bypass for automated deploys (mirrors api/database_maintenance.php).
+function wf_secrets_token_valid(): bool
+{
+    $input = json_decode(file_get_contents('php://input'), true) ?? [];
+    $provided = $_GET['admin_token'] ?? $_POST['admin_token'] ?? ($input['admin_token'] ?? '');
+    if (!is_string($provided) || $provided === '') {
+        return false;
+    }
+    $expected = getenv('WF_ADMIN_TOKEN') ?: (defined('WF_ADMIN_TOKEN') ? WF_ADMIN_TOKEN : '');
+    return is_string($expected) && $expected !== '' && hash_equals($expected, $provided);
+}
+
+$tokenOk = wf_secrets_token_valid();
+if (!$tokenOk) {
+    AuthHelper::requireAdmin();
+}
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 header('Content-Type: application/json');
@@ -19,7 +34,7 @@ header('Content-Type: application/json');
 try {
     switch ($action) {
         case 'save_batch':
-            if (!csrf_validate('admin_secrets', $_POST['csrf'] ?? $_GET['csrf'] ?? '')) {
+            if (!$tokenOk && !csrf_validate('admin_secrets', $_POST['csrf'] ?? $_GET['csrf'] ?? '')) {
                 Response::error('Invalid CSRF token', null, 400);
             }
             $raw = $_POST['payload'] ?? file_get_contents('php://input');
@@ -35,7 +50,7 @@ try {
             break;
 
         case 'rotate_keys':
-            if (!csrf_validate('admin_secrets', $_POST['csrf'] ?? $_GET['csrf'] ?? '')) {
+            if (!$tokenOk && !csrf_validate('admin_secrets', $_POST['csrf'] ?? $_GET['csrf'] ?? '')) {
                 Response::error('Invalid CSRF token', null, 400);
             }
             Database::getInstance();
@@ -55,7 +70,7 @@ try {
             break;
 
         case 'set':
-            if (!csrf_validate('admin_secrets', $_POST['csrf'] ?? $_GET['csrf'] ?? '')) {
+            if (!$tokenOk && !csrf_validate('admin_secrets', $_POST['csrf'] ?? $_GET['csrf'] ?? '')) {
                 Response::error('Invalid CSRF token', null, 400);
             }
             $key = trim($_POST['key'] ?? '');
@@ -65,7 +80,7 @@ try {
             break;
 
         case 'delete':
-            if (!csrf_validate('admin_secrets', $_POST['csrf'] ?? $_GET['csrf'] ?? '')) {
+            if (!$tokenOk && !csrf_validate('admin_secrets', $_POST['csrf'] ?? $_GET['csrf'] ?? '')) {
                 Response::error('Invalid CSRF token', null, 400);
             }
             $key = trim($_POST['key'] ?? '');

@@ -7,6 +7,7 @@ export interface IAiImageEditRequest {
     item_sku?: string;
     room_number?: string;
     source_background_id?: number;
+    shortcut_mapping_id?: number;
 }
 
 export interface IAiImageEditResponse {
@@ -34,6 +35,8 @@ export interface IAiImageEditResponse {
             image_url: string;
             png_url: string;
             webp_url?: string | null;
+            mapping_id?: number;
+            id?: number;
         };
     };
     error?: string;

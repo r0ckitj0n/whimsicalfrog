@@ -56,7 +56,7 @@ class EmailConfig
                 : (class_exists('BusinessSettings') ? (string) BusinessSettings::get('business_support_email', $be) : (string)$be);
 
             $config = [
-                'smtp_enabled' => ($settings['smtp_enabled'] ?? 'false') === 'true',
+                'smtp_enabled' => in_array(strtolower((string)($settings['smtp_enabled'] ?? 'false')), ['1', 'true', 'yes', 'on'], true),
                 'smtp_host' => $settings['smtp_host'] ?? '',
                 'smtp_port' => (int)($settings['smtp_port'] ?? 587),
                 'smtp_username' => $settings['smtp_username'] ?? '',

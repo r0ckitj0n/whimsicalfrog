@@ -49,6 +49,21 @@ class AreaMappingSchemaHelper
                 UNIQUE KEY uniq_slug (slug)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
+            Database::execute("CREATE TABLE IF NOT EXISTS shortcut_sign_assets (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                mapping_id INT NOT NULL,
+                room_number VARCHAR(50) NOT NULL,
+                image_url TEXT NOT NULL,
+                png_url TEXT NULL,
+                webp_url TEXT NULL,
+                source VARCHAR(40) NOT NULL DEFAULT 'unknown',
+                is_active TINYINT(1) DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_mapping (mapping_id),
+                INDEX idx_room (room_number),
+                INDEX idx_active (is_active)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
         } catch (Exception $e) {
             error_log("AreaMappingSchemaHelper Error: " . $e->getMessage());
             throw $e;
@@ -87,6 +102,16 @@ class AreaMappingSchemaHelper
                 Database::execute("CREATE INDEX idx_active ON area_mappings (is_active)");
             }
             // @reason: Idempotent DDL - column/index may already exist
+        } catch (Exception $e) {
+        }
+
+        try {
+            if (!self::hasColumn('shortcut_sign_assets', 'source')) {
+                Database::execute("ALTER TABLE shortcut_sign_assets ADD COLUMN source VARCHAR(40) NOT NULL DEFAULT 'unknown'");
+            }
+            if (!self::hasColumn('shortcut_sign_assets', 'is_active')) {
+                Database::execute("ALTER TABLE shortcut_sign_assets ADD COLUMN is_active TINYINT(1) DEFAULT 0");
+            }
         } catch (Exception $e) {
         }
 

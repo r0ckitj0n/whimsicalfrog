@@ -16,6 +16,30 @@ class EmailHelper
 {
     private static $emailLogColumns = null;
     private static $emailLogSchemaEnsured = false;
+    private static $emailConfigEnsured = false;
+
+    /**
+     * Ensure EmailConfig is hydrated from BusinessSettings + secrets store.
+     * This is the "single path" for outbound email across the application.
+     */
+    private static function ensureEmailConfig(): void
+    {
+        // Avoid repeated DB work within a request.
+        if (self::$emailConfigEnsured) {
+            return;
+        }
+        self::$emailConfigEnsured = true;
+
+        try {
+            if (class_exists('EmailConfig') && method_exists('EmailConfig', 'createFromBusinessSettings')) {
+                // createFromBusinessSettings reads DB + secret_store internally.
+                EmailConfig::createFromBusinessSettings(null);
+            }
+        } catch (\Throwable $e) {
+            // Non-fatal: callers may fall back to mail() or have config pre-set.
+            error_log('[EmailHelper] ensureEmailConfig failed: ' . $e->getMessage());
+        }
+    }
 
     private static function fetchEmailLogColumnsFromDatabase(): array
     {
@@ -171,6 +195,8 @@ class EmailHelper
     public static function configure($config)
     {
         EmailConfig::configure($config);
+        // If a caller sets config explicitly, avoid re-hydrating unless needed.
+        self::$emailConfigEnsured = true;
     }
 
     /**
@@ -178,6 +204,7 @@ class EmailHelper
      */
     public static function preflightSMTP()
     {
+        self::ensureEmailConfig();
         return SmtpSender::preflight(EmailConfig::getConfig());
     }
 
@@ -186,6 +213,7 @@ class EmailHelper
      */
     public static function send($to, $subject, $body, $options = [])
     {
+        self::ensureEmailConfig();
         $config = EmailConfig::getConfig();
         $options = array_merge([
             'from_email' => $config['from_email'],
@@ -204,6 +232,12 @@ class EmailHelper
 
         try {
             $result = false;
+            // If SMTP is enabled but secrets/config weren't available at first ensure, try once more.
+            if (!empty($config['smtp_enabled']) && (empty($config['smtp_password']) || empty($config['smtp_host']))) {
+                self::$emailConfigEnsured = false;
+                self::ensureEmailConfig();
+                $config = EmailConfig::getConfig();
+            }
             if ($config['smtp_enabled']) {
                 try {
                     $result = SmtpSender::send($to, $subject, $body, $options, $config);

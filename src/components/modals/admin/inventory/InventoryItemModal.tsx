@@ -96,6 +96,8 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
         handlePriceSuggestionUpdated,
         breakdownRefreshTrigger,
         handleBreakdownApplied,
+        syncCostFromBreakdown,
+        syncRetailFromBreakdown,
         isReadOnly,
         isSaving,
         lockedFields,
@@ -178,6 +180,22 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
     });
     const modalIsDirty = isDirty || costBreakdownState.isDirty || priceBreakdownState.isDirty;
     const showSaveAction = isAdding ? hasUploadedImage : modalIsDirty;
+
+    useEffect(() => {
+        if (isReadOnly || isAdding) return;
+        if (!costBreakdownState.isDirty) return;
+        if (Number.isFinite(costBreakdownState.total)) {
+            syncCostFromBreakdown(costBreakdownState.total);
+        }
+    }, [isReadOnly, isAdding, costBreakdownState.isDirty, costBreakdownState.total, syncCostFromBreakdown]);
+
+    useEffect(() => {
+        if (isReadOnly || isAdding) return;
+        if (!priceBreakdownState.isDirty) return;
+        if (Number.isFinite(priceBreakdownState.total)) {
+            syncRetailFromBreakdown(priceBreakdownState.total);
+        }
+    }, [isReadOnly, isAdding, priceBreakdownState.isDirty, priceBreakdownState.total, syncRetailFromBreakdown]);
     const [costTier, setCostTier] = useState('standard');
     const [priceTier, setPriceTier] = useState('standard');
     const [storedMarketingData, setStoredMarketingData] = useState<MarketingData | null>(null);

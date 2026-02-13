@@ -83,9 +83,21 @@ export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHo
         }
     }, [selectedRoom, mappings]);
 
-    const handleContentEdit = useCallback((mapping: IAreaMapping) => {
+    const handleContentEdit = useCallback(async (mapping: IAreaMapping) => {
         setNewMapping(mapping);
-    }, []);
+        const mappingId = Number(mapping.id || 0);
+        if (!mappingId || !selectedRoom) return;
+        try {
+            const assets = await mappings.fetchShortcutSignAssets(mappingId, selectedRoom);
+            setNewMapping(prev => ({
+                ...prev,
+                shortcut_images: assets
+            }));
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Failed to load shortcut sign images';
+            window.WFToast?.error?.(message);
+        }
+    }, [mappings, selectedRoom]);
 
     const handleGenerateContentImage = useCallback(async () => {
         if (!selectedRoom) {
@@ -123,7 +135,8 @@ export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHo
             const generated = await mappings.generateShortcutImage({
                 room_number: selectedRoom,
                 content_target: contentTarget,
-                link_label: String(newMapping.link_label || '').trim()
+                link_label: String(newMapping.link_label || '').trim(),
+                mapping_id: Number(newMapping.id || 0) || undefined
             });
             if (!generated?.image_url) {
                 throw new Error('AI did not return a generated image');
@@ -135,10 +148,18 @@ export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHo
                 content_image: generated.image_url,
                 link_image: generated.image_url
             };
-
             const success = await mappings.saveMapping(mappingToSave);
             if (!success) {
                 throw new Error('Sign was generated, but saving the mapping failed');
+            }
+
+            const mappingId = Number(mappingToSave.id || newMapping.id || 0);
+            if (mappingId) {
+                const assets = await mappings.fetchShortcutSignAssets(mappingId, selectedRoom);
+                setNewMapping(prev => ({
+                    ...prev,
+                    shortcut_images: assets
+                }));
             }
 
             setNewMapping({ mapping_type: 'item', area_selector: '' });

@@ -255,6 +255,9 @@ export interface IAreaMappingsHook {
     deleteMapping: (id: number, room: string) => Promise<boolean>;
     uploadImage: (file: File) => Promise<string | null>;
     generateShortcutImage: (request: import('./room-shortcuts.js').IGenerateShortcutImageRequest) => Promise<import('./room-shortcuts.js').IGenerateShortcutImageResult | null>;
+    fetchShortcutSignAssets: (mappingId: number, room: string) => Promise<import('./room-shortcuts.js').IShortcutSignAsset[]>;
+    setShortcutSignActive: (mappingId: number, assetId: number, room: string) => Promise<boolean>;
+    deleteShortcutSignAsset: (mappingId: number, assetId: number, room: string) => Promise<boolean>;
 }
 
 export interface IRoomMapEditorHook {
@@ -311,6 +314,8 @@ export interface IRoomVisualsHook {
         room_number?: string;
         source_background_id?: number;
         source_shortcut_image_url?: string;
+        shortcut_mapping_id?: number;
+        shortcut_images?: import('./room-shortcuts.js').IShortcutSignAsset[];
     } | null;
     setPreviewImage: React.Dispatch<React.SetStateAction<{
         url: string;
@@ -319,6 +324,8 @@ export interface IRoomVisualsHook {
         room_number?: string;
         source_background_id?: number;
         source_shortcut_image_url?: string;
+        shortcut_mapping_id?: number;
+        shortcut_images?: import('./room-shortcuts.js').IShortcutSignAsset[];
     } | null>>;
     getImageUrl: (bg: { webp_filename?: string; image_filename?: string }) => string;
 }

@@ -15,6 +15,7 @@ require_once __DIR__ . '/../includes/area_mappings/helpers/AreaMappingFetchHelpe
 require_once __DIR__ . '/../includes/area_mappings/helpers/AreaMappingActionHelper.php';
 require_once __DIR__ . '/../includes/area_mappings/helpers/AreaMappingSitemapHelper.php';
 require_once __DIR__ . '/../includes/area_mappings/helpers/AreaMappingUploadHelper.php';
+require_once __DIR__ . '/../includes/area_mappings/helpers/AreaMappingSignHelper.php';
 
 // Ensure JSON content-type
 if (!headers_sent()) {
@@ -44,6 +45,7 @@ $allowedGetActions = [
     'get_live_view',
     'get_sitemap_entries',
     'door_sign_destinations',
+    'get_shortcut_sign_assets',
 ];
 $allowedPostActions = [
     'upload_content_image',
@@ -52,6 +54,8 @@ $allowedPostActions = [
     'update_mapping',
     'delete_mapping',
     'swap',
+    'set_shortcut_sign_active',
+    'delete_shortcut_sign',
 ];
 
 try {
@@ -168,6 +172,15 @@ try {
                     $room = $_GET['room'] ?? $_GET['room_number'] ?? '0';
                     Response::success(['destinations' => AreaMappingSitemapHelper::getDoorSignDestinationsForRoom($room)]);
                     break;
+                case 'get_shortcut_sign_assets':
+                    $room = $_GET['room'] ?? $_GET['room_number'] ?? '';
+                    $mappingId = (int) ($_GET['mapping_id'] ?? 0);
+                    if ($room === '' || $mappingId <= 0) {
+                        Response::error('room and mapping_id are required', null, 400);
+                    }
+                    $assets = AreaMappingSignHelper::fetchAssets($mappingId, $room);
+                    Response::success(['assets' => $assets]);
+                    break;
 
                 default:
                     Response::error('Invalid action', null, 400);
@@ -191,6 +204,18 @@ try {
                 Response::json(AreaMappingActionHelper::deleteMapping($input['id'] ?? $input['area_id'] ?? null));
             } elseif ($action === 'swap') {
                 Response::success(AreaMappingActionHelper::swapMappings($input['area1_id'] ?? null, $input['area2_id'] ?? null));
+            } elseif ($action === 'set_shortcut_sign_active') {
+                $room = (string) ($input['room'] ?? $input['room_number'] ?? '');
+                $mappingId = (int) ($input['mapping_id'] ?? 0);
+                $assetId = (int) ($input['asset_id'] ?? 0);
+                $asset = AreaMappingSignHelper::setActiveAsset($mappingId, $assetId, $room);
+                Response::success(['asset' => $asset]);
+            } elseif ($action === 'delete_shortcut_sign') {
+                $room = (string) ($input['room'] ?? $input['room_number'] ?? '');
+                $mappingId = (int) ($input['mapping_id'] ?? 0);
+                $assetId = (int) ($input['asset_id'] ?? 0);
+                $assets = AreaMappingSignHelper::deleteAsset($mappingId, $assetId, $room);
+                Response::success(['assets' => $assets]);
             } else {
                 Response::error('Invalid action: ' . $action, null, 400);
             }

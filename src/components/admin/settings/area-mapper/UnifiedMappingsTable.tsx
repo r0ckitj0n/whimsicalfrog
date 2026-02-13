@@ -14,6 +14,7 @@ interface UnifiedMappingsTableProps {
     onToggleActive: (id: number, currentActive: boolean | number) => void;
     onDelete: (id: number) => void;
     onConvert: (area: string, sku: string) => void;
+    onPreviewImage: (mapping: IAreaMapping) => void;
 }
 
 type SlotStatus = 'explicit' | 'derived' | 'inactive' | 'empty';
@@ -124,7 +125,8 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
     onEdit,
     onToggleActive,
     onDelete,
-    onConvert
+    onConvert,
+    onPreviewImage
 }) => {
     // Merge mappings into unified slots
     const unifiedSlots = useMemo<UnifiedSlot[]>(() => {
@@ -236,12 +238,28 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        <img
-                                            src={getImageSource(liveMapping)}
-                                            alt={`Preview for ${slot.area}`}
-                                            className="w-10 h-10 rounded border border-black/5 object-contain bg-white shadow-sm mx-auto"
-                                            loading="lazy"
-                                        />
+                                        {liveMapping ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => onPreviewImage(liveMapping)}
+                                                className="group"
+                                                title="View image"
+                                            >
+                                                <img
+                                                    src={getImageSource(liveMapping)}
+                                                    alt={`Preview for ${slot.area}`}
+                                                    className="w-10 h-10 rounded border border-black/5 object-contain bg-white shadow-sm mx-auto group-hover:shadow-md transition-shadow"
+                                                    loading="lazy"
+                                                />
+                                            </button>
+                                        ) : (
+                                            <img
+                                                src={getImageSource(liveMapping)}
+                                                alt={`Preview for ${slot.area}`}
+                                                className="w-10 h-10 rounded border border-black/5 object-contain bg-white shadow-sm mx-auto"
+                                                loading="lazy"
+                                            />
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         {isExplicitSlot && slot.explicit ? (

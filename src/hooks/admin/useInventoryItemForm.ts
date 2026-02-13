@@ -820,6 +820,24 @@ export const useInventoryItemForm = ({
         setIsDirty(true);
     };
 
+    const syncCostFromBreakdown = useCallback((total: number) => {
+        if (!Number.isFinite(total) || total < 0) return;
+        setFormData(prev => {
+            if (Math.abs(Number(prev.cost_price || 0) - total) <= 0.001) return prev;
+            return { ...prev, cost_price: Number(total.toFixed(2)) };
+        });
+        setIsDirty(true);
+    }, []);
+
+    const syncRetailFromBreakdown = useCallback((total: number) => {
+        if (!Number.isFinite(total) || total < 0) return;
+        setFormData(prev => {
+            if (Math.abs(Number(prev.retail_price || 0) - total) <= 0.001) return prev;
+            return { ...prev, retail_price: Number(total.toFixed(2)) };
+        });
+        setIsDirty(true);
+    }, []);
+
     const handleBreakdownApplied = () => {
         setBreakdownRefreshTrigger(prev => prev + 1);
         setIsDirty(true);
@@ -853,6 +871,8 @@ export const useInventoryItemForm = ({
         toggleFieldLock,
         lockedWords,
         updateLockedWords,
-        cachedMarketingData
+        cachedMarketingData,
+        syncCostFromBreakdown,
+        syncRetailFromBreakdown
     };
 };

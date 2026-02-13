@@ -12,7 +12,13 @@ import {
     IMappingsResponse,
     IAreaMappingsHook
 } from '../../types/room.js';
-import type { IGenerateShortcutImageRequest, IGenerateShortcutImageResponse } from '../../types/room-shortcuts.js';
+import type {
+    IGenerateShortcutImageRequest,
+    IGenerateShortcutImageResponse,
+    IShortcutSignAsset,
+    IShortcutSignAssetsResponse,
+    IShortcutSignAssetActionResponse
+} from '../../types/room-shortcuts.js';
 
 export const useAreaMappings = (): IAreaMappingsHook => {
     const [isLoading, setIsLoading] = useState(false);
@@ -271,6 +277,79 @@ export const useAreaMappings = (): IAreaMappingsHook => {
         }
     }, []);
 
+    const fetchShortcutSignAssets = useCallback(async (mappingId: number, room: string): Promise<IShortcutSignAsset[]> => {
+        try {
+            const res = await ApiClient.get<IShortcutSignAssetsResponse>('/api/area_mappings.php', {
+                action: API_ACTION.GET_SHORTCUT_SIGN_ASSETS,
+                mapping_id: mappingId,
+                room
+            });
+            if (res?.success) {
+                return res.data?.assets || res.assets || [];
+            }
+            throw new Error(res?.error || res?.message || 'Failed to load shortcut sign assets');
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Unknown error';
+            logger.error('fetchShortcutSignAssets failed', err);
+            setError(message);
+            return [];
+        }
+    }, []);
+
+    const setShortcutSignActive = useCallback(async (mappingId: number, assetId: number, room: string) => {
+        setIsLoading(true);
+        try {
+            const res = await ApiClient.post<IShortcutSignAssetActionResponse>('/api/area_mappings.php', {
+                action: API_ACTION.SET_SHORTCUT_SIGN_ACTIVE,
+                mapping_id: mappingId,
+                asset_id: assetId,
+                room
+            });
+            if (!res?.success) {
+                throw new Error(res?.error || res?.message || 'Failed to deploy sign image');
+            }
+            await fetchMappings(room);
+            if (window.roomModalManager?.invalidateRoom) {
+                window.roomModalManager.invalidateRoom(room);
+            }
+            return true;
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Unknown error';
+            logger.error('setShortcutSignActive failed', err);
+            setError(message);
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [fetchMappings]);
+
+    const deleteShortcutSignAsset = useCallback(async (mappingId: number, assetId: number, room: string) => {
+        setIsLoading(true);
+        try {
+            const res = await ApiClient.post<IShortcutSignAssetActionResponse>('/api/area_mappings.php', {
+                action: API_ACTION.DELETE_SHORTCUT_SIGN,
+                mapping_id: mappingId,
+                asset_id: assetId,
+                room
+            });
+            if (!res?.success) {
+                throw new Error(res?.error || res?.message || 'Failed to delete sign image');
+            }
+            await fetchMappings(room);
+            if (window.roomModalManager?.invalidateRoom) {
+                window.roomModalManager.invalidateRoom(room);
+            }
+            return true;
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Unknown error';
+            logger.error('deleteShortcutSignAsset failed', err);
+            setError(message);
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [fetchMappings]);
+
     return {
         isLoading,
         error,
@@ -290,6 +369,9 @@ export const useAreaMappings = (): IAreaMappingsHook => {
         toggleMappingActive,
         deleteMapping,
         uploadImage,
-        generateShortcutImage
+        generateShortcutImage,
+        fetchShortcutSignAssets,
+        setShortcutSignActive,
+        deleteShortcutSignAsset
     };
 };

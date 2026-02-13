@@ -496,6 +496,7 @@ try {
                 Response::error('room_number is required (alphanumeric)', null, 422);
             }
             $roomNumber = normalizeRoomNumber($roomRaw);
+            $mappingId = (int) ($input['shortcut_mapping_id'] ?? 0);
             $safeRoom = ImageUploadHelper::slugify('room' . $roomNumber);
             $safeBase = ImageUploadHelper::slugify('ai-edit-sign-' . $roomNumber);
             $unique = $safeBase . '-' . $safeRoom . '-' . substr(uniqid('', true), -6);
@@ -519,13 +520,36 @@ try {
             }
 
             $name = 'AI Edited Sign ' . date('Y-m-d H:i');
+            $webpUrl = '/images/' . $webpRel;
+            $pngUrl = '/images/' . $pngRel;
+
+            $assetId = 0;
+            if ($mappingId > 0) {
+                try {
+                    require_once __DIR__ . '/../includes/area_mappings/helpers/AreaMappingSignHelper.php';
+                    $asset = AreaMappingSignHelper::recordAssetForMapping(
+                        $mappingId,
+                        $roomNumber,
+                        $webpUrl,
+                        $pngUrl,
+                        $webpUrl,
+                        'ai_edit',
+                        true
+                    );
+                    $assetId = (int) ($asset['id'] ?? 0);
+                } catch (Throwable $e) {
+                    error_log('shortcut sign asset record failed: ' . $e->getMessage());
+                }
+            }
             $responseData = [
                 'target_type' => 'shortcut_sign',
                 'shortcut_sign' => [
                     'name' => $name,
-                    'image_url' => '/images/' . $webpRel,
-                    'png_url' => '/images/' . $pngRel,
-                    'webp_url' => '/images/' . $webpRel
+                    'image_url' => $webpUrl,
+                    'png_url' => $pngUrl,
+                    'webp_url' => $webpUrl,
+                    'mapping_id' => $mappingId > 0 ? $mappingId : null,
+                    'id' => $assetId > 0 ? $assetId : null
                 ]
             ];
             $responseMessage = 'Edited shortcut sign image saved';

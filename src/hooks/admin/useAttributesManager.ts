@@ -4,11 +4,12 @@ import { useGlobalEntities, ISizeTemplate, IColorTemplate } from './useGlobalEnt
 import { useInventoryOptionLinks } from './useInventoryOptionLinks.js';
 import { useMaterials } from './useMaterials.js';
 import { useCategoryList } from './useCategoryList.js';
+import { useOptionCascadeConfigs } from './useOptionCascadeConfigs.js';
 import type { InventoryOptionType, InventoryOptionAppliesToType } from '../../types/inventoryOptions.js';
 
 export type { ISizeTemplate, IColorTemplate };
 
-export type TabId = 'genders' | 'sizes' | 'colors' | 'global-colors' | 'global-sizes' | 'assignments' | 'materials';
+export type TabId = 'assignments' | 'cascade' | 'colors' | 'genders' | 'global-colors' | 'global-sizes' | 'materials' | 'sizes';
 
 export const useAttributesManager = () => {
     const {
@@ -39,6 +40,7 @@ export const useAttributesManager = () => {
     const linksApi = useInventoryOptionLinks();
     const materialsApi = useMaterials();
     const categoriesApi = useCategoryList();
+    const cascadeApi = useOptionCascadeConfigs();
 
     const [activeTab, setActiveTab] = useState<TabId>('genders');
     const [editingSize, setEditingSize] = useState<ISizeTemplate | null>(null);
@@ -244,18 +246,22 @@ export const useAttributesManager = () => {
         setIsRedesignOpen(true);
     }, []);
 
-    const upsertLink = useCallback(async (payload: {
+    const addLink = useCallback(async (payload: {
         option_type: InventoryOptionType;
         option_id: number;
         applies_to_type: InventoryOptionAppliesToType;
         category_id?: number | null;
         item_sku?: string | null;
     }) => {
-        return await linksApi.upsertLink(payload);
+        return await linksApi.addLink(payload);
     }, [linksApi]);
 
-    const clearLink = useCallback(async (payload: { option_type: InventoryOptionType; option_id: number }) => {
-        return await linksApi.clearLink(payload);
+    const deleteLink = useCallback(async (payload: { id: number }) => {
+        return await linksApi.deleteLink(payload);
+    }, [linksApi]);
+
+    const clearOptionLinks = useCallback(async (payload: { option_type: InventoryOptionType; option_id: number }) => {
+        return await linksApi.clearOptionLinks(payload);
     }, [linksApi]);
 
     return {
@@ -264,11 +270,12 @@ export const useAttributesManager = () => {
         genders,
         sizeTemplates,
         colorTemplates,
+        cascadeConfigs: cascadeApi.configs,
         materials: materialsApi.materials,
         optionLinks: linksApi.links,
         categories: categoriesApi.categories,
-        isLoading: isLoading || linksApi.isLoading || materialsApi.isLoading || categoriesApi.isLoading,
-        error: error || linksApi.error || materialsApi.error || categoriesApi.error,
+        isLoading: isLoading || linksApi.isLoading || materialsApi.isLoading || categoriesApi.isLoading || cascadeApi.isLoading,
+        error: error || linksApi.error || materialsApi.error || categoriesApi.error || cascadeApi.error,
         activeTab,
         setActiveTab,
         editingSize,
@@ -297,9 +304,11 @@ export const useAttributesManager = () => {
         handleEditColor,
         handleOpenSizeColorRedesign,
         handleSaveTemplate,
-        upsertLink,
-        clearLink,
+        addLink,
+        deleteLink,
+        clearOptionLinks,
         materialsApi,
+        cascadeApi,
         themedPrompt,
         themedConfirm
     };

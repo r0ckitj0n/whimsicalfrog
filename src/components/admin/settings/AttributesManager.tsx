@@ -12,6 +12,7 @@ import { ColorTemplatesTab } from './attributes/ColorTemplatesTab.js';
 import { SizeColorRedesign } from './attributes/SizeColorRedesign.js';
 import { OptionAssignmentsTab } from './attributes/OptionAssignmentsTab.js';
 import { MaterialsTab } from './attributes/MaterialsTab.js';
+import { CascadeTab } from './attributes/CascadeTab.js';
 import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface AttributesManagerProps {
@@ -26,6 +27,7 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
         genders,
         sizeTemplates,
         colorTemplates,
+        cascadeConfigs,
         materials,
         optionLinks,
         categories,
@@ -59,22 +61,25 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
         handleEditColor,
         handleOpenSizeColorRedesign,
         handleSaveTemplate,
-        upsertLink,
-        clearLink,
+        addLink,
+        deleteLink,
+        clearOptionLinks,
         materialsApi,
+        cascadeApi,
         themedPrompt,
         themedConfirm
     } = useAttributesManager();
 
-    const tabs = [
-        { id: 'genders', label: 'Genders' },
-        { id: 'global-colors', label: 'Global Colors' },
-        { id: 'global-sizes', label: 'Global Sizes' },
+    const tabs = ([
         { id: 'assignments', label: 'Assignments' },
-        { id: 'sizes', label: 'Size Templates' },
+        { id: 'cascade', label: 'Cascade' },
         { id: 'colors', label: 'Color Templates' },
+        { id: 'global-colors', label: 'Colors' },
+        { id: 'genders', label: 'Genders' },
         { id: 'materials', label: 'Materials' },
-    ];
+        { id: 'sizes', label: 'Size Templates' },
+        { id: 'global-sizes', label: 'Sizes' },
+    ] as Array<{ id: TabId; label: string }>).sort((a, b) => a.label.localeCompare(b.label));
     const attemptClose = useUnsavedChangesCloseGuard({
         isDirty,
         isBlocked: isLoading,
@@ -215,8 +220,18 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
                                             links={optionLinks}
                                             categories={categories}
                                             isBusy={isLoading}
-                                            onUpsertLink={upsertLink}
-                                            onClearLink={clearLink}
+                                            onAddLink={addLink}
+                                            onDeleteLink={deleteLink}
+                                            onClearOptionLinks={clearOptionLinks}
+                                        />
+                                    )}
+                                    {activeTab === 'cascade' && (
+                                        <CascadeTab
+                                            configs={cascadeConfigs}
+                                            categories={categories}
+                                            isBusy={isLoading}
+                                            onUpsert={cascadeApi.upsertConfig}
+                                            onDelete={cascadeApi.deleteConfig}
                                         />
                                     )}
                                     {activeTab === 'sizes' && (
@@ -258,8 +273,9 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
                                             onCreate={materialsApi.createMaterial}
                                             onUpdate={materialsApi.updateMaterial}
                                             onDelete={materialsApi.deleteMaterial}
-                                            onUpsertLink={async (payload) => upsertLink(payload)}
-                                            onClearLink={async (payload) => clearLink(payload)}
+                                            onAddLink={async (payload) => addLink(payload)}
+                                            onDeleteLink={async (payload) => deleteLink(payload)}
+                                            onClearOptionLinks={async (payload) => clearOptionLinks(payload)}
                                             prompt={themedPrompt}
                                             confirm={themedConfirm}
                                         />

@@ -4,9 +4,10 @@ import logger from '../../core/logger.js';
 import type {
     IInventoryOptionLink,
     IInventoryOptionLinksListResponse,
-    IUpsertInventoryOptionLinkRequest,
-    IClearInventoryOptionLinkRequest,
-    IUpsertInventoryOptionLinkResponse,
+    IAddInventoryOptionLinkRequest,
+    IDeleteInventoryOptionLinkRequest,
+    IClearInventoryOptionLinksForOptionRequest,
+    IInventoryOptionLinkActionResponse,
 } from '../../types/inventoryOptions.js';
 
 export const useInventoryOptionLinks = () => {
@@ -32,20 +33,20 @@ export const useInventoryOptionLinks = () => {
         }
     }, []);
 
-    const upsertLink = useCallback(async (payload: Omit<IUpsertInventoryOptionLinkRequest, 'action'>) => {
+    const addLink = useCallback(async (payload: Omit<IAddInventoryOptionLinkRequest, 'action'>) => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await ApiClient.post<IUpsertInventoryOptionLinkResponse>('/api/inventory_option_links.php', { action: 'upsert', ...payload });
+            const res = await ApiClient.post<IInventoryOptionLinkActionResponse>('/api/inventory_option_links.php', { action: 'add', ...payload });
             if (res?.success) {
                 await fetchLinks();
-                return { success: true as const };
+                return { success: true as const, id: res.id };
             }
-            const msg = res?.error || res?.message || 'Failed to save link';
+            const msg = res?.error || res?.message || 'Failed to add link';
             setError(msg);
             return { success: false as const, error: msg };
         } catch (err) {
-            logger.error('[useInventoryOptionLinks] upsertLink failed', err);
+            logger.error('[useInventoryOptionLinks] addLink failed', err);
             const msg = err instanceof Error ? err.message : 'Network error';
             setError(msg);
             return { success: false as const, error: msg };
@@ -54,20 +55,42 @@ export const useInventoryOptionLinks = () => {
         }
     }, [fetchLinks]);
 
-    const clearLink = useCallback(async (payload: Omit<IClearInventoryOptionLinkRequest, 'action'>) => {
+    const deleteLink = useCallback(async (payload: Omit<IDeleteInventoryOptionLinkRequest, 'action'>) => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await ApiClient.post<IUpsertInventoryOptionLinkResponse>('/api/inventory_option_links.php', { action: 'clear', ...payload });
+            const res = await ApiClient.post<IInventoryOptionLinkActionResponse>('/api/inventory_option_links.php', { action: 'delete', ...payload });
             if (res?.success) {
                 await fetchLinks();
                 return { success: true as const };
             }
-            const msg = res?.error || res?.message || 'Failed to clear link';
+            const msg = res?.error || res?.message || 'Failed to delete link';
             setError(msg);
             return { success: false as const, error: msg };
         } catch (err) {
-            logger.error('[useInventoryOptionLinks] clearLink failed', err);
+            logger.error('[useInventoryOptionLinks] deleteLink failed', err);
+            const msg = err instanceof Error ? err.message : 'Network error';
+            setError(msg);
+            return { success: false as const, error: msg };
+        } finally {
+            setIsLoading(false);
+        }
+    }, [fetchLinks]);
+
+    const clearOptionLinks = useCallback(async (payload: Omit<IClearInventoryOptionLinksForOptionRequest, 'action'>) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const res = await ApiClient.post<IInventoryOptionLinkActionResponse>('/api/inventory_option_links.php', { action: 'clear_option', ...payload });
+            if (res?.success) {
+                await fetchLinks();
+                return { success: true as const };
+            }
+            const msg = res?.error || res?.message || 'Failed to clear option links';
+            setError(msg);
+            return { success: false as const, error: msg };
+        } catch (err) {
+            logger.error('[useInventoryOptionLinks] clearOptionLinks failed', err);
             const msg = err instanceof Error ? err.message : 'Network error';
             setError(msg);
             return { success: false as const, error: msg };
@@ -80,6 +103,5 @@ export const useInventoryOptionLinks = () => {
         void fetchLinks();
     }, [fetchLinks]);
 
-    return { links, isLoading, error, fetchLinks, upsertLink, clearLink };
+    return { links, isLoading, error, fetchLinks, addLink, deleteLink, clearOptionLinks };
 };
-

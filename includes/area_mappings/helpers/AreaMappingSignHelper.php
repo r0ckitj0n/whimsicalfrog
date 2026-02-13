@@ -117,6 +117,31 @@ class AreaMappingSignHelper
             throw new Exception('Mapping ID is required');
         }
         $roomNumber = AreaMappingFetchHelper::normalizeRoomNumber($roomNumber);
+        $rows = Database::queryAll(
+            "SELECT id, mapping_id, room_number, image_url, png_url, webp_url, source, is_active, created_at\n             FROM shortcut_sign_assets\n             WHERE mapping_id = ? AND room_number = ?\n             ORDER BY created_at DESC, id DESC",
+            [$mappingId, $roomNumber]
+        );
+        if (is_array($rows) && count($rows) > 0) {
+            return $rows;
+        }
+
+        // Backfill: if this mapping already has a sign image set on area_mappings, seed it into shortcut_sign_assets
+        // so the UI can show a history list immediately.
+        $mapping = Database::queryOne(
+            "SELECT content_image, link_image FROM area_mappings WHERE id = ? AND room_number = ? LIMIT 1",
+            [$mappingId, $roomNumber]
+        );
+        if (is_array($mapping)) {
+            $imageUrl = trim((string) ($mapping['content_image'] ?? $mapping['link_image'] ?? ''));
+            if ($imageUrl !== '' && self::isSignImageUrl($imageUrl)) {
+                try {
+                    self::recordAssetForMapping($mappingId, $roomNumber, $imageUrl, null, null, 'backfill', true);
+                } catch (Exception $e) {
+                    error_log('shortcut sign backfill failed: ' . $e->getMessage());
+                }
+            }
+        }
+
         return Database::queryAll(
             "SELECT id, mapping_id, room_number, image_url, png_url, webp_url, source, is_active, created_at\n             FROM shortcut_sign_assets\n             WHERE mapping_id = ? AND room_number = ?\n             ORDER BY created_at DESC, id DESC",
             [$mappingId, $roomNumber]

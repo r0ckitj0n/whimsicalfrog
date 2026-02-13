@@ -16,13 +16,14 @@ interface MaterialsTabProps {
     onCreate: (payload: { material_name: string; description?: string | null }) => Promise<{ success: boolean; error?: string }>;
     onUpdate: (payload: { id: number; material_name?: string; description?: string | null }) => Promise<{ success: boolean; error?: string }>;
     onDelete: (payload: { id: number }) => Promise<{ success: boolean; error?: string }>;
-    onUpsertLink: (payload: { option_type: 'material'; option_id: number; applies_to_type: InventoryOptionAppliesToType; category_id?: number | null; item_sku?: string | null }) => Promise<{ success: boolean; error?: string }>;
-    onClearLink: (payload: { option_type: 'material'; option_id: number }) => Promise<{ success: boolean; error?: string }>;
+    onAddLink: (payload: { option_type: 'material'; option_id: number; applies_to_type: InventoryOptionAppliesToType; category_id?: number | null; item_sku?: string | null }) => Promise<{ success: boolean; error?: string; id?: number }>;
+    onDeleteLink: (payload: { id: number }) => Promise<{ success: boolean; error?: string }>;
+    onClearOptionLinks: (payload: { option_type: 'material'; option_id: number }) => Promise<{ success: boolean; error?: string }>;
     prompt: (opts: { title: string; message: string; confirmText?: string; icon?: string; input?: { defaultValue?: string } }) => Promise<string | null>;
     confirm: (opts: { title: string; message: string; confirmText?: string; confirmStyle?: 'danger' | 'primary'; iconKey?: string }) => Promise<boolean>;
 }
 
-type DraftById = Record<number, { open?: boolean; mode: 'unassigned' | 'category' | 'sku'; category_id?: number | null; item_sku?: string; search_q?: string; search_results?: ItemSearchResult[]; searching?: boolean }>;
+type DraftById = Record<number, { open?: boolean; mode: 'category' | 'sku'; category_id?: number | null; item_sku?: string; search_q?: string; search_results?: ItemSearchResult[]; searching?: boolean }>;
 
 export const MaterialsTab: React.FC<MaterialsTabProps> = ({
     materials,
@@ -32,39 +33,47 @@ export const MaterialsTab: React.FC<MaterialsTabProps> = ({
     onCreate,
     onUpdate,
     onDelete,
-    onUpsertLink,
-    onClearLink,
+    onAddLink,
+    onDeleteLink,
+    onClearOptionLinks,
     prompt,
     confirm,
 }) => {
-    const linkById = useMemo(() => {
-        const m = new Map<number, IInventoryOptionLink>();
+    const linksByMaterialId = useMemo(() => {
+        const m = new Map<number, IInventoryOptionLink[]>();
         links
             .filter((l) => l.option_type === 'material')
-            .forEach((l) => m.set(l.option_id, l));
+            .forEach((l) => {
+                const list = m.get(l.option_id) || [];
+                list.push(l);
+                m.set(l.option_id, list);
+            });
+        m.forEach((list, id) => {
+            list.sort((a, b) => {
+                if (a.applies_to_type !== b.applies_to_type) return a.applies_to_type === 'category' ? -1 : 1;
+                const aLabel = a.applies_to_type === 'category' ? (a.category_name || '') : (a.item_sku || '');
+                const bLabel = b.applies_to_type === 'category' ? (b.category_name || '') : (b.item_sku || '');
+                return aLabel.localeCompare(bLabel);
+            });
+            m.set(id, list);
+        });
         return m;
     }, [links]);
 
     const [drafts, setDrafts] = useState<DraftById>({});
 
-    const summarizeLink = (l: IInventoryOptionLink | undefined) => {
-        if (!l) return 'Unassigned';
+    const summarizeLink = (l: IInventoryOptionLink) => {
         if (l.applies_to_type === 'category') return `Category: ${l.category_name || `#${l.category_id ?? '?'}`}`;
         return `SKU: ${l.item_sku || '?'}${l.item_name ? ` (${l.item_name})` : ''}`;
     };
 
     const setDraft = (id: number, update: Partial<DraftById[number]>) => {
-        setDrafts((prev) => ({ ...prev, [id]: { ...(prev[id] || { mode: 'unassigned' }), ...update } }));
+        setDrafts((prev) => ({ ...prev, [id]: { ...(prev[id] || { mode: 'category', category_id: categories[0]?.id || null }), ...update } }));
     };
 
     const ensureDraft = (id: number) => {
         if (drafts[id]) return drafts[id];
-        const existing = linkById.get(id);
-        const init = existing
-            ? (existing.applies_to_type === 'category'
-                ? { mode: 'category' as const, category_id: existing.category_id ?? null, open: false }
-                : { mode: 'sku' as const, item_sku: existing.item_sku ?? '', open: false })
-            : { mode: 'unassigned' as const, open: false };
+        const init = { mode: 'category' as const, category_id: categories[0]?.id || null, open: false };
         setDrafts((prev) => ({ ...prev, [id]: init }));
         return init;
     };
@@ -87,21 +96,15 @@ export const MaterialsTab: React.FC<MaterialsTabProps> = ({
 
     const saveLink = async (id: number) => {
         const d = drafts[id] || ensureDraft(id);
-        if (d.mode === 'unassigned') {
-            const res = await onClearLink({ option_type: 'material', option_id: id });
-            if (res.success && window.WFToast) window.WFToast.success('Link cleared');
-            if (!res.success && window.WFToast) window.WFToast.error(res.error || 'Failed to clear link');
-            return;
-        }
         if (d.mode === 'category') {
             const category_id = Number(d.category_id || 0);
             if (!category_id) {
                 if (window.WFToast) window.WFToast.error('Select a category');
                 return;
             }
-            const res = await onUpsertLink({ option_type: 'material', option_id: id, applies_to_type: 'category', category_id, item_sku: null });
-            if (res.success && window.WFToast) window.WFToast.success('Link saved');
-            if (!res.success && window.WFToast) window.WFToast.error(res.error || 'Failed to save link');
+            const res = await onAddLink({ option_type: 'material', option_id: id, applies_to_type: 'category', category_id, item_sku: null });
+            if (res.success && window.WFToast) window.WFToast.success('Link added');
+            if (!res.success && window.WFToast) window.WFToast.error(res.error || 'Failed to add link');
             return;
         }
         const sku = (d.item_sku || '').trim();
@@ -109,9 +112,9 @@ export const MaterialsTab: React.FC<MaterialsTabProps> = ({
             if (window.WFToast) window.WFToast.error('Enter a SKU');
             return;
         }
-        const res = await onUpsertLink({ option_type: 'material', option_id: id, applies_to_type: 'sku', item_sku: sku, category_id: null });
-        if (res.success && window.WFToast) window.WFToast.success('Link saved');
-        if (!res.success && window.WFToast) window.WFToast.error(res.error || 'Failed to save link');
+        const res = await onAddLink({ option_type: 'material', option_id: id, applies_to_type: 'sku', item_sku: sku, category_id: null });
+        if (res.success && window.WFToast) window.WFToast.success('Link added');
+        if (!res.success && window.WFToast) window.WFToast.error(res.error || 'Failed to add link');
     };
 
     const addMaterial = async () => {
@@ -158,17 +161,31 @@ export const MaterialsTab: React.FC<MaterialsTabProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {materials.map((m) => {
-                    const l = linkById.get(m.id);
                     const d = drafts[m.id] || ensureDraft(m.id);
+                    const current = linksByMaterialId.get(m.id) || [];
                     return (
                         <div key={m.id} className="p-4 border rounded-lg bg-white shadow-sm">
                             <div className="flex justify-between items-start gap-3">
                                 <div className="min-w-0">
                                     <div className="text-sm font-bold text-gray-900 truncate">{m.material_name}</div>
                                     {m.description && <div className="text-xs text-gray-500 mt-1">{m.description}</div>}
-                                    <div className="text-xs text-gray-600 mt-2">
-                                        <span className="font-semibold text-gray-800">Applies to:</span> {summarizeLink(l)}
-                                    </div>
+                                    {current.length > 0 && (
+                                        <div className="text-xs text-gray-600 mt-2 space-y-1">
+                                            <div className="font-semibold text-gray-800">Applies to:</div>
+                                            {current.map((l) => (
+                                                <div key={l.id} className="flex items-center justify-between gap-2">
+                                                    <div className="truncate">{summarizeLink(l)}</div>
+                                                    <button
+                                                        type="button"
+                                                        className="admin-action-btn btn-icon--delete"
+                                                        onClick={() => { void onDeleteLink({ id: l.id }); }}
+                                                        disabled={isBusy}
+                                                        data-help-id="materials-delete-link"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex gap-2 shrink-0">
@@ -195,12 +212,10 @@ export const MaterialsTab: React.FC<MaterialsTabProps> = ({
                                                 onChange={(e) => {
                                                     const mode = e.target.value as DraftById[number]['mode'];
                                                     if (mode === 'category') setDraft(m.id, { mode, category_id: categories[0]?.id || null, item_sku: '', search_results: [] });
-                                                    else if (mode === 'sku') setDraft(m.id, { mode, item_sku: '', category_id: null, search_results: [] });
-                                                    else setDraft(m.id, { mode, category_id: null, item_sku: '', search_results: [] });
+                                                    else setDraft(m.id, { mode, item_sku: '', category_id: null, search_results: [] });
                                                 }}
                                                 disabled={isBusy}
                                             >
-                                                <option value="unassigned">Unassigned</option>
                                                 <option value="category">Category</option>
                                                 <option value="sku">SKU</option>
                                             </select>
@@ -278,7 +293,7 @@ export const MaterialsTab: React.FC<MaterialsTabProps> = ({
                                         <button
                                             type="button"
                                             className="btn btn-secondary px-3 py-2"
-                                            onClick={() => { setDraft(m.id, { mode: 'unassigned', category_id: null, item_sku: '', search_results: [] }); void saveLink(m.id); }}
+                                            onClick={() => { void onClearOptionLinks({ option_type: 'material', option_id: m.id }); }}
                                             disabled={isBusy}
                                         >
                                             Clear Link
@@ -301,4 +316,3 @@ export const MaterialsTab: React.FC<MaterialsTabProps> = ({
         </div>
     );
 };
-

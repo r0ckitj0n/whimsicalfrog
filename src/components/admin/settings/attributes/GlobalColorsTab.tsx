@@ -11,7 +11,7 @@ export const GlobalColorsTab: React.FC<GlobalColorsTabProps> = ({ colors, onAdd,
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h4 className="text-md font-bold text-gray-800">Manage Global Colors</h4>
+                <h4 className="text-md font-bold text-gray-800">Manage Colors</h4>
                 <div className="flex gap-2">
                     <button
                         onClick={onAdd}

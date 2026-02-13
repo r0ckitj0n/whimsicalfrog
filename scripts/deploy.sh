@@ -3,10 +3,19 @@
 # Change to the project root directory
 cd "$(dirname "$0")/.."
 
+# Load local env (not committed) for deploy credentials/config.
+ENV_FILE="$(pwd)/.env"
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  . "$ENV_FILE"
+  set +a
+fi
+
 # Configuration (prefer environment variables for CI/secrets managers)
-HOST="${WF_DEPLOY_HOST:-home419172903.1and1-data.host}"
-USER="${WF_DEPLOY_USER:-acc899014616}"
-PASS="${WF_DEPLOY_PASS:-Palz2516!}"
+HOST="${WF_DEPLOY_HOST:-}"
+USER="${WF_DEPLOY_USER:-}"
+PASS="${WF_DEPLOY_PASS:-}"
 REMOTE_PATH="/"
 # Optional public base for sites under a subdirectory (e.g., /wf)
 PUBLIC_BASE="${WF_PUBLIC_BASE:-}"
@@ -14,15 +23,34 @@ PUBLIC_BASE="${WF_PUBLIC_BASE:-}"
 DEPLOY_BASE_URL="${DEPLOY_BASE_URL:-https://whimsicalfrog.us}"
 BASE_URL="${DEPLOY_BASE_URL}${PUBLIC_BASE}"
 
+require_var() {
+  local key="$1" value="${!1:-}"
+  if [[ -z "$value" ]]; then
+    echo "Error: $key must be set (in environment or .env)." >&2
+    exit 1
+  fi
+}
+
 # Parameter parsing
 MODE="lite"
 SKIP_BUILD="${WF_SKIP_RELEASE_BUILD:-0}"
 PURGE="${WF_PURGE_REMOTE:-0}"
 STRICT_VERIFY="${WF_STRICT_VERIFY:-0}"
 UPLOAD_VENDOR="${WF_UPLOAD_VENDOR:-0}"
+PRESERVE_IMAGES=0
+CODE_ONLY=0
 
 while [[ $# -gt 0 ]]; do
   case $1 in
+    --code-only)
+      CODE_ONLY=1
+      PRESERVE_IMAGES=1
+      shift
+      ;;
+    --preserve-images|--no-delete-images)
+      PRESERVE_IMAGES=1
+      shift
+      ;;
     --purge)
       PURGE=1
       shift
@@ -53,6 +81,23 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+require_var WF_DEPLOY_HOST
+require_var WF_DEPLOY_USER
+require_var WF_DEPLOY_PASS
+
+if [[ "$CODE_ONLY" == "1" && "$MODE" == "env-only" ]]; then
+  echo "Error: --code-only cannot be combined with --env-only." >&2
+  exit 2
+fi
+if [[ "$CODE_ONLY" == "1" && "$MODE" == "dist-only" ]]; then
+  echo "Error: --code-only cannot be combined with --dist-only (use one or the other)." >&2
+  exit 2
+fi
+if [[ "$PRESERVE_IMAGES" == "1" && "$PURGE" == "1" ]]; then
+  echo "Error: --preserve-images/--code-only cannot be combined with --purge (purge deletes remote images)." >&2
+  exit 2
+fi
 
 if [ "$MODE" = "full" ]; then
   MIRROR_FLAGS="--reverse --delete --verbose --no-perms --overwrite --only-newer"
@@ -155,11 +200,6 @@ rm -f .tmp* ".tmp2 *" *.bak *.bak.*
 cd src
 rm -f .tmp* ".tmp2 *" *.bak *.bak.*
 cd ..
-cd images
-rm -f .tmp* ".tmp2 *" *.bak *.bak.*
-cd items
-rm -f .tmp* ".tmp2 *" *.bak *.bak.*
-cd /
 bye
 EOL
 
@@ -206,6 +246,15 @@ fi
 
 # Never deploy if required build artifacts are missing.
 require_dist_artifacts
+
+# Image handling:
+# - Default: deploy most files including images (but backgrounds/signs are handled separately).
+# - Preserve mode: do not upload/delete/touch any images/** paths on the server.
+if [ "$PRESERVE_IMAGES" = "1" ]; then
+  IMAGE_EXCLUDE_LINES=$'  --exclude-glob "images/**" \\\n'
+else
+  IMAGE_EXCLUDE_LINES=$'  --exclude-glob "images/backgrounds/**" \\\n  --exclude-glob "images/signs/**" \\\n'
+fi
 
 # Create lftp commands for file deployment
 echo -e "${GREEN}📁 Preparing file deployment...${NC}"
@@ -255,8 +304,7 @@ mirror $MIRROR_FLAGS \
   --exclude-glob fix_clown_frog_image.sql \
   --exclude-glob images/.htaccess \
   --exclude-glob images/items/.htaccess \
-  --exclude-glob "images/backgrounds/**" \
-  --exclude-glob "images/signs/**" \
+${IMAGE_EXCLUDE_LINES}  --exclude-glob config/my.cnf \
   --exclude-glob config/my.cnf \
   --exclude-glob config/secret.key \
   --exclude-glob "* [0-9].*" \
@@ -412,7 +460,7 @@ EOL
 
   # Secondary passes are unnecessary in full-replace mode
   if [ "${WF_FULL_REPLACE:-0}" != "1" ]; then
-    if [ "$MODE" != "dist-only" ]; then
+    if [ "$MODE" != "dist-only" ] && [ "$PRESERVE_IMAGES" != "1" ]; then
       # Perform a second, targeted mirror for images/backgrounds WITHOUT --ignore-time.
       # Rationale: when replacing background files with the same size but different content,
       # the size-only comparison (from --ignore-time) may skip the upload. This pass uses
@@ -579,9 +627,10 @@ if [ "$MODE" != "env-only" ]; then
   fi
   
   # Fix permissions automatically after deployment
-  echo -e "${GREEN}🔧 Fixing image permissions on server...${NC}"
-  # Remove problematic .htaccess files and fix permissions via SFTP
-  cat > fix_permissions.txt << EOL
+  if [ "$PRESERVE_IMAGES" != "1" ]; then
+    echo -e "${GREEN}🔧 Fixing image permissions on server...${NC}"
+    # Remove problematic .htaccess files and fix permissions via SFTP
+    cat > fix_permissions.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
 open sftp://$USER:$PASS@$HOST
@@ -593,16 +642,20 @@ chmod 644 images/items/*
 bye
 EOL
 
-  if [ "${WF_DRY_RUN:-0}" = "1" ]; then
-    echo -e "${YELLOW}DRY-RUN: Skipping remote permissions fix${NC}"
+    if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+      echo -e "${YELLOW}DRY-RUN: Skipping remote permissions fix${NC}"
+    else
+      lftp -f fix_permissions.txt > /dev/null 2>&1 || true
+    fi
+    rm fix_permissions.txt
   else
-    lftp -f fix_permissions.txt > /dev/null 2>&1 || true
+    echo -e "${YELLOW}⏭️  Preserving images: skipping remote permissions changes${NC}"
   fi
-  rm fix_permissions.txt
   
   # List duplicate-suffixed files on server (for visibility)
-  echo -e "${GREEN}🧹 Listing duplicate-suffixed files on server (space-number)...${NC}"
-  cat > list_server_duplicates.txt << EOL
+  if [ "$PRESERVE_IMAGES" != "1" ]; then
+    echo -e "${GREEN}🧹 Listing duplicate-suffixed files on server (space-number)...${NC}"
+    cat > list_server_duplicates.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
 open sftp://$USER:$PASS@$HOST
@@ -620,16 +673,20 @@ cls -1 images/signs/*\\ 2.* || true
 cls -1 images/signs/*\\ 3.* || true
 bye
 EOL
-  if [ "${WF_DRY_RUN:-0}" = "1" ]; then
-    echo -e "${YELLOW}DRY-RUN: Skipping remote duplicate listing${NC}"
+    if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+      echo -e "${YELLOW}DRY-RUN: Skipping remote duplicate listing${NC}"
+    else
+      lftp -f list_server_duplicates.txt || true
+    fi
+    rm list_server_duplicates.txt
   else
-    lftp -f list_server_duplicates.txt || true
+    echo -e "${YELLOW}⏭️  Preserving images: skipping duplicate listing/deletion under images/**${NC}"
   fi
-  rm list_server_duplicates.txt
   
   # Delete duplicate-suffixed files on server
-  echo -e "${GREEN}🧽 Removing duplicate-suffixed files on server...${NC}"
-  cat > delete_server_duplicates.txt << EOL
+  if [ "$PRESERVE_IMAGES" != "1" ]; then
+    echo -e "${GREEN}🧽 Removing duplicate-suffixed files on server...${NC}"
+    cat > delete_server_duplicates.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
 open sftp://$USER:$PASS@$HOST
@@ -645,12 +702,13 @@ rm -f images/signs/*\\ 2.* || true
 rm -f images/signs/*\\ 3.* || true
 bye
 EOL
-  if [ "${WF_DRY_RUN:-0}" = "1" ]; then
-    echo -e "${YELLOW}DRY-RUN: Skipping remote duplicate deletion${NC}"
-  else
-    lftp -f delete_server_duplicates.txt || true
+    if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+      echo -e "${YELLOW}DRY-RUN: Skipping remote duplicate deletion${NC}"
+    else
+      lftp -f delete_server_duplicates.txt || true
+    fi
+    rm delete_server_duplicates.txt
   fi
-  rm delete_server_duplicates.txt
 
   if [ "${STRICT_VERIFY}" = "1" ] && [ "$VERIFY_FAILED" != "0" ]; then
     echo -e "${RED}❌ Strict verification failed. Deployment is not healthy.${NC}"
@@ -684,7 +742,11 @@ fi
 echo -e "\n${GREEN}📊 Fast Deployment Summary:${NC}"
 echo -e "  • Files: ✅ Deployed to server"
 echo -e "  • Database: ⏭️  Skipped (use deploy_full.sh for database updates)"
-echo -e "  • Images: ✅ Included in deployment"
+if [ "$PRESERVE_IMAGES" = "1" ]; then
+  echo -e "  • Images: ⏭️  Preserved (images/** not modified)"
+else
+  echo -e "  • Images: ✅ Included in deployment"
+fi
 [ "$PURGE" = "1" ] && echo -e "  • Remote Purge: 🔥 Performed (managed directories)"
 echo -e "  • Verification: ✅ Completed"
 

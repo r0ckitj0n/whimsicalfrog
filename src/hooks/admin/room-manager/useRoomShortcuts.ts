@@ -84,7 +84,7 @@ export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHo
     }, [selectedRoom, mappings]);
 
     const handleContentEdit = useCallback(async (mapping: IAreaMapping) => {
-        setNewMapping(mapping);
+        setNewMapping({ ...mapping, shortcut_images: [] });
         const mappingId = Number(mapping.id || 0);
         if (!mappingId || !selectedRoom) return;
         try {

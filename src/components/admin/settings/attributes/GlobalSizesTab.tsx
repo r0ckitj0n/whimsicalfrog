@@ -11,7 +11,7 @@ export const GlobalSizesTab: React.FC<GlobalSizesTabProps> = ({ sizes, onAdd, on
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h4 className="text-md font-bold text-gray-800">Manage Global Sizes</h4>
+                <h4 className="text-md font-bold text-gray-800">Manage Sizes</h4>
                 <div className="flex gap-2">
                     <button
                         onClick={onAdd}

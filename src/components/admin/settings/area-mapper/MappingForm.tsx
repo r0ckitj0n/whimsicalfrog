@@ -234,7 +234,7 @@ export const MappingForm: React.FC<MappingFormProps> = ({
                     </div>
 
                     {/* Saved sign images (shortcut mappings) */}
-                    {assets.length > 0 && (
+                    {mapping.id && (
                         <div className="mt-3 bg-white border border-slate-200 rounded-xl p-3 space-y-2">
                             <div className="flex items-center justify-between gap-2">
                                 <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">
@@ -267,37 +267,43 @@ export const MappingForm: React.FC<MappingFormProps> = ({
                             </div>
 
                             <div className="max-h-44 overflow-y-auto pr-1">
-                                <div className="grid grid-cols-4 gap-2">
-                                    {assets.map((asset) => {
-                                        const isActive = asset.is_active === 1;
-                                        const isSelected = asset.id === selectedAssetId;
-                                        return (
-                                            <button
-                                                key={asset.id}
-                                                type="button"
-                                                onClick={() => setSelectedAssetId(asset.id)}
-                                                className={[
-                                                    'rounded-lg border-2 bg-white p-1 text-left transition',
-                                                    isActive ? 'border-[var(--brand-primary)]' : 'border-slate-200',
-                                                    isSelected ? 'ring-2 ring-[var(--brand-secondary)] ring-offset-1' : 'hover:border-slate-300'
-                                                ].join(' ')}
-                                                title={isActive ? 'Active' : (asset.source || 'Saved')}
-                                            >
-                                                <img
-                                                    src={asset.image_url}
-                                                    alt={asset.source || 'Saved sign'}
-                                                    className="w-full h-16 object-contain"
-                                                    loading="lazy"
-                                                />
-                                                {isActive && (
-                                                    <div className="mt-1 text-[8px] font-black uppercase tracking-widest text-[var(--brand-primary)]">
-                                                        Active
-                                                    </div>
-                                                )}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                                {assets.length > 0 ? (
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {assets.map((asset) => {
+                                            const isActive = asset.is_active === 1;
+                                            const isSelected = asset.id === selectedAssetId;
+                                            return (
+                                                <button
+                                                    key={asset.id}
+                                                    type="button"
+                                                    onClick={() => setSelectedAssetId(asset.id)}
+                                                    className={[
+                                                        'rounded-lg border-2 bg-white p-1 text-left transition',
+                                                        isActive ? 'border-[var(--brand-primary)]' : 'border-slate-200',
+                                                        isSelected ? 'ring-2 ring-[var(--brand-secondary)] ring-offset-1' : 'hover:border-slate-300'
+                                                    ].join(' ')}
+                                                    title={isActive ? 'Active' : (asset.source || 'Saved')}
+                                                >
+                                                    <img
+                                                        src={asset.image_url}
+                                                        alt={asset.source || 'Saved sign'}
+                                                        className="w-full h-16 object-contain"
+                                                        loading="lazy"
+                                                    />
+                                                    {isActive && (
+                                                        <div className="mt-1 text-[8px] font-black uppercase tracking-widest text-[var(--brand-primary)]">
+                                                            Active
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="text-xs text-slate-400 italic">
+                                        No saved images found for this shortcut yet.
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

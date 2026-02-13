@@ -155,6 +155,9 @@ class AreaMappingSignHelper
             throw new Exception('Mapping ID and asset ID are required');
         }
         $roomNumber = AreaMappingFetchHelper::normalizeRoomNumber($roomNumber);
+        if ($roomNumber === null || $roomNumber === '') {
+            throw new Exception('Room number is required');
+        }
         $asset = Database::queryOne(
             "SELECT id, image_url FROM shortcut_sign_assets WHERE id = ? AND mapping_id = ? AND room_number = ? LIMIT 1",
             [$assetId, $mappingId, $roomNumber]
@@ -165,18 +168,34 @@ class AreaMappingSignHelper
 
         Database::beginTransaction();
         try {
-            Database::execute("UPDATE shortcut_sign_assets SET is_active = 0 WHERE mapping_id = ?", [$mappingId]);
-            Database::execute("UPDATE shortcut_sign_assets SET is_active = 1 WHERE id = ? LIMIT 1", [$assetId]);
             Database::execute(
-                "UPDATE area_mappings SET content_image = ?, link_image = ? WHERE id = ? LIMIT 1",
-                [$asset['image_url'], $asset['image_url'], $mappingId]
+                "UPDATE shortcut_sign_assets SET is_active = 0 WHERE mapping_id = ? AND room_number = ?",
+                [$mappingId, $roomNumber]
             );
+
+            $activated = Database::execute(
+                "UPDATE shortcut_sign_assets SET is_active = 1 WHERE id = ? AND mapping_id = ? AND room_number = ? LIMIT 1",
+                [$assetId, $mappingId, $roomNumber]
+            );
+            if ($activated <= 0) {
+                throw new Exception('Failed to activate sign image');
+            }
+
+            $updatedMapping = Database::execute(
+                "UPDATE area_mappings SET content_image = ?, link_image = ? WHERE id = ? AND room_number = ? LIMIT 1",
+                [$asset['image_url'], $asset['image_url'], $mappingId, $roomNumber]
+            );
+            // If this is 0, we likely updated a stale/mismatched mapping row (or the row is missing).
+            if ($updatedMapping <= 0) {
+                throw new Exception('Failed to update mapping image');
+            }
             Database::commit();
         } catch (Exception $e) {
             Database::rollBack();
             throw $e;
         }
 
+        $asset['is_active'] = 1;
         return $asset;
     }
 

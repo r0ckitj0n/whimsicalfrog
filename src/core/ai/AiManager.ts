@@ -4,6 +4,7 @@
  */
 
 import ApiClient from '../ApiClient.js';
+import type { IAISuggestCostRequest, IAISuggestCostResponse, IAISuggestPriceRequest, IAISuggestPriceResponse } from '../../types/ai-suggest.js';
 
 export interface AiSuggestion {
     suggested_text: string;
@@ -51,30 +52,30 @@ export class AiManager {
      * Get pricing suggestion for an item
      */
     static async getPricingSuggestion(params: {
-        sku: string;
-        name: string;
-        description: string;
-        category: string;
-        cost_price: string | number;
-        useImages?: boolean;
-        quality_tier?: string;
-    }): Promise<Record<string, unknown>> {
-        return ApiClient.post<Record<string, unknown>>('suggest_price.php', params);
+        sku: IAISuggestPriceRequest['sku'];
+        name: IAISuggestPriceRequest['name'];
+        description: IAISuggestPriceRequest['description'];
+        category: IAISuggestPriceRequest['category'];
+        cost_price: IAISuggestPriceRequest['cost_price'];
+        useImages?: IAISuggestPriceRequest['useImages'];
+        quality_tier?: IAISuggestPriceRequest['quality_tier'];
+    }): Promise<IAISuggestPriceResponse> {
+        return ApiClient.post<IAISuggestPriceResponse>('suggest_price.php', params);
     }
 
     /**
      * Get cost suggestion for an item
      */
     static async getCostSuggestion(params: {
-        sku?: string;
-        name: string;
-        description: string;
-        category: string;
-        quality_tier?: string;
-        useImages?: boolean;
-        imageData?: string;
-    }): Promise<Record<string, unknown>> {
-        return ApiClient.post<Record<string, unknown>>('suggest_cost.php', params);
+        sku?: IAISuggestCostRequest['sku'];
+        name: IAISuggestCostRequest['name'];
+        description: IAISuggestCostRequest['description'];
+        category: IAISuggestCostRequest['category'];
+        quality_tier?: IAISuggestCostRequest['quality_tier'];
+        useImages?: IAISuggestCostRequest['useImages'];
+        imageData?: IAISuggestCostRequest['imageData'];
+    }): Promise<IAISuggestCostResponse> {
+        return ApiClient.post<IAISuggestCostResponse>('suggest_cost.php', params);
     }
 
     /**

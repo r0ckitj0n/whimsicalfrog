@@ -13,6 +13,9 @@ export interface PriceSuggestion {
     success: boolean;
     suggested_price: number;
     confidence: string | number | null;
+    fallback_used?: boolean;
+    fallback_reason?: string;
+    fallback_kind?: string;
     factors: {
         requested_pricing_tier?: string;
         tier_multiplier?: number;
@@ -111,6 +114,9 @@ export const usePriceSuggestions = () => {
             success: Boolean(data.success),
             suggested_price,
             confidence,
+            fallback_used: Boolean((data as any).fallback_used),
+            fallback_reason: String(((data as any).fallback_reason || '') as string),
+            fallback_kind: String(((data as any).fallback_kind || '') as string),
             factors: (safe_parse(data.factors, {}) as PriceSuggestion['factors']),
             components,
             analysis: (safe_parse(data.analysis, {}) as PriceSuggestion['analysis']),
@@ -190,11 +196,11 @@ export const usePriceSuggestions = () => {
             });
 
             if (data && data.success) {
-                let suggested = (data.suggested_price != null) ? Number(data.suggested_price) : Number(data.price ?? 0);
+                let suggested = (data.suggested_price != null) ? Number(data.suggested_price) : 0;
                 if (!Number.isFinite(suggested)) suggested = 0;
-                data.suggested_price = suggested;
+                (data as any).suggested_price = suggested;
 
-                const normalized = normalizePriceSuggestionData(data);
+                const normalized = normalizePriceSuggestionData(data as unknown as Record<string, unknown>);
                 if (normalized) {
                     const requestedTier = params.tier || 'standard';
                     const requestedMult = getPriceTierMultiplier(requestedTier);

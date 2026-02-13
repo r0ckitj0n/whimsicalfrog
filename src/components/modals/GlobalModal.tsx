@@ -42,6 +42,7 @@ export const GlobalModal: React.FC = () => {
         mode: rawMode = 'confirm',
         showCancel = rawMode !== 'alert',
         input,
+        extraActions,
         component
     } = modal;
 
@@ -130,6 +131,7 @@ export const GlobalModal: React.FC = () => {
                         cancelText={cancelText}
                         confirmStyle={confirmStyle}
                         showCancel={showCancel}
+                        extraActions={extraActions}
                         onConfirm={handleConfirm}
                         onCancel={handleCancel}
                     />

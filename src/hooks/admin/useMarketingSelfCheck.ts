@@ -12,6 +12,7 @@ declare global {
             success: (msg: string) => void;
             error: (msg: string) => void;
             info: (msg: string) => void;
+            warning: (msg: string) => void;
         };
     }
 }

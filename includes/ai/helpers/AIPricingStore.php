@@ -30,7 +30,15 @@ class AIPricingStore
     ];
 
     /**
-     * @return array{week_start:string, provider:string, currency:string, rates: array<string, array{job_type:string, unit_cost_cents:int, unit_cost_usd:float, currency:string, source:string, note:string}>, is_fallback:bool, fallback_note:string}
+     * @return array{
+     *   week_start:string,
+     *   provider:string,
+     *   currency:string,
+     *   rates: array<string, array{job_type:string, unit_cost_cents:int, unit_cost_usd:float, currency:string, source:string, note:string}>,
+     *   is_fallback:bool,
+     *   fallback_note:string,
+     *   fallback_reasons:string[]
+     * }
      */
     public static function getWeeklyRates(string $provider, ?string $weekStart = null): array
     {
@@ -44,6 +52,7 @@ class AIPricingStore
         $rates = [];
         $anyFallback = false;
         $fallbackNote = '';
+        $fallbackReasons = [];
 
         // Attempt to load all rates for this provider/week.
         $rows = Database::queryAll(
@@ -69,14 +78,18 @@ class AIPricingStore
                 'source' => $source,
                 'note' => $note,
             ];
+
+            if (self::isFallbackSource($source)) {
+                $anyFallback = true;
+                $fallbackReasons[] = $note !== ''
+                    ? $note
+                    : "Fallback pricing: stored rate marked as fallback for {$provider}/{$jt}.";
+            }
         }
 
         // Fill any missing job types by copying last-known stored rates (provider-specific), else fallback.
         foreach ($jobTypes as $jobType) {
             if (isset($rates[$jobType])) {
-                if (self::isFallbackSource((string)$rates[$jobType]['source'])) {
-                    $anyFallback = true;
-                }
                 continue;
             }
 
@@ -117,7 +130,15 @@ class AIPricingStore
                 'note' => $note,
             ];
             $anyFallback = true;
-            $fallbackNote = 'Fallback pricing in effect for at least one job type (no stored rates were available).';
+            $fallbackReasons[] = $note;
+        }
+
+        if ($anyFallback) {
+            $fallbackReasons = array_values(array_unique(array_filter(array_map('strval', $fallbackReasons))));
+            if (empty($fallbackReasons)) {
+                $fallbackReasons[] = 'Fallback pricing in effect (one or more stored rates were missing or marked fallback).';
+            }
+            $fallbackNote = 'Fallback pricing in effect: ' . $fallbackReasons[0];
         }
 
         return [
@@ -127,6 +148,7 @@ class AIPricingStore
             'rates' => $rates,
             'is_fallback' => $anyFallback,
             'fallback_note' => $fallbackNote,
+            'fallback_reasons' => $fallbackReasons,
         ];
     }
 
@@ -164,4 +186,3 @@ class AIPricingStore
         );
     }
 }
-

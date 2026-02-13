@@ -19,6 +19,17 @@ export interface IModalOptions {
         defaultValue?: string;
         type?: string;
     };
+    /**
+     * Optional extra actions rendered as additional buttons in the footer.
+     * Intended for "fix it" navigation like "AI Settings" when fallbacks are in effect.
+     */
+    extraActions?: Array<{
+        label: string;
+        href?: string;
+        target?: '_self' | '_blank';
+        onClick?: () => void;
+        style?: 'secondary' | 'primary' | 'warning';
+    }>;
     component?: string;
     props?: Record<string, any>;
 }

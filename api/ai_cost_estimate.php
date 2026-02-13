@@ -299,7 +299,12 @@ try {
     $assumptions[] = 'Includes the operations requested by this action and sums costs across all jobs.';
     $assumptions[] = 'Does not include extra cost from retries, provider-side token accounting, or model-specific pricing differences.';
     if (!empty($pricing['is_fallback'])) {
+        $fallbackReasons = (array) ($pricing['fallback_reasons'] ?? []);
+        $fallbackReasons = array_values(array_filter(array_map('strval', $fallbackReasons)));
         $assumptions[] = (string) ($pricing['fallback_note'] ?? 'Fallback pricing was used for at least one job type.');
+        if (!empty($fallbackReasons)) {
+            $assumptions[] = 'Fallback reason(s): ' . implode(' | ', array_slice($fallbackReasons, 0, 4));
+        }
     }
 
     Response::json([
@@ -314,7 +319,8 @@ try {
                 'provider' => (string) ($pricing['provider'] ?? $provider),
                 'rates' => array_values((array) ($pricing['rates'] ?? [])),
                 'is_fallback_pricing' => !empty($pricing['is_fallback']),
-                'fallback_note' => (string) ($pricing['fallback_note'] ?? '')
+                'fallback_note' => (string) ($pricing['fallback_note'] ?? ''),
+                'fallback_reasons' => array_values(array_filter(array_map('strval', (array) ($pricing['fallback_reasons'] ?? []))))
             ],
             'expected_cost' => round($expectedTotal, 6),
             'min_cost' => round($minTotal, 6),

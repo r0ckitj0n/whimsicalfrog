@@ -73,12 +73,38 @@ try {
         $costData = $aiProviders->generateCostSuggestion($name, $description, $category);
     }
 
+    $diagnostics = [];
+    try {
+        $diagnostics = $aiProviders->getLastRunDiagnostics();
+    } catch (Throwable $e) {
+        $diagnostics = [];
+    }
+
+    $fallbackUsed = false;
+    $fallbackKind = 'none';
+    $fallbackReason = '';
+
+    if (!empty($diagnostics['fallback_used'])) {
+        $fallbackUsed = true;
+        $fallbackKind = 'provider_fallback';
+        $providerName = (string) ($diagnostics['provider'] ?? ($aiProviders->getSettings()['ai_provider'] ?? 'unknown'));
+        $providerErr = (string) ($diagnostics['provider_error'] ?? 'unknown error');
+        $fallbackReason = "Primary provider '{$providerName}' failed: {$providerErr}. Used local fallback provider.";
+    }
+
     // Default to market-average heuristic for cost suggestions only when AI output is missing/invalid.
     $heuristic = CostHeuristics::analyze($name, $description, $category, Database::getInstance(), $qualityTier);
     $aiCost = isset($costData['cost']) ? (float) $costData['cost'] : 0.0;
     if ($aiCost <= 0.0 && !empty($heuristic['cost'])) {
         $costData = $heuristic;
         $costData['reasoning'] = ($costData['reasoning'] ?? '') . ' • AI output unavailable, market-average fallback applied.';
+        $fallbackUsed = true;
+        $fallbackKind = 'heuristic';
+        $fallbackReason = 'AI output was unavailable or invalid (cost <= 0). Market-average heuristic fallback applied.';
+        if (!empty($diagnostics['provider_error'])) {
+            $providerName = (string) ($diagnostics['provider'] ?? ($aiProviders->getSettings()['ai_provider'] ?? 'unknown'));
+            $fallbackReason .= " Provider error from '{$providerName}': " . (string) $diagnostics['provider_error'];
+        }
     }
 
     // Apply tier multiplier
@@ -174,7 +200,10 @@ try {
         'breakdown' => $costData['breakdown'] ?? [],
         'analysis' => $costData['analysis'] ?? [],
         'created_at' => date('c'),
-        'providerUsed' => $aiProviders->getSettings()['ai_provider'] ?? 'jons_ai'
+        'providerUsed' => $aiProviders->getSettings()['ai_provider'] ?? 'jons_ai',
+        'fallback_used' => (bool) $fallbackUsed,
+        'fallback_kind' => (string) $fallbackKind,
+        'fallback_reason' => (string) $fallbackReason
     ]);
 
 } catch (Throwable $e) {

@@ -340,7 +340,20 @@ export const generateCostSuggestion = async ({
 
     if (!suggestion) return null;
 
-    toastSuccess(showApplyingToast ? 'Cost preview ready (unsaved).' : 'Cost suggestion generated');
+    if (suggestion.fallback_used) {
+        const reason = (suggestion.fallback_reason || '').trim();
+        const kind = String((suggestion.fallback_kind || '')).trim();
+        const prefix = kind === 'heuristic'
+            ? "AI cost couldn't be generated."
+            : 'Fallback cost generation was used.';
+        if (window.WFToast?.warning) {
+            window.WFToast.warning(`${prefix} Fallback costs are in effect.${reason ? ` Reason: ${reason}` : ''}`);
+        } else {
+            toastError(`${prefix} Fallback costs are in effect.${reason ? ` Reason: ${reason}` : ''}`);
+        }
+    } else {
+        toastSuccess(showApplyingToast ? 'Cost preview ready (unsaved).' : 'Cost suggestion generated');
+    }
     if (showApplyingToast) {
         const settled = await waitForGlobalNetworkIdle();
         if (settled) toastSuccess('All cost generation tasks finished.');
@@ -396,7 +409,20 @@ export const generatePriceSuggestion = async ({
     });
 
     if (!suggestion) return null;
-    toastSuccess('Price suggestion generated');
+    if ((suggestion as any).fallback_used) {
+        const reason = String((suggestion as any).fallback_reason || '').trim();
+        const kind = String((suggestion as any).fallback_kind || '').trim();
+        const prefix = kind === 'heuristic'
+            ? "AI price couldn't be generated."
+            : 'Fallback price generation was used.';
+        if (window.WFToast?.warning) {
+            window.WFToast.warning(`${prefix} Fallback pricing is in effect.${reason ? ` Reason: ${reason}` : ''}`);
+        } else {
+            toastError(`${prefix} Fallback pricing is in effect.${reason ? ` Reason: ${reason}` : ''}`);
+        }
+    } else {
+        toastSuccess('Price suggestion generated');
+    }
     return suggestion;
 };
 

@@ -42,6 +42,8 @@ export interface IAICostPricingInfo {
     rates: IAICostPricingRate[];
     is_fallback_pricing: boolean;
     fallback_note?: string;
+    /** Human-readable, specific reasons for why fallback pricing is in effect (if any). */
+    fallback_reasons?: string[];
 }
 
 export interface IAICostEstimateLineItem {

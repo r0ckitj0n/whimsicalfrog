@@ -52,11 +52,66 @@ try {
         $pricingData = $aiProviders->generatePricingSuggestion($name, $description, $category, $cost_price);
     }
 
-    // Default to market-average heuristic unless another strategy leads by >20 confidence points
+    $diagnostics = [];
+    try {
+        $diagnostics = $aiProviders->getLastRunDiagnostics();
+    } catch (Throwable $e) {
+        $diagnostics = [];
+    }
+
+    $fallbackUsed = false;
+    $fallbackKind = 'none';
+    $fallbackReason = '';
+
+    if (!empty($diagnostics['fallback_used'])) {
+        $fallbackUsed = true;
+        $fallbackKind = 'provider_fallback';
+        $providerName = (string) ($diagnostics['provider'] ?? ($aiProviders->getSettings()['ai_provider'] ?? 'unknown'));
+        $providerErr = (string) ($diagnostics['provider_error'] ?? 'unknown error');
+        $fallbackReason = "Primary provider '{$providerName}' failed: {$providerErr}. Used local fallback provider.";
+    }
+
+    $toConfidence = static function ($raw): float {
+        if (is_array($raw)) {
+            $vals = array_values(array_filter($raw, fn($v) => is_numeric($v)));
+            if (!empty($vals)) {
+                $avg = array_sum($vals) / count($vals);
+                return max(0.0, min(1.0, (float) $avg));
+            }
+        }
+        if (is_numeric($raw)) return max(0.0, min(1.0, (float) $raw));
+        $s = strtolower(trim((string) $raw));
+        if ($s === 'high') return 0.9;
+        if ($s === 'low') return 0.2;
+        if ($s === 'medium') return 0.5;
+        return 0.0;
+    };
+
+    // Heuristic fallback: only use it when AI output is missing/invalid or clearly lower confidence.
     $heuristic = PricingHeuristics::analyze($name, $description, $category, $cost_price, Database::getInstance());
-    if (!empty($heuristic['price'])) {
+
+    $aiPrice = isset($pricingData['price']) ? (float) $pricingData['price'] : 0.0;
+    $aiConf = $toConfidence($pricingData['confidence'] ?? 0.0);
+    $heurPrice = isset($heuristic['price']) ? (float) $heuristic['price'] : 0.0;
+    $heurConf = $toConfidence($heuristic['confidence'] ?? 0.0);
+
+    if ($aiPrice <= 0.0 && $heurPrice > 0.0) {
         $pricingData = $heuristic;
-        $pricingData['reasoning'] = ($pricingData['reasoning'] ?? '') . ' • Market-average default applied.';
+        $pricingData['reasoning'] = ($pricingData['reasoning'] ?? '') . ' • AI output unavailable, market-average fallback applied.';
+        $fallbackUsed = true;
+        $fallbackKind = 'heuristic';
+        $fallbackReason = 'AI output was unavailable or invalid (price <= 0). Market-average heuristic fallback applied.';
+        if (!empty($diagnostics['provider_error'])) {
+            $providerName = (string) ($diagnostics['provider'] ?? ($aiProviders->getSettings()['ai_provider'] ?? 'unknown'));
+            $fallbackReason .= " Provider error from '{$providerName}': " . (string) $diagnostics['provider_error'];
+        }
+    } else if ($heurPrice > 0.0 && ($heurConf >= ($aiConf + 0.20))) {
+        $pricingData = $heuristic;
+        $pricingData['reasoning'] = ($pricingData['reasoning'] ?? '') . ' • Heuristic selected due to higher confidence.';
+        $fallbackUsed = true;
+        $fallbackKind = 'confidence_override';
+        $fallbackReason = 'Heuristic pricing selected because it exceeded AI confidence by >= 0.20 ('
+            . 'heuristic=' . number_format($heurConf, 2) . ', ai=' . number_format($aiConf, 2) . ').';
     }
 
     // Apply tier multiplier
@@ -118,7 +173,10 @@ try {
         'confidence' => $pricingData['confidence'],
         'factors' => $pricingData['factors'] ?? [],
         'components' => $pricingData['components'] ?? [],
-        'analysis' => $pricingData['analysis'] ?? []
+        'analysis' => $pricingData['analysis'] ?? [],
+        'fallback_used' => (bool) $fallbackUsed,
+        'fallback_kind' => (string) $fallbackKind,
+        'fallback_reason' => (string) $fallbackReason
     ]);
 
 } catch (Throwable $e) {

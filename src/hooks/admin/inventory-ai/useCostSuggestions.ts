@@ -11,6 +11,9 @@ export interface CostSuggestion {
     analysis: Record<string, unknown>;
     reasoning: string;
     baseline_cost?: number;
+    fallback_used?: boolean;
+    fallback_reason?: string;
+    fallback_kind?: string;
     _cachedAt?: number;
 }
 
@@ -65,7 +68,7 @@ export const useCostSuggestions = () => {
             });
 
             if (data && data.success) {
-                const res_data = data as Record<string, unknown>;
+                const res_data = data as unknown as Record<string, unknown>;
                 let base_cost = Number(res_data.suggested_cost);
                 if (!Number.isFinite(base_cost) || base_cost <= 0) base_cost = 0;
 
@@ -103,6 +106,9 @@ export const useCostSuggestions = () => {
                     breakdown: scaledBreakdown,
                     analysis: (res_data.analysis || {}) as Record<string, unknown>,
                     reasoning: (res_data.reasoning as string) || '',
+                    fallback_used: Boolean((res_data as any).fallback_used),
+                    fallback_reason: String(((res_data as any).fallback_reason || '') as string),
+                    fallback_kind: String(((res_data as any).fallback_kind || '') as string),
                     _cachedAt: Date.now()
                 };
                 setCachedCostSuggestion(suggestion);

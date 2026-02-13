@@ -1,6 +1,8 @@
 import { useCallback } from 'react';
 import { ApiClient } from '../../core/ApiClient.js';
 import { useModalContext } from '../../context/ModalContext.js';
+import { buildAdminUrl } from '../../core/admin-url-builder.js';
+import { ADMIN_SECTION } from '../../core/constants.js';
 import type {
     IAICostEstimateOperation,
     IAICostEstimateRequest,
@@ -59,8 +61,10 @@ export const useAICostEstimateConfirm = () => {
             });
         }
 
+        const fallbackReasons = estimate.pricing?.fallback_reasons || [];
+        const primaryFallbackReason = (fallbackReasons[0] || estimate.pricing?.fallback_note || '').trim();
         const pricingNote = estimate.pricing?.is_fallback_pricing
-            ? (estimate.pricing?.fallback_note || 'Fallback pricing in effect.')
+            ? `Fallback pricing in effect.${primaryFallbackReason ? ` Reason: ${primaryFallbackReason}` : ''}`
             : '';
 
         const lineSummary = estimate.line_items
@@ -82,7 +86,15 @@ export const useAICostEstimateConfirm = () => {
             confirmText,
             cancelText: 'Cancel',
             confirmStyle: 'warning',
-            iconKey: 'info'
+            iconKey: estimate.pricing?.is_fallback_pricing ? 'warning' : 'info',
+            extraActions: estimate.pricing?.is_fallback_pricing
+                ? [{
+                    label: 'AI Settings',
+                    style: 'secondary',
+                    href: buildAdminUrl(ADMIN_SECTION.AI_SETTINGS),
+                    target: '_blank'
+                }]
+                : undefined
         });
     }, [confirm]);
 

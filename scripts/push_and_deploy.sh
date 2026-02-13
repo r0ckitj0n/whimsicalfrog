@@ -64,11 +64,12 @@ fi
 DEPLOY_ARGS=()
 case "$DEPLOY_MODE" in
   lite) DEPLOY_ARGS+=(--lite) ;;
+  code-only) DEPLOY_ARGS+=(--lite --code-only) ;;
   full) DEPLOY_ARGS+=(--full) ;;
   dist-only) DEPLOY_ARGS+=(--dist-only) ;;
   env-only) DEPLOY_ARGS+=(--env-only) ;;
   *)
-    echo "[push+deploy] Invalid --mode '$DEPLOY_MODE'. Use lite|full|dist-only|env-only." >&2
+    echo "[push+deploy] Invalid --mode '$DEPLOY_MODE'. Use lite|code-only|full|dist-only|env-only." >&2
     exit 2
     ;;
 esac

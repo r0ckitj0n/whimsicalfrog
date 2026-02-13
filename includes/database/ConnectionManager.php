@@ -134,7 +134,8 @@ class ConnectionManager
             'host' => $get('WF_DB_LIVE_HOST') ?: 'db5017975223.hosting-data.io',
             'name' => $get('WF_DB_LIVE_NAME') ?: 'dbs14295502',
             'user' => $get('WF_DB_LIVE_USER') ?: 'dbu2826619',
-            'pass' => $get('WF_DB_LIVE_PASS') ?: 'Ruok2drvacar?',
+            // Never commit live passwords. Require WF_DB_LIVE_PASS in server environment.
+            'pass' => $get('WF_DB_LIVE_PASS') ?: '',
             'port' => $get('WF_DB_LIVE_PORT') ?: 3306,
             'socket' => $get('WF_DB_LIVE_SOCKET') ?: '',
         ];

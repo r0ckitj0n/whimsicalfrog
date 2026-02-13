@@ -191,6 +191,11 @@ done
 
 # Pre-clean common duplicate/backup/tmp files on the remote to avoid slow deletes during mirror
 echo -e "${GREEN}🧽 Pre-cleaning duplicate/backup/tmp files on server...${NC}"
+if [ "$PRESERVE_IMAGES" = "1" ]; then
+  PRECLEAN_IMAGE_LINES=""
+else
+  PRECLEAN_IMAGE_LINES=$'cd images\nrm -f .tmp* ".tmp2 *" *.bak *.bak.*\ncd items\nrm -f .tmp* ".tmp2 *" *.bak *.bak.*\ncd /\n'
+fi
 cat > preclean_remote.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
@@ -200,6 +205,7 @@ rm -f .tmp* ".tmp2 *" *.bak *.bak.*
 cd src
 rm -f .tmp* ".tmp2 *" *.bak *.bak.*
 cd ..
+${PRECLEAN_IMAGE_LINES}
 bye
 EOL
 
@@ -251,9 +257,9 @@ require_dist_artifacts
 # - Default: deploy most files including images (but backgrounds/signs are handled separately).
 # - Preserve mode: do not upload/delete/touch any images/** paths on the server.
 if [ "$PRESERVE_IMAGES" = "1" ]; then
-  IMAGE_EXCLUDE_LINES=$'  --exclude-glob "images/**" \\\n'
+  IMAGE_EXCLUDE_LINES=$'  --exclude-glob "images/**" \\'
 else
-  IMAGE_EXCLUDE_LINES=$'  --exclude-glob "images/backgrounds/**" \\\n  --exclude-glob "images/signs/**" \\\n'
+  IMAGE_EXCLUDE_LINES=$'  --exclude-glob "images/backgrounds/**" \\\n  --exclude-glob "images/signs/**" \\'
 fi
 
 # Create lftp commands for file deployment
@@ -304,7 +310,7 @@ mirror $MIRROR_FLAGS \
   --exclude-glob fix_clown_frog_image.sql \
   --exclude-glob images/.htaccess \
   --exclude-glob images/items/.htaccess \
-${IMAGE_EXCLUDE_LINES}  --exclude-glob config/my.cnf \
+${IMAGE_EXCLUDE_LINES}
   --exclude-glob config/my.cnf \
   --exclude-glob config/secret.key \
   --exclude-glob "* [0-9].*" \

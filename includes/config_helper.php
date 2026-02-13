@@ -14,7 +14,8 @@ function wf_detect_environment()
 function wf_load_db_config($isLocal)
 {
     if ($isLocal) {
-        $cfg = ['host' => '127.0.0.1', 'db' => 'whimsicalfrog', 'user' => 'root', 'pass' => 'Palz2516!', 'port' => 3306, 'socket' => null];
+        // Local defaults should be safe to commit (no secrets).
+        $cfg = ['host' => '127.0.0.1', 'db' => 'whimsicalfrog', 'user' => 'root', 'pass' => '', 'port' => 3306, 'socket' => null];
         $ini = __DIR__ . '/../config/my.cnf';
         if (file_exists($ini)) {
             $inClient = false;
@@ -44,10 +45,12 @@ function wf_load_db_config($isLocal)
         ];
     }
     return [
+        // Live credentials must come from environment (.env on server or host-provided env vars).
+        // Keep non-secret defaults (host/db/user) only if you want a "helpful" baseline; never commit passwords.
         'host' => getenv('WF_DB_LIVE_HOST') ?: 'db5017975223.hosting-data.io',
         'db' => getenv('WF_DB_LIVE_NAME') ?: 'dbs14295502',
         'user' => getenv('WF_DB_LIVE_USER') ?: 'dbu2826619',
-        'pass' => getenv('WF_DB_LIVE_PASS') ?: 'Ruok2drvacar?',
+        'pass' => getenv('WF_DB_LIVE_PASS') ?: '',
         'port' => (int) (getenv('WF_DB_LIVE_PORT') ?: 3306),
         'socket' => getenv('WF_DB_LIVE_SOCKET') ?: null
     ];

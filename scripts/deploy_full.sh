@@ -171,9 +171,13 @@ restore_via_api() {
   # Fallback: upload SQL to server via SFTP, then call server_backup_path
   echo -e "${YELLOW}⚠️  Multipart upload failed or not accepted. Trying server file path restore...${NC}"
   # Use same SFTP credentials as scripts/deploy.sh
-  HOST="home419172903.1and1-data.host"
-  USER="acc899014616"
-  PASS="Palz2516!"
+  HOST="${WF_DEPLOY_HOST:-}"
+  USER="${WF_DEPLOY_USER:-}"
+  PASS="${WF_DEPLOY_PASS:-}"
+  if [[ -z "$HOST" || -z "$USER" || -z "$PASS" ]]; then
+    echo -e "${RED}❌ Missing WF_DEPLOY_HOST/WF_DEPLOY_USER/WF_DEPLOY_PASS for SFTP fallback upload${NC}"
+    return 1
+  fi
   # Upload into api/uploads/ (API accepts server_backup_path under uploads/)
   REMOTE_DIR="api/uploads"
   # Preserve .gz extension if present so server can stream decompress

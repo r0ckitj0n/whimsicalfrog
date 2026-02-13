@@ -105,7 +105,7 @@ fi
 section "Database: creating local dev DB dump (gz)"
 mkdir -p backups/sql
 # Preferred: use mysqldump-based script and capture its reported output path
-if DUMP_OUT=$(bash scripts/db/dump_local_db.sh --gzip 2>&1); then
+if DUMP_OUT=$(bash scripts/db/dump_local_db.sh --gzip --exclude-secrets 2>&1); then
   # Extract the final path from a line like: "Done: backups/sql/local_db_dump_YYYY-MM-DD_HH-MM-SS.sql.gz"
   DUMP_PATH=$(echo "$DUMP_OUT" | awk '/^Done: /{p=$2} END{print p}')
   if [[ -n "${DUMP_PATH:-}" && -f "${DUMP_PATH}" ]]; then
@@ -120,7 +120,7 @@ fi
 # Fallback or continue if DUMP_PATH not set
 if [[ -z "${DUMP_PATH:-}" || ! -f "${DUMP_PATH}" ]]; then
   # PHP dumper prints resulting path(s); capture the last non-empty line
-  PHP_DUMP_OUT=$(php scripts/db/php_dump_dev.php --gzip 2>&1 || true)
+  PHP_DUMP_OUT=$(php scripts/db/php_dump_dev.php --gzip --exclude-secrets 2>&1 || true)
   echo "$PHP_DUMP_OUT" | tail -n +1 | sed '/^$/d' | tail -n 1 > /tmp/wf_php_dump_path.txt || true
   if [[ -s /tmp/wf_php_dump_path.txt ]]; then
     DUMP_PATH=$(cat /tmp/wf_php_dump_path.txt)
@@ -255,7 +255,9 @@ restore_via_mysql() {
 section "Database: restoring dump to LIVE"
 # First, ensure a clean state by dropping all current tables (avoids FK conflicts with old schemas)
 echo -e "${YELLOW}🧹 Pre-cleaning: dropping all existing tables on LIVE...${NC}"
-curl -s -X POST "${BASE_URL}/api/database_maintenance.php?action=drop_all_tables&admin_token=${WF_ADMIN_TOKEN:-}" > /tmp/wf_drop_all.out || true
+curl -s -X POST \
+  --data-urlencode "skip_tables=secrets" \
+  "${BASE_URL}/api/database_maintenance.php?action=drop_all_tables&admin_token=${WF_ADMIN_TOKEN:-}" > /tmp/wf_drop_all.out || true
 if grep -q '"success"\s*:\s*true' /tmp/wf_drop_all.out 2>/dev/null; then
   echo -e "${GREEN}✅ Remote database cleared${NC}"
 else
@@ -298,4 +300,3 @@ echo -e "  • Vite manifest -> HTTP ${MANIFEST_CODE}"
 echo -e "\n${GREEN}🎉 Full deployment completed successfully!${NC}"
 echo -e "${GREEN}📦 DB: restored from local dump${NC}"
 echo -e "${GREEN}📁 Files: mirrored to live and verified${NC}"
-

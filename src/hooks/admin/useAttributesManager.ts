@@ -1,10 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useModalContext } from '../../context/ModalContext.js';
 import { useGlobalEntities, ISizeTemplate, IColorTemplate } from './useGlobalEntities.js';
+import { useInventoryOptionLinks } from './useInventoryOptionLinks.js';
+import { useMaterials } from './useMaterials.js';
+import { useCategoryList } from './useCategoryList.js';
+import type { InventoryOptionType, InventoryOptionAppliesToType } from '../../types/inventoryOptions.js';
 
 export type { ISizeTemplate, IColorTemplate };
 
-export type TabId = 'genders' | 'sizes' | 'colors' | 'global-colors' | 'global-sizes';
+export type TabId = 'genders' | 'sizes' | 'colors' | 'global-colors' | 'global-sizes' | 'assignments' | 'materials';
 
 export const useAttributesManager = () => {
     const {
@@ -31,6 +35,10 @@ export const useAttributesManager = () => {
         duplicateSizeTemplate,
         duplicateColorTemplate
     } = useGlobalEntities();
+
+    const linksApi = useInventoryOptionLinks();
+    const materialsApi = useMaterials();
+    const categoriesApi = useCategoryList();
 
     const [activeTab, setActiveTab] = useState<TabId>('genders');
     const [editingSize, setEditingSize] = useState<ISizeTemplate | null>(null);
@@ -236,14 +244,31 @@ export const useAttributesManager = () => {
         setIsRedesignOpen(true);
     }, []);
 
+    const upsertLink = useCallback(async (payload: {
+        option_type: InventoryOptionType;
+        option_id: number;
+        applies_to_type: InventoryOptionAppliesToType;
+        category_id?: number | null;
+        item_sku?: string | null;
+    }) => {
+        return await linksApi.upsertLink(payload);
+    }, [linksApi]);
+
+    const clearLink = useCallback(async (payload: { option_type: InventoryOptionType; option_id: number }) => {
+        return await linksApi.clearLink(payload);
+    }, [linksApi]);
+
     return {
         colors,
         sizes,
         genders,
         sizeTemplates,
         colorTemplates,
-        isLoading,
-        error,
+        materials: materialsApi.materials,
+        optionLinks: linksApi.links,
+        categories: categoriesApi.categories,
+        isLoading: isLoading || linksApi.isLoading || materialsApi.isLoading || categoriesApi.isLoading,
+        error: error || linksApi.error || materialsApi.error || categoriesApi.error,
         activeTab,
         setActiveTab,
         editingSize,
@@ -271,6 +296,11 @@ export const useAttributesManager = () => {
         handleEditSize,
         handleEditColor,
         handleOpenSizeColorRedesign,
-        handleSaveTemplate
+        handleSaveTemplate,
+        upsertLink,
+        clearLink,
+        materialsApi,
+        themedPrompt,
+        themedConfirm
     };
 };

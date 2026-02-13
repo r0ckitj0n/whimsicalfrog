@@ -1,8 +1,10 @@
 import React from 'react';
 import { IColorTemplate } from '../../../../hooks/admin/useGlobalEntities.js';
+import type { IInventoryOptionLink } from '../../../../types/inventoryOptions.js';
 
 interface ColorTemplatesTabProps {
     templates: IColorTemplate[];
+    links?: IInventoryOptionLink[];
     onAdd: () => void;
     onEdit: (id: number) => void;
     onDuplicate: (id: number) => void;
@@ -12,12 +14,22 @@ interface ColorTemplatesTabProps {
 
 export const ColorTemplatesTab: React.FC<ColorTemplatesTabProps> = ({
     templates,
+    links = [],
     onAdd,
     onEdit,
     onDuplicate,
     onDelete,
     onOpenRedesign
 }) => {
+    const linkById = new Map<number, IInventoryOptionLink>();
+    links.filter(l => l.option_type === 'color_template').forEach(l => linkById.set(l.option_id, l));
+
+    const summarize = (l?: IInventoryOptionLink) => {
+        if (!l) return 'Unassigned';
+        if (l.applies_to_type === 'category') return `Category: ${l.category_name || `#${l.category_id ?? '?'}`}`;
+        return `SKU: ${l.item_sku || '?'}${l.item_name ? ` (${l.item_name})` : ''}`;
+    };
+
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
@@ -42,6 +54,9 @@ export const ColorTemplatesTab: React.FC<ColorTemplatesTabProps> = ({
                             <div>
                                 <div className="text-sm font-bold text-gray-900">{tpl.template_name}</div>
                                 <div className="text-xs text-gray-500">{tpl.category || 'General'}</div>
+                                <div className="text-[11px] text-gray-600 mt-1">
+                                    <span className="font-semibold text-gray-800">Applies to:</span> {summarize(linkById.get(tpl.id))}
+                                </div>
                             </div>
                             <div className="flex gap-2">
                                 <button

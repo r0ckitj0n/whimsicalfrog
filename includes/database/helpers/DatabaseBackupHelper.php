@@ -235,19 +235,35 @@ class DatabaseBackupHelper
     /**
      * Drop all tables in database
      */
-    public static function dropAllTables()
+    public static function dropAllTables(array $skipTables = [])
     {
         try {
             $pdo = Database::getInstance();
             $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
             $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+
+            $skip = [];
+            foreach ($skipTables as $t) {
+                if (is_string($t) && $t !== '') {
+                    $skip[strtolower($t)] = true;
+                }
+            }
+
+            $dropped = 0;
+            $skipped = [];
             foreach ($tables as $table) {
+                if (isset($skip[strtolower((string)$table)])) {
+                    $skipped[] = $table;
+                    continue;
+                }
                 $pdo->exec("DROP TABLE IF EXISTS `$table`");
+                $dropped++;
             }
             $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
             return [
                 'success' => true,
-                'tables_dropped' => count($tables),
+                'tables_dropped' => $dropped,
+                'tables_skipped' => $skipped,
                 'tables' => $tables
             ];
         } catch (Exception $e) {

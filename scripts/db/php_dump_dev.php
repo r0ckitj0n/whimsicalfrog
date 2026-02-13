@@ -3,7 +3,7 @@
 // scripts/db/php_dump_dev.php
 // PHP-based database dumper for DEV (local) environment, no mysqldump required.
 // Outputs a SQL file under backups/sql/dev_full_YYYY-MM-DD_HH-MM-SS.sql
-// Usage: php scripts/db/php_dump_dev.php [--gzip]
+// Usage: php scripts/db/php_dump_dev.php [--gzip] [--exclude-secrets]
 
 ini_set('memory_limit', '1024M');
 set_time_limit(0);
@@ -30,6 +30,8 @@ function sql_escape(PDO $pdo, $v)
 }
 
 $pdo = Database::getInstance();
+
+$excludeSecrets = in_array('--exclude-secrets', $argv, true);
 
 $date = date('Y-m-d_H-i-s');
 $outDir = $root . '/backups/sql';
@@ -74,6 +76,9 @@ usort($entries, function ($a, $b) use ($priority) {
 foreach ($entries as $ent) {
     $table = $ent['name'];
     $type = $ent['type'];
+    if ($excludeSecrets && $table === 'secrets') {
+        continue;
+    }
     if ($type === 'VIEW') {
         // Dump VIEW definition only
         fwrite($fh, "--\n-- View structure for view " . q($table) . "\n--\n\n");

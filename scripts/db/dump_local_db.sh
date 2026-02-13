@@ -4,7 +4,7 @@ set -euo pipefail
 # Dump the local database to backups/sql/ with a timestamped filename.
 # Reads credentials from .env (WF_DB_LOCAL_*). Falls back to sane defaults if set in the environment.
 # Usage:
-#   scripts/db/dump_local_db.sh [--gzip]
+#   scripts/db/dump_local_db.sh [--gzip] [--exclude-secrets]
 #
 # Example:
 #   ./scripts/db/dump_local_db.sh --gzip
@@ -39,10 +39,15 @@ SOCKET="${WF_DB_LOCAL_SOCKET:-}"
 
 # Parse flags
 GZIP_OUTPUT=0
+EXCLUDE_SECRETS=0
 for arg in "$@"; do
   case "$arg" in
     --gzip|-z)
       GZIP_OUTPUT=1
+      shift
+      ;;
+    --exclude-secrets)
+      EXCLUDE_SECRETS=1
       shift
       ;;
     *) ;;
@@ -92,6 +97,12 @@ fi
 
 # Add the database without CREATE DATABASE/USE so dumps restore cleanly into a differently named live DB
 MYSQLDUMP_ARGS+=("${DB}")
+
+# Avoid dumping the encrypted secrets table when preparing a dump intended for production restore.
+# The live site keeps its own filesystem key (config/secret.key) which should not be synced from dev.
+if [[ "${EXCLUDE_SECRETS}" -eq 1 ]]; then
+  MYSQLDUMP_ARGS+=("--ignore-table=${DB}.secrets")
+fi
 
 # Run the dump (avoid exposing password in process list using MYSQL_PWD)
 if [[ -n "${PASS}" ]]; then

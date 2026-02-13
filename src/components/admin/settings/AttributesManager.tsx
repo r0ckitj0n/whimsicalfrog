@@ -10,6 +10,8 @@ import { GlobalSizesTab } from './attributes/GlobalSizesTab.js';
 import { SizeTemplatesTab } from './attributes/SizeTemplatesTab.js';
 import { ColorTemplatesTab } from './attributes/ColorTemplatesTab.js';
 import { SizeColorRedesign } from './attributes/SizeColorRedesign.js';
+import { OptionAssignmentsTab } from './attributes/OptionAssignmentsTab.js';
+import { MaterialsTab } from './attributes/MaterialsTab.js';
 import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface AttributesManagerProps {
@@ -24,6 +26,9 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
         genders,
         sizeTemplates,
         colorTemplates,
+        materials,
+        optionLinks,
+        categories,
         isLoading,
         error,
         activeTab,
@@ -53,15 +58,22 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
         handleEditSize,
         handleEditColor,
         handleOpenSizeColorRedesign,
-        handleSaveTemplate
+        handleSaveTemplate,
+        upsertLink,
+        clearLink,
+        materialsApi,
+        themedPrompt,
+        themedConfirm
     } = useAttributesManager();
 
     const tabs = [
         { id: 'genders', label: 'Genders' },
         { id: 'global-colors', label: 'Global Colors' },
         { id: 'global-sizes', label: 'Global Sizes' },
+        { id: 'assignments', label: 'Assignments' },
         { id: 'sizes', label: 'Size Templates' },
-        { id: 'colors', label: 'Color Templates' }
+        { id: 'colors', label: 'Color Templates' },
+        { id: 'materials', label: 'Materials' },
     ];
     const attemptClose = useUnsavedChangesCloseGuard({
         isDirty,
@@ -196,9 +208,21 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
                                     {activeTab === 'genders' && <GenderTab genders={genders} onAdd={handleAddGender} onDelete={handleDeleteGender} />}
                                     {activeTab === 'global-colors' && <GlobalColorsTab colors={colors} onAdd={handleAddGlobalColor} onDelete={handleDeleteGlobalColor} />}
                                     {activeTab === 'global-sizes' && <GlobalSizesTab sizes={sizes} onAdd={handleAddGlobalSize} onDelete={handleDeleteGlobalSize} />}
+                                    {activeTab === 'assignments' && (
+                                        <OptionAssignmentsTab
+                                            sizeTemplates={sizeTemplates}
+                                            colorTemplates={colorTemplates}
+                                            links={optionLinks}
+                                            categories={categories}
+                                            isBusy={isLoading}
+                                            onUpsertLink={upsertLink}
+                                            onClearLink={clearLink}
+                                        />
+                                    )}
                                     {activeTab === 'sizes' && (
                                         <SizeTemplatesTab
                                             templates={sizeTemplates}
+                                            links={optionLinks}
                                             onAdd={() => {
                                                 const empty: Partial<ISizeTemplate> = { template_name: '', sizes: [] };
                                                 setEditingSize(empty as ISizeTemplate);
@@ -213,6 +237,7 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
                                     {activeTab === 'colors' && (
                                         <ColorTemplatesTab
                                             templates={colorTemplates}
+                                            links={optionLinks}
                                             onAdd={() => {
                                                 const empty: Partial<IColorTemplate> = { template_name: '', colors: [] };
                                                 setEditingColor(empty as IColorTemplate);
@@ -222,6 +247,21 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
                                             onDuplicate={handleDuplicateColor}
                                             onDelete={handleDeleteColorTemplate}
                                             onOpenRedesign={handleOpenSizeColorRedesign}
+                                        />
+                                    )}
+                                    {activeTab === 'materials' && (
+                                        <MaterialsTab
+                                            materials={materials}
+                                            links={optionLinks}
+                                            categories={categories}
+                                            isBusy={isLoading}
+                                            onCreate={materialsApi.createMaterial}
+                                            onUpdate={materialsApi.updateMaterial}
+                                            onDelete={materialsApi.deleteMaterial}
+                                            onUpsertLink={async (payload) => upsertLink(payload)}
+                                            onClearLink={async (payload) => clearLink(payload)}
+                                            prompt={themedPrompt}
+                                            confirm={themedConfirm}
                                         />
                                     )}
                                 </div>

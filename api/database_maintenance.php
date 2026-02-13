@@ -126,7 +126,14 @@ try {
             Response::json(DatabaseBackupHelper::createBackup());
             break;
         case 'drop_all_tables':
-            Response::json(DatabaseBackupHelper::dropAllTables());
+            $skipRaw = $_GET['skip_tables'] ?? $_POST['skip_tables'] ?? ($input['skip_tables'] ?? '');
+            $skip = [];
+            if (is_array($skipRaw)) {
+                $skip = array_values(array_filter(array_map('strval', $skipRaw), static fn($v) => $v !== ''));
+            } elseif (is_string($skipRaw) && trim($skipRaw) !== '') {
+                $skip = array_values(array_filter(array_map('trim', explode(',', $skipRaw)), static fn($v) => $v !== ''));
+            }
+            Response::json(DatabaseBackupHelper::dropAllTables($skip));
             break;
         case 'restore_database':
             Response::json(DatabaseBackupHelper::restoreDatabase($input, $_FILES));

@@ -42,6 +42,7 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
         error,
         fetchBreakdown,
         saveCostFactor,
+        updateCostFactor,
         clearBreakdown,
         populateFromSuggestion,
         applySuggestionLocally
@@ -121,12 +122,30 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
         onDirtyStateChange({ isDirty: isDirtyFromTotals || hasCached, total, stored });
     }, [onDirtyStateChange, breakdown.totals?.total, breakdown.totals?.stored, cachedBreakdown]);
 
-    const handleFactorChange = (category: string, value: string, existingId?: string) => {
+    const normalizeIdForUpdate = (rawId?: string): string | null => {
+        const id = String(rawId || '').trim();
+        if (!id) return null;
+
+        // DB-backed ids are normalized in useCostBreakdown to `${category}-${id}`; accept both.
+        if (/^\\d+$/.test(id)) return id;
+        const m = id.match(/^(materials|labor|energy|equipment)-(\\d+)$/);
+        if (m?.[2]) return m[2];
+        return null; // Avoid accidentally updating some random row for AI temp ids.
+    };
+
+    const handleFactorChange = (category: string, value: string, existingId?: string, existingLabel?: string) => {
         const cost = parseFloat(value);
-        if (!isNaN(cost)) {
-            // Passing label as second param or empty if not provided, adjusting to match hook signature (category, cost, label, details)
-            saveCostFactor(category, cost, category, existingId);
+        if (Number.isNaN(cost)) return;
+
+        const label = String(existingLabel || category).trim();
+        const normalizedId = normalizeIdForUpdate(existingId);
+
+        if (normalizedId) {
+            void updateCostFactor(category, normalizedId, cost, label);
+            return;
         }
+
+        void saveCostFactor(category, cost, label);
     };
 
     const categories = [
@@ -147,10 +166,10 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
         setEditValue(amount.toFixed(2));
     };
 
-    const commitEditCategory = (category: string, existingId?: string) => {
+    const commitEditCategory = (category: string, existingId?: string, existingLabel?: string) => {
         const amount = parseFloat(editValue);
         if (!isNaN(amount)) {
-            handleFactorChange(category, String(amount), existingId);
+            handleFactorChange(category, String(amount), existingId, existingLabel);
         }
         setEditingCategory(null);
         setEditValue('');
@@ -229,6 +248,7 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
                         const items = Array.isArray(itemsArray) ? itemsArray : [];
                         const firstItem = items[0] as ICostItem | undefined;
                         const firstId = firstItem?.id?.toString();
+                        const firstLabel = firstItem?.label?.toString() || '';
                         const displayValue = firstItem?.cost ? firstItem.cost.toFixed(2) : '';
 
                         return (
@@ -245,9 +265,9 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
                                                     className="w-20 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold focus:ring-1 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/20"
                                                     value={editValue}
                                                     onChange={(e) => setEditValue(e.target.value)}
-                                                    onBlur={() => commitEditCategory(cat.id, firstId)}
+                                                    onBlur={() => commitEditCategory(cat.id, firstId, firstLabel)}
                                                     onKeyDown={(e) => {
-                                                        if (e.key === 'Enter') commitEditCategory(cat.id, firstId);
+                                                        if (e.key === 'Enter') commitEditCategory(cat.id, firstId, firstLabel);
                                                         if (e.key === 'Escape') {
                                                             setEditingCategory(null);
                                                             setEditValue('');

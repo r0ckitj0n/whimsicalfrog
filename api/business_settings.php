@@ -4,6 +4,25 @@
  * Modern refactored version using backup logic.
  */
 
+// Preflight required includes so missing files produce a JSON error instead of a blank 500/fatal.
+$requiredFiles = [
+    ['api/config.php', __DIR__ . '/config.php'],
+    ['includes/functions.php', __DIR__ . '/../includes/functions.php'],
+    ['includes/auth_helper.php', __DIR__ . '/../includes/auth_helper.php'],
+    ['includes/response.php', __DIR__ . '/../includes/response.php'],
+    ['includes/Constants.php', __DIR__ . '/../includes/Constants.php'],
+    ['includes/business_settings_api_helper.php', __DIR__ . '/../includes/business_settings_api_helper.php'],
+];
+foreach ($requiredFiles as [$label, $path]) {
+    if (!is_file($path)) {
+        if (ob_get_length()) ob_clean();
+        http_response_code(500);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => "Missing required server file: {$label}"]);
+        exit;
+    }
+}
+
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
@@ -182,6 +201,8 @@ try {
         default:
             Response::error('Invalid action: ' . $action, null, 400);
     }
-} catch (Exception $e) {
-    Response::serverError($e->getMessage());
+} catch (Throwable $e) {
+    // Ensure fatal-type errors (TypeError, Error) still produce a JSON response instead of an empty 500.
+    error_log('[business_settings] ' . get_class($e) . ': ' . $e->getMessage());
+    Response::serverError($e->getMessage(), ['type' => get_class($e)]);
 }

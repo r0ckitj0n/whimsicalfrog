@@ -11,6 +11,7 @@ interface MediaAndVariantsSectionProps {
     mode: 'edit' | 'view' | 'add' | '';
     isReadOnly: boolean;
     onStockChange: (newTotal: number) => void;
+    onOpenInventoryOptions?: () => void;
     formData: {
         weight_oz: number;
         package_length_in: number;
@@ -29,6 +30,7 @@ export const MediaAndVariantsSection: React.FC<MediaAndVariantsSectionProps> = (
     mode,
     isReadOnly,
     onStockChange,
+    onOpenInventoryOptions,
     formData,
     onFieldChange,
     lockedFields = {},
@@ -145,10 +147,19 @@ export const MediaAndVariantsSection: React.FC<MediaAndVariantsSectionProps> = (
 
             {!isAdding && (
                 <div className="bg-gradient-to-br from-emerald-50 via-green-50/70 to-white rounded-2xl border border-emerald-200 shadow-sm overflow-hidden">
-                    <div className="px-4 py-2.5 bg-emerald-50/80 border-b border-emerald-200">
+                    <div className="px-4 py-2.5 bg-emerald-50/80 border-b border-emerald-200 flex items-center justify-between gap-3">
                         <h3 className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest flex items-center gap-2">
                             <span>🧩</span> Variants & Options
                         </h3>
+                        <button
+                            type="button"
+                            className="btn btn-secondary px-3 py-1.5 text-[10px] font-black uppercase tracking-widest"
+                            onClick={onOpenInventoryOptions}
+                            disabled={!onOpenInventoryOptions}
+                            data-help-id="inventory-open-inventory-options"
+                        >
+                            Inventory Options
+                        </button>
                     </div>
                     <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div className="space-y-2">

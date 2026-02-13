@@ -18,6 +18,7 @@ import { PriceAnalysisColumn } from '../../../admin/inventory/partials/PriceAnal
 import { MediaAndVariantsSection } from '../../../admin/inventory/partials/MediaAndVariantsSection.js';
 import { AIMarketingPanel } from '../../../admin/inventory/AIMarketingPanel.js';
 import { ImageGallery } from '../../../admin/inventory/ImageGallery.js';
+import { AttributesManager } from '../../../admin/settings/AttributesManager.js';
 
 interface InventoryItemModalProps {
     sku: string;
@@ -204,6 +205,8 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
         sellingPoints?: string[];
         marketingChannels?: string[];
     } | null>(null);
+
+    const [isInventoryOptionsOpen, setIsInventoryOptionsOpen] = useState(false);
 
     useEffect(() => {
         let isCancelled = false;
@@ -605,6 +608,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                                 mode={mode}
                                 isReadOnly={isReadOnly}
                                 onStockChange={handleStockChange}
+                                onOpenInventoryOptions={() => setIsInventoryOptionsOpen(true)}
                                 formData={formData}
                                 onFieldChange={handleFieldChange}
                                 lockedFields={lockedFields}
@@ -644,6 +648,12 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
     return (
         <>
             {createPortal(modalContent, document.body)}
+            {isInventoryOptionsOpen && (
+                <AttributesManager
+                    title="Inventory Options"
+                    onClose={() => setIsInventoryOptionsOpen(false)}
+                />
+            )}
         </>
     );
 };

@@ -4,6 +4,7 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/item_price_sync.php';
 
 function ensureAiTierColumnsExist(): void
 {
@@ -45,12 +46,7 @@ try {
 
     ensureAiTierColumnsExist();
 
-    // Start transaction
-    Database::beginTransaction();
-
     // 1. Clear existing price factors
-    Database::execute("DELETE FROM price_factors WHERE sku = ?", [$sku]);
-
     // 2. Save AI metadata to items table
     // Ensure confidence is numeric - AI may return 'N/A' which breaks decimal columns
     $confidenceRaw = $suggestion['confidence'] ?? null;
@@ -59,6 +55,12 @@ try {
     if ($qualityTier !== null && !in_array($qualityTier, ['standard', 'premium', 'luxury'], true)) {
         Response::error('Invalid quality_tier', null, 422);
     }
+
+    // Start transaction (after all validations that can Response::error/exit).
+    Database::beginTransaction();
+
+    // 1. Clear existing price factors
+    Database::execute("DELETE FROM price_factors WHERE sku = ?", [$sku]);
 
     // Build dynamic SET clause to only update price-specific tier if provided
     $setClauses = ['ai_price_confidence = ?', 'ai_price_at = ?'];
@@ -109,10 +111,17 @@ try {
         }
     }
 
+    // Keep items.retail_price consistent with the breakdown.
+    wf_sync_item_retail_price_from_factors($sku);
+
     Database::commit();
     Response::success(null, 'Populated price factors from AI');
 
 } catch (Exception $e) {
-    Database::rollBack();
+    try {
+        Database::rollBack();
+    } catch (Throwable $_ignored) {
+        // ignore
+    }
     Response::serverError($e->getMessage());
 }

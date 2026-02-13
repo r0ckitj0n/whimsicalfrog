@@ -4,6 +4,7 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/item_price_sync.php';
 
 try {
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -22,8 +23,8 @@ try {
         Response::error('Missing required fields (updates)', null, 422);
     }
 
-    // Start transaction if supported by Database helper.
-    Database::execute("START TRANSACTION");
+    // Start transaction.
+    Database::beginTransaction();
 
     foreach ($updates as $u) {
         if (!is_array($u)) {
@@ -45,15 +46,17 @@ try {
         );
     }
 
-    Database::execute("COMMIT");
+    // Keep items.retail_price consistent with the breakdown.
+    wf_sync_item_retail_price_from_factors($sku);
+
+    Database::commit();
     Response::success(null, 'Price factors updated');
 
 } catch (Exception $e) {
     try {
-        Database::execute("ROLLBACK");
+        Database::rollBack();
     } catch (Throwable $_ignored) {
         // ignore
     }
     Response::serverError($e->getMessage());
 }
-

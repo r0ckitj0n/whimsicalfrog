@@ -94,13 +94,14 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
 
     if (!sku) return null;
 
-    // Header total should always reflect the breakdown sum.
-    const currentRetailValue = Number(breakdown.totals?.total ?? 0);
+    const storedRetailValue = Number(breakdown.totals?.stored ?? 0);
+    const breakdownTotalValue = Number(breakdown.totals?.total ?? 0);
+    const hasMismatch = Math.abs(storedRetailValue - breakdownTotalValue) > 0.001;
 
     const startEditCurrent = () => {
         if (isReadOnly) return;
         setIsEditingCurrent(true);
-        setCurrentEditValue(currentRetailValue.toFixed(2));
+        setCurrentEditValue(storedRetailValue.toFixed(2));
     };
 
     const commitEditCurrent = async () => {
@@ -180,10 +181,15 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
                             onClick={startEditCurrent}
                             title={!isReadOnly && onCurrentPriceChange ? 'Click to edit current retail price' : undefined}
                         >
-                            ${currentRetailValue.toFixed(2)}
+                            ${storedRetailValue.toFixed(2)}
                         </span>
                     )}
                 </div>
+                {hasMismatch && (
+                    <div className="mt-1 text-[10px] text-white/70">
+                        Breakdown total: ${breakdownTotalValue.toFixed(2)}
+                    </div>
+                )}
             </div>
 
             <div className="divide-y divide-gray-200 border border-gray-200 rounded bg-white overflow-hidden">

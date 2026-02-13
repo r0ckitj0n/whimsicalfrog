@@ -3,6 +3,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/item_price_sync.php';
 
 try {
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -64,6 +65,8 @@ try {
 
     $category = strtolower($category);
 
+    Database::beginTransaction();
+
     if ($id !== null) {
         // Update by ID (preferred method)
         Database::execute(
@@ -85,8 +88,17 @@ try {
         );
     }
 
+    // Keep items.cost_price consistent with the breakdown.
+    wf_sync_item_cost_price_from_factors((string) $sku);
+    Database::commit();
+
     Response::success(null, 'Saved factor');
 
 } catch (Exception $e) {
+    try {
+        Database::rollBack();
+    } catch (Throwable $_ignored) {
+        // ignore
+    }
     Response::serverError($e->getMessage());
 }

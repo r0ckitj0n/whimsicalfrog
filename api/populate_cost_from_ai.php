@@ -3,6 +3,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/item_price_sync.php';
 
 function ensureAiTierColumnsExist(): void
 {
@@ -69,6 +70,7 @@ try {
         WHERE sku = ?
     ", $params);
 
+    Database::beginTransaction();
     Database::execute("DELETE FROM cost_factors WHERE sku = ?", [$sku]);
 
     // AI suggestion usually comes with categories inside a 'breakdown' property
@@ -110,8 +112,18 @@ try {
         }
     }
 
+    // Keep items.cost_price consistent with the breakdown.
+    wf_sync_item_cost_price_from_factors($sku);
+
+    Database::commit();
+
     Response::success(null, 'Populated from AI');
 
 } catch (Exception $e) {
+    try {
+        Database::rollBack();
+    } catch (Throwable $_ignored) {
+        // ignore
+    }
     Response::serverError($e->getMessage());
 }

@@ -2,31 +2,49 @@
 /**
  * Analytics Tracking Logic
  */
-require_once __DIR__ . '/../session.php';
 
 function getAnalyticsSessionId()
 {
-    if (session_status() !== PHP_SESSION_ACTIVE) {
-        session_init([
-            'name' => 'PHPSESSID',
-            'lifetime' => 0,
-            'path' => '/',
-            'domain' => '',
-            'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
+    // Analytics should not depend on PHP sessions.
+    // Using session_start() here can block on session file locks and cause 30s timeouts (HTTP 500),
+    // which breaks primary UX flows. Use a dedicated cookie instead.
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        $sid = session_id();
+        if (is_string($sid) && $sid !== '') return $sid;
     }
-    $sessionId = session_id();
-    if ($sessionId === '') {
-        throw new RuntimeException('Unable to establish analytics session id');
+
+    $cookieKey = 'wf_analytics_sid';
+    $existing = (string) ($_COOKIE[$cookieKey] ?? '');
+    if ($existing !== '' && preg_match('/^[a-f0-9]{16,128}$/i', $existing)) {
+        return $existing;
     }
-    return $sessionId;
+
+    $sid = bin2hex(random_bytes(16));
+    $isHttps = (
+        (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+        (($_SERVER['SERVER_PORT'] ?? '') == 443) ||
+        (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ||
+        (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
+    );
+
+    // 180 days is plenty; analytics session id is not auth.
+    @setcookie($cookieKey, $sid, [
+        'expires' => time() + (180 * 24 * 60 * 60),
+        'path' => '/',
+        'secure' => $isHttps,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    $_COOKIE[$cookieKey] = $sid;
+    return $sid;
 }
 
 function trackVisit()
 {
     $input = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($input)) $input = [];
+    $input = array_merge($_GET ?? [], $_POST ?? [], $input);
+
     $sessionId = getAnalyticsSessionId();
     $deviceInfo = parseUserAgent($_SERVER['HTTP_USER_AGENT'] ?? '');
 
@@ -48,6 +66,9 @@ function trackVisit()
 function trackPageView()
 {
     $input = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($input)) $input = [];
+    $input = array_merge($_GET ?? [], $_POST ?? [], $input);
+
     $sessionId = getAnalyticsSessionId();
     
     Database::execute(

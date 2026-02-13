@@ -54,64 +54,82 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
         }
     }, [sku, fetchBreakdown, refreshTrigger]);
 
-    // Convert simple key-value breakdown to ICostBreakdown if provided
-    const breakdown: ICostBreakdown = useMemo(() => {
-        if (cachedBreakdown && Object.keys(cachedBreakdown).length > 0) {
-            const createItem = (cat: string, raw: unknown): ICostItem[] => {
-                if (typeof raw === 'number' && raw !== 0) {
-                    return [{
-                        id: `ai-${cat}-${Date.now()}`,
-                        sku,
-                        label: `AI Estimated ${cat}`,
-                        cost: raw
-                    }];
-                }
-                if (Array.isArray(raw)) {
-                    return raw
-                        .map((item, idx) => {
-                            if (!item || typeof item !== 'object') return null;
-                            const itemRecord = item as Record<string, unknown>;
-                            const itemCost = typeof itemRecord.cost === 'number' ? itemRecord.cost : 0;
-                            if (!itemCost) return null;
-                            return {
-                                id: `ai-${cat}-${Date.now()}-${idx}`,
-                                sku,
-                                label: typeof itemRecord.label === 'string'
-                                    ? itemRecord.label
-                                    : `AI Estimated ${cat} ${idx + 1}`,
-                                cost: itemCost
-                            } as ICostItem;
-                        })
-                        .filter((item): item is ICostItem => item !== null);
-                }
-                return [];
-            };
+    const hasStoredBreakdown = useMemo(() => {
+        const count =
+            (hookBreakdown.materials?.length || 0)
+            + (hookBreakdown.labor?.length || 0)
+            + (hookBreakdown.energy?.length || 0)
+            + (hookBreakdown.equipment?.length || 0);
+        return count > 0;
+    }, [hookBreakdown.energy, hookBreakdown.equipment, hookBreakdown.labor, hookBreakdown.materials]);
 
-            const materials = createItem('materials', cachedBreakdown.materials);
-            const labor = createItem('labor', cachedBreakdown.labor);
-            const energy = createItem('energy', cachedBreakdown.energy);
-            const equipment = createItem('equipment', cachedBreakdown.equipment);
+    // Convert simple key-value breakdown to ICostBreakdown if provided.
+    // IMPORTANT: Only use this "pending AI" view when there is no stored breakdown yet.
+    // This mirrors PriceBreakdownTable behavior and prevents edits from "not saving" due to the UI
+    // continually re-rendering the cached suggestion instead of the DB-backed breakdown.
+    const pendingBreakdown: ICostBreakdown | null = useMemo(() => {
+        if (!cachedBreakdown || Object.keys(cachedBreakdown).length === 0) return null;
 
-            return {
-                materials,
-                labor,
-                energy,
-                equipment,
-                totals: {
-                    materials: materials.reduce((sum, it) => sum + it.cost, 0),
-                    labor: labor.reduce((sum, it) => sum + it.cost, 0),
-                    energy: energy.reduce((sum, it) => sum + it.cost, 0),
-                    equipment: equipment.reduce((sum, it) => sum + it.cost, 0),
-                    total: materials.reduce((sum, it) => sum + it.cost, 0)
-                        + labor.reduce((sum, it) => sum + it.cost, 0)
-                        + energy.reduce((sum, it) => sum + it.cost, 0)
-                        + equipment.reduce((sum, it) => sum + it.cost, 0),
-                    stored: hookBreakdown.totals?.stored || 0
-                }
-            };
-        }
-        return hookBreakdown;
-    }, [cachedBreakdown, hookBreakdown, sku]);
+        const createItem = (cat: string, raw: unknown): ICostItem[] => {
+            if (typeof raw === 'number' && raw !== 0) {
+                return [{
+                    id: `ai-${cat}-${Date.now()}`,
+                    sku,
+                    label: `AI Estimated ${cat}`,
+                    cost: raw
+                }];
+            }
+            if (Array.isArray(raw)) {
+                return raw
+                    .map((item, idx) => {
+                        if (!item || typeof item !== 'object') return null;
+                        const itemRecord = item as Record<string, unknown>;
+                        const itemCost = typeof itemRecord.cost === 'number' ? itemRecord.cost : 0;
+                        if (!itemCost) return null;
+                        return {
+                            id: `ai-${cat}-${Date.now()}-${idx}`,
+                            sku,
+                            label: typeof itemRecord.label === 'string'
+                                ? itemRecord.label
+                                : `AI Estimated ${cat} ${idx + 1}`,
+                            cost: itemCost
+                        } as ICostItem;
+                    })
+                    .filter((item): item is ICostItem => item !== null);
+            }
+            return [];
+        };
+
+        const materials = createItem('materials', cachedBreakdown.materials);
+        const labor = createItem('labor', cachedBreakdown.labor);
+        const energy = createItem('energy', cachedBreakdown.energy);
+        const equipment = createItem('equipment', cachedBreakdown.equipment);
+
+        const materialsTotal = materials.reduce((sum, it) => sum + it.cost, 0);
+        const laborTotal = labor.reduce((sum, it) => sum + it.cost, 0);
+        const energyTotal = energy.reduce((sum, it) => sum + it.cost, 0);
+        const equipmentTotal = equipment.reduce((sum, it) => sum + it.cost, 0);
+
+        return {
+            materials,
+            labor,
+            energy,
+            equipment,
+            totals: {
+                materials: materialsTotal,
+                labor: laborTotal,
+                energy: energyTotal,
+                equipment: equipmentTotal,
+                total: materialsTotal + laborTotal + energyTotal + equipmentTotal,
+                stored: hookBreakdown.totals?.stored || 0
+            }
+        };
+    }, [cachedBreakdown, hookBreakdown.totals?.stored, sku]);
+
+    const isPendingOnly = !hasStoredBreakdown && !!pendingBreakdown;
+    const breakdown: ICostBreakdown = (hasStoredBreakdown || !pendingBreakdown)
+        ? hookBreakdown
+        : pendingBreakdown;
 
     useEffect(() => {
         if (!onDirtyStateChange) return;
@@ -242,6 +260,11 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
 
             <div className="divide-y divide-gray-200 border border-gray-200 rounded bg-white overflow-hidden">
                 <div className="px-3 py-2 space-y-1 min-h-[100px]">
+                    {isPendingOnly && (
+                        <div className="text-[10px] text-amber-600 italic py-1">
+                            Showing pending AI breakdown. Save item to persist to database.
+                        </div>
+                    )}
                     {categories.map((cat) => {
                         const itemsArray = breakdown[cat.id as keyof ICostBreakdown];
                         // Handle both array format and totals object
@@ -252,7 +275,7 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
                         const displayValue = firstItem?.cost ? firstItem.cost.toFixed(2) : '';
 
                         return (
-                            <div key={`${cat.id}-${displayValue}`} className="flex flex-col py-2 border-b last:border-0">
+                            <div key={cat.id} className="flex flex-col py-2 border-b last:border-0">
                                 <div className="flex items-center justify-between gap-2">
                                     <span className="text-gray-800 text-sm font-semibold">{cat.label}</span>
                                     <div className="flex items-center gap-2">

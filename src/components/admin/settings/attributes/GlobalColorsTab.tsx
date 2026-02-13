@@ -1,5 +1,5 @@
 import React from 'react';
-import { IGlobalColor } from '../../../../hooks/admin/useGlobalEntities.js';
+import type { IGlobalColor } from '../../../../types/theming.js';
 
 interface GlobalColorsTabProps {
     colors: IGlobalColor[];

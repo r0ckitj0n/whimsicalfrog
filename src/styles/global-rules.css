@@ -6,6 +6,19 @@
   --wf-admin-tabs-height: 44px;
 }
 
+/* Color preview helpers (admin inventory/settings swatches) */
+.wf-color-preview {
+  background-color: var(--preview-color, #cccccc);
+}
+
+.wf-color-preview-box {
+  background-color: var(--preview-bg, #cccccc);
+}
+
+.wf-color-preview-swatch {
+  background-color: var(--swatch-bg, #cccccc);
+}
+
 /* stationary backgrounds */
 body {
   background-attachment: fixed !important;

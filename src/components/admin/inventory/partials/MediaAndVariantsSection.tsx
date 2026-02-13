@@ -158,7 +158,7 @@ export const MediaAndVariantsSection: React.FC<MediaAndVariantsSectionProps> = (
                             Inventory Options
                         </button>
                     </div>
-                    <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="p-4 grid grid-cols-1 gap-4">
                         <div className="space-y-2">
                             <p className="text-xs text-slate-600">
                                 View the configured option rules (from Inventory Options).

@@ -16,7 +16,7 @@ interface IAICostConfirmOptions {
 }
 
 const formatUsd = (value: number): string =>
-    `$${Number(value || 0).toFixed(4)}`;
+    `$${Number(value || 0).toFixed(2)}`;
 
 export const useAICostEstimateConfirm = () => {
     const { confirm } = useModalContext();
@@ -59,15 +59,25 @@ export const useAICostEstimateConfirm = () => {
             });
         }
 
+        const pricingNote = estimate.pricing?.is_fallback_pricing
+            ? (estimate.pricing?.fallback_note || 'Fallback pricing in effect.')
+            : '';
+
         const lineSummary = estimate.line_items
             .slice(0, 4)
-            .map((line) => `${line.label}: ${formatUsd(line.expected_cost)}`)
+            .map((line) => {
+                const jc = line.job_counts;
+                const jobsText = jc
+                    ? ` (jobs: t${jc.text_generation}, a${jc.image_analysis}, i${jc.image_creation})`
+                    : '';
+                return `${line.label}: ${formatUsd(line.expected_cost)}${jobsText}`;
+            })
             .join(' | ');
 
         return confirm({
             title: 'Confirm AI Generation',
             subtitle: `${estimate.provider} • ${estimate.model}`,
-            message: `${action_label} will run ${estimate.operation_count} AI operation(s). Estimated total: ${formatUsd(estimate.expected_cost)} (range ${formatUsd(estimate.min_cost)} to ${formatUsd(estimate.max_cost)}).`,
+            message: `${action_label} will run ${estimate.operation_count} AI operation(s). Estimated total: ${formatUsd(estimate.expected_cost)}.${pricingNote ? ` ${pricingNote}` : ''}`,
             details: lineSummary || 'No line-item estimate available.',
             confirmText,
             cancelText: 'Cancel',

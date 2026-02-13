@@ -19,6 +19,31 @@ export interface IAICostEstimateRequest {
     };
 }
 
+export type AICostJobType = 'text_generation' | 'image_analysis' | 'image_creation';
+
+export interface IAICostJobCounts {
+    text_generation: number;
+    image_analysis: number;
+    image_creation: number;
+}
+
+export interface IAICostPricingRate {
+    job_type: AICostJobType | string;
+    unit_cost_cents: number;
+    unit_cost_usd: number;
+    currency: 'USD' | string;
+    source: 'stored' | 'stored_copy' | 'fallback' | string;
+    note?: string;
+}
+
+export interface IAICostPricingInfo {
+    week_start: string;
+    provider: string;
+    rates: IAICostPricingRate[];
+    is_fallback_pricing: boolean;
+    fallback_note?: string;
+}
+
 export interface IAICostEstimateLineItem {
     key: string;
     label: string;
@@ -26,6 +51,7 @@ export interface IAICostEstimateLineItem {
     estimated_output_tokens: number;
     image_count: number;
     image_generations: number;
+    job_counts?: IAICostJobCounts;
     expected_cost: number;
     min_cost: number;
     max_cost: number;
@@ -36,7 +62,8 @@ export interface IAICostEstimatePayload {
     provider: string;
     model: string;
     currency: 'USD';
-    source: 'ai' | 'heuristic';
+    source: 'stored';
+    pricing?: IAICostPricingInfo;
     expected_cost: number;
     min_cost: number;
     max_cost: number;

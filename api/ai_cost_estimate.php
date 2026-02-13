@@ -4,6 +4,7 @@ require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/ai_providers.php';
+require_once __DIR__ . '/../includes/ai/helpers/AIPricingStore.php';
 
 AuthHelper::requireAdmin();
 
@@ -25,119 +26,58 @@ if ($actionKey === '') {
     Response::error('action_key is required.', null, 400);
 }
 
-/**
- * Pricing rates are rough, conservative estimates used for preflight confirmation.
- * Values are USD per 1M tokens unless stated otherwise.
- */
-function wf_estimate_rates(string $provider, string $model): array
+function wf_job_counts_for_operation(string $opKey, int $imageCount, int $imageGenerations): array
 {
-    $provider = strtolower($provider);
-    $modelLower = strtolower($model);
+    $opKey = strtolower(trim($opKey));
+    $boundedImages = max(0, min(3, $imageCount)); // current endpoints typically cap to 3 images
 
-    $rates = [
-        'input_per_million' => 2.5,
-        'output_per_million' => 10.0,
-        'image_generation_per_image' => 0.04
+    $jobs = [
+        AIPricingStore::JOB_TEXT_GENERATION => 0,
+        AIPricingStore::JOB_IMAGE_ANALYSIS => 0,
+        AIPricingStore::JOB_IMAGE_CREATION => 0,
     ];
 
-    if ($provider === 'jons_ai') {
-        return [
-            'input_per_million' => 0.0,
-            'output_per_million' => 0.0,
-            'image_generation_per_image' => 0.0
-        ];
+    // Operation keys reflect the actual backend orchestration paths:
+    // - suggest_all.php (info): analyzes each image (one AI call per image) + generates dimensions (one text call).
+    // - suggest_all.php (cost): one multimodal call when images are provided; otherwise one text call.
+    // - suggest_all.php (price): one text call (orchestrator does not pass images here).
+    // - suggest_marketing.php: analyzes each image (one AI call per image) + enhanced marketing (one text call).
+    // - generate_room_image.php: prompt refinement is tracked separately as room_prompt_refinement.
+    switch ($opKey) {
+        case 'info_from_images':
+            $jobs[AIPricingStore::JOB_IMAGE_ANALYSIS] = $boundedImages;
+            $jobs[AIPricingStore::JOB_TEXT_GENERATION] = 1; // dimensions suggestion
+            break;
+        case 'cost_estimation':
+            if ($boundedImages > 0) {
+                $jobs[AIPricingStore::JOB_IMAGE_ANALYSIS] = 1; // single multimodal cost call
+            } else {
+                $jobs[AIPricingStore::JOB_TEXT_GENERATION] = 1;
+            }
+            break;
+        case 'price_estimation':
+            $jobs[AIPricingStore::JOB_TEXT_GENERATION] = 1;
+            break;
+        case 'marketing_generation':
+            $jobs[AIPricingStore::JOB_IMAGE_ANALYSIS] = $boundedImages;
+            $jobs[AIPricingStore::JOB_TEXT_GENERATION] = 1;
+            break;
+        case 'room_prompt_refinement':
+            $jobs[AIPricingStore::JOB_TEXT_GENERATION] = 1;
+            break;
+        case 'room_image_generation':
+            $jobs[AIPricingStore::JOB_IMAGE_CREATION] = max(1, $imageGenerations);
+            break;
+        case 'image_edit_generation':
+            $jobs[AIPricingStore::JOB_IMAGE_CREATION] = max(1, $imageGenerations);
+            break;
+        default:
+            // Safe default: assume one text generation call.
+            $jobs[AIPricingStore::JOB_TEXT_GENERATION] = 1;
+            break;
     }
 
-    if ($provider === 'openai') {
-        if (strpos($modelLower, 'gpt-image') !== false) {
-            $rates['input_per_million'] = 5.0;
-            $rates['output_per_million'] = 15.0;
-            $rates['image_generation_per_image'] = 0.055;
-            return $rates;
-        }
-
-        if (strpos($modelLower, 'gpt-5.2-codex') !== false) {
-            $rates['input_per_million'] = 1.5;
-            $rates['output_per_million'] = 12.0;
-        } elseif (strpos($modelLower, 'gpt-5.2') !== false || strpos($modelLower, 'gpt-5') !== false) {
-            $rates['input_per_million'] = 1.25;
-            $rates['output_per_million'] = 10.0;
-        } elseif (strpos($modelLower, 'gpt-4o-mini') !== false) {
-            $rates['input_per_million'] = 0.6;
-            $rates['output_per_million'] = 2.4;
-        } elseif (strpos($modelLower, 'gpt-4o') !== false) {
-            $rates['input_per_million'] = 2.5;
-            $rates['output_per_million'] = 10.0;
-        } elseif (strpos($modelLower, 'gpt-4-turbo') !== false) {
-            $rates['input_per_million'] = 6.0;
-            $rates['output_per_million'] = 18.0;
-        } elseif (strpos($modelLower, 'gpt-3.5') !== false) {
-            $rates['input_per_million'] = 0.5;
-            $rates['output_per_million'] = 1.5;
-        }
-        return $rates;
-    }
-
-    if ($provider === 'anthropic') {
-        if (strpos($modelLower, 'haiku') !== false) {
-            return [
-                'input_per_million' => 1.0,
-                'output_per_million' => 5.0,
-                'image_generation_per_image' => 0.03
-            ];
-        }
-        if (strpos($modelLower, 'sonnet') !== false) {
-            return [
-                'input_per_million' => 3.0,
-                'output_per_million' => 15.0,
-                'image_generation_per_image' => 0.03
-            ];
-        }
-        return [
-            'input_per_million' => 4.0,
-            'output_per_million' => 20.0,
-            'image_generation_per_image' => 0.03
-        ];
-    }
-
-    if ($provider === 'google') {
-        if (strpos($modelLower, 'flash') !== false) {
-            return [
-                'input_per_million' => 0.6,
-                'output_per_million' => 2.4,
-                'image_generation_per_image' => 0.025
-            ];
-        }
-        if (strpos($modelLower, 'pro') !== false) {
-            return [
-                'input_per_million' => 1.8,
-                'output_per_million' => 7.0,
-                'image_generation_per_image' => 0.03
-            ];
-        }
-        return [
-            'input_per_million' => 1.0,
-            'output_per_million' => 4.0,
-            'image_generation_per_image' => 0.03
-        ];
-    }
-
-    if ($provider === 'meta') {
-        if (strpos($modelLower, '405b') !== false || strpos($modelLower, '70b') !== false) {
-            return [
-                'input_per_million' => 0.9,
-                'output_per_million' => 1.2,
-                'image_generation_per_image' => 0.03
-            ];
-        }
-        return [
-            'input_per_million' => 0.6,
-            'output_per_million' => 0.8,
-            'image_generation_per_image' => 0.03
-        ];
-    }
-
-    return $rates;
+    return $jobs;
 }
 
 function wf_default_operation_catalog(int $defaultImageCount): array
@@ -145,49 +85,49 @@ function wf_default_operation_catalog(int $defaultImageCount): array
     return [
         'info_from_images' => [
             'label' => 'Image analysis + item info',
-            'input_tokens' => 2200 + (900 * $defaultImageCount),
-            'output_tokens' => 700,
+            'input_tokens' => 0,
+            'output_tokens' => 0,
             'image_count' => $defaultImageCount,
             'image_generations' => 0
         ],
         'cost_estimation' => [
             'label' => 'Cost suggestion',
-            'input_tokens' => 900 + (300 * $defaultImageCount),
-            'output_tokens' => 450,
+            'input_tokens' => 0,
+            'output_tokens' => 0,
             'image_count' => $defaultImageCount,
             'image_generations' => 0
         ],
         'price_estimation' => [
             'label' => 'Price suggestion',
-            'input_tokens' => 1000 + (150 * $defaultImageCount),
-            'output_tokens' => 500,
+            'input_tokens' => 0,
+            'output_tokens' => 0,
             'image_count' => max(1, $defaultImageCount),
             'image_generations' => 0
         ],
         'marketing_generation' => [
             'label' => 'Marketing generation',
-            'input_tokens' => 1400 + (350 * $defaultImageCount),
-            'output_tokens' => 1200,
+            'input_tokens' => 0,
+            'output_tokens' => 0,
             'image_count' => max(1, $defaultImageCount),
             'image_generations' => 0
         ],
         'room_prompt_refinement' => [
             'label' => 'Room prompt refinement',
-            'input_tokens' => 1800,
-            'output_tokens' => 900,
+            'input_tokens' => 0,
+            'output_tokens' => 0,
             'image_count' => 0,
             'image_generations' => 0
         ],
         'room_image_generation' => [
             'label' => 'Room image generation',
-            'input_tokens' => 350,
+            'input_tokens' => 0,
             'output_tokens' => 0,
             'image_count' => 0,
             'image_generations' => 1
         ],
         'image_edit_generation' => [
             'label' => 'Image edit generation',
-            'input_tokens' => 800,
+            'input_tokens' => 0,
             'output_tokens' => 0,
             'image_count' => 1,
             'image_generations' => 1
@@ -287,38 +227,12 @@ function wf_index_by_key(array $items): array
 
 function wf_try_ai_estimate(array $ops, array $context, AIProviders $aiProviders): array
 {
-    $payloadSummary = array_map(static function (array $op): array {
-        return [
-            'key' => $op['key'],
-            'label' => $op['label'],
-            'count' => $op['count'],
-            'baseline_input_tokens' => $op['input_tokens'],
-            'baseline_output_tokens' => $op['output_tokens'],
-            'image_count' => $op['image_count'],
-            'image_generations' => $op['image_generations']
-        ];
-    }, $ops);
-
-    $prompt = "Estimate token and image usage for these AI operations.\n";
-    $prompt .= "Return ONLY valid JSON with keys: line_items, assumptions.\n";
-    $prompt .= "line_items must be an array of objects with keys: key, estimated_input_tokens, estimated_output_tokens, image_count, image_generations, reasoning.\n";
-    $prompt .= "If uncertain, stay conservative but realistic.\n";
-    $prompt .= "Operations JSON: " . json_encode($payloadSummary, JSON_UNESCAPED_SLASHES);
-    $prompt .= "\nContext JSON: " . json_encode($context, JSON_UNESCAPED_SLASHES);
-
-    $result = $aiProviders->generateReceiptMessage($prompt);
-    if (!is_array($result) || !isset($result['line_items']) || !is_array($result['line_items'])) {
-        return [
-            'success' => false,
-            'line_items' => [],
-            'assumptions' => []
-        ];
-    }
-
+    // Intentionally disabled: we do not call external AI to estimate pricing.
+    // Estimates are based on weekly-stored per-job pricing in MySQL.
     return [
-        'success' => true,
-        'line_items' => $result['line_items'],
-        'assumptions' => isset($result['assumptions']) && is_array($result['assumptions']) ? $result['assumptions'] : []
+        'success' => false,
+        'line_items' => [],
+        'assumptions' => []
     ];
 }
 
@@ -332,22 +246,11 @@ try {
     $defaultImageCount = max(0, (int) ($context['image_count'] ?? 1));
     $ops = wf_coerce_operations(is_array($operationsInput) ? $operationsInput : [], $actionKey, $defaultImageCount);
 
-    $aiEstimate = ['success' => false, 'line_items' => [], 'assumptions' => []];
-    $forceHeuristicActions = [
-        'shortcut_generate_sign_image',
-        'shortcut_image_submit_to_ai'
-    ];
-    $shouldUseHeuristicOnly = in_array($actionKey, $forceHeuristicActions, true);
-    if ($provider !== 'jons_ai' && !$shouldUseHeuristicOnly) {
-        try {
-            $aiEstimate = wf_try_ai_estimate($ops, $context, $aiProviders);
-        } catch (Throwable $estimateErr) {
-            error_log('ai_cost_estimate AI estimate failed: ' . $estimateErr->getMessage());
-        }
-    }
-
-    $lineOverrides = wf_index_by_key($aiEstimate['line_items']);
-    $rates = wf_estimate_rates($provider, $model);
+    $pricing = AIPricingStore::getWeeklyRates($provider);
+    $ratesByJob = (array) ($pricing['rates'] ?? []);
+    $textRate = (int) (($ratesByJob[AIPricingStore::JOB_TEXT_GENERATION]['unit_cost_cents'] ?? 0));
+    $analysisRate = (int) (($ratesByJob[AIPricingStore::JOB_IMAGE_ANALYSIS]['unit_cost_cents'] ?? 0));
+    $creationRate = (int) (($ratesByJob[AIPricingStore::JOB_IMAGE_CREATION]['unit_cost_cents'] ?? 0));
 
     $lineItems = [];
     $expectedTotal = 0.0;
@@ -355,20 +258,18 @@ try {
     $maxTotal = 0.0;
 
     foreach ($ops as $op) {
-        $override = $lineOverrides[$op['key']] ?? null;
-        $inputTokens = max(0, (int) ($override['estimated_input_tokens'] ?? $op['input_tokens']));
-        $outputTokens = max(0, (int) ($override['estimated_output_tokens'] ?? $op['output_tokens']));
-        $imageCount = max(0, (int) ($override['image_count'] ?? $op['image_count']));
-        $imageGenerations = max(0, (int) ($override['image_generations'] ?? $op['image_generations']));
+        $imageCount = max(0, (int) ($op['image_count'] ?? 0));
+        $imageGenerations = max(0, (int) ($op['image_generations'] ?? 0));
+        $jobs = wf_job_counts_for_operation((string) ($op['key'] ?? ''), $imageCount, $imageGenerations);
 
-        $tokenCost = (($inputTokens / 1000000) * $rates['input_per_million']) + (($outputTokens / 1000000) * $rates['output_per_million']);
-        // Approximate extra image-analysis token load.
-        $imageAnalysisTokens = $imageCount * 1200;
-        $imageAnalysisCost = ($imageAnalysisTokens / 1000000) * $rates['input_per_million'];
-        $imageGenCost = $imageGenerations * $rates['image_generation_per_image'];
-        $expected = $tokenCost + $imageAnalysisCost + $imageGenCost;
-        $min = $expected * 0.7;
-        $max = $expected * 1.3;
+        $textJobs = (int) ($jobs[AIPricingStore::JOB_TEXT_GENERATION] ?? 0);
+        $analysisJobs = (int) ($jobs[AIPricingStore::JOB_IMAGE_ANALYSIS] ?? 0);
+        $creationJobs = (int) ($jobs[AIPricingStore::JOB_IMAGE_CREATION] ?? 0);
+
+        $expectedCents = ($textJobs * $textRate) + ($analysisJobs * $analysisRate) + ($creationJobs * $creationRate);
+        $expected = round($expectedCents / 100, 6);
+        $min = $expected;
+        $max = $expected;
 
         $expectedTotal += $expected;
         $minTotal += $min;
@@ -377,31 +278,28 @@ try {
         $lineItems[] = [
             'key' => $op['key'],
             'label' => $op['label'],
-            'estimated_input_tokens' => $inputTokens,
-            'estimated_output_tokens' => $outputTokens,
+            'estimated_input_tokens' => 0,
+            'estimated_output_tokens' => 0,
             'image_count' => $imageCount,
             'image_generations' => $imageGenerations,
+            'job_counts' => [
+                'text_generation' => $textJobs,
+                'image_analysis' => $analysisJobs,
+                'image_creation' => $creationJobs
+            ],
             'expected_cost' => round($expected, 6),
             'min_cost' => round($min, 6),
             'max_cost' => round($max, 6),
-            'reasoning' => isset($override['reasoning']) ? (string) $override['reasoning'] : ''
+            'reasoning' => ''
         ];
     }
 
     $assumptions = [];
-    $assumptions[] = 'Preflight estimates are approximate and can vary with prompt length, retries, and provider-side billing changes.';
-    $assumptions[] = 'Includes the operations requested by this action and combines them into one total.';
-    if ($shouldUseHeuristicOnly) {
-        $assumptions[] = 'Used fast heuristic estimate for responsive shortcut image UX.';
-    } elseif (!$aiEstimate['success']) {
-        $assumptions[] = 'Used heuristic token estimates because live AI estimation was unavailable.';
-    } else {
-        foreach ($aiEstimate['assumptions'] as $assumption) {
-            $text = trim((string) $assumption);
-            if ($text !== '') {
-                $assumptions[] = $text;
-            }
-        }
+    $assumptions[] = 'Estimate uses weekly stored per-job pricing (text generation / image analysis / image creation).';
+    $assumptions[] = 'Includes the operations requested by this action and sums costs across all jobs.';
+    $assumptions[] = 'Does not include extra cost from retries, provider-side token accounting, or model-specific pricing differences.';
+    if (!empty($pricing['is_fallback'])) {
+        $assumptions[] = (string) ($pricing['fallback_note'] ?? 'Fallback pricing was used for at least one job type.');
     }
 
     Response::json([
@@ -410,7 +308,14 @@ try {
             'provider' => $provider,
             'model' => $model,
             'currency' => 'USD',
-            'source' => $aiEstimate['success'] ? 'ai' : 'heuristic',
+            'source' => 'stored',
+            'pricing' => [
+                'week_start' => (string) ($pricing['week_start'] ?? ''),
+                'provider' => (string) ($pricing['provider'] ?? $provider),
+                'rates' => array_values((array) ($pricing['rates'] ?? [])),
+                'is_fallback_pricing' => !empty($pricing['is_fallback']),
+                'fallback_note' => (string) ($pricing['fallback_note'] ?? '')
+            ],
             'expected_cost' => round($expectedTotal, 6),
             'min_cost' => round($minTotal, 6),
             'max_cost' => round($maxTotal, 6),

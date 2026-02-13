@@ -85,7 +85,14 @@ const getRequestUrl = (input: RequestInfo | URL): string => {
     return input.url;
 };
 
-const shouldTrack = (url: string) => hasUserInteracted && isApiRequestUrl(url);
+const isNonGet = (method: string | null | undefined): boolean => {
+    const m = String(method || 'GET').trim().toUpperCase();
+    return m !== 'GET';
+};
+
+// Only track non-GET API requests for the global processing overlay.
+// Rationale: GETs may be background refreshes/polls and should not keep the user-blocking spinner alive.
+const shouldTrack = (url: string, method?: string | null) => hasUserInteracted && isApiRequestUrl(url) && isNonGet(method);
 
 const markUserInteracted = () => {
     hasUserInteracted = true;
@@ -151,7 +158,9 @@ const installFetchTracker = () => {
 
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
         const requestUrl = getRequestUrl(input);
-        const track = shouldTrack(requestUrl);
+        const methodFromInit = init?.method;
+        const methodFromRequest = (input instanceof Request) ? input.method : undefined;
+        const track = shouldTrack(requestUrl, methodFromInit ?? methodFromRequest);
 
         if (track) increment();
 
@@ -175,7 +184,7 @@ const installXhrTracker = () => {
         password?: string | null
     ): void {
         const requestUrl = String(url);
-        this.__wfTrackRequest = shouldTrack(requestUrl);
+        this.__wfTrackRequest = shouldTrack(requestUrl, method);
 
         if (username !== undefined || password !== undefined) {
             return originalXhrOpen!.call(this, method, requestUrl, async ?? true, username ?? null, password ?? null);

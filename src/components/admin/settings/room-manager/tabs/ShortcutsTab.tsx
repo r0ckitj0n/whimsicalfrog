@@ -15,6 +15,8 @@ interface ShortcutsTabProps {
     onContentUpload: (e: React.ChangeEvent<HTMLInputElement>, field: 'content_image' | 'link_image') => Promise<void>;
     onGenerateContentImage: () => Promise<void>;
     onPreviewContentImage: (mapping: IAreaMapping, url: string) => void;
+    onDeploySavedImage: (mapping: IAreaMapping, assetId: number) => Promise<void>;
+    onDeleteSavedImage: (mapping: IAreaMapping, assetId: number) => Promise<void>;
     onContentEdit: (mapping: IAreaMapping) => void;
     onContentConvert: (area: string, sku: string) => Promise<void>;
     onToggleMappingActive: (id: number, currentActive: boolean | number) => Promise<void>;
@@ -31,6 +33,8 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
     onContentUpload,
     onGenerateContentImage,
     onPreviewContentImage,
+    onDeploySavedImage,
+    onDeleteSavedImage,
     onContentEdit,
     onContentConvert,
     onToggleMappingActive,
@@ -55,6 +59,16 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
                         onPreviewImage={(url) => {
                             if (newMapping.id) {
                                 onPreviewContentImage(newMapping as IAreaMapping, url);
+                            }
+                        }}
+                        onDeploySavedImage={async (assetId) => {
+                            if (newMapping.id) {
+                                await onDeploySavedImage(newMapping as IAreaMapping, assetId);
+                            }
+                        }}
+                        onDeleteSavedImage={async (assetId) => {
+                            if (newMapping.id) {
+                                await onDeleteSavedImage(newMapping as IAreaMapping, assetId);
                             }
                         }}
                         isGeneratingImage={isGeneratingImage}

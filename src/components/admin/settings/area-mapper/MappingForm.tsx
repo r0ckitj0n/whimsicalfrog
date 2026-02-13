@@ -2,6 +2,7 @@ import React from 'react';
 import { IAreaMapping, MappingType, IItem } from '../../../../types/index.js';
 import { IAreaOption, IDoorDestination } from '../../../../types/room.js';
 import { MAPPING_TYPE } from '../../../../core/constants.js';
+import type { IShortcutSignAsset } from '../../../../types/room-shortcuts.js';
 
 interface MappingFormProps {
     mapping: Partial<IAreaMapping>;
@@ -15,6 +16,8 @@ interface MappingFormProps {
     onUpload: (e: React.ChangeEvent<HTMLInputElement>, field: 'content_image' | 'link_image') => void;
     onGenerateImage: () => Promise<void>;
     onPreviewImage: (url: string) => void;
+    onDeploySavedImage: (assetId: number) => Promise<void>;
+    onDeleteSavedImage: (assetId: number) => Promise<void>;
     isGeneratingImage: boolean;
 }
 
@@ -30,8 +33,25 @@ export const MappingForm: React.FC<MappingFormProps> = ({
     onUpload,
     onGenerateImage,
     onPreviewImage,
+    onDeploySavedImage,
+    onDeleteSavedImage,
     isGeneratingImage
 }) => {
+    const assets = (mapping.shortcut_images || []) as IShortcutSignAsset[];
+    const activeAsset = assets.find(a => a.is_active === 1) || null;
+    const [selectedAssetId, setSelectedAssetId] = React.useState<number>(activeAsset?.id || assets[0]?.id || 0);
+
+    React.useEffect(() => {
+        const nextActive = assets.find(a => a.is_active === 1) || assets[0] || null;
+        setSelectedAssetId(prev => {
+            if (prev && assets.some(a => a.id === prev)) return prev;
+            return nextActive?.id || 0;
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [assets.length, activeAsset?.id]);
+
+    const selectedAsset = assets.find(a => a.id === selectedAssetId) || null;
+
     return (
         <form onSubmit={onSubmit} className="p-4 bg-gray-50 border rounded-xl space-y-4">
             <h4 className="font-bold text-gray-700 text-sm uppercase tracking-wider mb-2">
@@ -212,6 +232,75 @@ export const MappingForm: React.FC<MappingFormProps> = ({
                             </div>
                         </div>
                     </div>
+
+                    {/* Saved sign images (shortcut mappings) */}
+                    {assets.length > 0 && (
+                        <div className="mt-3 bg-white border border-slate-200 rounded-xl p-3 space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                    Saved Images
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary px-2 py-1 text-[9px] font-black uppercase tracking-widest disabled:opacity-60"
+                                        onClick={() => selectedAsset && void onDeploySavedImage(selectedAsset.id)}
+                                        disabled={!selectedAsset || selectedAsset.is_active === 1}
+                                    >
+                                        Deploy
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="admin-action-btn btn-icon--view"
+                                        onClick={() => selectedAsset && onPreviewImage(selectedAsset.image_url)}
+                                        disabled={!selectedAsset}
+                                        title="View"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="admin-action-btn btn-icon--delete"
+                                        onClick={() => selectedAsset && void onDeleteSavedImage(selectedAsset.id)}
+                                        disabled={!selectedAsset}
+                                        title="Delete"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="max-h-44 overflow-y-auto pr-1">
+                                <div className="grid grid-cols-4 gap-2">
+                                    {assets.map((asset) => {
+                                        const isActive = asset.is_active === 1;
+                                        const isSelected = asset.id === selectedAssetId;
+                                        return (
+                                            <button
+                                                key={asset.id}
+                                                type="button"
+                                                onClick={() => setSelectedAssetId(asset.id)}
+                                                className={[
+                                                    'rounded-lg border-2 bg-white p-1 text-left transition',
+                                                    isActive ? 'border-[var(--brand-primary)]' : 'border-slate-200',
+                                                    isSelected ? 'ring-2 ring-[var(--brand-secondary)] ring-offset-1' : 'hover:border-slate-300'
+                                                ].join(' ')}
+                                                title={isActive ? 'Active' : (asset.source || 'Saved')}
+                                            >
+                                                <img
+                                                    src={asset.image_url}
+                                                    alt={asset.source || 'Saved sign'}
+                                                    className="w-full h-16 object-contain"
+                                                    loading="lazy"
+                                                />
+                                                {isActive && (
+                                                    <div className="mt-1 text-[8px] font-black uppercase tracking-widest text-[var(--brand-primary)]">
+                                                        Active
+                                                    </div>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 

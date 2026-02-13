@@ -384,6 +384,34 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                                             shortcut_images: assets
                                         });
                                     }}
+                                    onDeploySavedImage={async (mapping, assetId) => {
+                                        const mappingId = Number(mapping.id || 0);
+                                        if (!mappingId) return;
+                                        const ok = await mappings.setShortcutSignActive(mappingId, assetId, selectedRoom);
+                                        if (!ok) return;
+                                        const assets = await mappings.fetchShortcutSignAssets(mappingId, selectedRoom);
+                                        const active = assets.find(a => a.is_active === 1) || assets[0];
+                                        setNewMapping(prev => ({
+                                            ...prev,
+                                            content_image: active?.image_url || prev.content_image,
+                                            link_image: active?.image_url || prev.link_image,
+                                            shortcut_images: assets
+                                        }));
+                                    }}
+                                    onDeleteSavedImage={async (mapping, assetId) => {
+                                        const mappingId = Number(mapping.id || 0);
+                                        if (!mappingId) return;
+                                        const ok = await mappings.deleteShortcutSignAsset(mappingId, assetId, selectedRoom);
+                                        if (!ok) return;
+                                        const assets = await mappings.fetchShortcutSignAssets(mappingId, selectedRoom);
+                                        const active = assets.find(a => a.is_active === 1) || assets[0];
+                                        setNewMapping(prev => ({
+                                            ...prev,
+                                            content_image: active?.image_url || '',
+                                            link_image: active?.image_url || '',
+                                            shortcut_images: assets
+                                        }));
+                                    }}
                                     onContentEdit={handleContentEdit}
                                     onContentConvert={handleContentConvert}
                                     onToggleMappingActive={shortcuts.handleToggleMappingActive}
@@ -486,71 +514,7 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                                 data-help-id="common-close"
                             />
                         </div>
-                        <div className="flex-1 min-h-0 p-4 bg-slate-100/60 overflow-y-auto overflow-x-hidden space-y-4">
-                            {preview_image.target_type === 'shortcut_sign' && (
-                                <div className="bg-white rounded-2xl border border-slate-200 p-4">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Shortcut Sign Images</h4>
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                            {preview_image.shortcut_images?.length || 0} total
-                                        </span>
-                                    </div>
-                                    {preview_image.shortcut_images && preview_image.shortcut_images.length > 0 ? (
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                                            {preview_image.shortcut_images.map(asset => {
-                                                const isActive = asset.is_active === 1;
-                                                return (
-                                                    <div
-                                                        key={asset.id}
-                                                        className={`relative group rounded-xl border-2 ${isActive ? 'border-[var(--brand-primary)] shadow-[0_0_0_2px_rgba(34,197,94,0.15)]' : 'border-slate-200'}`}
-                                                    >
-                                                        <img
-                                                            src={asset.image_url}
-                                                            alt={asset.source || 'Shortcut sign'}
-                                                            className="w-full h-32 object-contain bg-white rounded-lg p-2"
-                                                            loading="lazy"
-                                                        />
-                                                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-xl flex items-center justify-center gap-2">
-                                                            <button
-                                                                type="button"
-                                                                className="admin-action-btn btn-icon--view"
-                                                                onClick={() => setPreviewImage(prev => prev ? ({
-                                                                    ...prev,
-                                                                    url: asset.image_url,
-                                                                    source_shortcut_image_url: asset.image_url
-                                                                }) : prev)}
-                                                                title="View"
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-primary px-2 py-1 text-[9px] font-black uppercase tracking-widest"
-                                                                onClick={() => void handleDeployShortcutSign(asset.id)}
-                                                                disabled={isManagingShortcutImages}
-                                                            >
-                                                                Deploy
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                className="admin-action-btn btn-icon--delete"
-                                                                onClick={() => void handleDeleteShortcutSign(asset.id)}
-                                                                title="Delete"
-                                                                disabled={isManagingShortcutImages}
-                                                            />
-                                                        </div>
-                                                        {isActive && (
-                                                            <div className="absolute top-2 left-2 text-[9px] font-black uppercase tracking-widest text-white bg-[var(--brand-primary)]/90 px-2 py-0.5 rounded-full">
-                                                                Active
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <div className="text-xs text-slate-400 italic">No sign images stored for this shortcut yet.</div>
-                                    )}
-                                </div>
-                            )}
+                        <div className="flex-1 min-h-0 p-4 bg-slate-100/60 overflow-y-auto overflow-x-hidden">
                             <img src={preview_image.url} className="max-w-full h-auto object-contain rounded-2xl mx-auto" />
                         </div>
                     </div>

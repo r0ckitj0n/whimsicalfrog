@@ -60,9 +60,29 @@ export const OptionAssignmentsTab: React.FC<OptionAssignmentsTabProps> = ({
     onDeleteLink,
     onClearOptionLinks,
 }) => {
+    const [viewMode, setViewMode] = useState<'category' | 'template'>('category');
+    const [categoryFilter, setCategoryFilter] = useState('');
+    const [addColorByCategory, setAddColorByCategory] = useState<Record<number, number>>({});
+    const [addSizeByCategory, setAddSizeByCategory] = useState<Record<number, number>>({});
+
     const [drafts, setDrafts] = useState<DraftByKey>({});
     const [pendingAdds, setPendingAdds] = useState<PendingAdd[]>([]);
     const [pendingDeletes, setPendingDeletes] = useState<PendingDelete[]>([]);
+
+    const sortedCategories = useMemo(() => {
+        const q = categoryFilter.trim().toLowerCase();
+        return [...(categories || [])]
+            .filter((c) => !q || (c.name || '').toLowerCase().includes(q))
+            .sort((a, b) => (a.name || '').localeCompare((b.name || ''), undefined, { sensitivity: 'base' }));
+    }, [categories, categoryFilter]);
+
+    const sortedColorTemplates = useMemo(() => {
+        return [...(colorTemplates || [])].sort((a, b) => (a.template_name || '').localeCompare((b.template_name || ''), undefined, { sensitivity: 'base' }));
+    }, [colorTemplates]);
+
+    const sortedSizeTemplates = useMemo(() => {
+        return [...(sizeTemplates || [])].sort((a, b) => (a.template_name || '').localeCompare((b.template_name || ''), undefined, { sensitivity: 'base' }));
+    }, [sizeTemplates]);
 
     const linkGroups = useMemo(() => {
         const m = new Map<string, IInventoryOptionLink[]>();
@@ -83,6 +103,27 @@ export const OptionAssignmentsTab: React.FC<OptionAssignmentsTabProps> = ({
             m.set(k, list);
         });
         return m;
+    }, [links]);
+
+    const categoryTemplateLinks = useMemo(() => {
+        const byCat = new Map<number, { color: IInventoryOptionLink[]; size: IInventoryOptionLink[] }>();
+        (links || []).forEach((l) => {
+            if (l.applies_to_type !== 'category') return;
+            const catId = Number(l.category_id || 0);
+            if (!catId) return;
+            if (l.option_type !== 'color_template' && l.option_type !== 'size_template') return;
+            const cur = byCat.get(catId) || { color: [], size: [] };
+            if (l.option_type === 'color_template') cur.color.push(l);
+            if (l.option_type === 'size_template') cur.size.push(l);
+            byCat.set(catId, cur);
+        });
+        // Stable ordering
+        byCat.forEach((v, k) => {
+            v.color.sort((a, b) => (a.option_label || '').localeCompare((b.option_label || ''), undefined, { sensitivity: 'base' }));
+            v.size.sort((a, b) => (a.option_label || '').localeCompare((b.option_label || ''), undefined, { sensitivity: 'base' }));
+            byCat.set(k, v);
+        });
+        return byCat;
     }, [links]);
 
     const sections = useMemo(() => {
@@ -212,14 +253,168 @@ export const OptionAssignmentsTab: React.FC<OptionAssignmentsTabProps> = ({
         if (!res.success && window.WFToast) window.WFToast.error(res.error || 'Failed to clear');
     };
 
+    const addTemplateToCategory = async (category_id: number, option_type: 'color_template' | 'size_template', option_id: number) => {
+        const existing = categoryTemplateLinks.get(category_id);
+        const already = (existing?.[option_type === 'color_template' ? 'color' : 'size'] || []).some((l) => l.option_id === option_id);
+        if (already) {
+            if (window.WFToast) window.WFToast.info('Already assigned');
+            return;
+        }
+
+        const res = await onAddLink({ option_type, option_id, applies_to_type: 'category', category_id, item_sku: null });
+        if (res.success && window.WFToast) window.WFToast.success('Assigned');
+        if (!res.success && window.WFToast) window.WFToast.error(res.error || 'Failed to assign');
+    };
+
+    const deleteLinkWithToast = async (id: number) => {
+        const res = await onDeleteLink({ id });
+        if (res.success && window.WFToast) window.WFToast.success('Removed');
+        if (!res.success && window.WFToast) window.WFToast.error(res.error || 'Failed to remove');
+    };
+
     return (
         <div className="space-y-6">
             <div>
                 <h4 className="text-md font-bold text-gray-800">Assignments</h4>
-                <div className="text-xs text-gray-500">Add multiple assignments per option. Each assignment targets either a Category or a SKU.</div>
+                <div className="text-xs text-gray-500">Assign templates to Categories (recommended) or manage links per template (legacy).</div>
             </div>
 
-            {sections.map((section) => {
+            <div className="flex flex-col md:flex-row md:items-center gap-3">
+                <div className="inline-flex rounded-xl border border-slate-200 bg-white overflow-hidden self-start">
+                    <button
+                        type="button"
+                        className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest ${viewMode === 'category' ? 'bg-slate-900 text-white' : 'text-slate-600'}`}
+                        onClick={() => setViewMode('category')}
+                        disabled={isBusy}
+                    >
+                        Categories
+                    </button>
+                    <button
+                        type="button"
+                        className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest ${viewMode === 'template' ? 'bg-slate-900 text-white' : 'text-slate-600'}`}
+                        onClick={() => setViewMode('template')}
+                        disabled={isBusy}
+                    >
+                        Templates (Legacy)
+                    </button>
+                </div>
+
+                {viewMode === 'category' && (
+                    <input
+                        className="form-input w-full md:max-w-sm text-sm"
+                        value={categoryFilter}
+                        onChange={(e) => setCategoryFilter(e.target.value)}
+                        placeholder="Filter categories..."
+                        disabled={isBusy}
+                    />
+                )}
+            </div>
+
+            {viewMode === 'category' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {sortedCategories.map((cat) => {
+                        const cur = categoryTemplateLinks.get(cat.id) || { color: [], size: [] };
+                        const selectedColor = addColorByCategory[cat.id] || 0;
+                        const selectedSize = addSizeByCategory[cat.id] || 0;
+                        return (
+                            <div key={cat.id} className="p-4 border rounded-2xl bg-white shadow-sm space-y-3">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <div className="text-sm font-black text-slate-900 truncate">{cat.name}</div>
+                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Category</div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div>
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Color Templates</div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {cur.color.length === 0 && <span className="text-xs text-slate-500">None</span>}
+                                            {cur.color.map((l) => (
+                                                <span key={l.id} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700">
+                                                    <span className="truncate max-w-[220px]">{l.option_label || `#${l.option_id}`}</span>
+                                                    <button
+                                                        type="button"
+                                                        className="admin-action-btn btn-icon--close !w-6 !h-6 !min-w-6 !min-h-6 !text-xs"
+                                                        disabled={isBusy}
+                                                        onClick={() => { void deleteLinkWithToast(l.id); }}
+                                                        data-help-id="inventory-options-delete-link"
+                                                    />
+                                                </span>
+                                            ))}
+                                        </div>
+
+                                        <div className="mt-2 flex gap-2">
+                                            <select
+                                                className="form-input w-full text-sm"
+                                                value={String(selectedColor || '')}
+                                                disabled={isBusy}
+                                                onChange={(e) => setAddColorByCategory((prev) => ({ ...prev, [cat.id]: Number(e.target.value || 0) }))}
+                                            >
+                                                <option value="">Select template...</option>
+                                                {sortedColorTemplates.map((t) => (
+                                                    <option key={t.id} value={String(t.id)}>{t.template_name}</option>
+                                                ))}
+                                            </select>
+                                            <button
+                                                type="button"
+                                                className="btn btn-primary px-3 py-2"
+                                                disabled={isBusy || !selectedColor}
+                                                onClick={() => { void addTemplateToCategory(cat.id, 'color_template', selectedColor); }}
+                                            >
+                                                Add
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Size Templates</div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {cur.size.length === 0 && <span className="text-xs text-slate-500">None</span>}
+                                            {cur.size.map((l) => (
+                                                <span key={l.id} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700">
+                                                    <span className="truncate max-w-[220px]">{l.option_label || `#${l.option_id}`}</span>
+                                                    <button
+                                                        type="button"
+                                                        className="admin-action-btn btn-icon--close !w-6 !h-6 !min-w-6 !min-h-6 !text-xs"
+                                                        disabled={isBusy}
+                                                        onClick={() => { void deleteLinkWithToast(l.id); }}
+                                                        data-help-id="inventory-options-delete-link"
+                                                    />
+                                                </span>
+                                            ))}
+                                        </div>
+
+                                        <div className="mt-2 flex gap-2">
+                                            <select
+                                                className="form-input w-full text-sm"
+                                                value={String(selectedSize || '')}
+                                                disabled={isBusy}
+                                                onChange={(e) => setAddSizeByCategory((prev) => ({ ...prev, [cat.id]: Number(e.target.value || 0) }))}
+                                            >
+                                                <option value="">Select template...</option>
+                                                {sortedSizeTemplates.map((t) => (
+                                                    <option key={t.id} value={String(t.id)}>{t.template_name}</option>
+                                                ))}
+                                            </select>
+                                            <button
+                                                type="button"
+                                                className="btn btn-primary px-3 py-2"
+                                                disabled={isBusy || !selectedSize}
+                                                onClick={() => { void addTemplateToCategory(cat.id, 'size_template', selectedSize); }}
+                                            >
+                                                Add
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {viewMode === 'template' && sections.map((section) => {
                 const dirty = sectionDirty(section.option_type);
                 return (
                     <div key={section.id} className="space-y-3">
@@ -394,4 +589,3 @@ export const OptionAssignmentsTab: React.FC<OptionAssignmentsTabProps> = ({
         </div>
     );
 };
-

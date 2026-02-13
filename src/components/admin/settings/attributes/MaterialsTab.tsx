@@ -143,6 +143,10 @@ export const MaterialsTab: React.FC<MaterialsTabProps> = ({
         if (!res.success && window.WFToast) window.WFToast.error(res.error || 'Failed to delete material');
     };
 
+    const sortedMaterials = useMemo(() => {
+        return [...(materials || [])].sort((a, b) => (a.material_name || '').localeCompare((b.material_name || ''), undefined, { sensitivity: 'base' }));
+    }, [materials]);
+
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
@@ -160,7 +164,7 @@ export const MaterialsTab: React.FC<MaterialsTabProps> = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {materials.map((m) => {
+                {sortedMaterials.map((m) => {
                     const d = drafts[m.id] || ensureDraft(m.id);
                     const current = linksByMaterialId.get(m.id) || [];
                     return (

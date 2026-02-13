@@ -148,8 +148,8 @@ export const ColorTemplateEditor: React.FC<ColorTemplateEditorProps> = ({ templa
                                 </td>
                                 <td className="px-4 py-2">
                                     <div
-                                        className="w-8 h-8 rounded-full border shadow-sm color-swatch-preview"
-                                        style={{ '--swatch-color': item.color_code || '#cccccc' } as React.CSSProperties}
+                                        className="w-8 h-8 rounded-full border shadow-sm"
+                                        style={{ backgroundColor: (item.color_code || '#cccccc') }}
                                     />
                                 </td>
                                 <td className="px-4 py-2 text-right">

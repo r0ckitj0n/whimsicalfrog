@@ -136,7 +136,7 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
         for (const m of explicitMappings) {
             const key = m.area_selector;
             const existing = slotMap.get(key);
-            const curActive = m.is_active === true || m.is_active === 1;
+            const curActive = m.is_active === true || Number(m.is_active) === 1;
 
             if (!existing || !existing.explicit) {
                 slotMap.set(key, {
@@ -151,7 +151,7 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
             // Prefer the active explicit mapping when there are multiple rows for the same area selector.
             // list_room_raw can contain historical inactive rows; editing should default to the active row.
             const prev = existing.explicit;
-            const prevActive = prev.is_active === true || prev.is_active === 1;
+            const prevActive = prev.is_active === true || Number(prev.is_active) === 1;
 
             if (curActive && !prevActive) {
                 existing.explicit = m;

@@ -162,7 +162,7 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
                             <button
                                 type="button"
                                 onClick={() => { void runSanmarImport(); }}
-                                className="px-4 py-2 rounded-full text-xs font-black border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition"
+                                className="btn btn-primary whitespace-nowrap"
                                 data-help-id="attributes-import-sanmar"
                             >
                                 Import Sanmar

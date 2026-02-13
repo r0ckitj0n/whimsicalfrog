@@ -67,11 +67,11 @@ export const GlobalColorsTab: React.FC<GlobalColorsTabProps> = ({ colors, onAdd,
                 <div className="text-[10px] font-mono text-slate-400">{filtered.length} shown</div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-4">
                 {grouped.map(section => (
                     <details
                         key={section.label}
-                        className="md:col-span-2 lg:col-span-3 border border-slate-100 rounded-2xl bg-slate-50/40 p-3"
+                        className="border border-slate-100 rounded-2xl bg-slate-50/40 p-3"
                         open={section.label === 'Base Colors' || section.label === 'Sanmar Colors'}
                     >
                         <summary className="cursor-pointer select-none flex items-center justify-between gap-3 px-2 py-1 text-xs font-black text-slate-700">

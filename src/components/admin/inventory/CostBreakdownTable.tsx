@@ -145,8 +145,8 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
         if (!id) return null;
 
         // DB-backed ids are normalized in useCostBreakdown to `${category}-${id}`; accept both.
-        if (/^\\d+$/.test(id)) return id;
-        const m = id.match(/^(materials|labor|energy|equipment)-(\\d+)$/);
+        if (/^\d+$/.test(id)) return id;
+        const m = id.match(/^(materials|labor|energy|equipment)-(\d+)$/);
         if (m?.[2]) return m[2];
         return null; // Avoid accidentally updating some random row for AI temp ids.
     };

@@ -51,9 +51,28 @@ export const usePriceBreakdown = (sku: string) => {
     const applySuggestionLocally = useCallback((suggestion: PriceSuggestion) => {
         setPendingSuggestion(suggestion);
 
-        // Persisted backend stores a single "final" factor (components are not additive).
+        // Persisted backend stores:
+        // - component factors as type=analysis (display-only)
+        // - a single "final" factor for suggested_price (contributes to totals)
         const suggested = Number(suggestion.suggested_price || 0);
-        const newFactors: IPriceFactor[] = [{
+        const created_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+        const analysisFactors: IPriceFactor[] = Array.isArray(suggestion.components)
+            ? suggestion.components
+                .filter((c) => c && typeof c === 'object')
+                .map((c, idx) => ({
+                    id: -1000 - idx,
+                    sku,
+                    label: String((c as any).label ?? (c as any).type ?? 'Analysis'),
+                    amount: Number((c as any).amount ?? 0) || 0,
+                    type: 'analysis',
+                    explanation: String((c as any).explanation || ''),
+                    source: 'ai',
+                    created_at
+                }))
+            : [];
+
+        const finalFactor: IPriceFactor = {
             id: -1,
             sku,
             label: 'AI Suggested Retail',
@@ -61,8 +80,10 @@ export const usePriceBreakdown = (sku: string) => {
             type: 'final',
             explanation: String(suggestion.reasoning || ''),
             source: 'ai',
-            created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
-        }];
+            created_at
+        };
+
+        const newFactors: IPriceFactor[] = [...analysisFactors, finalFactor];
 
         setFactors(newFactors); // Update factors state
         setConfidence(typeof suggestion.confidence === 'number' ? suggestion.confidence : (suggestion.confidence ? parseFloat(String(suggestion.confidence)) : null));

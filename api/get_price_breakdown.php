@@ -13,7 +13,7 @@ try {
         SELECT id, sku, label, amount, type, explanation, source, created_at
         FROM price_factors 
         WHERE sku = ?
-        ORDER BY created_at
+        ORDER BY created_at, id
     ", [$sku]);
 
     $item = Database::queryOne("SELECT retail_price, ai_price_confidence, ai_price_at FROM items WHERE sku = ?", [$sku]);

@@ -81,7 +81,9 @@ try {
     // 3. Insert new price factors.
     // IMPORTANT: Suggestion components may contain alternative anchors (cost-plus, market research, etc.)
     // that are not additive and must not be summed into the stored retail price.
-    // We persist a single "final" factor that matches suggestion.suggested_price.
+    // We persist:
+    //   - "analysis" rows for component breakdown (display-only; excluded from totals)
+    //   - a single "final" factor that matches suggestion.suggested_price (contributes to totals)
     $suggestedPrice = (float) ($suggestion['suggested_price'] ?? 0);
     if ($suggestedPrice <= 0) {
         throw new Exception('Invalid suggested_price from AI suggestion.');
@@ -91,6 +93,52 @@ try {
     $reasoning = trim((string) ($suggestion['reasoning'] ?? ''));
     if (strlen($reasoning) > 2000) {
         $reasoning = substr($reasoning, 0, 2000);
+    }
+
+    // Insert analysis rows (components) first so the UI can show a nice "Cost Breakdown"-style list.
+    $componentsRaw = $suggestion['components'] ?? [];
+    if (is_string($componentsRaw)) {
+        $decoded = json_decode($componentsRaw, true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            $componentsRaw = $decoded;
+        }
+    }
+
+    // Components may come as an array or an object map.
+    $components = [];
+    if (is_array($componentsRaw)) {
+        $isAssoc = array_keys($componentsRaw) !== range(0, count($componentsRaw) - 1);
+        if ($isAssoc) {
+            foreach ($componentsRaw as $type => $val) {
+                if (is_array($val)) {
+                    $val['type'] = $val['type'] ?? $type;
+                    $components[] = $val;
+                } else {
+                    $components[] = ['type' => $type, 'amount' => $val];
+                }
+            }
+        } else {
+            $components = $componentsRaw;
+        }
+    }
+
+    foreach ($components as $comp) {
+        if (!is_array($comp)) continue;
+        $label = trim((string) ($comp['label'] ?? $comp['type'] ?? ''));
+        if ($label === '') continue;
+        if (strlen($label) > 120) $label = substr($label, 0, 120);
+
+        $amountRaw = $comp['amount'] ?? 0;
+        $amount = is_numeric($amountRaw) ? round((float) $amountRaw, 2) : 0.0;
+
+        $explanation = trim((string) ($comp['explanation'] ?? ''));
+        if (strlen($explanation) > 2000) $explanation = substr($explanation, 0, 2000);
+
+        Database::execute(
+            "INSERT INTO price_factors (sku, label, amount, type, explanation, source)
+             VALUES (?, ?, ?, 'analysis', ?, 'ai')",
+            [$sku, $label, $amount, $explanation]
+        );
     }
 
     Database::execute(

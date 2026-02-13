@@ -79,23 +79,46 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
     };
 
     const pendingSuggested = Number((cachedSuggestion as any)?.suggested_price || 0);
+    const pendingCreatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const pendingComponentsRaw = (cachedSuggestion as any)?.components;
+    const pendingComponents: Array<{ label?: string; type?: string; amount?: number; explanation?: string }> = Array.isArray(pendingComponentsRaw)
+        ? pendingComponentsRaw
+        : [];
+
     const pendingFactors: IPriceFactor[] = cachedSuggestion
-        ? [{
-            id: -1,
-            sku,
-            label: 'AI Suggested Retail',
-            amount: Number.isFinite(pendingSuggested) ? Number(pendingSuggested.toFixed(2)) : 0,
-            type: 'final',
-            explanation: String((cachedSuggestion as any)?.reasoning || ''),
-            source: 'ai',
-            created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
-        }]
+        ? [
+            ...pendingComponents.map((c, idx) => ({
+                id: -1000 - idx,
+                sku,
+                label: String(c?.label ?? c?.type ?? 'Analysis'),
+                amount: Number(c?.amount ?? 0) || 0,
+                type: 'analysis',
+                explanation: String(c?.explanation || ''),
+                source: 'ai' as const,
+                created_at: pendingCreatedAt
+            })),
+            {
+                id: -1,
+                sku,
+                label: 'AI Suggested Retail',
+                amount: Number.isFinite(pendingSuggested) ? Number(pendingSuggested.toFixed(2)) : 0,
+                type: 'final',
+                explanation: String((cachedSuggestion as any)?.reasoning || ''),
+                source: 'ai' as const,
+                created_at: pendingCreatedAt
+            }
+        ]
         : [];
 
     const displayFactors = breakdown.factors.length > 0 ? breakdown.factors : pendingFactors;
     const isPendingOnly = breakdown.factors.length === 0 && pendingFactors.length > 0;
 
     if (!sku) return null;
+
+    const isNonContributing = (t?: string) => {
+        const type = String(t || '').toLowerCase().trim();
+        return type === 'analysis' || type === 'meta';
+    };
 
     const storedRetailValue = Number(breakdown.totals?.stored ?? 0);
     const breakdownTotalValue = Number(breakdown.totals?.total ?? 0);
@@ -123,7 +146,7 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
             return;
         }
 
-        const currentFactors = breakdown.factors || [];
+        const currentFactors = (breakdown.factors || []).filter((f) => !isNonContributing(f.type));
         const factorIds = currentFactors.map((f) => f.id).filter((id) => typeof id === 'number' && id > 0);
         if (factorIds.length !== currentFactors.length || currentFactors.length === 0) {
             window.WFToast?.error?.('Cannot edit total: pricing breakdown factors are not persisted yet.');
@@ -149,6 +172,10 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
         setIsEditingCurrent(false);
         setCurrentEditValue('');
     };
+
+    const analysisFactors = displayFactors.filter((f) => String(f?.type || '').toLowerCase().trim() === 'analysis');
+    const contributingFactors = displayFactors.filter((f) => !isNonContributing(f.type));
+    const rowsToDisplay = analysisFactors.length > 0 ? analysisFactors : contributingFactors;
 
     return (
         <div className="price-breakdown-wrapper">
@@ -197,7 +224,7 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
 
             <div className="divide-y divide-gray-200 border border-gray-200 rounded bg-white overflow-hidden">
                 <div className="px-3 py-2 space-y-1 min-h-[100px]">
-                    {displayFactors.length === 0 ? (
+                    {rowsToDisplay.length === 0 ? (
                         <div className="text-center py-8 text-gray-400 italic text-xs">
                             No pricing breakdown components found.
                         </div>
@@ -208,7 +235,7 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
                                     Showing pending AI breakdown. Save item to persist to database.
                                 </div>
                             )}
-                            {displayFactors.map((f: { id: number; label: string; amount: number; explanation?: string }) => (
+                            {rowsToDisplay.map((f: { id: number; label: string; amount: number; explanation?: string; type?: string }) => (
                             <div key={f.id} className="flex flex-col py-2 border-b last:border-0">
                                 <div className="flex items-center justify-between gap-2">
                                     <span className="text-gray-800 text-sm font-semibold">{f.label}</span>
@@ -232,9 +259,12 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
                                         </div>
                                     ) : (
                                         <span
-                                            className={`text-sm font-bold text-gray-900 ${!isReadOnly ? 'cursor-pointer hover:text-[var(--brand-primary)] hover:underline' : ''}`}
-                                            onClick={() => handleStartEdit(f.id, f.amount)}
-                                            title={!isReadOnly ? 'Click to edit' : undefined}
+                                            className={`text-sm font-bold text-gray-900 ${(!isReadOnly && !isNonContributing(f.type)) ? 'cursor-pointer hover:text-[var(--brand-primary)] hover:underline' : ''}`}
+                                            onClick={() => {
+                                                if (isNonContributing(f.type)) return;
+                                                handleStartEdit(f.id, f.amount);
+                                            }}
+                                            title={(!isReadOnly && !isNonContributing(f.type)) ? 'Click to edit' : undefined}
                                         >
                                             ${f.amount.toFixed(2)}
                                         </span>

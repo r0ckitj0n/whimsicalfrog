@@ -27,14 +27,10 @@ if (!isset($pdo)) {
 function syncTotalStockWithColors($pdo, $item_sku)
 {
     try {
-        // Calculate total stock from all active colors
-        $result = Database::queryOne("\n            SELECT COALESCE(SUM(stock_level), 0) as total_color_stock\n            FROM item_colors \n            WHERE item_sku = ? AND is_active = 1\n        ", [$item_sku]);
-        $totalColorStock = (int)($result['total_color_stock'] ?? 0);
-
-        // Update the main item's stock level
-        Database::execute("UPDATE items SET stock_quantity = ? WHERE sku = ?", [$totalColorStock, $item_sku]);
-
-        return $totalColorStock;
+        // Master stock mode: items.stock_quantity is manually managed and must not be overwritten
+        // by summing variant rows.
+        $row = Database::queryOne("SELECT COALESCE(stock_quantity, 0) AS stock_quantity FROM items WHERE sku = ? LIMIT 1", [$item_sku]);
+        return (int)($row['stock_quantity'] ?? 0);
     } catch (Exception $e) {
         error_log("Error syncing stock for $item_sku: " . $e->getMessage());
         return false;
@@ -72,14 +68,12 @@ function syncColorStockWithSizes($pdo, $color_id)
 function syncTotalStockWithSizes($pdo, $item_sku)
 {
     try {
-        // Calculate total stock from all active sizes
-        $result = Database::queryOne("\n            SELECT COALESCE(SUM(stock_level), 0) as total_size_stock\n            FROM item_sizes \n            WHERE item_sku = ? AND is_active = 1\n        ", [$item_sku]);
-        $totalSizeStock = (int)($result['total_size_stock'] ?? 0);
+        // Master stock mode: items.stock_quantity is manually managed and must not be overwritten
+        // by summing variant rows.
+        $row = Database::queryOne("SELECT COALESCE(stock_quantity, 0) AS stock_quantity FROM items WHERE sku = ? LIMIT 1", [$item_sku]);
+        $master = (int)($row['stock_quantity'] ?? 0);
 
-        // Update the main item's stock level
-        Database::execute("UPDATE items SET stock_quantity = ? WHERE sku = ?", [$totalSizeStock, $item_sku]);
-
-        // Also sync color stocks if there are color-specific sizes
+        // Still keep color rollups consistent for admin tooling.
         $rows = Database::queryAll("\n            SELECT DISTINCT color_id \n            FROM item_sizes \n            WHERE item_sku = ? AND color_id IS NOT NULL\n        ", [$item_sku]);
         $colorIds = array_map(function ($r) { return $r['color_id']; }, $rows);
 
@@ -87,7 +81,7 @@ function syncTotalStockWithSizes($pdo, $item_sku)
             syncColorStockWithSizes($pdo, $color_id);
         }
 
-        return $totalSizeStock;
+        return $master;
     } catch (Exception $e) {
         error_log("Error syncing stock for $item_sku: " . $e->getMessage());
         return false;
@@ -259,47 +253,8 @@ function reduceStockForSale($pdo, $item_sku, $quantity, $colorName = null, $size
 function getStockLevel($pdo, $item_sku, $colorName = null, $sizeCode = null)
 {
     try {
-        // Most specific: size + color
-        if (!empty($sizeCode) && !empty($colorName)) {
-            $row = Database::queryOne("\n                SELECT s.stock_level \n                FROM item_sizes s\n                JOIN item_colors c ON s.color_id = c.id\n                WHERE s.item_sku = ? AND c.color_name = ? AND s.size_code = ? AND s.is_active = 1 AND c.is_active = 1\n            ", [$item_sku, $colorName, $sizeCode]);
-            $result = $row !== null ? $row['stock_level'] : false;
-            if ($result !== false) {
-                return (int)$result;
-            }
-        }
-
-        // Size only (no color)
-        if (!empty($sizeCode)) {
-            $row = Database::queryOne("\n                SELECT stock_level \n                FROM item_sizes \n                WHERE item_sku = ? AND size_code = ? AND color_id IS NULL AND is_active = 1\n            ", [$item_sku, $sizeCode]);
-            $result = $row !== null ? $row['stock_level'] : false;
-            if ($result !== false) {
-                return (int)$result;
-            }
-        }
-
-        // Color only
-        if (!empty($colorName)) {
-            $row = Database::queryOne("\n                SELECT stock_level \n                FROM item_colors \n                WHERE item_sku = ? AND color_name = ? AND is_active = 1\n            ", [$item_sku, $colorName]);
-            $result = $row !== null ? $row['stock_level'] : false;
-            if ($result !== false) {
-                return (int)$result;
-            }
-        }
-
-        // Aggregated stock across sizes (active rows only)
-        $agg = Database::queryOne(
-            "SELECT COALESCE(SUM(stock_level), 0) AS total FROM item_sizes WHERE item_sku = ? AND is_active = 1",
-            [$item_sku]
-        );
-        if ($agg && isset($agg['total'])) {
-            $total = (int)$agg['total'];
-            // Prefer aggregate when it shows real availability; otherwise defer to legacy
-            if ($total > 0) {
-                return $total;
-            }
-        }
-
-        // General item stock fallback
+        // Master stock mode: treat items.stock_quantity as the single source of truth for selling.
+        // Variant (color/size/gender) stock is presentation-only in this mode.
         $row = Database::queryOne("SELECT stock_quantity FROM items WHERE sku = ?", [$item_sku]);
         $result = $row !== null ? $row['stock_quantity'] : false;
         return $result !== false ? (int)$result : 0;

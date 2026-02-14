@@ -56,7 +56,16 @@ try {
         case WF_Constants::ACTION_GET_SIZES:
             $sku = $_GET['item_sku'] ?? '';
             if (empty($sku)) throw new Exception('SKU required');
-            Response::json(['success' => true, 'sizes' => get_item_sizes($sku, $_GET['color_id'] ?? null, $_GET['gender'] ?? null)]);
+            $sizes = get_item_sizes($sku, $_GET['color_id'] ?? null, $_GET['gender'] ?? null);
+            // Master stock mode: expose items.stock_quantity as the effective stock for every variation.
+            // This keeps storefront selling limited by your "how many I can make" number.
+            $row = Database::queryOne("SELECT COALESCE(stock_quantity, 0) AS stock_quantity FROM items WHERE sku = ? LIMIT 1", [$sku]);
+            $master = (int) ($row['stock_quantity'] ?? 0);
+            foreach ($sizes as &$s) {
+                $s['stock_level'] = $master;
+            }
+            unset($s);
+            Response::json(['success' => true, 'sizes' => $sizes]);
             break;
 
         case WF_Constants::ACTION_GET_ALL_SIZES:

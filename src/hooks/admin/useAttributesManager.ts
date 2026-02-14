@@ -217,10 +217,55 @@ export const useAttributesManager = () => {
         if (template) setEditingColor(template);
     }, [fetchColorTemplate]);
 
+    const syncTemplateCategoryLink = useCallback(async (option_type: 'color_template' | 'size_template', option_id: number, categoryLabel?: string | null) => {
+        if (!option_id) return { changed: false as const };
+        const raw = String(categoryLabel || '').trim();
+        if (!raw) return { changed: false as const };
+
+        const key = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
+        if ((categoriesApi.categories || []).length === 0) {
+            await categoriesApi.fetchCategories();
+        }
+        if ((linksApi.links || []).length === 0) {
+            await linksApi.fetchLinks();
+        }
+
+        const match = (categoriesApi.categories || []).find((c) => key(c.name) === key(raw));
+        if (!match) return { changed: false as const };
+
+        const existing = (linksApi.links || []).filter((l) =>
+            l.option_type === option_type
+            && l.option_id === option_id
+            && l.applies_to_type === 'category'
+        );
+
+        // If this option is already linked to multiple categories, don't guess intent.
+        if (existing.length > 1) {
+            return { changed: false as const, skippedBecauseMultiple: true as const, categoryName: match.name };
+        }
+
+        const already = existing.length === 1 && Number(existing[0]?.category_id || 0) === match.id;
+        if (already) return { changed: false as const };
+
+        // Remove the prior category link (if any), then add the one matching the category label.
+        if (existing.length === 1) {
+            await linksApi.deleteLink({ id: existing[0].id });
+        }
+        await linksApi.addLink({ option_type, option_id, applies_to_type: 'category', category_id: match.id, item_sku: null });
+        return { changed: true as const, categoryName: match.name };
+    }, [categoriesApi.categories, categoriesApi.fetchCategories, linksApi]);
+
     const handleSaveTemplate = useCallback(async (): Promise<boolean> => {
         if (localSize) {
             const res = await saveSizeTemplate(localSize);
             if (res?.success) {
+                // If template.category matches a real Category name, keep Assignments in sync.
+                const templateId = Number((res as any)?.template_id || localSize.id || 0);
+                const linkRes = await syncTemplateCategoryLink('size_template', templateId, localSize.category);
+                if ((linkRes as any)?.skippedBecauseMultiple) {
+                    window.WFToast?.info('This template is assigned to multiple categories; manage assignments in the Assignments tab.');
+                }
+
                 setEditingSize(null);
                 setLocalSize(null);
                 if (window.WFToast) window.WFToast.success('Size template saved');
@@ -232,6 +277,13 @@ export const useAttributesManager = () => {
         } else if (localColor) {
             const res = await saveColorTemplate(localColor);
             if (res?.success) {
+                // If template.category matches a real Category name, keep Assignments in sync.
+                const templateId = Number((res as any)?.template_id || localColor.id || 0);
+                const linkRes = await syncTemplateCategoryLink('color_template', templateId, localColor.category);
+                if ((linkRes as any)?.skippedBecauseMultiple) {
+                    window.WFToast?.info('This template is assigned to multiple categories; manage assignments in the Assignments tab.');
+                }
+
                 setEditingColor(null);
                 setLocalColor(null);
                 if (window.WFToast) window.WFToast.success('Color template saved');
@@ -242,7 +294,7 @@ export const useAttributesManager = () => {
             }
         }
         return false;
-    }, [localSize, localColor, saveSizeTemplate, saveColorTemplate]);
+    }, [localSize, localColor, saveSizeTemplate, saveColorTemplate, syncTemplateCategoryLink]);
 
     const isDirty = useMemo(() => {
         if (localSize && editingSize) return JSON.stringify(localSize) !== JSON.stringify(editingSize);

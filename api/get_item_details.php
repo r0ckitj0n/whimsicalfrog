@@ -60,18 +60,8 @@ try {
         exit;
     }
 
-    // Compute aggregated total stock from item_sizes (active rows only) IF variants exist
-    $variantCount = (int) Database::queryOne("SELECT COUNT(*) as cnt FROM item_sizes WHERE item_sku = ?", [$sku])['cnt'];
-    if ($variantCount > 0) {
-        $stockRow = Database::queryOne(
-            "SELECT COALESCE(SUM(stock_level), 0) AS total_stock FROM item_sizes WHERE item_sku = ? AND is_active = 1",
-            [$sku]
-        );
-        $item['total_stock'] = isset($stockRow['total_stock']) ? (int) $stockRow['total_stock'] : 0;
-    } else {
-        // Fallback to base stock_quantity for flat items
-        $item['total_stock'] = (int) $item['stock_quantity'];
-    }
+    // Master stock mode: use the item's stock_quantity regardless of variant rows.
+    $item['total_stock'] = (int) ($item['stock_quantity'] ?? 0);
 
     // Decode AI JSON fields if they exist
     $aiJsonFields = ['cost_breakdown', 'price_factors', 'price_components', 'locked_fields', 'locked_words'];

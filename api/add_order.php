@@ -126,27 +126,27 @@ try {
     $colors = array_pad($input['colors'] ?? [], count($item_ids), null);
     $sizes = array_pad($input['sizes'] ?? [], count($item_ids), null);
 
+    // Master stock is enforced at the SKU level (across all variations).
+    $requestedBySku = [];
     for ($i = 0; $i < count($item_ids); $i++) {
         $sku = trim((string) $item_ids[$i]);
         $qty = (int) $quantities[$i];
-        $color = $colors[$i];
-        $size = $sizes[$i];
 
         if ($sku === '' || strlen($sku) > 64 || $qty <= 0 || $qty > 100000) {
             Response::error('Invalid item payload', null, 422);
         }
-        $currentStock = getStockLevel(Database::getInstance(), $sku, $color, $size);
-        if ($currentStock === false || $qty > $currentStock) {
-            // Fetch name and price for better error UX
+        $requestedBySku[$sku] = ($requestedBySku[$sku] ?? 0) + $qty;
+    }
+
+    foreach ($requestedBySku as $sku => $requestedQty) {
+        $currentStock = getStockLevel(Database::getInstance(), $sku, null, null);
+        if ($currentStock === false || $requestedQty > $currentStock) {
             $itemInfo = Database::queryOne("SELECT name, retail_price FROM items WHERE sku = ?", [$sku]);
             $itemName = $itemInfo ? $itemInfo['name'] : $sku;
             $itemPrice = $itemInfo ? (float) $itemInfo['retail_price'] : 0.0;
 
             $msg = "Sorry, \"$itemName\" is out of stock. ";
-            $msg .= "We have " . ($currentStock ?: 0) . " available (you requested $qty). ";
-            if ($color || $size) {
-                $msg .= "Variation: " . implode(', ', array_filter([$color, $size])) . ". ";
-            }
+            $msg .= "We have " . ($currentStock ?: 0) . " available (you requested $requestedQty). ";
             $msg .= "Price: $" . number_format($itemPrice, 2) . ".";
 
             Response::error($msg, ['available' => $currentStock], 409);

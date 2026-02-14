@@ -178,20 +178,8 @@ try {
         $item['formatted_price'] = '$' . number_format($item['retail_price'], 2);
         $item['price'] = $item['retail_price']; // Keep numeric price for cart
 
-        // Stock status
-        // Aggregate variant stock if present; fall back to item stock_quantity if NO variants exist
-        $variantStats = Database::queryOne(
-            "SELECT COUNT(*) as v_count, COALESCE(SUM(CASE WHEN is_active = 1 THEN stock_level ELSE 0 END), 0) AS total_stock 
-             FROM item_sizes 
-             WHERE item_sku = ?",
-            [$item['sku']]
-        );
-        $total_stock = 0;
-        if ($variantStats && ((int) $variantStats['v_count']) > 0) {
-            $total_stock = (int) $variantStats['total_stock'];
-        } else {
-            $total_stock = (int) $item['stock_quantity'];
-        }
+        // Stock status (master stock mode): items.stock_quantity is the selling constraint.
+        $total_stock = (int) $item['stock_quantity'];
         $item['total_stock'] = $total_stock;
         $item['stock_level'] = $total_stock; // alias for JS consumers
         $item['in_stock'] = $total_stock > 0;

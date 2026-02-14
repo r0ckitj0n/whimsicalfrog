@@ -316,15 +316,8 @@ if (!isset($categories) || !is_array($categories) || empty($categories)) {
                     error_log('[shop_data_loader] variant existence check failed: ' . $eAggV->getMessage());
                 }
 
-                // Apply alignment: if an item HAS variants in item_sizes, use the active sum.
-                // Otherwise, keep the base stock_quantity.
-                foreach ($items_list as &$pFix) {
-                    $sku = $pFix['sku'] ?? '';
-                    if ($sku !== '' && isset($hasSizes[$sku])) {
-                        $pFix['stock'] = $sizeSums[$sku] ?? 0;
-                    }
-                }
-                unset($pFix);
+                // NOTE: Master stock mode.
+                // Do NOT override item stock from variant sums. items.stock_quantity is the public-facing selling limit.
             }
         } catch (Throwable $eAgg) {
             error_log('[shop_data_loader] stock aggregation pass failed: ' . $eAgg->getMessage());

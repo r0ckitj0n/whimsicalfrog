@@ -176,9 +176,9 @@ class OrderActionHelper
             }
         }
 
-        if (!$stock_reduced) {
-            Database::execute("UPDATE items SET stock_quantity = GREATEST(stock_quantity - ?, 0) WHERE sku = ?", [$qty, $sku]);
-        }
+        // Master stock is the selling constraint across all variants. Always decrement it.
+        // This keeps stock enforcement consistent even when per-variant rows exist.
+        Database::execute("UPDATE items SET stock_quantity = GREATEST(stock_quantity - ?, 0) WHERE sku = ?", [$qty, $sku]);
 
         // 3. Low Stock Trigger (Post-Check)
         self::checkLowStock($sku, $color, $size);

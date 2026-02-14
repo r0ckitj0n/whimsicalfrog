@@ -33,7 +33,7 @@ export const useItemOptions = (item: IItemDetails | null, options: IItemOption[]
         return unique.map((s) => ({
             code: s,
             name: s,
-            stock: 99,
+            stock: Number(item.stock_quantity || 0),
             priceAdj: 0
         }));
     }, [item]);

@@ -156,14 +156,22 @@ try {
 
         case 'delete_template':
             // Delete size template (soft delete)
-            $templateId = $_POST['template_id'] ?? 0;
+            $templateId = (int)($_GET['template_id'] ?? $_POST['template_id'] ?? ($json['template_id'] ?? 0));
+            if ($templateId <= 0) {
+                Response::error('Template ID required', null, 400);
+                break;
+            }
 
             $affected = Database::execute("UPDATE size_templates SET is_active = 0 WHERE id = ?", [$templateId]);
             if ($affected > 0) {
                 Response::updated();
             } else {
                 $exists = Database::queryOne('SELECT id FROM size_templates WHERE id = ?', [$templateId]);
-                if ($exists) { Response::noChanges(); } else { http_response_code(404); echo json_encode(['success' => false, 'error' => 'Template not found']); }
+                if ($exists) {
+                    Response::noChanges();
+                } else {
+                    Response::error('Template not found', null, 404);
+                }
             }
             break;
 

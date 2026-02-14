@@ -83,10 +83,10 @@ export const useAICostEstimateConfirm = () => {
                 .join('\n');
 
             const detailsText = [
+                pricingNote ? pricingNote : '',
                 `${estimate.provider} • ${estimate.model}`,
-                lineSummary ? `\n${lineSummary}` : '',
-                pricingNote ? `\n${pricingNote}` : ''
-            ].join('').trim();
+                lineSummary ? `\n${lineSummary}` : ''
+            ].filter(Boolean).join('\n').trim();
 
             return confirm({
                 hideHeader: true,
@@ -94,7 +94,7 @@ export const useAICostEstimateConfirm = () => {
                 subtitle: action_label,
                 subtitleClassName: 'text-sm font-black text-gray-500 uppercase tracking-widest',
                 messageClassName: 'text-base text-gray-700 leading-relaxed font-semibold',
-                message: `Estimated AI cost: ${formatUsd(estimate.expected_cost)}.${pricingNote ? ` ${pricingNote}` : ''}`,
+                message: `Estimated AI cost: ${formatUsd(estimate.expected_cost)}.`,
                 details: detailsText || undefined,
                 detailsCollapsible: Boolean(detailsText),
                 detailsLabel: 'Details',
@@ -134,8 +134,8 @@ export const useAICostEstimateConfirm = () => {
         return confirm({
             title: 'Confirm AI Generation',
             subtitle: `${estimate.provider} • ${estimate.model}`,
-            message: `${action_label} will run ${estimate.operation_count} AI operation(s). Estimated total: ${formatUsd(estimate.expected_cost)}.${pricingNote ? ` ${pricingNote}` : ''}`,
-            details: lineSummary || 'No line-item estimate available.',
+            message: `${action_label} will run ${estimate.operation_count} AI operation(s). Estimated total: ${formatUsd(estimate.expected_cost)}.`,
+            details: [pricingNote, lineSummary || 'No line-item estimate available.'].filter(Boolean).join(' | '),
             confirmText,
             cancelText: 'Cancel',
             confirmStyle: 'warning',

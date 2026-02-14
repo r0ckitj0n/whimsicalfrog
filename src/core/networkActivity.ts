@@ -79,6 +79,37 @@ const isApiRequestUrl = (rawUrl: string) => {
     }
 };
 
+const isIgnoredForGlobalProcessing = (rawUrl: string): boolean => {
+    try {
+        const parsedUrl = new URL(rawUrl, window.location.origin);
+        const path = parsedUrl.pathname.toLowerCase();
+        // Long-running AI endpoints should not block the UI with the global spinner.
+        // They have their own UX (toasts/modals/button disabled states).
+        return (
+            path.endsWith('/api/ai_cost_estimate.php') ||
+            path.endsWith('/api/suggest_cost.php') ||
+            path.endsWith('/api/suggest_price.php') ||
+            path.endsWith('/api/suggest_all.php') ||
+            path.endsWith('/api/suggest_marketing.php') ||
+            path.endsWith('/api/run_image_analysis.php') ||
+            path.endsWith('/api/ai_edit_image.php') ||
+            path.endsWith('/api/ai_image_processor.php')
+        );
+    } catch {
+        const u = rawUrl.toLowerCase();
+        return (
+            u.includes('/api/ai_cost_estimate.php') ||
+            u.includes('/api/suggest_cost.php') ||
+            u.includes('/api/suggest_price.php') ||
+            u.includes('/api/suggest_all.php') ||
+            u.includes('/api/suggest_marketing.php') ||
+            u.includes('/api/run_image_analysis.php') ||
+            u.includes('/api/ai_edit_image.php') ||
+            u.includes('/api/ai_image_processor.php')
+        );
+    }
+};
+
 const getRequestUrl = (input: RequestInfo | URL): string => {
     if (typeof input === 'string') return input;
     if (input instanceof URL) return input.toString();
@@ -92,7 +123,8 @@ const isNonGet = (method: string | null | undefined): boolean => {
 
 // Only track non-GET API requests for the global processing overlay.
 // Rationale: GETs may be background refreshes/polls and should not keep the user-blocking spinner alive.
-const shouldTrack = (url: string, method?: string | null) => hasUserInteracted && isApiRequestUrl(url) && isNonGet(method);
+const shouldTrack = (url: string, method?: string | null) =>
+    hasUserInteracted && isApiRequestUrl(url) && isNonGet(method) && !isIgnoredForGlobalProcessing(url);
 
 const markUserInteracted = () => {
     hasUserInteracted = true;
@@ -120,6 +152,8 @@ const isGenerateAction = (label: string): boolean => {
 const markGenerateIntent = (event: Event) => {
     const actionable = getActionableElement(event.target);
     if (!actionable) return;
+    // Avoid showing the global overlay for "Generate" clicks inside modals.
+    if (actionable.closest('.wf-modal-overlay')) return;
 
     const label = getActionLabel(actionable);
     if (!isGenerateAction(label)) return;

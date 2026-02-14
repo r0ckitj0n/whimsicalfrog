@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { IColorTemplate, IColorTemplateItem } from '../../../../hooks/admin/useGlobalEntities.js';
+import { ApiClient } from '../../../../core/ApiClient.js';
+import { AUTH } from '../../../../core/constants.js';
+import logger from '../../../../core/logger.js';
+import type { ITemplateCategoriesResponse } from '../../../../types/templates.js';
 
 interface ColorTemplateEditorProps {
     template: Partial<IColorTemplate>;
@@ -14,6 +18,10 @@ export const ColorTemplateEditor: React.FC<ColorTemplateEditorProps> = ({ templa
     const [description, setDescription] = useState(template.description || '');
     const [items, setItems] = useState<IColorTemplateItem[]>(template.colors || []);
     const [isDirty, setIsDirty] = useState(false);
+    const [categories, setCategories] = useState<string[]>([]);
+    const [categoriesError, setCategoriesError] = useState<string | null>(null);
+
+    const categoriesId = useMemo(() => `wf-color-template-categories-${template.id || 'new'}`, [template.id]);
 
     useEffect(() => {
         setIsDirty(true);
@@ -27,6 +35,32 @@ export const ColorTemplateEditor: React.FC<ColorTemplateEditorProps> = ({ templa
             } as IColorTemplate);
         }
     }, [name, category, description, items, onChange, template]);
+
+    useEffect(() => {
+        let isMounted = true;
+        (async () => {
+            try {
+                setCategoriesError(null);
+                const res = await ApiClient.get<ITemplateCategoriesResponse>(`/api/color_templates.php?action=get_categories&admin_token=${AUTH.ADMIN_TOKEN}`);
+                if (!isMounted) return;
+                if (res?.success) {
+                    const list = (res.categories || []).map(String).map(s => s.trim()).filter(Boolean);
+                    // Ensure current category stays selectable even if it's not in the list.
+                    if (category && !list.includes(category)) list.unshift(category);
+                    setCategories(Array.from(new Set(list)));
+                } else {
+                    setCategoriesError(res?.error || res?.message || 'Failed to load categories');
+                }
+            } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : 'Failed to load categories';
+                logger.error('ColorTemplateEditor category load failed', e);
+                if (isMounted) setCategoriesError(msg);
+            }
+        })();
+        return () => { isMounted = false; };
+        // category intentionally not included; we just want to load once.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleAddItem = () => {
         setItems([...items, { color_name: '', color_code: '#000000', display_order: items.length + 1 }]);
@@ -80,10 +114,21 @@ export const ColorTemplateEditor: React.FC<ColorTemplateEditorProps> = ({ templa
                     <label className="block text-sm font-bold text-gray-700 mb-1">Category</label>
                     <input
                         type="text"
+                        list={categoriesId}
                         value={category}
                         onChange={e => setCategory(e.target.value)}
                         className="form-input w-full"
                     />
+                    <datalist id={categoriesId}>
+                        {categories.map((c) => (
+                            <option key={c} value={c} />
+                        ))}
+                    </datalist>
+                    {categoriesError && (
+                        <div className="mt-1 text-[11px] font-bold text-red-600">
+                            {categoriesError}
+                        </div>
+                    )}
                 </div>
             </div>
 

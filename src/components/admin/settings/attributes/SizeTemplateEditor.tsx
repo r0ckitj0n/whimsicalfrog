@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ISizeTemplate, ISizeTemplateItem } from '../../../../hooks/admin/useGlobalEntities.js';
+import { ApiClient } from '../../../../core/ApiClient.js';
+import { AUTH } from '../../../../core/constants.js';
+import logger from '../../../../core/logger.js';
+import type { ITemplateCategoriesResponse } from '../../../../types/templates.js';
 
 interface SizeTemplateEditorProps {
     template: Partial<ISizeTemplate>;
@@ -14,6 +18,10 @@ export const SizeTemplateEditor: React.FC<SizeTemplateEditorProps> = ({ template
     const [description, setDescription] = useState(template.description || '');
     const [items, setItems] = useState<ISizeTemplateItem[]>(template.sizes || []);
     const [isDirty, setIsDirty] = useState(false);
+    const [categories, setCategories] = useState<string[]>([]);
+    const [categoriesError, setCategoriesError] = useState<string | null>(null);
+
+    const categoriesId = useMemo(() => `wf-size-template-categories-${template.id || 'new'}`, [template.id]);
 
     useEffect(() => {
         setIsDirty(true);
@@ -27,6 +35,31 @@ export const SizeTemplateEditor: React.FC<SizeTemplateEditorProps> = ({ template
             } as ISizeTemplate);
         }
     }, [name, category, description, items, onChange, template]);
+
+    useEffect(() => {
+        let isMounted = true;
+        (async () => {
+            try {
+                setCategoriesError(null);
+                const res = await ApiClient.get<ITemplateCategoriesResponse>(`/api/size_templates.php?action=get_categories&admin_token=${AUTH.ADMIN_TOKEN}`);
+                if (!isMounted) return;
+                if (res?.success) {
+                    const list = (res.categories || []).map(String).map(s => s.trim()).filter(Boolean);
+                    if (category && !list.includes(category)) list.unshift(category);
+                    setCategories(Array.from(new Set(list)));
+                } else {
+                    setCategoriesError(res?.error || res?.message || 'Failed to load categories');
+                }
+            } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : 'Failed to load categories';
+                logger.error('SizeTemplateEditor category load failed', e);
+                if (isMounted) setCategoriesError(msg);
+            }
+        })();
+        return () => { isMounted = false; };
+        // category intentionally not included; we just want to load once.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleAddItem = () => {
         setItems([...items, { size_name: '', size_code: '', price_adjustment: 0, display_order: items.length }]);
@@ -80,10 +113,21 @@ export const SizeTemplateEditor: React.FC<SizeTemplateEditorProps> = ({ template
                     <label className="block text-sm font-bold text-gray-700 mb-1">Category</label>
                     <input
                         type="text"
+                        list={categoriesId}
                         value={category}
                         onChange={e => setCategory(e.target.value)}
                         className="form-input w-full"
                     />
+                    <datalist id={categoriesId}>
+                        {categories.map((c) => (
+                            <option key={c} value={c} />
+                        ))}
+                    </datalist>
+                    {categoriesError && (
+                        <div className="mt-1 text-[11px] font-bold text-red-600">
+                            {categoriesError}
+                        </div>
+                    )}
                 </div>
             </div>
 

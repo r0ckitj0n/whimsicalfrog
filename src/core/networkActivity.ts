@@ -10,11 +10,6 @@ const listeners = new Set<NetworkActivityListener>();
 let activeCount = 0;
 let hasUserInteracted = false;
 let installed = false;
-let generateIntentActive = false;
-let networkSeenSinceGenerateIntent = false;
-let generateIntentTimeoutId: number | null = null;
-let generateIntentHardTimeoutId: number | null = null;
-let generateIntentClearDelayId: number | null = null;
 let originalFetch: typeof window.fetch | null = null;
 let originalXhrOpen: typeof XMLHttpRequest.prototype.open | null = null;
 let originalXhrSend: typeof XMLHttpRequest.prototype.send | null = null;
@@ -22,7 +17,7 @@ let originalXhrSend: typeof XMLHttpRequest.prototype.send | null = null;
 const publish = () => {
     const snapshot: NetworkActivitySnapshot = {
         activeCount,
-        isActive: activeCount > 0 || generateIntentActive
+        isActive: activeCount > 0
     };
 
     listeners.forEach((listener) => listener(snapshot));
@@ -30,43 +25,13 @@ const publish = () => {
 
 const increment = () => {
     activeCount += 1;
-    if (generateIntentActive) {
-        networkSeenSinceGenerateIntent = true;
-    }
     publish();
 };
 
 const decrement = () => {
     activeCount = Math.max(0, activeCount - 1);
 
-    if (generateIntentActive && networkSeenSinceGenerateIntent && activeCount === 0) {
-        if (generateIntentClearDelayId) window.clearTimeout(generateIntentClearDelayId);
-        generateIntentClearDelayId = window.setTimeout(() => {
-            if (activeCount === 0) clearGenerateIntent();
-        }, 220);
-    }
-
     publish();
-};
-
-const clearGenerateIntent = () => {
-    generateIntentActive = false;
-    networkSeenSinceGenerateIntent = false;
-
-    if (generateIntentTimeoutId) {
-        window.clearTimeout(generateIntentTimeoutId);
-        generateIntentTimeoutId = null;
-    }
-
-    if (generateIntentHardTimeoutId) {
-        window.clearTimeout(generateIntentHardTimeoutId);
-        generateIntentHardTimeoutId = null;
-    }
-
-    if (generateIntentClearDelayId) {
-        window.clearTimeout(generateIntentClearDelayId);
-        generateIntentClearDelayId = null;
-    }
 };
 
 const isApiRequestUrl = (rawUrl: string) => {
@@ -83,30 +48,12 @@ const isIgnoredForGlobalProcessing = (rawUrl: string): boolean => {
     try {
         const parsedUrl = new URL(rawUrl, window.location.origin);
         const path = parsedUrl.pathname.toLowerCase();
-        // Long-running AI endpoints should not block the UI with the global spinner.
-        // They have their own UX (toasts/modals/button disabled states).
-        return (
-            path.endsWith('/api/ai_cost_estimate.php') ||
-            path.endsWith('/api/suggest_cost.php') ||
-            path.endsWith('/api/suggest_price.php') ||
-            path.endsWith('/api/suggest_all.php') ||
-            path.endsWith('/api/suggest_marketing.php') ||
-            path.endsWith('/api/run_image_analysis.php') ||
-            path.endsWith('/api/ai_edit_image.php') ||
-            path.endsWith('/api/ai_image_processor.php')
-        );
+        // The estimate call is a quick pre-flight step for the confirm modal and
+        // should never show the global processing overlay.
+        return path.endsWith('/api/ai_cost_estimate.php');
     } catch {
         const u = rawUrl.toLowerCase();
-        return (
-            u.includes('/api/ai_cost_estimate.php') ||
-            u.includes('/api/suggest_cost.php') ||
-            u.includes('/api/suggest_price.php') ||
-            u.includes('/api/suggest_all.php') ||
-            u.includes('/api/suggest_marketing.php') ||
-            u.includes('/api/run_image_analysis.php') ||
-            u.includes('/api/ai_edit_image.php') ||
-            u.includes('/api/ai_image_processor.php')
-        );
+        return u.includes('/api/ai_cost_estimate.php');
     }
 };
 
@@ -130,61 +77,10 @@ const markUserInteracted = () => {
     hasUserInteracted = true;
 };
 
-const getActionableElement = (target: EventTarget | null): HTMLElement | null => {
-    if (!(target instanceof Element)) return null;
-    const actionable = target.closest('button, input[type="button"], input[type="submit"], [role="button"]');
-    return actionable instanceof HTMLElement ? actionable : null;
-};
-
-const getActionLabel = (element: HTMLElement): string => {
-    if (element instanceof HTMLInputElement) {
-        return (element.value || '').trim();
-    }
-
-    return (element.innerText || element.textContent || '').trim();
-};
-
-const isGenerateAction = (label: string): boolean => {
-    const normalizedLabel = label.trim().toLowerCase();
-    return normalizedLabel.startsWith('generate');
-};
-
-const markGenerateIntent = (event: Event) => {
-    const actionable = getActionableElement(event.target);
-    if (!actionable) return;
-    // Avoid showing the global overlay for "Generate" clicks inside modals.
-    if (actionable.closest('.wf-modal-overlay')) return;
-
-    const label = getActionLabel(actionable);
-    if (!isGenerateAction(label)) return;
-
-    generateIntentActive = true;
-    networkSeenSinceGenerateIntent = false;
-
-    if (generateIntentTimeoutId) window.clearTimeout(generateIntentTimeoutId);
-    if (generateIntentHardTimeoutId) window.clearTimeout(generateIntentHardTimeoutId);
-    if (generateIntentClearDelayId) window.clearTimeout(generateIntentClearDelayId);
-
-    generateIntentTimeoutId = window.setTimeout(() => {
-        if (!networkSeenSinceGenerateIntent && activeCount === 0) {
-            clearGenerateIntent();
-            publish();
-        }
-    }, 1200);
-
-    generateIntentHardTimeoutId = window.setTimeout(() => {
-        clearGenerateIntent();
-        publish();
-    }, 30000);
-
-    publish();
-};
-
 const installInteractionListeners = () => {
     document.addEventListener('pointerdown', markUserInteracted, { capture: true, passive: true });
     document.addEventListener('keydown', markUserInteracted, { capture: true, passive: true });
     document.addEventListener('touchstart', markUserInteracted, { capture: true, passive: true });
-    document.addEventListener('click', markGenerateIntent, { capture: true, passive: true });
 };
 
 const installFetchTracker = () => {
@@ -249,7 +145,7 @@ export const installNetworkActivityTracker = () => {
 
 export const subscribeToNetworkActivity = (listener: NetworkActivityListener) => {
     listeners.add(listener);
-    listener({ activeCount, isActive: activeCount > 0 || generateIntentActive });
+    listener({ activeCount, isActive: activeCount > 0 });
 
     return () => {
         listeners.delete(listener);

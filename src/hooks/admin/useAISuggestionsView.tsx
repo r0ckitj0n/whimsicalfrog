@@ -279,6 +279,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
                 { key: 'marketing_generation', label: 'Marketing generation' },
                 { key: 'price_estimation', label: 'Price suggestion' }
             ],
+            mode: 'minimal',
             context: {
                 image_count: Math.max(resolvedImageUrls.length, resolvedPrimaryImageUrl ? 1 : 0),
                 name_length: localFormData.name.length,
@@ -451,6 +452,7 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
                 { key: 'info_from_images', label: 'Image analysis + item info' },
                 { key: 'marketing_generation', label: 'Marketing refinement' }
             ],
+            mode: 'minimal',
             context: {
                 image_count: Math.max(resolvedImageUrls.length, resolvedPrimaryImageUrl ? 1 : 0),
                 name_length: localFormData.name.length,

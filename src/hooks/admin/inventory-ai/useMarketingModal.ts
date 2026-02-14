@@ -77,6 +77,7 @@ export const useMarketingModal = ({
                 { key: 'info_from_images', label: 'Image analysis + item info' },
                 { key: 'marketing_generation', label: 'Marketing generation' }
             ],
+            mode: 'minimal',
             context: {
                 image_count: 1,
                 name_length: itemName.length,

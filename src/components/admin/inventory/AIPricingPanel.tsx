@@ -103,6 +103,7 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
             operations: [
                 { key: 'price_estimation', label: 'Price suggestion' }
             ],
+            mode: 'minimal',
             context: {
                 image_count: Math.max(imageUrls.length, primaryImageUrl ? 1 : 0),
                 name_length: name.length,

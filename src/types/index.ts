@@ -56,3 +56,4 @@ export type * from './help.js';
 export type * from './marketing.js';
 export type * from './shipping.js';
 export type * from './pos.js';
+export type * from './pricing-history.js';

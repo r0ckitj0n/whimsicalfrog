@@ -122,6 +122,7 @@ export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHo
             operations: [
                 { key: 'room_image_generation', label: 'Shortcut sign image generation', image_generations: 1 }
             ],
+            mode: 'minimal',
             context: {
                 prompt_length: (String(newMapping.link_label || '').trim().length || 24)
             },

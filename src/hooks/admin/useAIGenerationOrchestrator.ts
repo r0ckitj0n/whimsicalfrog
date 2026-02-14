@@ -355,7 +355,9 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                 useImages: true,
                 step: 'info',
                 locked_words: lockedWords || {},
-                image_first_priority: true
+                image_first_priority: true,
+                whimsicalTheme: true,
+                contentTone: 'whimsical_frog'
             });
 
             console.log('[AI Orchestrator] executeInfoStep response:', response);

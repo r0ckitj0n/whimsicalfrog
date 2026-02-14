@@ -6,6 +6,12 @@ export interface IModalOptions {
     message?: string;
     subtitle?: string;
     details?: string;
+    /** When true, render the details block behind a toggle. */
+    detailsCollapsible?: boolean;
+    /** Label shown next to the details toggle (defaults to "Details"). */
+    detailsLabel?: string;
+    /** When details are collapsible, whether the details are expanded initially. */
+    detailsDefaultOpen?: boolean;
     icon?: string;
     iconType?: ModalIconType;
     iconKey?: string;

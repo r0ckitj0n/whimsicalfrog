@@ -273,6 +273,7 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                 operations: [
                     { key: 'room_prompt_refinement', label: 'Room prompt refinement' }
                 ],
+                mode: 'minimal',
                 context: {
                     prompt_length: draftPromptText.length
                 },
@@ -344,6 +345,7 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
                 : [
                     { key: 'room_image_generation', label: 'Room image generation', image_generations: 1 }
                 ],
+            mode: 'minimal',
             context: {
                 prompt_length: (generatedPromptText.trim() || draftPromptText).length
             },

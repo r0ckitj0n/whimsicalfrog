@@ -33,6 +33,9 @@ export const GlobalModal: React.FC = () => {
         message = 'Are you sure you want to proceed?',
         subtitle,
         details,
+        detailsCollapsible,
+        detailsLabel,
+        detailsDefaultOpen,
         icon,
         iconType = 'warning',
         iconKey,
@@ -119,6 +122,9 @@ export const GlobalModal: React.FC = () => {
                         message={message}
                         subtitle={subtitle}
                         details={details}
+                        detailsCollapsible={detailsCollapsible}
+                        detailsLabel={detailsLabel}
+                        detailsDefaultOpen={detailsDefaultOpen}
                         mode={mode}
                         inputValue={inputValue}
                         setInputValue={setInputValue}

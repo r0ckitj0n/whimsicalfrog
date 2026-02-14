@@ -394,6 +394,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                 operations: [
                     { key: 'room_image_generation', label: 'Room image generation', image_generations: 1 }
                 ],
+                mode: 'minimal',
                 context: {
                     prompt_length: generatedPromptText.length
                 },

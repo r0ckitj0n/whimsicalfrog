@@ -117,6 +117,7 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
             operations: [
                 { key: 'cost_estimation', label: 'Cost suggestion' }
             ],
+            mode: 'minimal',
             context: {
                 image_count: 1,
                 name_length: currentItem.name.length,

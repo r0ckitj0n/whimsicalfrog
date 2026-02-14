@@ -11,6 +11,7 @@ require_once __DIR__ . '/../includes/ai/helpers/CostHeuristics.php';
 require_once __DIR__ . '/../includes/ai/helpers/PricingHeuristics.php';
 require_once __DIR__ . '/../includes/ai/helpers/TierScalingHelper.php';
 require_once __DIR__ . '/../includes/ai/helpers/MarketingHeuristics.php';
+require_once __DIR__ . '/../includes/ai/settings_manager.php';
 
 AuthHelper::requireAdmin();
 
@@ -36,6 +37,7 @@ $useImages = $input['useImages'] ?? false;
 $imageData = $input['imageData'] ?? null;
 $brandVoice = trim($input['brandVoice'] ?? '');
 $contentTone = trim($input['contentTone'] ?? '');
+$whimsicalTheme = isset($input['whimsicalTheme']) ? (bool) $input['whimsicalTheme'] : null;
 $step = trim($input['step'] ?? ''); // Step-by-step mode: 'info', 'cost', 'price', 'marketing', or empty for full
 $lockedWords = is_array($input['locked_words'] ?? null) ? $input['locked_words'] : [];
 $imageFirstPriority = array_key_exists('image_first_priority', $input)
@@ -282,6 +284,63 @@ function wf_resolve_png_analysis_image($imagePath)
     return null;
 }
 
+function wf_text_has_any_token($text, $tokens): bool
+{
+    $text = strtolower((string) $text);
+    if (!is_array($tokens) || empty($tokens)) {
+        return false;
+    }
+    foreach ($tokens as $t) {
+        $t = strtolower(trim((string) $t));
+        if ($t === '') {
+            continue;
+        }
+        if (preg_match('/\\b' . preg_quote($t, '/') . '\\b/i', $text)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function wf_apply_theme_word_to_title($title, $themeWords): string
+{
+    $title = trim((string) $title);
+    if ($title === '' || !is_array($themeWords) || empty($themeWords)) {
+        return $title;
+    }
+    if (wf_text_has_any_token($title, $themeWords)) {
+        return $title;
+    }
+
+    $w = trim((string) ($themeWords[0] ?? ''));
+    if ($w === '') {
+        return $title;
+    }
+
+    // Keep it simple and consistent: a single brand-aligned lead word.
+    $candidate = trim($w . ' ' . $title);
+    return $candidate;
+}
+
+function wf_apply_theme_word_to_description($description, $themeWords): string
+{
+    $description = trim((string) $description);
+    if ($description === '' || !is_array($themeWords) || empty($themeWords)) {
+        return $description;
+    }
+    if (wf_text_has_any_token($description, $themeWords)) {
+        return $description;
+    }
+
+    $w = trim((string) ($themeWords[1] ?? $themeWords[0] ?? ''));
+    if ($w === '') {
+        return $description;
+    }
+
+    // Short, low-risk suffix sentence that naturally includes the token.
+    return rtrim($description, ". \t\n\r\0\x0B") . ". A touch of {$w} charm.";
+}
+
 try {
     $aiProviders = getAIProviders();
     $images = [];
@@ -448,10 +507,39 @@ try {
                         $reasoningSuffix .= " Some images were skipped: " . implode(' | ', $analysisErrors) . ".";
                     }
 
+                    // Theme words (AI Settings controlled) for name/description.
+                    $aiThemeSettings = AISettingsManager::getAISettings();
+                    $themeWordsEnabled = (bool) ($aiThemeSettings['ai_theme_words_enabled'] ?? true);
+                    $themeWordsEnabledName = (bool) ($aiThemeSettings['ai_theme_words_enabled_name'] ?? true);
+                    $themeWordsEnabledDescription = (bool) ($aiThemeSettings['ai_theme_words_enabled_description'] ?? true);
+                    $themeModeRequested = ($whimsicalTheme === true)
+                        || (strtolower($contentTone) === 'whimsical_frog')
+                        || (strtolower((string) ($aiThemeSettings['ai_content_tone'] ?? '')) === 'whimsical_frog');
+
+                    $themeInspiration = [];
+                    $themeWordTokens = [];
+                    if ($themeWordsEnabled && $themeModeRequested && ($themeWordsEnabledName || $themeWordsEnabledDescription)) {
+                        require_once __DIR__ . '/../includes/theme_words/manager.php';
+                        $themeInspiration = get_whimsical_inspiration(3);
+                        $themeWordTokens = array_values(array_filter(array_map(function ($item) {
+                            return is_array($item) ? (string) ($item['text'] ?? '') : '';
+                        }, $themeInspiration)));
+                    }
+
+                    $rawTitle = (string) ($bestAnalysis['title'] ?? '');
+                    $rawDescription = (string) ($bestAnalysis['description'] ?? '');
+                    $titleWithTheme = $themeWordsEnabledName ? wf_apply_theme_word_to_title($rawTitle, $themeWordTokens) : $rawTitle;
+                    $descriptionWithTheme = $themeWordsEnabledDescription ? wf_apply_theme_word_to_description($rawDescription, $themeWordTokens) : $rawDescription;
+
+                    if (!empty($themeInspiration)) {
+                        // Source = SKU when we have it, otherwise a stable label.
+                        log_theme_words_usage($themeInspiration, 'info_suggestion', $sku !== '' ? $sku : 'suggest_all_info');
+                    }
+
                     $results['info_suggestion'] = [
                         'success' => true,
-                        'name' => wf_apply_locked_words($bestAnalysis['title'] ?? '', $lockedWords['name'] ?? ''),
-                        'description' => wf_apply_locked_words($bestAnalysis['description'] ?? '', $lockedWords['description'] ?? ''),
+                        'name' => wf_apply_locked_words($titleWithTheme, $lockedWords['name'] ?? ''),
+                        'description' => wf_apply_locked_words($descriptionWithTheme, $lockedWords['description'] ?? ''),
                         'category' => wf_apply_locked_words($resolvedCategory, $lockedWords['category'] ?? ''),
                         'confidence' => $bestAnalysis['confidence'] ?? 'medium',
                         'reasoning' => ($bestAnalysis['reasoning'] ?? '') . $reasoningSuffix

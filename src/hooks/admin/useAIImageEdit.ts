@@ -20,6 +20,7 @@ export const useAIImageEdit = () => {
             operations: [
                 { key: 'image_edit_generation', label: 'Image edit generation', image_count: 1, image_generations: 1 }
             ],
+            mode: 'minimal',
             context: {
                 image_count: 1,
                 prompt_length: String(payload.instructions || '').length

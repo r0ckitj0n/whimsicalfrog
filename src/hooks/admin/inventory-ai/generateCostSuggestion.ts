@@ -3,8 +3,10 @@ import { subscribeToNetworkActivity } from '../../../core/networkActivity.js';
 import { ApiClient } from '../../../core/ApiClient.js';
 import type { CostSuggestion } from './useCostSuggestions.js';
 import type { PriceSuggestion } from './usePriceSuggestions.js';
+import { getPriceTierMultiplier } from './usePriceSuggestions.js';
 import type { GenerationContext } from '../useAIGenerationOrchestrator.js';
 import type { MarketingData } from './useMarketingManager.js';
+import type { IRecentSoldPriceResponse } from '../../../types/pricing-history.js';
 
 interface SharedGenerationParams<TSuggestion> {
     sku: string;
@@ -42,6 +44,7 @@ interface SharedGenerationParams<TSuggestion> {
     infoToast: string;
     successToast: string;
     failureToast: string;
+    notificationMode?: 'verbose' | 'minimal';
 }
 
 interface GenerateCostSuggestionParams {
@@ -52,6 +55,7 @@ interface GenerateCostSuggestionParams {
     tier: string;
     isReadOnly?: boolean;
     showApplyingToast?: boolean;
+    notificationMode?: 'verbose' | 'minimal';
     primaryImageUrl?: string;
     imageUrls?: string[];
     imageData?: string;
@@ -77,6 +81,7 @@ interface GeneratePriceSuggestionParams {
     costPrice: number | string;
     tier: string;
     isReadOnly?: boolean;
+    notificationMode?: 'verbose' | 'minimal';
     primaryImageUrl?: string;
     imageUrls?: string[];
     imageData?: string;
@@ -100,6 +105,7 @@ interface GenerateMarketingSuggestionParams {
     description: string;
     category: string;
     isReadOnly?: boolean;
+    notificationMode?: 'verbose' | 'minimal';
     primaryImageUrl?: string;
     imageUrls?: string[];
     imageData?: string;
@@ -228,9 +234,11 @@ const runImageFirstSuggestion = async <TSuggestion>({
     startToast,
     infoToast,
     successToast,
-    failureToast
+    failureToast,
+    notificationMode = 'verbose'
 }: SharedGenerationParams<TSuggestion>): Promise<TSuggestion | null> => {
-    toastSuccess(startToast);
+    const shouldToast = notificationMode !== 'minimal';
+    if (shouldToast) toastSuccess(startToast);
 
     try {
         const resolvedImageUrls = await gatherImageCandidates({
@@ -251,7 +259,7 @@ const runImageFirstSuggestion = async <TSuggestion>({
         let nextCategory = category;
 
         if (generateInfoOnly) {
-            toastSuccess(infoToast);
+            if (shouldToast) toastSuccess(infoToast);
             const infoResult = await generateInfoOnly({
                 sku,
                 primaryImageUrl: preferredImage,
@@ -285,7 +293,7 @@ const runImageFirstSuggestion = async <TSuggestion>({
             return null;
         }
 
-        toastSuccess(successToast);
+        if (shouldToast) toastSuccess(successToast);
         onSuggestionGenerated?.(suggestion);
         if (!isReadOnly) onApplied?.();
         return suggestion;
@@ -303,6 +311,7 @@ export const generateCostSuggestion = async ({
     tier,
     isReadOnly = false,
     showApplyingToast = false,
+    notificationMode = 'verbose',
     primaryImageUrl,
     imageUrls = [],
     imageData,
@@ -339,12 +348,15 @@ export const generateCostSuggestion = async ({
         startToast: 'Starting AI cost analysis...',
         infoToast: 'Analyzing item image before cost calculation...',
         successToast: showApplyingToast ? 'AI analysis complete. Building preview...' : 'AI analysis complete.',
-        failureToast: 'Failed to generate cost suggestion'
+        failureToast: 'Failed to generate cost suggestion',
+        notificationMode
     });
 
     if (!suggestion) return null;
 
-    if (suggestion.fallback_used) {
+    const shouldToast = notificationMode !== 'minimal';
+
+    if (suggestion.fallback_used && shouldToast) {
         const reason = (suggestion.fallback_reason || '').trim();
         const kind = String((suggestion.fallback_kind || '')).trim();
         if (kind === 'provider_fallback') {
@@ -356,12 +368,12 @@ export const generateCostSuggestion = async ({
             if (window.WFToast?.warning) window.WFToast.warning(msg);
             else toastError(msg);
         }
-    } else {
+    } else if (shouldToast) {
         toastSuccess(showApplyingToast ? 'Cost preview ready (unsaved).' : 'Cost suggestion generated');
     }
     if (showApplyingToast) {
         const settled = await waitForGlobalNetworkIdle();
-        if (settled) toastSuccess('All cost generation tasks finished.');
+        if (settled && shouldToast) toastSuccess('All cost generation tasks finished.');
     }
 
     return suggestion;
@@ -375,6 +387,7 @@ export const generatePriceSuggestion = async ({
     costPrice,
     tier,
     isReadOnly = false,
+    notificationMode = 'verbose',
     primaryImageUrl,
     imageUrls = [],
     imageData,
@@ -383,6 +396,60 @@ export const generatePriceSuggestion = async ({
     onSuggestionGenerated,
     onApplied
 }: GeneratePriceSuggestionParams): Promise<PriceSuggestion | null> => {
+    // Prefer real-world price signals when they are fresh.
+    // If we have sold prices in the last 7 days, use them as the base price and apply tier scaling.
+    const fetchRecentSoldPrice = async (skuToCheck: string): Promise<IRecentSoldPriceResponse | null> => {
+        if (!skuToCheck) return null;
+        try {
+            const res = await ApiClient.get<IRecentSoldPriceResponse>('/api/get_recent_sold_price.php', { sku: skuToCheck });
+            return res ?? null;
+        } catch (_err) {
+            return null;
+        }
+    };
+
+    const recent = await fetchRecentSoldPrice(sku);
+    if (recent?.success && typeof recent.avg_price === 'number' && Number.isFinite(recent.avg_price) && recent.avg_price > 0) {
+        const base = Number(recent.avg_price.toFixed(2));
+        const tierMult = getPriceTierMultiplier(tier || 'standard') || 1;
+        const tiered = Number((base * tierMult).toFixed(2));
+        const lineCount = Number(recent.line_count || 0);
+
+        const synthesized: PriceSuggestion = {
+            success: true,
+            suggested_price: tiered,
+            confidence: 0.85,
+            factors: {
+                requested_pricing_tier: (tier || 'standard').toLowerCase(),
+                tier_multiplier: tierMult,
+                final_before_tier: base,
+                recent_sold_price_lines: lineCount,
+                recent_sold_price_last_at: recent.last_sold_at ?? null
+            },
+            components: [
+                {
+                    type: 'historical_price',
+                    amount: tiered,
+                    label: 'Recent Sold Price (7d avg)',
+                    explanation: `Derived from ${lineCount} order line(s) in the last 7 days.`
+                }
+            ],
+            analysis: {
+                requested_pricing_tier: (tier || 'standard').toLowerCase(),
+                requested_tier_multiplier: tierMult
+            },
+            reasoning: `Used recent sold prices (last 7 days) as the base signal; tier multiplier applied.`,
+            created_at: recent.last_sold_at ?? new Date().toISOString().slice(0, 19).replace('T', ' ')
+        };
+
+        if (notificationMode !== 'minimal' && window.WFToast?.info) {
+            window.WFToast.info('Using recent sold prices (fresh).');
+        }
+        onSuggestionGenerated?.(synthesized);
+        if (!isReadOnly) onApplied?.();
+        return synthesized;
+    }
+
     const suggestion = await runImageFirstSuggestion<PriceSuggestion>({
         sku,
         name,
@@ -411,11 +478,14 @@ export const generatePriceSuggestion = async ({
         startToast: 'Starting AI price analysis...',
         infoToast: 'Analyzing item image before price calculation...',
         successToast: 'AI analysis complete.',
-        failureToast: 'Failed to generate price suggestion'
+        failureToast: 'Failed to generate price suggestion',
+        notificationMode
     });
 
     if (!suggestion) return null;
-    if ((suggestion as any).fallback_used) {
+    const shouldToast = notificationMode !== 'minimal';
+
+    if ((suggestion as any).fallback_used && shouldToast) {
         const reason = String((suggestion as any).fallback_reason || '').trim();
         const kind = String((suggestion as any).fallback_kind || '').trim();
         if (kind === 'provider_fallback') {
@@ -427,7 +497,7 @@ export const generatePriceSuggestion = async ({
             if (window.WFToast?.warning) window.WFToast.warning(msg);
             else toastError(msg);
         }
-    } else {
+    } else if (shouldToast) {
         toastSuccess('Price suggestion generated');
     }
     return suggestion;
@@ -439,6 +509,7 @@ export const generateMarketingSuggestion = async ({
     description,
     category,
     isReadOnly = false,
+    notificationMode = 'verbose',
     primaryImageUrl,
     imageUrls = [],
     imageData,
@@ -470,10 +541,11 @@ export const generateMarketingSuggestion = async ({
         startToast: 'Starting AI marketing analysis...',
         infoToast: 'Analyzing item image before marketing generation...',
         successToast: 'AI analysis complete.',
-        failureToast: 'Failed to generate marketing suggestion'
+        failureToast: 'Failed to generate marketing suggestion',
+        notificationMode
     });
 
     if (!suggestion) return null;
-    toastSuccess('Marketing suggestion generated');
+    if (notificationMode !== 'minimal') toastSuccess('Marketing suggestion generated');
     return suggestion;
 };

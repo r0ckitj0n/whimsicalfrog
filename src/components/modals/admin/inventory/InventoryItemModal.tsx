@@ -81,6 +81,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
         formData,
         isDirty,
         localSku,
+        isAiBusy,
         cached_cost_suggestion,
         cached_price_suggestion,
         setLocalSku,
@@ -544,7 +545,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                                 onGenerateSku={generateSku}
                                 onRegenerateSku={handleRegenerateSku}
                                 onGenerateInfoAndMarketing={handleGenerateInfoAndMarketing}
-                                isBusy={is_busy}
+                                isBusy={isAiBusy}
                                 primaryImage={resolvedPrimaryImage}
                                 lockedFields={lockedFields}
                                 onToggleFieldLock={toggleFieldLock}
@@ -555,7 +556,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                             </div>
 
                             <CostAnalysisColumn
-                                sku={sku}
+                                sku={activeSku}
                                 formData={formData}
                                 isReadOnly={isReadOnly}
                                 onApplyCost={handleApplyCost}
@@ -577,7 +578,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                             />
 
                             <PriceAnalysisColumn
-                                sku={sku}
+                                sku={activeSku}
                                 formData={formData}
                                 isReadOnly={isReadOnly}
                                 onApplyPrice={handleApplyPrice}

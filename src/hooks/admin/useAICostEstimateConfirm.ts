@@ -15,6 +15,8 @@ interface IAICostConfirmOptions {
     operations: IAICostEstimateOperation[];
     context?: IAICostEstimateRequest['context'];
     confirmText?: string;
+    /** UI verbosity of the confirm modal. */
+    mode?: 'full' | 'minimal';
 }
 
 const formatUsd = (value: number): string =>
@@ -29,10 +31,11 @@ export const useAICostEstimateConfirm = () => {
             action_label,
             operations,
             context,
-            confirmText = 'Generate'
+            confirmText = 'Generate',
+            mode = 'minimal'
         } = options;
 
-        if (window.WFToast?.info) {
+        if (mode !== 'minimal' && window.WFToast?.info) {
             window.WFToast.info('Estimating AI cost...');
         }
 
@@ -58,6 +61,53 @@ export const useAICostEstimateConfirm = () => {
                 cancelText: 'Cancel',
                 confirmStyle: 'warning',
                 iconKey: 'warning'
+            });
+        }
+
+        if (mode === 'minimal') {
+            const fallbackReasons = estimate.pricing?.fallback_reasons || [];
+            const primaryFallbackReason = (fallbackReasons[0] || estimate.pricing?.fallback_note || '').trim();
+            const pricingNote = estimate.pricing?.is_fallback_pricing
+                ? `Fallback pricing in effect.${primaryFallbackReason ? ` Reason: ${primaryFallbackReason}` : ''}`
+                : '';
+
+            const lineSummary = estimate.line_items
+                .slice(0, 12)
+                .map((line) => {
+                    const jc = line.job_counts;
+                    const jobsText = jc
+                        ? ` (jobs: t${jc.text_generation}, a${jc.image_analysis}, i${jc.image_creation})`
+                        : '';
+                    return `${line.label}: ${formatUsd(line.expected_cost)}${jobsText}`;
+                })
+                .join('\n');
+
+            const detailsText = [
+                `${estimate.provider} • ${estimate.model}`,
+                lineSummary ? `\n${lineSummary}` : '',
+                pricingNote ? `\n${pricingNote}` : ''
+            ].join('').trim();
+
+            return confirm({
+                title: 'Confirm AI Generation',
+                subtitle: action_label,
+                message: `Estimated AI cost: ${formatUsd(estimate.expected_cost)}.${pricingNote ? ` ${pricingNote}` : ''}`,
+                details: detailsText || undefined,
+                detailsCollapsible: Boolean(detailsText),
+                detailsLabel: 'Details',
+                detailsDefaultOpen: false,
+                confirmText,
+                cancelText: 'Cancel',
+                confirmStyle: 'warning',
+                iconKey: estimate.pricing?.is_fallback_pricing ? 'warning' : 'info',
+                extraActions: estimate.pricing?.is_fallback_pricing
+                    ? [{
+                        label: 'AI Settings',
+                        style: 'secondary',
+                        href: buildAdminUrl(ADMIN_SECTION.AI_SETTINGS),
+                        target: '_blank'
+                    }]
+                    : undefined
             });
         }
 

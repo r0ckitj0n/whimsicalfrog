@@ -99,6 +99,7 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
             operations: [
                 { key: 'cost_estimation', label: 'Cost suggestion' }
             ],
+            mode: 'minimal',
             context: {
                 image_count: Math.max(imageUrls.length, primaryImageUrl ? 1 : 0),
                 name_length: name.length,

@@ -478,6 +478,7 @@ export const useInventoryItemForm = ({
                     { key: 'marketing_generation', label: 'Marketing generation' },
                     { key: 'price_estimation', label: 'Price suggestion' }
                 ],
+                mode: 'minimal',
                 context: {
                     image_count: Math.max(imageUrls.length, primaryImage ? 1 : 0),
                     name_length: formData.name.length,
@@ -501,6 +502,7 @@ export const useInventoryItemForm = ({
                 { key: 'info_from_images', label: 'Image analysis + item info' },
                 { key: 'marketing_generation', label: 'Marketing generation' }
             ],
+            mode: 'minimal',
             context: {
                 image_count: Math.max(imageUrls.length, primaryImage ? 1 : 0),
                 name_length: formData.name.length,
@@ -843,10 +845,14 @@ export const useInventoryItemForm = ({
         setIsDirty(true);
     };
 
+    // Single busy flag for the modal and its buttons (shared across all AI flows).
+    const isAiBusy = aiBusy || orchestratorBusy;
+
     return {
         formData,
         isDirty,
         isSaving,
+        isAiBusy,
         cached_cost_suggestion,
         cached_price_suggestion,
         localSku,

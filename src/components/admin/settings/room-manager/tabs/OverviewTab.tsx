@@ -90,6 +90,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                 operations: [
                     { key: 'room_image_generation', label: 'Room image generation', image_generations: 1 }
                 ],
+                mode: 'minimal',
                 context: {
                     prompt_length: originalPrompt.length
                 },

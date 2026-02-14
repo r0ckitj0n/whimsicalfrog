@@ -36,7 +36,11 @@ export const useGlobalEntities = () => {
             if (cRes?.success) setColors(cRes.colors || []);
             if (stRes?.success) setSizeTemplates(stRes.templates || []);
             if (ctRes?.success) setColorTemplates(ctRes.templates || []);
-            if ((gtRes as any)?.success) setGenderTemplates((gtRes as any).templates || (gtRes as any).genderTemplates || []);
+            if ((gtRes as any)?.success) {
+                const gtAny = gtRes as any;
+                // gender_templates.php uses Response::success => { success:true, data:{ templates:[...] } }
+                setGenderTemplates(gtAny.templates || gtAny.genderTemplates || gtAny.data?.templates || gtAny.data?.genderTemplates || []);
+            }
 
             if (!gRes?.success || !sRes?.success || !cRes?.success || !stRes?.success || !ctRes?.success || !(gtRes as any)?.success) {
                 setError('Some global attributes failed to load');

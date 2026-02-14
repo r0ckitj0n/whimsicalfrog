@@ -15,6 +15,7 @@ require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/ai_image_processor.php';
 require_once __DIR__ . '/../includes/helpers/MultiImageUploadHelper.php';
+require_once __DIR__ . '/../includes/ai/helpers/AICostEventStore.php';
 
 function wf_abs_path_from_rel(string $rootDir, string $relPath): ?string
 {
@@ -222,6 +223,7 @@ try {
     $processedCount = 0;
     $skippedCount = 0;
     $errors = [];
+    $analysisJobs = 0;
 
     foreach ($images as $img) {
         $id = (int)$img['id'];
@@ -261,6 +263,9 @@ try {
             $formatResult = MultiImageUploadHelper::processImageAtPathForDualFormat($sourceAbsPath, $rootDir, true);
             if (!$formatResult['success']) {
                 throw new Exception('Dual format conversion failed');
+            }
+            if (!empty($formatResult['ai_used'])) {
+                $analysisJobs++;
             }
 
             $webpAbs = $formatResult['webp_path'] ?? null;
@@ -304,6 +309,7 @@ try {
                 'source_transparency' => (bool)($source['has_transparency'] ?? false),
                 'status' => 'processed',
                 'ai' => null,
+                'ai_used' => !empty($formatResult['ai_used']),
                 'steps' => ['Processed via shared upload/image pipeline']
             ];
         } catch (Throwable $e) {
@@ -323,9 +329,46 @@ try {
         'sku' => $sku,
         'processed' => $processedCount,
         'skipped' => $skippedCount,
+        'analysis_jobs' => $analysisJobs,
         'errors' => $errors,
         'results' => $results
     ];
+
+    if ($analysisJobs > 0) {
+        try {
+            $rows = Database::queryAll(
+                "SELECT setting_key, setting_value
+                 FROM business_settings
+                 WHERE category = 'ai'
+                 AND setting_key IN ('ai_provider','openai_model','anthropic_model','google_model','meta_model')"
+            );
+            $settings = [];
+            foreach ($rows as $row) {
+                $k = (string) ($row['setting_key'] ?? '');
+                if ($k !== '') {
+                    $settings[$k] = (string) ($row['setting_value'] ?? '');
+                }
+            }
+            $pm = AICostEventStore::resolveProviderAndModelFromSettings($settings);
+            AICostEventStore::logEvent([
+                'endpoint' => 'run_image_analysis.php',
+                'step' => 'image_crop_analysis_batch',
+                'provider' => (string) ($pm['provider'] ?? 'default'),
+                'model' => (string) ($pm['model'] ?? 'default-model'),
+                'sku' => $sku,
+                'text_jobs' => 0,
+                'image_analysis_jobs' => $analysisJobs,
+                'image_creation_jobs' => 0,
+                'request_meta' => [
+                    'force' => (bool) $force,
+                    'processed' => $processedCount,
+                    'skipped' => $skippedCount
+                ]
+            ]);
+        } catch (Throwable $e) {
+            error_log('run_image_analysis cost event log failed: ' . $e->getMessage());
+        }
+    }
 
     Response::json($response);
 } catch (PDOException $e) {

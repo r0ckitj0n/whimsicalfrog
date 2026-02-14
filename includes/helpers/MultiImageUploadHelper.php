@@ -41,6 +41,7 @@ class MultiImageUploadHelper {
             }
             return [
                 'success' => true,
+                'ai_used' => !empty($aiResult['ai_analysis']),
                 'path' => $finalPath,
                 'webp_path' => $formatResult['webp_path'] ?? null,
                 'png_path' => $formatResult['png_path'] ?? null

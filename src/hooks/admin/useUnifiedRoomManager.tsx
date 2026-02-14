@@ -20,6 +20,7 @@ import { useRoomVisuals } from './room-manager/useRoomVisuals.js';
 import { useRoomShortcuts } from './room-manager/useRoomShortcuts.js';
 import { useRoomBoundaries } from './room-manager/useRoomBoundaries.js';
 import { normalizeMapAreas } from './room-manager/mapCoordinates.js';
+import { useAICostEstimateConfirm } from './useAICostEstimateConfirm.js';
 
 interface UseUnifiedRoomManagerProps {
     onClose?: () => void;
@@ -32,6 +33,7 @@ export const useUnifiedRoomManager = ({
     const [activeTab, setActiveTab] = useState(initialTab);
     const [selectedRoom, setSelectedRoom] = useState<string>('');
     const { confirm: confirmModal } = useModalContext();
+    const { confirmWithEstimate } = useAICostEstimateConfirm();
 
     // Base Domain Hooks
     const mappings = useAreaMappings();
@@ -215,11 +217,34 @@ export const useUnifiedRoomManager = ({
             if (!roomNumber) {
                 return { success: false, error: 'No room selected' };
             }
+
+            const generatePromptOnly = Boolean(request.generate_prompt_only);
+            const refine = Boolean(request.refine_prompt_with_ai || request.generate_prompt_only)
+                && String(request.prompt_override || '').trim() === '';
+
+            const ops = [
+                ...(refine ? [{ key: 'room_prompt_refinement', label: 'Room prompt refinement', image_count: 0, image_generations: 0 }] : []),
+                ...(!generatePromptOnly ? [{ key: 'room_image_generation', label: 'Room image generation', image_count: 0, image_generations: 1 }] : [])
+            ];
+
+            const confirmed = await confirmWithEstimate({
+                action_key: generatePromptOnly ? 'room_generate_prompt' : (refine ? 'room_generate_background' : 'room_generate_background_only'),
+                action_label: generatePromptOnly ? 'Generate room prompt with AI' : 'Generate room background with AI',
+                operations: ops.length > 0 ? ops : [{ key: 'room_image_generation', label: 'Room image generation', image_count: 0, image_generations: 1 }],
+                mode: 'minimal',
+                context: {
+                    image_count: 0,
+                    prompt_length: String(request.prompt_override || '').length,
+                },
+                confirmText: generatePromptOnly ? 'Generate Prompt' : 'Generate Background'
+            });
+            if (!confirmed) return { success: false, error: 'Canceled' };
+
             return backgrounds.generateRoomBackground({
                 ...request,
                 room_number: roomNumber
             });
-        }, [selectedRoom, backgrounds]),
+        }, [selectedRoom, backgrounds, confirmWithEstimate]),
 
         // Handlers - Boundaries (delegated to base boundaries hook with room scope)
         handleActivateMap: useCallback(async (id: string | number) => {

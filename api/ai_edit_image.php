@@ -10,6 +10,7 @@ require_once __DIR__ . '/../includes/helpers/MultiImageUploadHelper.php';
 require_once __DIR__ . '/../includes/secret_store.php';
 require_once __DIR__ . '/ai_image_processor.php';
 require_once __DIR__ . '/../includes/backgrounds/manager.php';
+require_once __DIR__ . '/../includes/ai/helpers/AICostEventStore.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -565,6 +566,27 @@ try {
     if (!is_array($responseData)) {
         throw new RuntimeException('AI image edit did not produce a response payload');
     }
+
+    // Record job-based AI cost event (image edit is treated as an image creation job).
+    try {
+        AICostEventStore::logEvent([
+            'endpoint' => 'ai_edit_image.php',
+            'step' => 'image_edit_generation',
+            'provider' => 'openai',
+            'model' => $model,
+            'sku' => $targetType === 'item' ? (string) ($input['item_sku'] ?? '') : null,
+            'text_jobs' => 0,
+            'image_analysis_jobs' => 0,
+            'image_creation_jobs' => 1,
+            'request_meta' => [
+                'target_type' => $targetType,
+                'source_image_url' => $sourceImageUrl !== '' ? substr($sourceImageUrl, 0, 240) : '',
+            ]
+        ]);
+    } catch (Throwable $e) {
+        error_log('ai_edit_image cost event log failed: ' . $e->getMessage());
+    }
+
     Response::success($responseData, $responseMessage);
 } catch (Throwable $e) {
     Response::error($e->getMessage(), null, 500);

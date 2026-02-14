@@ -7,6 +7,7 @@ require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/../includes/helpers/ImageUploadHelper.php';
 require_once __DIR__ . '/../includes/secret_store.php';
+require_once __DIR__ . '/../includes/ai/helpers/AICostEventStore.php';
 
 @ini_set('max_execution_time', '180');
 @set_time_limit(180);
@@ -511,6 +512,26 @@ try {
     $prompt = $promptOverride !== '' ? $promptOverride : $resolvedTemplatePrompt;
     if ($promptOverride === '' && $refinePromptWithAi) {
         $prompt = wf_openai_generate_prompt($apiKey, $textModel, $templateKey, $resolved, $resolvedTemplatePrompt);
+        // Record prompt refinement cost (text generation).
+        try {
+            AICostEventStore::logEvent([
+                'endpoint' => 'generate_room_image.php',
+                'step' => 'room_prompt_refinement',
+                'provider' => 'openai',
+                'model' => $textModel,
+                'sku' => null,
+                'text_jobs' => 1,
+                'image_analysis_jobs' => 0,
+                'image_creation_jobs' => 0,
+                'request_meta' => [
+                    'template_key' => $templateKey,
+                    'room_number' => $roomParam,
+                    'generate_prompt_only' => (bool) $generatePromptOnly,
+                ]
+            ]);
+        } catch (Throwable $e) {
+            error_log('generate_room_image prompt refinement cost log failed: ' . $e->getMessage());
+        }
     }
 
     $roomType = str_starts_with(strtolower($roomParam), 'room') ? 'room' . substr($roomParam, 4) : 'room' . $roomParam;
@@ -643,6 +664,27 @@ try {
         'error_message' => '',
         'created_by' => $createdByForLog
     ]);
+
+    // Record room image generation cost (image creation).
+    try {
+        AICostEventStore::logEvent([
+            'endpoint' => 'generate_room_image.php',
+            'step' => 'room_image_generation',
+            'provider' => 'openai',
+            'model' => $model,
+            'sku' => null,
+            'text_jobs' => 0,
+            'image_analysis_jobs' => 0,
+            'image_creation_jobs' => 1,
+            'request_meta' => [
+                'template_key' => $templateKey,
+                'room_number' => $roomNumber,
+                'size' => $size,
+            ]
+        ]);
+    } catch (Throwable $e) {
+        error_log('generate_room_image image generation cost log failed: ' . $e->getMessage());
+    }
 
     Response::success([
         'background' => [

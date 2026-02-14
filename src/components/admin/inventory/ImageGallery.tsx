@@ -4,6 +4,7 @@ import { IItemImage } from '../../../types/index.js';
 import { useModalContext } from '../../../context/ModalContext.js';
 import { ApiClient } from '../../../core/ApiClient.js';
 import { useAIImageEdit } from '../../../hooks/admin/useAIImageEdit.js';
+import { useAICostEstimateConfirm } from '../../../hooks/admin/useAICostEstimateConfirm.js';
 
 interface ImageGalleryProps {
     sku: string;
@@ -22,6 +23,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
 }) => {
     const { images, isLoading, uploadProgress, error, deleteImage, setPrimaryImage, uploadImages, fetchImages } = useInventoryImages(sku);
     const { confirm: confirmModal } = useModalContext();
+    const { confirmWithEstimate } = useAICostEstimateConfirm();
     const [isViewerOpen, setIsViewerOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState<IItemImage | null>(null);
     const [isProcessingAll, setIsProcessingAll] = useState(false);
@@ -81,14 +83,17 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
     const handleProcessExistingImagesWithAI = async () => {
         if (!sku || images.length === 0 || isProcessingAll) return;
 
-        const confirmed = await confirmModal({
-            title: 'AI Crop/Compress All Images?',
-            message: `Run AI crop/compress for all ${images.length} image${images.length === 1 ? '' : 's'} on ${sku}?`,
-            subtitle: 'This updates existing image files to optimized crop/compression outputs.',
-            confirmText: 'Process Images',
-            cancelText: 'Cancel',
-            confirmStyle: 'warning',
-            iconKey: 'warning'
+        const confirmed = await confirmWithEstimate({
+            action_key: 'inventory_process_images_with_ai',
+            action_label: 'AI crop/compress item images',
+            operations: [
+                { key: 'image_crop_analysis_batch', label: 'Image crop/compress analysis', image_count: images.length, image_generations: 0 }
+            ],
+            mode: 'minimal',
+            context: {
+                image_count: images.length
+            },
+            confirmText: 'Process Images'
         });
 
         if (!confirmed) return;
@@ -99,6 +104,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
                 success?: boolean;
                 processed?: number;
                 skipped?: number;
+                analysis_jobs?: number;
                 errors?: string[];
                 error?: string;
             }>('/api/run_image_analysis.php', { sku, force: 1 });
@@ -111,7 +117,11 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
             const processed = response.processed ?? 0;
             const skipped = response.skipped ?? 0;
             const errorCount = Array.isArray(response.errors) ? response.errors.length : 0;
+            const analysisJobs = response.analysis_jobs ?? 0;
             window.WFToast?.success?.(`AI crop/compress complete: ${processed} processed, ${skipped} skipped, ${errorCount} errors.`);
+            if (analysisJobs > 0) {
+                window.WFToast?.info?.(`AI usage recorded: ${analysisJobs} image analysis job${analysisJobs === 1 ? '' : 's'}.`);
+            }
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Failed to process images';
             window.WFToast?.error?.(message);

@@ -50,11 +50,20 @@ try {
         }
     }
 
-    // Get stored cost_price and AI metadata from items table
-    $item = Database::queryOne("SELECT cost_price, ai_cost_confidence, ai_cost_at FROM items WHERE sku = ?", [$sku]);
-    $storedPrice = $item ? (float) $item['cost_price'] : 0.0;
+    // Get stored cost_price and AI metadata from items table.
+    // Live DBs may temporarily lag schema additions; degrade gracefully instead of 500'ing.
+    $warnings = [];
+    $item = null;
+    try {
+        $item = Database::queryOne("SELECT cost_price, ai_cost_confidence, ai_cost_at FROM items WHERE sku = ?", [$sku]);
+    } catch (Throwable $e) {
+        error_log('[get_cost_breakdown] items AI metadata columns missing or query failed: ' . $e->getMessage());
+        $warnings[] = 'AI metadata columns unavailable on items table (ai_cost_confidence/ai_cost_at). Schema sync needed.';
+        $item = Database::queryOne("SELECT cost_price FROM items WHERE sku = ?", [$sku]);
+    }
+    $storedPrice = $item ? (float) ($item['cost_price'] ?? 0) : 0.0;
     $aiConfidence = $item ? (float) ($item['ai_cost_confidence'] ?? 0) : 0;
-    $aiAt = $item ? $item['ai_cost_at'] : null;
+    $aiAt = $item['ai_cost_at'] ?? null;
 
     $calculateTotal = function ($items) {
         return array_reduce($items, fn($sum, $item) => $sum + (float) ($item['cost'] ?? 0), 0);
@@ -70,6 +79,7 @@ try {
         'labor' => $labor,
         'energy' => $energy,
         'equipment' => $equipment,
+        'warnings' => $warnings,
         'totals' => [
             'materials' => $materialTotal,
             'labor' => $laborTotal,

@@ -29,6 +29,7 @@ function wf_job_counts_for_operation(string $opKey, int $imageCount, int $imageG
 {
     $opKey = strtolower(trim($opKey));
     $boundedImages = max(0, min(3, $imageCount)); // current endpoints typically cap to 3 images
+    $batchImages = max(0, min(40, $imageCount)); // batch processing (e.g., image crop/compress) may exceed 3
 
     $jobs = [
         AIPricingStore::JOB_TEXT_GENERATION => 0,
@@ -69,6 +70,10 @@ function wf_job_counts_for_operation(string $opKey, int $imageCount, int $imageG
             break;
         case 'image_edit_generation':
             $jobs[AIPricingStore::JOB_IMAGE_CREATION] = max(1, $imageGenerations);
+            break;
+        case 'image_crop_analysis_batch':
+            // One object-boundary analysis call per image when AI cropping is used.
+            $jobs[AIPricingStore::JOB_IMAGE_ANALYSIS] = $batchImages;
             break;
         default:
             // Safe default: assume one text generation call.

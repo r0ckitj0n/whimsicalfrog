@@ -73,8 +73,8 @@ try {
 
 } catch (PDOException $e) {
     error_log("Database error in get_marketing_suggestion.php: " . $e->getMessage());
-    Response::serverError('Database error occurred.');
+    Response::serverError('Database error: ' . $e->getMessage());
 } catch (Exception $e) {
     error_log("Error in get_marketing_suggestion.php: " . $e->getMessage());
-    Response::serverError('Internal server error occurred.');
+    Response::serverError('Internal server error: ' . $e->getMessage());
 }

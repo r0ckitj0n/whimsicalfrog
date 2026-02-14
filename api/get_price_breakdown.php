@@ -16,10 +16,19 @@ try {
         ORDER BY created_at, id
     ", [$sku]);
 
-    $item = Database::queryOne("SELECT retail_price, ai_price_confidence, ai_price_at FROM items WHERE sku = ?", [$sku]);
-    $storedPrice = $item ? (float) $item['retail_price'] : 0.0;
+    // Live DBs may temporarily lag schema additions; degrade gracefully instead of 500'ing.
+    $warnings = [];
+    $item = null;
+    try {
+        $item = Database::queryOne("SELECT retail_price, ai_price_confidence, ai_price_at FROM items WHERE sku = ?", [$sku]);
+    } catch (Throwable $e) {
+        error_log('[get_price_breakdown] items AI metadata columns missing or query failed: ' . $e->getMessage());
+        $warnings[] = 'AI metadata columns unavailable on items table (ai_price_confidence/ai_price_at). Schema sync needed.';
+        $item = Database::queryOne("SELECT retail_price FROM items WHERE sku = ?", [$sku]);
+    }
+    $storedPrice = $item ? (float) ($item['retail_price'] ?? 0) : 0.0;
     $aiConfidence = $item ? (float) ($item['ai_price_confidence'] ?? 0) : 0;
-    $aiAt = $item ? $item['ai_price_at'] : null;
+    $aiAt = $item['ai_price_at'] ?? null;
 
     // Only sum contributing factors. Analysis/meta rows should not affect stored retail.
     $total = array_reduce($factors, function ($sum, $f) {
@@ -41,6 +50,7 @@ try {
                 'created_at' => $f['created_at']
             ];
         }, $factors),
+        'warnings' => $warnings,
         'totals' => [
             'total' => (float) $total,
             'stored' => (float) $storedPrice,

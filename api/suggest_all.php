@@ -12,6 +12,7 @@ require_once __DIR__ . '/../includes/ai/helpers/PricingHeuristics.php';
 require_once __DIR__ . '/../includes/ai/helpers/TierScalingHelper.php';
 require_once __DIR__ . '/../includes/ai/helpers/MarketingHeuristics.php';
 require_once __DIR__ . '/../includes/ai/settings_manager.php';
+require_once __DIR__ . '/../includes/ai/helpers/AICostEventStore.php';
 
 AuthHelper::requireAdmin();
 
@@ -618,6 +619,31 @@ try {
 
         // If this is an info-only step, return now
         if ($step === 'info') {
+            // Log actual cost based on job counts (not estimate).
+            // Info step: one image analysis call per image + one text call for dimensions suggestion.
+            try {
+                $settings = $aiProviders->getSettings();
+                $pm = AICostEventStore::resolveProviderAndModelFromSettings(is_array($settings) ? $settings : []);
+
+                $dimensionsAttempted = (!empty($dimensionsContextName) || !empty($dimensionsContextDescription) || !empty($dimensionsContextCategory));
+                AICostEventStore::logEvent([
+                    'endpoint' => 'suggest_all',
+                    'step' => 'info',
+                    'sku' => $sku !== '' ? $sku : null,
+                    'provider' => $pm['provider'],
+                    'model' => $pm['model'],
+                    'text_jobs' => $dimensionsAttempted ? 1 : 0,
+                    'image_analysis_jobs' => $useImages ? count($images) : 0,
+                    'image_creation_jobs' => 0,
+                    'request_meta' => [
+                        'use_images' => (bool) $useImages,
+                        'image_count' => is_array($images) ? count($images) : 0,
+                        'image_first_priority' => (bool) $imageFirstPriority
+                    ]
+                ]);
+            } catch (Throwable $logErr) {
+                error_log('suggest_all.php: failed logging AI cost event: ' . $logErr->getMessage());
+            }
             Response::json($results);
         }
     }
@@ -700,6 +726,30 @@ try {
 
         // If this is a cost-only step, return now
         if ($step === 'cost') {
+            // Log actual cost based on job counts (not estimate).
+            // Cost step: one multimodal call when images are provided; otherwise one text call.
+            try {
+                $settings = $aiProviders->getSettings();
+                $pm = AICostEventStore::resolveProviderAndModelFromSettings(is_array($settings) ? $settings : []);
+
+                $usesImagesForCost = (!empty($images) && $useImages);
+                AICostEventStore::logEvent([
+                    'endpoint' => 'suggest_all',
+                    'step' => 'cost',
+                    'sku' => $sku !== '' ? $sku : null,
+                    'provider' => $pm['provider'],
+                    'model' => $pm['model'],
+                    'text_jobs' => $usesImagesForCost ? 0 : 1,
+                    'image_analysis_jobs' => $usesImagesForCost ? 1 : 0,
+                    'image_creation_jobs' => 0,
+                    'request_meta' => [
+                        'use_images' => (bool) $useImages,
+                        'image_count' => is_array($images) ? count($images) : 0,
+                    ]
+                ]);
+            } catch (Throwable $logErr) {
+                error_log('suggest_all.php: failed logging AI cost event (cost): ' . $logErr->getMessage());
+            }
             Response::json($results);
         }
     }
@@ -783,6 +833,30 @@ try {
 
         // If this is a price-only step, return now
         if ($step === 'price') {
+            // Log actual cost based on job counts (not estimate).
+            // Price step: one multimodal call when images are provided; otherwise one text call.
+            try {
+                $settings = $aiProviders->getSettings();
+                $pm = AICostEventStore::resolveProviderAndModelFromSettings(is_array($settings) ? $settings : []);
+
+                $usesImagesForPrice = (!empty($images) && $useImages);
+                AICostEventStore::logEvent([
+                    'endpoint' => 'suggest_all',
+                    'step' => 'price',
+                    'sku' => $sku !== '' ? $sku : null,
+                    'provider' => $pm['provider'],
+                    'model' => $pm['model'],
+                    'text_jobs' => $usesImagesForPrice ? 0 : 1,
+                    'image_analysis_jobs' => $usesImagesForPrice ? 1 : 0,
+                    'image_creation_jobs' => 0,
+                    'request_meta' => [
+                        'use_images' => (bool) $useImages,
+                        'image_count' => is_array($images) ? count($images) : 0,
+                    ]
+                ]);
+            } catch (Throwable $logErr) {
+                error_log('suggest_all.php: failed logging AI cost event (price): ' . $logErr->getMessage());
+            }
             Response::json($results);
         }
     }
@@ -1013,6 +1087,29 @@ try {
 
         // If this is a marketing-only step, return now
         if ($step === 'marketing') {
+            // Log actual cost based on job counts (not estimate).
+            // Marketing step here is text-only (image insights are heuristic/local in this endpoint).
+            try {
+                $settings = $aiProviders->getSettings();
+                $pm = AICostEventStore::resolveProviderAndModelFromSettings(is_array($settings) ? $settings : []);
+
+                AICostEventStore::logEvent([
+                    'endpoint' => 'suggest_all',
+                    'step' => 'marketing',
+                    'sku' => $sku !== '' ? $sku : null,
+                    'provider' => $pm['provider'],
+                    'model' => $pm['model'],
+                    'text_jobs' => 1,
+                    'image_analysis_jobs' => 0,
+                    'image_creation_jobs' => 0,
+                    'request_meta' => [
+                        'use_images' => (bool) $useImages,
+                        'image_count' => is_array($images) ? count($images) : 0,
+                    ]
+                ]);
+            } catch (Throwable $logErr) {
+                error_log('suggest_all.php: failed logging AI cost event (marketing): ' . $logErr->getMessage());
+            }
             Response::json($results);
         }
     }

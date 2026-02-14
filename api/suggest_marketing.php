@@ -8,6 +8,7 @@ require_once __DIR__ . '/ai_providers.php';
 require_once __DIR__ . '/marketing_helper.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/../includes/ai/helpers/MarketingHeuristics.php';
+require_once __DIR__ . '/../includes/ai/helpers/AICostEventStore.php';
 
 AuthHelper::requireAdmin();
 
@@ -341,6 +342,31 @@ try {
     }
 
     error_log("Returning marketing success response for SKU: $sku");
+
+    // Log actual cost based on job counts (not estimate).
+    // Marketing endpoint: one image analysis call per image (alt text analysis) + one text generation call.
+    try {
+        $settings = $aiProviders->getSettings();
+        $pm = AICostEventStore::resolveProviderAndModelFromSettings(is_array($settings) ? $settings : []);
+        AICostEventStore::logEvent([
+            'endpoint' => 'suggest_marketing',
+            'step' => null,
+            'sku' => $sku !== '' ? $sku : null,
+            'provider' => $pm['provider'],
+            'model' => $pm['model'],
+            'text_jobs' => 1,
+            'image_analysis_jobs' => (!empty($images) && $useImages) ? count($images) : 0,
+            'image_creation_jobs' => 0,
+            'request_meta' => [
+                'use_images' => (bool) $useImages,
+                'image_count' => is_array($images) ? count($images) : 0,
+                'fresh_start' => (bool) $freshStart
+            ]
+        ]);
+    } catch (Throwable $logErr) {
+        error_log('suggest_marketing.php: failed logging AI cost event: ' . $logErr->getMessage());
+    }
+
     Response::json([
         'success' => true,
         'title' => $marketingData['title'] ?? 'New Item',

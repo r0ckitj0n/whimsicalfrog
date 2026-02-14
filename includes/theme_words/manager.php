@@ -105,6 +105,12 @@ function delete_theme_word_category(PDO $db, $id): bool
  */
 function get_diverse_theme_words($limit = 3, $category = null): array
 {
+    // Lifetime anti-saturation:
+    // We want broad variety over all time, not per-day throttling.
+    // Default cap is 5 uses total per theme word unless explicitly set lower.
+    $defaultMaxUsageTotal = 5;
+    $effectiveMaxUsageTotal = "COALESCE(NULLIF(tw.max_usage_total, 0), {$defaultMaxUsageTotal})";
+
     $where = "tw.is_active = 1 AND COALESCE(twc.is_active, 1) = 1";
     $params = [];
     $hasCategoryId = wf_theme_words_has_category_id_column();
@@ -137,15 +143,26 @@ function get_diverse_theme_words($limit = 3, $category = null): array
     $sql = "SELECT tw.* FROM theme_words tw
             {$joinClause}
             WHERE $where
-            AND (tw.max_usage_per_day IS NULL OR tw.daily_usage_count < tw.max_usage_per_day)
-            ORDER BY tw.daily_usage_count ASC, tw.usage_count ASC, tw.last_used_at ASC
+            AND tw.usage_count < {$effectiveMaxUsageTotal}
+            ORDER BY tw.usage_count ASC, tw.last_used_at ASC
             LIMIT " . (int) $limit;
 
     $words = Database::queryAll($sql, $params);
 
     // Attach one random active variant for each word
     foreach ($words as &$w) {
-        $v = Database::queryOne("SELECT * FROM theme_word_variants WHERE theme_word_id = ? AND is_active = 1 ORDER BY RAND() LIMIT 1", [$w['id']]);
+        // Prefer least-used variants to spread phrasing; still enforce the lifetime cap.
+        $effectiveVariantMaxUsageTotal = "COALESCE(NULLIF(max_usage_total, 0), {$defaultMaxUsageTotal})";
+        $v = Database::queryOne(
+            "SELECT *
+             FROM theme_word_variants
+             WHERE theme_word_id = ?
+               AND is_active = 1
+               AND usage_count < {$effectiveVariantMaxUsageTotal}
+             ORDER BY usage_count ASC, last_used_at ASC, RAND()
+             LIMIT 1",
+            [$w['id']]
+        );
         $w['selected_variant'] = $v;
     }
 

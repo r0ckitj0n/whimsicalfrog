@@ -33,6 +33,17 @@ try {
             $stats = wf_import_sanmar_colors();
             Response::success(['stats' => $stats], 'SanMar colors imported');
             break;
+        case 'migrate_strip_prefix':
+            Database::beginTransaction();
+            try {
+                $migration = wf_sanmar_migrate_strip_prefix_and_backfill_codes();
+                Database::commit();
+            } catch (Throwable $e) {
+                Database::rollBack();
+                throw $e;
+            }
+            Response::success(['migration' => $migration], 'SanMar migration complete');
+            break;
 
         default:
             Response::error('Invalid action', null, 400);
@@ -40,4 +51,3 @@ try {
 } catch (Throwable $e) {
     Response::error($e->getMessage(), null, 500);
 }
-

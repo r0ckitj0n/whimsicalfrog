@@ -77,7 +77,7 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
     const runSanmarImport = async () => {
         const ok = await themedConfirm({
             title: 'Import SanMar Colors',
-            message: 'This will fetch SanMar Digital Color Guide PDFs and sync SM- colors + refresh the "Sanmar" color template. Continue?',
+            message: 'This will fetch SanMar Digital Color Guide PDFs, sync SanMar colors, and refresh the "Sanmar" color template. Continue?',
             confirmText: 'Import Now',
             confirmStyle: 'primary',
             iconKey: 'download'

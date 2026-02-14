@@ -59,6 +59,8 @@ interface GenerateCostSuggestionParams {
     primaryImageUrl?: string;
     imageUrls?: string[];
     imageData?: string;
+    /** When true, bypass stored-suggestion caching and run the live AI call. */
+    forceRefresh?: boolean;
     fetchCostSuggestion: (params: {
         sku?: string;
         name: string;
@@ -67,6 +69,7 @@ interface GenerateCostSuggestionParams {
         tier?: string;
         useImages?: boolean;
         imageData?: string;
+        forceRefresh?: boolean;
     }) => Promise<CostSuggestion | null>;
     generateInfoOnly?: SharedGenerationParams<CostSuggestion>['generateInfoOnly'];
     onSuggestionGenerated?: (suggestion: CostSuggestion) => void;
@@ -85,6 +88,8 @@ interface GeneratePriceSuggestionParams {
     primaryImageUrl?: string;
     imageUrls?: string[];
     imageData?: string;
+    /** When true, bypass stored-suggestion caching and run the live AI call. */
+    forceRefresh?: boolean;
     fetchPriceSuggestion: (params: {
         sku: string;
         name: string;
@@ -93,6 +98,7 @@ interface GeneratePriceSuggestionParams {
         cost_price: number | string;
         tier?: string;
         useImages?: boolean;
+        forceRefresh?: boolean;
     }) => Promise<PriceSuggestion | null>;
     generateInfoOnly?: SharedGenerationParams<PriceSuggestion>['generateInfoOnly'];
     onSuggestionGenerated?: (suggestion: PriceSuggestion) => void;
@@ -315,6 +321,7 @@ export const generateCostSuggestion = async ({
     primaryImageUrl,
     imageUrls = [],
     imageData,
+    forceRefresh = false,
     fetchCostSuggestion,
     generateInfoOnly,
     onSuggestionGenerated,
@@ -340,7 +347,8 @@ export const generateCostSuggestion = async ({
                 category: nextCategory,
                 tier: nextTier,
                 useImages: true,
-                imageData: preferredImage || imageData
+                imageData: preferredImage || imageData,
+                forceRefresh
             });
         },
         onSuggestionGenerated,
@@ -391,6 +399,7 @@ export const generatePriceSuggestion = async ({
     primaryImageUrl,
     imageUrls = [],
     imageData,
+    forceRefresh = false,
     fetchPriceSuggestion,
     generateInfoOnly,
     onSuggestionGenerated,
@@ -398,6 +407,7 @@ export const generatePriceSuggestion = async ({
 }: GeneratePriceSuggestionParams): Promise<PriceSuggestion | null> => {
     // Prefer real-world price signals when they are fresh.
     // If we have sold prices in the last 7 days, use them as the base price and apply tier scaling.
+    // But when the user explicitly requested a live AI refresh, do not bypass with this shortcut.
     const fetchRecentSoldPrice = async (skuToCheck: string): Promise<IRecentSoldPriceResponse | null> => {
         if (!skuToCheck) return null;
         try {
@@ -408,8 +418,8 @@ export const generatePriceSuggestion = async ({
         }
     };
 
-    const recent = await fetchRecentSoldPrice(sku);
-    if (recent?.success && typeof recent.avg_price === 'number' && Number.isFinite(recent.avg_price) && recent.avg_price > 0) {
+    const recent = forceRefresh ? null : await fetchRecentSoldPrice(sku);
+    if (!forceRefresh && recent?.success && typeof recent.avg_price === 'number' && Number.isFinite(recent.avg_price) && recent.avg_price > 0) {
         const base = Number(recent.avg_price.toFixed(2));
         const tierMult = getPriceTierMultiplier(tier || 'standard') || 1;
         const tiered = Number((base * tierMult).toFixed(2));
@@ -470,7 +480,8 @@ export const generatePriceSuggestion = async ({
                 category: nextCategory,
                 cost_price: costPrice,
                 tier: nextTier,
-                useImages: true
+                useImages: true,
+                forceRefresh
             });
         },
         onSuggestionGenerated,

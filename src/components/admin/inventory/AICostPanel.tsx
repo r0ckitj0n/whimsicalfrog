@@ -59,7 +59,7 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
     const { confirmWithEstimate } = useAICostEstimateConfirm();
     const [isApplying, setIsApplying] = React.useState(false);
 
-    const runImageFirstSuggestion = async (targetTier: string) => {
+    const runImageFirstSuggestion = async (targetTier: string, opts?: { forceRefresh?: boolean }) => {
         const suggestion = await generateCostSuggestion({
             sku,
             name,
@@ -70,6 +70,7 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
             primaryImageUrl,
             imageUrls,
             imageData: primaryImageUrl,
+            forceRefresh: Boolean(opts?.forceRefresh),
             fetchCostSuggestion: fetch_cost_suggestion,
             onSuggestionGenerated: (nextSuggestion) => {
                 setCachedCostSuggestion(nextSuggestion);
@@ -82,20 +83,8 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
     };
 
     const handleSuggest = async () => {
-        // Fast path: if we have any stored AI cost suggestion, use it instantly and skip AI.
-        // The user can later force a refresh by using other AI generation flows (Generate All / etc).
+        // Keep any stored suggestion only as a fallback if the live AI run fails.
         const stored = await fetch_stored_ai_cost_suggestion(sku, tier);
-        const storedAgeDays = ageInDays(stored?.created_at ?? null);
-        if (stored && Number.isFinite(storedAgeDays ?? NaN) && (storedAgeDays as number) >= 0) {
-            setCachedCostSuggestion(stored);
-            onSuggestionUpdated?.(stored);
-            if (!isReadOnly && onApplyCost) onApplyCost(stored.suggested_cost);
-            if (window.WFToast?.info) {
-                const freshness = (storedAgeDays as number) < 7 ? 'fresh' : 'stored';
-                window.WFToast.info(`Using ${freshness} cost suggestion.`);
-            }
-            return;
-        }
 
         const confirmed = await confirmWithEstimate({
             action_key: 'inventory_generate_cost',
@@ -114,7 +103,7 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
         });
         if (!confirmed) return;
 
-        const suggestion = await runImageFirstSuggestion(tier);
+        const suggestion = await runImageFirstSuggestion(tier, { forceRefresh: true });
         if (!suggestion && stored) {
             setCachedCostSuggestion(stored);
             onSuggestionUpdated?.(stored);

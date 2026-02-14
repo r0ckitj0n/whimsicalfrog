@@ -61,7 +61,7 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
 
     const [isApplying, setIsApplying] = React.useState(false);
 
-    const runImageFirstSuggestion = async (targetTier: string) => {
+    const runImageFirstSuggestion = async (targetTier: string, opts?: { forceRefresh?: boolean }) => {
         const suggestion = await generatePriceSuggestion({
             sku,
             name,
@@ -73,6 +73,7 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
             primaryImageUrl,
             imageUrls,
             imageData: primaryImageUrl,
+            forceRefresh: Boolean(opts?.forceRefresh),
             fetchPriceSuggestion: fetch_price_suggestion,
             onSuggestionGenerated: (nextSuggestion) => {
                 setCachedPriceSuggestion(nextSuggestion);
@@ -85,21 +86,8 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
     };
 
     const handleSuggest = async () => {
-        // Fast path: if we have any stored suggestion, use it instantly and skip AI.
-        // The user can later force a refresh by using other AI generation flows (Generate All / etc).
+        // Keep any stored suggestion only as a fallback if the live AI run fails.
         const stored = await fetch_stored_price_suggestion(sku);
-        const storedAgeDays = ageInDays(stored?.created_at ?? null);
-        if (stored && stored.success && Number.isFinite(storedAgeDays ?? NaN) && (storedAgeDays as number) >= 0) {
-            const updated = retier_price_suggestion(stored, tier) || stored;
-            setCachedPriceSuggestion(updated);
-            onSuggestionUpdated?.(updated);
-            if (!isReadOnly && onApplyPrice) onApplyPrice(updated.suggested_price);
-            if (window.WFToast?.info) {
-                const freshness = (storedAgeDays as number) < 7 ? 'fresh' : 'stored';
-                window.WFToast.info(`Using ${freshness} price suggestion.`);
-            }
-            return;
-        }
 
         const confirmed = await confirmWithEstimate({
             action_key: 'inventory_generate_price',
@@ -118,7 +106,7 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
         });
         if (!confirmed) return;
 
-        const suggestion = await runImageFirstSuggestion(tier);
+        const suggestion = await runImageFirstSuggestion(tier, { forceRefresh: true });
         if (!suggestion && stored) {
             // If we had something stored (even if stale) and AI refresh failed, prefer the stored result.
             const updated = retier_price_suggestion(stored, tier) || stored;

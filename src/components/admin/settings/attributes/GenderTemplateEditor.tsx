@@ -3,7 +3,6 @@ import type { IGenderTemplate, IGenderTemplateItem, IGlobalGender } from '../../
 import { ApiClient } from '../../../../core/ApiClient.js';
 import { AUTH } from '../../../../core/constants.js';
 import logger from '../../../../core/logger.js';
-import type { ITemplateCategoriesResponse } from '../../../../types/templates.js';
 
 interface GenderTemplateEditorProps {
     template: Partial<IGenderTemplate>;
@@ -41,11 +40,20 @@ export const GenderTemplateEditor: React.FC<GenderTemplateEditorProps> = ({ temp
         (async () => {
             try {
                 setCategoriesError(null);
-                const res = await ApiClient.get<ITemplateCategoriesResponse>(`/api/gender_templates.php?action=get_categories&admin_token=${AUTH.ADMIN_TOKEN}`);
+                // Use the canonical Categories list so this dropdown always offers every category,
+                // and aligns with Inventory Options assignments.
+                const res = await ApiClient.get<{ success: boolean; categories?: Array<{ id?: number; name?: string; category?: string }>; data?: { categories?: Array<{ id?: number; name?: string; category?: string }> }; error?: string; message?: string }>(
+                    '/api/categories.php',
+                    { action: 'list' }
+                );
                 if (!isMounted) return;
-                // gender_templates.php returns Response::success({categories: [...]}) so parser flattens into { success, categories }
+                const root = (res && 'data' in res && res.data) ? res.data : res;
+                const raw = (root && 'categories' in root && Array.isArray(root.categories)) ? root.categories : [];
                 if (res?.success) {
-                    const list = (res.categories || []).map(String).map(s => s.trim()).filter(Boolean);
+                    const list = raw
+                        .map((c) => String(c?.name || c?.category || '').trim())
+                        .filter(Boolean)
+                        .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
                     if (category && !list.includes(category)) list.unshift(category);
                     setCategories(Array.from(new Set(list)));
                 } else {
@@ -206,4 +214,3 @@ export const GenderTemplateEditor: React.FC<GenderTemplateEditorProps> = ({ temp
         </form>
     );
 };
-

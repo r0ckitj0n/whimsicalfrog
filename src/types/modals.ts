@@ -5,13 +5,29 @@ export interface IModalOptions {
     title?: string;
     message?: string;
     subtitle?: string;
+    /** Optional class overrides for typography/layout tweaks in specific modals. */
+    messageClassName?: string;
+    subtitleClassName?: string;
     details?: string;
+    /** When true, hide the branded header bar (used for minimal confirm modals). */
+    hideHeader?: boolean;
     /** When true, render the details block behind a toggle. */
     detailsCollapsible?: boolean;
     /** Label shown next to the details toggle (defaults to "Details"). */
     detailsLabel?: string;
     /** When details are collapsible, whether the details are expanded initially. */
     detailsDefaultOpen?: boolean;
+    /**
+     * Optional actions rendered inside the details section (only visible when details are shown).
+     * Intended for links like "AI Settings" when fallback pricing is in effect.
+     */
+    detailsActions?: Array<{
+        label: string;
+        href?: string;
+        target?: '_self' | '_blank';
+        onClick?: () => void;
+        style?: 'secondary' | 'primary' | 'warning';
+    }>;
     icon?: string;
     iconType?: ModalIconType;
     iconKey?: string;

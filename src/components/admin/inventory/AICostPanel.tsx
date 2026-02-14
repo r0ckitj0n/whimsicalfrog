@@ -82,14 +82,18 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
     };
 
     const handleSuggest = async () => {
-        // Fast path: if we have a stored AI cost suggestion newer than 7 days, use it instantly and skip AI.
+        // Fast path: if we have any stored AI cost suggestion, use it instantly and skip AI.
+        // The user can later force a refresh by using other AI generation flows (Generate All / etc).
         const stored = await fetch_stored_ai_cost_suggestion(sku, tier);
         const storedAgeDays = ageInDays(stored?.created_at ?? null);
-        if (stored && Number.isFinite(storedAgeDays ?? NaN) && (storedAgeDays as number) >= 0 && (storedAgeDays as number) < 7) {
+        if (stored && Number.isFinite(storedAgeDays ?? NaN) && (storedAgeDays as number) >= 0) {
             setCachedCostSuggestion(stored);
             onSuggestionUpdated?.(stored);
             if (!isReadOnly && onApplyCost) onApplyCost(stored.suggested_cost);
-            if (window.WFToast?.info) window.WFToast.info('Using stored cost suggestion (fresh).');
+            if (window.WFToast?.info) {
+                const freshness = (storedAgeDays as number) < 7 ? 'fresh' : 'stored';
+                window.WFToast.info(`Using ${freshness} cost suggestion.`);
+            }
             return;
         }
 

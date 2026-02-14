@@ -89,18 +89,21 @@ export const useAICostEstimateConfirm = () => {
             ].join('').trim();
 
             return confirm({
-                title: 'Confirm AI Generation',
+                hideHeader: true,
+                title: '',
                 subtitle: action_label,
+                subtitleClassName: 'text-sm font-black text-gray-500 uppercase tracking-widest',
+                messageClassName: 'text-base text-gray-700 leading-relaxed font-semibold',
                 message: `Estimated AI cost: ${formatUsd(estimate.expected_cost)}.${pricingNote ? ` ${pricingNote}` : ''}`,
                 details: detailsText || undefined,
                 detailsCollapsible: Boolean(detailsText),
                 detailsLabel: 'Details',
                 detailsDefaultOpen: false,
                 confirmText,
-                cancelText: 'Cancel',
+                showCancel: false,
                 confirmStyle: 'warning',
                 iconKey: estimate.pricing?.is_fallback_pricing ? 'warning' : 'info',
-                extraActions: estimate.pricing?.is_fallback_pricing
+                detailsActions: estimate.pricing?.is_fallback_pricing
                     ? [{
                         label: 'AI Settings',
                         style: 'secondary',

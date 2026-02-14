@@ -9,10 +9,19 @@ interface IPromptInputConfig {
 interface GlobalModalBodyProps {
     message: string;
     subtitle?: string;
+    messageClassName?: string;
+    subtitleClassName?: string;
     details?: string;
     detailsCollapsible?: boolean;
     detailsLabel?: string;
     detailsDefaultOpen?: boolean;
+    detailsActions?: Array<{
+        label: string;
+        href?: string;
+        target?: '_self' | '_blank';
+        onClick?: () => void;
+        style?: 'secondary' | 'primary' | 'warning';
+    }>;
     mode: string;
     inputValue: string;
     setInputValue: (val: string) => void;
@@ -23,10 +32,13 @@ interface GlobalModalBodyProps {
 export const GlobalModalBody: React.FC<GlobalModalBodyProps> = ({
     message,
     subtitle,
+    messageClassName,
+    subtitleClassName,
     details,
     detailsCollapsible = false,
     detailsLabel = 'Details',
     detailsDefaultOpen = false,
+    detailsActions = [],
     mode,
     inputValue,
     setInputValue,
@@ -42,12 +54,12 @@ export const GlobalModalBody: React.FC<GlobalModalBodyProps> = ({
     return (
         <div className="space-y-3">
             {subtitle && (
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                <p className={subtitleClassName || "text-xs font-bold text-gray-400 uppercase tracking-widest"}>
                     {subtitle}
                 </p>
             )}
 
-            <div className="text-sm text-gray-600 leading-relaxed font-medium">
+            <div className={messageClassName || "text-sm text-gray-600 leading-relaxed font-medium"}>
                 {message}
             </div>
 
@@ -71,8 +83,36 @@ export const GlobalModalBody: React.FC<GlobalModalBodyProps> = ({
                         </span>
                     </button>
                     {detailsOpen && (
-                        <div className="mt-2 p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-500 font-mono whitespace-pre-wrap">
-                            {details}
+                        <div className="mt-2 space-y-2">
+                            <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-500 font-mono whitespace-pre-wrap">
+                                {details}
+                            </div>
+                            {detailsActions.length > 0 && (
+                                <div className="flex gap-2 flex-wrap">
+                                    {detailsActions.map((action, idx) => {
+                                        const style = action.style || 'secondary';
+                                        const cls = style === 'primary'
+                                            ? 'bg-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/90 text-white'
+                                            : (style === 'warning'
+                                                ? 'bg-[var(--brand-warning)] hover:bg-[var(--brand-warning)]/90 text-white'
+                                                : 'bg-gray-100 hover:bg-gray-200 text-gray-700');
+                                        const handle = () => {
+                                            if (typeof action.onClick === 'function') action.onClick();
+                                            if (action.href) window.open(action.href, action.target || '_self', 'noopener,noreferrer');
+                                        };
+                                        return (
+                                            <button
+                                                key={`${action.label}-${idx}`}
+                                                type="button"
+                                                onClick={handle}
+                                                className={`px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-colors ${cls}`}
+                                            >
+                                                {action.label}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

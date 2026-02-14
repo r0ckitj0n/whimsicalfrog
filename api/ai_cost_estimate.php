@@ -3,7 +3,6 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
-require_once __DIR__ . '/ai_providers.php';
 require_once __DIR__ . '/../includes/ai/helpers/AIPricingStore.php';
 
 AuthHelper::requireAdmin();
@@ -225,7 +224,7 @@ function wf_index_by_key(array $items): array
     return $indexed;
 }
 
-function wf_try_ai_estimate(array $ops, array $context, AIProviders $aiProviders): array
+function wf_try_ai_estimate(array $ops, array $context): array
 {
     // Intentionally disabled: we do not call external AI to estimate pricing.
     // Estimates are based on weekly-stored per-job pricing in MySQL.
@@ -236,17 +235,54 @@ function wf_try_ai_estimate(array $ops, array $context, AIProviders $aiProviders
     ];
 }
 
-try {
-    $aiProviders = getAIProviders();
-    $settings = $aiProviders->getSettings();
-    $provider = (string) ($settings['ai_provider'] ?? 'jons_ai');
+function wf_get_provider_and_model_from_settings(): array
+{
+    // Keep this endpoint lightweight: avoid bootstrapping full AIProviders.
+    // Only read the keys needed to label the estimate output.
+    $defaults = [
+        'ai_provider' => 'jons_ai',
+        'openai_model' => 'gpt-4o',
+        'anthropic_model' => 'claude-3-5-sonnet-20241022',
+        'google_model' => 'gemini-1.5-pro',
+        'meta_model' => 'meta-llama/llama-3.1-405b-instruct',
+    ];
+
+    try {
+        $rows = Database::queryAll(
+            "SELECT setting_key, setting_value
+             FROM business_settings
+             WHERE category = 'ai'
+             AND setting_key IN ('ai_provider','openai_model','anthropic_model','google_model','meta_model')"
+        );
+        foreach ($rows as $row) {
+            $k = (string) ($row['setting_key'] ?? '');
+            if ($k === '' || !array_key_exists($k, $defaults)) continue;
+            $defaults[$k] = trim((string) ($row['setting_value'] ?? ''));
+        }
+    } catch (Throwable $e) {
+        // Non-fatal: fall back to defaults.
+    }
+
+    $provider = $defaults['ai_provider'] !== '' ? $defaults['ai_provider'] : 'jons_ai';
     $modelKey = $provider . '_model';
-    $model = (string) ($settings[$modelKey] ?? ($provider === 'jons_ai' ? 'jons-ai' : 'default-model'));
+    $model = (string) ($defaults[$modelKey] ?? ($provider === 'jons_ai' ? 'jons-ai' : 'default-model'));
+
+    return [
+        'provider' => $provider,
+        'model' => $model !== '' ? $model : 'default-model',
+    ];
+}
+
+try {
+    $pm = wf_get_provider_and_model_from_settings();
+    $provider = (string) ($pm['provider'] ?? 'jons_ai');
+    $model = (string) ($pm['model'] ?? ($provider === 'jons_ai' ? 'jons-ai' : 'default-model'));
 
     $defaultImageCount = max(0, (int) ($context['image_count'] ?? 1));
     $ops = wf_coerce_operations(is_array($operationsInput) ? $operationsInput : [], $actionKey, $defaultImageCount);
 
-    $pricing = AIPricingStore::getWeeklyRates($provider);
+    // Read-only: estimates should not write fallback/copied rates.
+    $pricing = AIPricingStore::getWeeklyRatesReadOnly($provider);
     $ratesByJob = (array) ($pricing['rates'] ?? []);
     $textRate = (int) (($ratesByJob[AIPricingStore::JOB_TEXT_GENERATION]['unit_cost_cents'] ?? 0));
     $analysisRate = (int) (($ratesByJob[AIPricingStore::JOB_IMAGE_ANALYSIS]['unit_cost_cents'] ?? 0));

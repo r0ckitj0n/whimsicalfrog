@@ -85,15 +85,19 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
     };
 
     const handleSuggest = async () => {
-        // Fast path: if we have a stored suggestion newer than 7 days, use it instantly and skip AI.
+        // Fast path: if we have any stored suggestion, use it instantly and skip AI.
+        // The user can later force a refresh by using other AI generation flows (Generate All / etc).
         const stored = await fetch_stored_price_suggestion(sku);
         const storedAgeDays = ageInDays(stored?.created_at ?? null);
-        if (stored && stored.success && Number.isFinite(storedAgeDays ?? NaN) && (storedAgeDays as number) >= 0 && (storedAgeDays as number) < 7) {
+        if (stored && stored.success && Number.isFinite(storedAgeDays ?? NaN) && (storedAgeDays as number) >= 0) {
             const updated = retier_price_suggestion(stored, tier) || stored;
             setCachedPriceSuggestion(updated);
             onSuggestionUpdated?.(updated);
             if (!isReadOnly && onApplyPrice) onApplyPrice(updated.suggested_price);
-            if (window.WFToast?.info) window.WFToast.info('Using stored price suggestion (fresh).');
+            if (window.WFToast?.info) {
+                const freshness = (storedAgeDays as number) < 7 ? 'fresh' : 'stored';
+                window.WFToast.info(`Using ${freshness} price suggestion.`);
+            }
             return;
         }
 

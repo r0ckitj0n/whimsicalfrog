@@ -32,10 +32,14 @@ export const GlobalModal: React.FC = () => {
         title = 'Confirm Action',
         message = 'Are you sure you want to proceed?',
         subtitle,
+        messageClassName,
+        subtitleClassName,
         details,
+        hideHeader = false,
         detailsCollapsible,
         detailsLabel,
         detailsDefaultOpen,
+        detailsActions,
         icon,
         iconType = 'warning',
         iconKey,
@@ -109,22 +113,39 @@ export const GlobalModal: React.FC = () => {
                 }}
                 onClick={e => e.stopPropagation()}
             >
-                <GlobalModalHeader
-                    title={title}
-                    iconKey={iconKey}
-                    icon={icon}
-                    iconType={iconType}
-                    onClose={handleCancel}
-                />
+                {!hideHeader && (
+                    <GlobalModalHeader
+                        title={title}
+                        iconKey={iconKey}
+                        icon={icon}
+                        iconType={iconType}
+                        onClose={handleCancel}
+                    />
+                )}
+
+                {hideHeader && (
+                    <button
+                        type="button"
+                        onClick={handleCancel}
+                        aria-label="Close"
+                        className="absolute top-3 right-3 w-9 h-9 rounded-full bg-gray-50 border border-gray-200 text-gray-500 hover:bg-gray-100 transition-colors flex items-center justify-center"
+                        data-help-id="modal-close"
+                    >
+                        ×
+                    </button>
+                )}
 
                 <div className="p-6 space-y-4 flex-1 overflow-y-auto">
                     <GlobalModalBody
                         message={message}
                         subtitle={subtitle}
+                        messageClassName={messageClassName}
+                        subtitleClassName={subtitleClassName}
                         details={details}
                         detailsCollapsible={detailsCollapsible}
                         detailsLabel={detailsLabel}
                         detailsDefaultOpen={detailsDefaultOpen}
+                        detailsActions={detailsActions}
                         mode={mode}
                         inputValue={inputValue}
                         setInputValue={setInputValue}

@@ -152,6 +152,121 @@ class AIPricingStore
         ];
     }
 
+    /**
+     * Read-only variant used by UI estimate flows.
+     *
+     * Unlike getWeeklyRates(), this method never writes fallback/copied rates to the database.
+     * This keeps the estimate endpoint fast and avoids unexpected write load on simple UI opens.
+     */
+    public static function getWeeklyRatesReadOnly(string $provider, ?string $weekStart = null): array
+    {
+        Database::getInstance();
+        AIPricingSchemaHelper::ensureSchema();
+
+        $provider = trim(strtolower($provider)) !== '' ? trim(strtolower($provider)) : 'default';
+        $weekStart = $weekStart ?: self::weekStartUtc();
+
+        $jobTypes = array_keys(self::FALLBACK_CENTS);
+        $rates = [];
+        $anyFallback = false;
+        $fallbackNote = '';
+        $fallbackReasons = [];
+
+        $rows = Database::queryAll(
+            "SELECT job_type, unit_cost_cents, currency, source, note
+             FROM ai_job_pricing_rates
+             WHERE provider = ? AND week_start = ?",
+            [$provider, $weekStart]
+        );
+        foreach ($rows as $row) {
+            $jt = (string)($row['job_type'] ?? '');
+            if ($jt === '') continue;
+            $cents = (int)($row['unit_cost_cents'] ?? 0);
+            $currency = (string)($row['currency'] ?? 'USD');
+            $source = (string)($row['source'] ?? 'stored');
+            $note = (string)($row['note'] ?? '');
+            $rates[$jt] = [
+                'job_type' => $jt,
+                'unit_cost_cents' => $cents,
+                'unit_cost_usd' => round($cents / 100, 4),
+                'currency' => $currency,
+                'source' => $source,
+                'note' => $note,
+            ];
+            if (self::isFallbackSource($source)) {
+                $anyFallback = true;
+                $fallbackReasons[] = $note !== ''
+                    ? $note
+                    : "Fallback pricing: stored rate marked as fallback for {$provider}/{$jt}.";
+            }
+        }
+
+        // Fill any missing job types by looking up last-known stored rates, else fallback (no writes).
+        foreach ($jobTypes as $jobType) {
+            if (isset($rates[$jobType])) continue;
+
+            $latest = Database::queryOne(
+                "SELECT unit_cost_cents, currency, source, note
+                 FROM ai_job_pricing_rates
+                 WHERE provider = ? AND job_type = ?
+                 ORDER BY week_start DESC
+                 LIMIT 1",
+                [$provider, $jobType]
+            );
+
+            if (is_array($latest) && isset($latest['unit_cost_cents'])) {
+                $copiedCents = (int)$latest['unit_cost_cents'];
+                $currency = (string)($latest['currency'] ?? 'USD');
+                $source = (string)($latest['source'] ?? 'stored_copy');
+                $note = (string)($latest['note'] ?? 'Copied from most recent stored rate.');
+                $rates[$jobType] = [
+                    'job_type' => $jobType,
+                    'unit_cost_cents' => $copiedCents,
+                    'unit_cost_usd' => round($copiedCents / 100, 4),
+                    'currency' => $currency,
+                    'source' => $source,
+                    'note' => $note,
+                ];
+                if (self::isFallbackSource($source)) {
+                    $anyFallback = true;
+                    $fallbackReasons[] = $note !== '' ? $note : "Fallback pricing: stored rate marked fallback for {$provider}/{$jobType}.";
+                }
+                continue;
+            }
+
+            $fallbackCents = (int)(self::FALLBACK_CENTS[$jobType] ?? 0);
+            $note = "Fallback pricing: no stored price available for {$provider}/{$jobType}.";
+            $rates[$jobType] = [
+                'job_type' => $jobType,
+                'unit_cost_cents' => $fallbackCents,
+                'unit_cost_usd' => round($fallbackCents / 100, 4),
+                'currency' => 'USD',
+                'source' => 'fallback',
+                'note' => $note,
+            ];
+            $anyFallback = true;
+            $fallbackReasons[] = $note;
+        }
+
+        if ($anyFallback) {
+            $fallbackReasons = array_values(array_unique(array_filter(array_map('strval', $fallbackReasons))));
+            if (empty($fallbackReasons)) {
+                $fallbackReasons[] = 'Fallback pricing in effect (one or more stored rates were missing or marked fallback).';
+            }
+            $fallbackNote = 'Fallback pricing in effect: ' . $fallbackReasons[0];
+        }
+
+        return [
+            'week_start' => $weekStart,
+            'provider' => $provider,
+            'currency' => 'USD',
+            'rates' => $rates,
+            'is_fallback' => $anyFallback,
+            'fallback_note' => $fallbackNote,
+            'fallback_reasons' => $fallbackReasons,
+        ];
+    }
+
     public static function weekStartUtc(): string
     {
         $dt = new DateTimeImmutable('now', new DateTimeZone('UTC'));

@@ -127,8 +127,9 @@ try {
             // Update existing color template
             $data = isset($json) && is_array($json) ? $json : [];
 
-            if (!$data || !isset($data['template_id'])) {
-                echo json_encode(['success' => false, 'message' => 'Template ID required']);
+            $templateId = (int)($data['template_id'] ?? ($data['id'] ?? 0));
+            if (!$data || $templateId <= 0) {
+                Response::error('Template ID required', null, 400);
                 break;
             }
 
@@ -138,11 +139,11 @@ try {
                 // Update template info
                 Database::execute(
                     "UPDATE color_templates SET template_name = ?, description = ?, category = ? WHERE id = ?",
-                    [$data['template_name'], $data['description'] ?? '', $data['category'] ?? 'General', $data['template_id']]
+                    [$data['template_name'], $data['description'] ?? '', $data['category'] ?? 'General', $templateId]
                 );
 
                 // Delete existing colors
-                Database::execute("DELETE FROM color_template_items WHERE template_id = ?", [$data['template_id']]);
+                Database::execute("DELETE FROM color_template_items WHERE template_id = ?", [$templateId]);
 
                 // Insert updated colors
                 if (isset($data['colors']) && is_array($data['colors'])) {
@@ -153,7 +154,7 @@ try {
                         }
                         Database::execute(
                             "INSERT INTO color_template_items (template_id, color_name, color_code, display_order) VALUES (?, ?, ?, ?)",
-                            [$data['template_id'], $cname, $c['color_code'] ?? '', $c['display_order'] ?? ($idx + 1)]
+                            [$templateId, $cname, $c['color_code'] ?? '', $c['display_order'] ?? ($idx + 1)]
                         );
                     }
                 }

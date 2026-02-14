@@ -26,7 +26,14 @@ export const useSizeTemplates = (fetchAll: () => Promise<void>) => {
         setIsLoading(true);
         try {
             const action = data.id ? 'update_template' : 'create_template';
-            const res = await ApiClient.post<{ success: boolean; template_id?: number; message?: string }>(`/api/size_templates.php?action=${action}&admin_token=${AUTH.ADMIN_TOKEN}`, data);
+            // Backend expects template_id for updates.
+            const payload: Record<string, unknown> = { ...data };
+            if (action === 'update_template' && !('template_id' in payload)) {
+                payload.template_id = data.id;
+            }
+            delete payload.id;
+
+            const res = await ApiClient.post<{ success: boolean; template_id?: number; message?: string }>(`/api/size_templates.php?action=${action}&admin_token=${AUTH.ADMIN_TOKEN}`, payload);
             if (res?.success) {
                 await fetchAll();
                 return res;

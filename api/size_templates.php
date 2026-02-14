@@ -119,8 +119,9 @@ try {
             // Update existing size template
             $data = isset($json) && is_array($json) ? $json : [];
 
-            if (!$data || !isset($data['template_id'])) {
-                echo json_encode(['success' => false, 'message' => 'Template ID required']);
+            $templateId = (int)($data['template_id'] ?? ($data['id'] ?? 0));
+            if (!$data || $templateId <= 0) {
+                Response::error('Template ID required', null, 400);
                 break;
             }
 
@@ -130,18 +131,18 @@ try {
                 // Update template info
                 Database::execute(
                     "UPDATE size_templates SET template_name = ?, description = ?, category = ? WHERE id = ?",
-                    [$data['template_name'], $data['description'] ?? '', $data['category'] ?? 'General', $data['template_id']]
+                    [$data['template_name'], $data['description'] ?? '', $data['category'] ?? 'General', $templateId]
                 );
 
                 // Delete existing sizes
-                Database::execute("DELETE FROM size_template_items WHERE template_id = ?", [$data['template_id']]);
+                Database::execute("DELETE FROM size_template_items WHERE template_id = ?", [$templateId]);
 
                 // Insert updated sizes
                 if (isset($data['sizes']) && is_array($data['sizes'])) {
                     foreach ($data['sizes'] as $index => $size) {
                         Database::execute(
                             "INSERT INTO size_template_items (template_id, size_name, size_code, price_adjustment, display_order) VALUES (?, ?, ?, ?, ?)",
-                            [$data['template_id'], $size['size_name'], $size['size_code'], $size['price_adjustment'] ?? 0.00, $index]
+                            [$templateId, $size['size_name'], $size['size_code'], $size['price_adjustment'] ?? 0.00, $index]
                         );
                     }
                 }

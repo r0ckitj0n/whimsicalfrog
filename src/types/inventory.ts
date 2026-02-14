@@ -148,6 +148,17 @@ export interface IItemSizesResponse {
     sizes: IItemOption[];
 }
 
+export interface IEffectiveOptionLists {
+    genders: string[];
+    colors: Array<{ name: string; code: string }>;
+    sizes: Array<{ code: string; name: string; price_adjustment: number }>;
+}
+
+export interface IItemEffectiveOptionListsResponse {
+    success: boolean;
+    lists: IEffectiveOptionLists;
+}
+
 // Storefront Shop Types
 export interface IShopItem {
     sku: string;

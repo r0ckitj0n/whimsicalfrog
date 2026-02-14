@@ -37,7 +37,7 @@ if ($action === '') {
         }
     }
 }
-$allowedActions = ['get_settings', 'update_settings', 'get_aggregates'];
+$allowedActions = ['get_settings', 'update_settings', 'get_aggregates', 'get_effective_lists'];
 if (!in_array($action, $allowedActions, true)) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Invalid action']);
@@ -140,6 +140,134 @@ try {
                 );
             }
             echo json_encode(['success' => true]);
+            break;
+        }
+        case 'get_effective_lists': {
+            $sku = $_GET['item_sku'] ?? '';
+            if (!$sku) {
+                throw new Exception('item_sku required');
+            }
+
+            $item = Database::queryOne("SELECT category_id FROM items WHERE sku = ? LIMIT 1", [$sku]);
+            if (!$item) {
+                throw new Exception('Item not found');
+            }
+            $catId = isset($item['category_id']) ? (int) $item['category_id'] : 0;
+
+            $links = [];
+            try {
+                $links = Database::queryAll(
+                    "SELECT option_type, option_id
+                     FROM inventory_option_links
+                     WHERE ((applies_to_type = 'sku' AND item_sku = ?) OR (applies_to_type = 'category' AND category_id = ?))
+                       AND option_type IN ('color_template','size_template','gender_template')",
+                    [$sku, $catId]
+                );
+            } catch (Throwable $e) {
+                // If inventory_option_links isn't present yet, return empty lists.
+                $links = [];
+            }
+
+            $colorTplIds = [];
+            $sizeTplIds = [];
+            $genderTplIds = [];
+            foreach ($links as $r) {
+                $t = (string) ($r['option_type'] ?? '');
+                $id = (int) ($r['option_id'] ?? 0);
+                if ($id <= 0) {
+                    continue;
+                }
+                if ($t === 'color_template') {
+                    $colorTplIds[] = $id;
+                } elseif ($t === 'size_template') {
+                    $sizeTplIds[] = $id;
+                } elseif ($t === 'gender_template') {
+                    $genderTplIds[] = $id;
+                }
+            }
+
+            $colorTplIds = array_values(array_unique($colorTplIds));
+            $sizeTplIds = array_values(array_unique($sizeTplIds));
+            $genderTplIds = array_values(array_unique($genderTplIds));
+
+            $colors = [];
+            $sizes = [];
+            $genders = [];
+
+            if (count($colorTplIds) > 0) {
+                $ph = implode(',', array_fill(0, count($colorTplIds), '?'));
+                $rows = Database::queryAll(
+                    "SELECT cti.color_name, cti.color_code, ct.template_name, cti.display_order
+                     FROM color_template_items cti
+                     INNER JOIN color_templates ct ON ct.id = cti.template_id AND ct.is_active = 1
+                     WHERE cti.template_id IN ($ph) AND cti.is_active = 1
+                     ORDER BY ct.template_name ASC, cti.display_order ASC, cti.color_name ASC",
+                    $colorTplIds
+                );
+                $seen = [];
+                foreach ($rows as $r) {
+                    $name = trim((string) ($r['color_name'] ?? ''));
+                    if ($name === '') continue;
+                    $key = strtolower($name);
+                    if (isset($seen[$key])) continue;
+                    $seen[$key] = true;
+                    $code = trim((string) ($r['color_code'] ?? ''));
+                    $colors[] = ['name' => $name, 'code' => $code];
+                }
+            }
+
+            if (count($sizeTplIds) > 0) {
+                $ph = implode(',', array_fill(0, count($sizeTplIds), '?'));
+                $rows = Database::queryAll(
+                    "SELECT sti.size_code, sti.size_name, sti.price_adjustment, st.template_name, sti.display_order
+                     FROM size_template_items sti
+                     INNER JOIN size_templates st ON st.id = sti.template_id AND st.is_active = 1
+                     WHERE sti.template_id IN ($ph) AND sti.is_active = 1
+                     ORDER BY st.template_name ASC, sti.display_order ASC, sti.size_code ASC",
+                    $sizeTplIds
+                );
+                $seen = [];
+                foreach ($rows as $r) {
+                    $code = trim((string) ($r['size_code'] ?? ''));
+                    if ($code === '') continue;
+                    $key = strtoupper($code);
+                    if (isset($seen[$key])) continue;
+                    $seen[$key] = true;
+                    $name = trim((string) ($r['size_name'] ?? ''));
+                    $adj = (float) ($r['price_adjustment'] ?? 0);
+                    $sizes[] = ['code' => $code, 'name' => $name !== '' ? $name : $code, 'price_adjustment' => $adj];
+                }
+            }
+
+            if (count($genderTplIds) > 0) {
+                $ph = implode(',', array_fill(0, count($genderTplIds), '?'));
+                $rows = Database::queryAll(
+                    "SELECT gti.gender_name, gt.template_name, gti.display_order
+                     FROM gender_template_items gti
+                     INNER JOIN gender_templates gt ON gt.id = gti.template_id AND gt.is_active = 1
+                     WHERE gti.template_id IN ($ph) AND gti.is_active = 1
+                     ORDER BY gt.template_name ASC, gti.display_order ASC, gti.gender_name ASC",
+                    $genderTplIds
+                );
+                $seen = [];
+                foreach ($rows as $r) {
+                    $name = trim((string) ($r['gender_name'] ?? ''));
+                    if ($name === '') continue;
+                    $key = strtolower($name);
+                    if (isset($seen[$key])) continue;
+                    $seen[$key] = true;
+                    $genders[] = $name;
+                }
+            }
+
+            echo json_encode([
+                'success' => true,
+                'lists' => [
+                    'genders' => $genders,
+                    'colors' => $colors,
+                    'sizes' => $sizes,
+                ],
+            ]);
             break;
         }
         case 'get_aggregates': {

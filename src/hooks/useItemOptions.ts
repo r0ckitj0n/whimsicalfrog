@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect } from 'react';
 import { IItemDetails, IItemOption } from './useItemDetails.js';
+import { IEffectiveOptionLists } from '../types/inventory.js';
 
 /**
  * useItemOptions v1.0.73
  * Handles variant parsing, filtering, and selection logic for detailed item modal.
  */
-export const useItemOptions = (item: IItemDetails | null, options: IItemOption[]) => {
+export const useItemOptions = (item: IItemDetails | null, options: IItemOption[], effectiveLists: IEffectiveOptionLists | null = null) => {
     const [selectedGender, setSelectedGender] = useState('');
     const [selectedColor, setSelectedColor] = useState('');
     const [selectedSize, setSelectedSize] = useState('');
@@ -17,11 +18,21 @@ export const useItemOptions = (item: IItemDetails | null, options: IItemOption[]
         setSelectedSize('');
     }, [item?.sku]);
 
+    // Keep cascade behavior predictable when lists are large.
+    useEffect(() => {
+        setSelectedColor('');
+        setSelectedSize('');
+    }, [selectedGender]);
+
+    useEffect(() => {
+        setSelectedSize('');
+    }, [selectedColor]);
+
     const fallbackColors = useMemo(() => {
         if (!item?.color_options) return [];
         const unique = Array.from(new Set(item.color_options.split(',').map(c => c.trim()).filter(Boolean)));
         return unique.map((c, index) => ({
-            id: `fallback-color-${index}`,
+            id: c,
             name: c,
             code: '#ccc'
         }));
@@ -39,6 +50,9 @@ export const useItemOptions = (item: IItemDetails | null, options: IItemOption[]
     }, [item]);
 
     const availableGenders = useMemo(() => {
+        if (effectiveLists && Array.isArray(effectiveLists.genders) && effectiveLists.genders.length > 0) {
+            return effectiveLists.genders.slice();
+        }
         if (!Array.isArray(options) || options.length === 0) return [];
         const genders = new Set(options
             .filter(opt => Number(opt.stock_level) > 0)
@@ -46,35 +60,52 @@ export const useItemOptions = (item: IItemDetails | null, options: IItemOption[]
             .filter(Boolean)
         );
         return Array.from(genders) as string[];
-    }, [options]);
+    }, [effectiveLists, options]);
 
     const availableColors = useMemo(() => {
+        if (effectiveLists && Array.isArray(effectiveLists.colors) && effectiveLists.colors.length > 0) {
+            return effectiveLists.colors.map((c) => ({
+                id: c.name,
+                name: c.name,
+                code: c.code || '',
+            }));
+        }
         if (Array.isArray(options) && options.length > 0) {
-            return options.filter((opt) => 
+            return options.filter((opt) =>
                 Number(opt.stock_level) > 0 &&
                 (!selectedGender || opt.gender === selectedGender) &&
                 (!selectedSize || opt.size_code === selectedSize)
             ).reduce((acc: Array<{ id: string; name: string; code: string }>, opt) => {
-                const colorId = String(opt.color_id);
-                if (opt.color_id && !acc.find(c => c.id === colorId)) {
-                    acc.push({ 
-                        id: colorId, 
-                        name: opt.color_name || '', 
-                        code: opt.color_code || '' 
+                const colorName = (opt.color_name || '').trim();
+                if (!colorName) return acc;
+                if (!acc.find(c => c.id === colorName)) {
+                    acc.push({
+                        id: colorName,
+                        name: colorName,
+                        code: opt.color_code || ''
                     });
                 }
                 return acc;
             }, []);
         }
         return fallbackColors;
-    }, [options, selectedGender, selectedSize, fallbackColors]);
+    }, [effectiveLists, options, selectedGender, selectedSize, fallbackColors]);
 
     const availableSizes = useMemo(() => {
+        if (effectiveLists && Array.isArray(effectiveLists.sizes) && effectiveLists.sizes.length > 0) {
+            const master = Number(item?.stock_quantity || 0);
+            return effectiveLists.sizes.map((s) => ({
+                code: s.code,
+                name: s.name,
+                stock: master,
+                priceAdj: Number(s.price_adjustment || 0),
+            }));
+        }
         if (Array.isArray(options) && options.length > 0) {
             return options.filter((opt) => 
                 Number(opt.stock_level) > 0 &&
                 (!selectedGender || opt.gender === selectedGender) &&
-                (!selectedColor || String(opt.color_id) === String(selectedColor))
+                (!selectedColor || String(opt.color_name || '') === String(selectedColor))
             ).reduce((acc: Array<{ code: string; name: string; stock: number; priceAdj: number }>, opt) => {
                 const sizeCode = opt.size_code || 'NOSIZE';
                 const sizeName = opt.size_name || 'One Size';
@@ -90,13 +121,28 @@ export const useItemOptions = (item: IItemDetails | null, options: IItemOption[]
             }, []);
         }
         return fallbackSizes;
-    }, [options, selectedGender, selectedColor, fallbackSizes]);
+    }, [effectiveLists, item?.stock_quantity, options, selectedGender, selectedColor, fallbackSizes]);
 
     const currentVariant = useMemo(() => {
+        if (item && effectiveLists && Array.isArray(effectiveLists.sizes) && effectiveLists.sizes.length > 0) {
+            if (!(selectedGender || selectedColor || selectedSize)) return undefined;
+            const matchSize = selectedSize
+                ? effectiveLists.sizes.find((s) => String(s.code) === String(selectedSize))
+                : null;
+            return {
+                id: 'virtual-template',
+                sku: item.sku,
+                gender: selectedGender || undefined,
+                color_name: selectedColor || undefined,
+                size_code: selectedSize || undefined,
+                stock_level: Number(item.stock_quantity || 0),
+                price_adjustment: Number(matchSize?.price_adjustment || 0),
+            } as IItemOption;
+        }
         if (Array.isArray(options) && options.length > 0) {
             const match = options.find((opt) => 
                 (!selectedGender || opt.gender === selectedGender) &&
-                (!selectedColor || String(opt.color_id) === String(selectedColor)) &&
+                (!selectedColor || String(opt.color_name || '') === String(selectedColor)) &&
                 (!selectedSize || opt.size_code === selectedSize)
             );
             if (match) return match;
@@ -104,7 +150,7 @@ export const useItemOptions = (item: IItemDetails | null, options: IItemOption[]
             if (!selectedSize && (selectedColor || selectedGender)) {
                 return options.find((opt) => 
                     (!selectedGender || opt.gender === selectedGender) &&
-                    (!selectedColor || String(opt.color_id) === String(selectedColor))
+                    (!selectedColor || String(opt.color_name || '') === String(selectedColor))
                 );
             }
         }
@@ -117,7 +163,7 @@ export const useItemOptions = (item: IItemDetails | null, options: IItemOption[]
             } as IItemOption;
         }
         return undefined;
-    }, [options, selectedGender, selectedColor, selectedSize, item]);
+    }, [effectiveLists, item, options, selectedGender, selectedColor, selectedSize]);
 
     return {
         selectedGender, setSelectedGender,

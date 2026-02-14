@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { ApiClient } from '../core/ApiClient.js';
 import { useCart } from './use-cart.js';
 import logger from '../core/logger.js';
-import { IItemOption, IItemDetails, IItemDetailsResponse, IItemSizesResponse } from '../types/inventory.js';
+import { IEffectiveOptionLists, IItemEffectiveOptionListsResponse, IItemOption, IItemDetails, IItemDetailsResponse, IItemSizesResponse } from '../types/inventory.js';
 
 // Re-export for backward compatibility
 export type { IItemOption, IItemDetails } from '../types/inventory.js';
@@ -13,6 +13,7 @@ export type { IItemOption, IItemDetails } from '../types/inventory.js';
 export const useItemDetails = (sku: string) => {
     const [item, setItem] = useState<IItemDetails | null>(null);
     const [options, setOptions] = useState<IItemOption[]>([]);
+    const [effectiveLists, setEffectiveLists] = useState<IEffectiveOptionLists | null>(null);
     const [images, setImages] = useState<Array<{ image_path: string; alt_text?: string; is_primary: boolean; sort_order: number }>>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -71,6 +72,21 @@ export const useItemDetails = (sku: string) => {
             if (optRes && optRes.sizes) {
                 setOptions(optRes.sizes);
             }
+
+            try {
+                const listsRes = await ApiClient.get<IItemEffectiveOptionListsResponse>('/api/item_options.php', {
+                    action: 'get_effective_lists',
+                    item_sku: sku
+                });
+                if (listsRes && listsRes.success && listsRes.lists) {
+                    setEffectiveLists(listsRes.lists);
+                } else {
+                    setEffectiveLists(null);
+                }
+            } catch (err) {
+                // Non-fatal; we can fall back to legacy option parsing.
+                setEffectiveLists(null);
+            }
         } catch (err) {
             logger.error('[useItemDetails] Failed to fetch item details', err);
             setError('Unable to load item details');
@@ -83,9 +99,11 @@ export const useItemDetails = (sku: string) => {
         fetchDetails();
     }, [fetchDetails]);
 
-    const addToCart = useCallback((quantity: number, selectedOptions: Partial<IItemOption>) => {
+    const addToCart = useCallback((quantity: number, selectedOptions: { optionGender?: string; option_color?: string; option_size?: string; price_adjustment?: number }) => {
         if (!item) return;
-        const price = Number(item.price || item.retail_price || 0);
+        const base = Number(item.price || item.retail_price || 0);
+        const adj = Number(selectedOptions?.price_adjustment || 0) || 0;
+        const price = base + adj;
         const cartItem = {
             ...item,
             ...selectedOptions,
@@ -98,6 +116,7 @@ export const useItemDetails = (sku: string) => {
     return {
         item,
         options,
+        effectiveLists,
         images,
         isLoading,
         error,

@@ -18,7 +18,7 @@ interface ItemDetailsModalProps {
  * Refactored into sub-components to satisfy the <250 line rule.
  */
 export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ sku, isOpen, onClose }) => {
-    const { item, options, images, isLoading, addToCart } = useItemDetails(sku);
+    const { item, options, effectiveLists, images, isLoading, addToCart } = useItemDetails(sku);
     const {
         selectedGender, setSelectedGender,
         selectedColor, setSelectedColor,
@@ -27,7 +27,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ sku, isOpen,
         availableColors,
         availableSizes,
         currentVariant
-    } = useItemOptions(item, options);
+    } = useItemOptions(item, options, effectiveLists);
 
     const [quantity, setQuantity] = useState(1);
     const [isMobileLayout, setIsMobileLayout] = useState(() =>
@@ -41,22 +41,19 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ sku, isOpen,
 
     const maxQty = useMemo(() => {
         if (!item) return 0;
-        if (options.length > 0) {
-            if (currentVariant && selectedSize && (availableColors.length === 0 || selectedColor)) {
-                return currentVariant.stock_level;
-            }
-            return item.total_stock ?? item.stock_quantity ?? 0;
+        if (currentVariant) {
+            return Number(currentVariant.stock_level || 0);
         }
         return item.total_stock ?? item.stock_quantity ?? 0;
-    }, [item, options, currentVariant, selectedSize, selectedColor, availableColors]);
+    }, [item, currentVariant]);
 
     const handleAddToCart = () => {
         if (!item) return;
         addToCart(quantity, {
-            gender: selectedGender,
-            color_id: selectedColor,
-            size_code: selectedSize,
-            price_adjustment: currentVariant?.price_adjustment
+            optionGender: selectedGender,
+            option_color: selectedColor,
+            option_size: selectedSize,
+            price_adjustment: Number(currentVariant?.price_adjustment || 0)
         });
         onClose();
     };

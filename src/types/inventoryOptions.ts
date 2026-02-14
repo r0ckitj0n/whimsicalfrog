@@ -1,4 +1,4 @@
-export type InventoryOptionType = 'size_template' | 'color_template' | 'material';
+export type InventoryOptionType = 'size_template' | 'color_template' | 'gender_template' | 'material';
 
 export type InventoryOptionAppliesToType = 'category' | 'sku';
 

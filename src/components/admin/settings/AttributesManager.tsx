@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { useAttributesManager, TabId, ISizeTemplate, IColorTemplate } from '../../../hooks/admin/useAttributesManager.js';
+import { useAttributesManager, TabId, ISizeTemplate, IColorTemplate, IGenderTemplate } from '../../../hooks/admin/useAttributesManager.js';
 import { ApiClient } from '../../../core/ApiClient.js';
 import { AUTH } from '../../../core/constants.js';
 import type { ISanmarColorsImportResponse } from '../../../types/sanmar.js';
@@ -12,11 +12,13 @@ import { GlobalColorsTab } from './attributes/GlobalColorsTab.js';
 import { GlobalSizesTab } from './attributes/GlobalSizesTab.js';
 import { SizeTemplatesTab } from './attributes/SizeTemplatesTab.js';
 import { ColorTemplatesTab } from './attributes/ColorTemplatesTab.js';
+import { GenderTemplatesTab } from './attributes/GenderTemplatesTab.js';
 import { SizeColorRedesign } from './attributes/SizeColorRedesign.js';
 import { OptionAssignmentsTab } from './attributes/OptionAssignmentsTab.js';
 import { MaterialsTab } from './attributes/MaterialsTab.js';
 import { CascadeTab } from './attributes/CascadeTab.js';
 import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
+import { GenderTemplateEditor } from './attributes/GenderTemplateEditor.js';
 
 interface AttributesManagerProps {
     onClose?: () => void;
@@ -30,6 +32,7 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
         genders,
         sizeTemplates,
         colorTemplates,
+        genderTemplates,
         cascadeConfigs,
         materials,
         optionLinks,
@@ -46,15 +49,21 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
         setEditingColor,
         localColor,
         setLocalColor,
+        editingGenderTemplate,
+        setEditingGenderTemplate,
+        localGenderTemplate,
+        setLocalGenderTemplate,
         isRedesignOpen,
         setIsRedesignOpen,
         isDirty,
         fetchAll,
         handleDuplicateSize,
         handleDuplicateColor,
+        handleDuplicateGenderTemplate,
         handleDeleteGender,
         handleDeleteSizeTemplate,
         handleDeleteColorTemplate,
+        handleDeleteGenderTemplate,
         handleDeleteGlobalColor,
         handleDeleteGlobalSize,
         handleAddGlobalColor,
@@ -63,6 +72,7 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
         handleAddGender,
         handleEditSize,
         handleEditColor,
+        handleEditGenderTemplate,
         handleOpenSizeColorRedesign,
         handleSaveTemplate,
         addLink,
@@ -104,6 +114,7 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
         { id: 'assignments', label: 'Assignments' },
         { id: 'cascade', label: 'Cascade' },
         { id: 'colors', label: 'Color Templates' },
+        { id: 'gender-templates', label: 'Gender Templates' },
         { id: 'global-colors', label: 'Colors' },
         { id: 'genders', label: 'Genders' },
         { id: 'materials', label: 'Materials' },
@@ -158,7 +169,7 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {activeTab === 'global-colors' && !editingColor && !editingSize && (
+                        {activeTab === 'global-colors' && !editingColor && !editingSize && !editingGenderTemplate && (
                             <button
                                 type="button"
                                 onClick={() => { void runSanmarImport(); }}
@@ -168,7 +179,7 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
                                 Import Sanmar
                             </button>
                         )}
-                        {(editingSize || editingColor) && (
+                        {(editingSize || editingColor || editingGenderTemplate) && (
                             <button
                                 onClick={handleSaveTemplate}
                                 disabled={isLoading || !isDirty}
@@ -232,6 +243,26 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
                                 onSave={handleSaveTemplate}
                             />
                         </div>
+                    ) : editingGenderTemplate ? (
+                        <div className="flex-1 overflow-y-auto p-10 space-y-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">
+                                    {editingGenderTemplate.id ? 'Edit Gender Template' : 'New Gender Template'}
+                                </h3>
+                                <button
+                                    onClick={() => { setEditingGenderTemplate(null); setLocalGenderTemplate(null); }}
+                                    className="admin-action-btn btn-icon--close"
+                                    data-help-id="attributes-cancel-edit"
+                                />
+                            </div>
+                            <GenderTemplateEditor
+                                template={localGenderTemplate || editingGenderTemplate}
+                                globalGenders={genders}
+                                onChange={(t) => setLocalGenderTemplate(t)}
+                                onCancel={() => { setEditingGenderTemplate(null); setLocalGenderTemplate(null); }}
+                                onSave={handleSaveTemplate}
+                            />
+                        </div>
                     ) : (
                         <>
                             <div className="flex-1 overflow-y-auto p-10">
@@ -264,6 +295,7 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
                                         <OptionAssignmentsTab
                                             sizeTemplates={sizeTemplates}
                                             colorTemplates={colorTemplates}
+                                            genderTemplates={genderTemplates}
                                             links={optionLinks}
                                             categories={categories}
                                             isBusy={isLoading}
@@ -309,6 +341,20 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
                                             onDuplicate={handleDuplicateColor}
                                             onDelete={handleDeleteColorTemplate}
                                             onOpenRedesign={handleOpenSizeColorRedesign}
+                                        />
+                                    )}
+                                    {activeTab === 'gender-templates' && (
+                                        <GenderTemplatesTab
+                                            templates={genderTemplates}
+                                            links={optionLinks}
+                                            onAdd={() => {
+                                                const empty: Partial<IGenderTemplate> = { template_name: '', genders: [] };
+                                                setEditingGenderTemplate(empty as IGenderTemplate);
+                                                setLocalGenderTemplate(empty as IGenderTemplate);
+                                            }}
+                                            onEdit={handleEditGenderTemplate}
+                                            onDuplicate={handleDuplicateGenderTemplate}
+                                            onDelete={handleDeleteGenderTemplate}
                                         />
                                     )}
                                     {activeTab === 'materials' && (

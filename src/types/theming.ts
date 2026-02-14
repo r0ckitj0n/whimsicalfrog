@@ -149,6 +149,25 @@ export interface IGlobalGender {
     display_order: number;
 }
 
+// Gender Template Types
+export interface IGenderTemplateItem {
+    id?: number;
+    template_id?: number;
+    gender_name: string;
+    display_order: number;
+    is_active?: boolean;
+}
+
+export interface IGenderTemplate {
+    id: number;
+    template_name: string;
+    description?: string;
+    category?: string;
+    is_active: boolean;
+    gender_count?: number;
+    genders?: IGenderTemplateItem[];
+}
+
 // Color Template Types (migrated from useColorTemplates.ts)
 export interface IColorTemplateItem {
     id?: number;
@@ -216,4 +235,3 @@ export interface IGlobalEntitiesResponse<T> {
     templates?: T;
     error?: string;
 }
-

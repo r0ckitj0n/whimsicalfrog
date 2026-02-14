@@ -48,6 +48,39 @@ SQL;
     $db->exec($sql);
 }
 
+function ensure_gender_templates_tables(PDO $db): void
+{
+    // This API reads gender_templates for option labels. Ensure tables exist to avoid 500s.
+    $db->exec(<<<SQL
+CREATE TABLE IF NOT EXISTS gender_templates (
+  id INT NOT NULL AUTO_INCREMENT,
+  template_name VARCHAR(100) NOT NULL,
+  description TEXT NULL,
+  category VARCHAR(128) NOT NULL DEFAULT 'General',
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uniq_template_name (template_name),
+  KEY idx_active_cat (is_active, category, template_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+SQL);
+
+    $db->exec(<<<SQL
+CREATE TABLE IF NOT EXISTS gender_template_items (
+  id INT NOT NULL AUTO_INCREMENT,
+  template_id INT NOT NULL,
+  gender_name VARCHAR(64) NOT NULL,
+  display_order INT NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_tpl (template_id, is_active, display_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+SQL);
+}
+
 function ensure_inventory_option_links_table(PDO $db): void
 {
     $sql = <<<SQL
@@ -83,7 +116,7 @@ SQL;
 function normalize_option_type(string $t): string
 {
     $t = strtolower(trim($t));
-    if ($t === 'size_template' || $t === 'color_template' || $t === 'material') {
+    if ($t === 'size_template' || $t === 'color_template' || $t === 'gender_template' || $t === 'material') {
         return $t;
     }
     return '';
@@ -101,6 +134,7 @@ function normalize_applies_to_type(string $t): string
 try {
     $db = Database::getInstance();
     ensure_materials_table($db);
+    ensure_gender_templates_tables($db);
     ensure_inventory_option_links_table($db);
 
     $input = json_decode(file_get_contents('php://input'), true) ?? [];
@@ -113,6 +147,7 @@ try {
                         CASE
                           WHEN l.option_type = 'size_template' THEN (SELECT template_name FROM size_templates st WHERE st.id = l.option_id LIMIT 1)
                           WHEN l.option_type = 'color_template' THEN (SELECT template_name FROM color_templates ct WHERE ct.id = l.option_id LIMIT 1)
+                          WHEN l.option_type = 'gender_template' THEN (SELECT template_name FROM gender_templates gt WHERE gt.id = l.option_id LIMIT 1)
                           WHEN l.option_type = 'material' THEN (SELECT material_name FROM materials m WHERE m.id = l.option_id LIMIT 1)
                           ELSE NULL
                         END AS option_label,
@@ -160,6 +195,7 @@ try {
                         CASE
                           WHEN l.option_type = 'size_template' THEN (SELECT template_name FROM size_templates st WHERE st.id = l.option_id LIMIT 1)
                           WHEN l.option_type = 'color_template' THEN (SELECT template_name FROM color_templates ct WHERE ct.id = l.option_id LIMIT 1)
+                          WHEN l.option_type = 'gender_template' THEN (SELECT template_name FROM gender_templates gt WHERE gt.id = l.option_id LIMIT 1)
                           WHEN l.option_type = 'material' THEN (SELECT material_name FROM materials m WHERE m.id = l.option_id LIMIT 1)
                           ELSE NULL
                         END AS option_label,

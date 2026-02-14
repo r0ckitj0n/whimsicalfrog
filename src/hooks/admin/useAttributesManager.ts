@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useModalContext } from '../../context/ModalContext.js';
-import { useGlobalEntities, ISizeTemplate, IColorTemplate } from './useGlobalEntities.js';
+import { useGlobalEntities, ISizeTemplate, IColorTemplate, IGenderTemplate } from './useGlobalEntities.js';
 import { useInventoryOptionLinks } from './useInventoryOptionLinks.js';
 import { useMaterials } from './useMaterials.js';
 import { useCategoryList } from './useCategoryList.js';
 import { useOptionCascadeConfigs } from './useOptionCascadeConfigs.js';
 import type { InventoryOptionType, InventoryOptionAppliesToType } from '../../types/inventoryOptions.js';
 
-export type { ISizeTemplate, IColorTemplate };
+export type { ISizeTemplate, IColorTemplate, IGenderTemplate };
 
-export type TabId = 'assignments' | 'cascade' | 'colors' | 'genders' | 'global-colors' | 'global-sizes' | 'materials' | 'sizes';
+export type TabId = 'assignments' | 'cascade' | 'colors' | 'genders' | 'gender-templates' | 'global-colors' | 'global-sizes' | 'materials' | 'sizes';
 
 export const useAttributesManager = () => {
     const {
@@ -18,14 +18,17 @@ export const useAttributesManager = () => {
         genders,
         sizeTemplates,
         colorTemplates,
+        genderTemplates,
         isLoading,
         error,
         fetchAll,
         fetchSizeTemplate,
         fetchColorTemplate,
+        fetchGenderTemplate,
         deleteGender,
         deleteSizeTemplate,
         deleteColorTemplate,
+        deleteGenderTemplate,
         saveGender,
         saveColor,
         deleteColor,
@@ -33,8 +36,10 @@ export const useAttributesManager = () => {
         deleteSize,
         saveSizeTemplate,
         saveColorTemplate,
+        saveGenderTemplate,
         duplicateSizeTemplate,
-        duplicateColorTemplate
+        duplicateColorTemplate,
+        duplicateGenderTemplate
     } = useGlobalEntities();
 
     const linksApi = useInventoryOptionLinks();
@@ -48,6 +53,8 @@ export const useAttributesManager = () => {
     const [localSize, setLocalSize] = useState<ISizeTemplate | null>(null);
     const [editingColor, setEditingColor] = useState<IColorTemplate | null>(null);
     const [localColor, setLocalColor] = useState<IColorTemplate | null>(null);
+    const [editingGenderTemplate, setEditingGenderTemplate] = useState<IGenderTemplate | null>(null);
+    const [localGenderTemplate, setLocalGenderTemplate] = useState<IGenderTemplate | null>(null);
     const [isRedesignOpen, setIsRedesignOpen] = useState(false);
 
     useEffect(() => {
@@ -66,6 +73,11 @@ export const useAttributesManager = () => {
         const success = await duplicateColorTemplate(id);
         if (success && window.WFToast) window.WFToast.success('Color template duplicated');
     }, [duplicateColorTemplate]);
+
+    const handleDuplicateGenderTemplate = useCallback(async (id: number) => {
+        const success = await duplicateGenderTemplate(id);
+        if (success && window.WFToast) window.WFToast.success('Gender template duplicated');
+    }, [duplicateGenderTemplate]);
 
     const handleDeleteGender = useCallback(async (id: number, name: string) => {
         const confirmed = await themedConfirm({
@@ -111,6 +123,21 @@ export const useAttributesManager = () => {
             if (success && window.WFToast) window.WFToast.success('Color template deleted');
         }
     }, [themedConfirm, deleteColorTemplate]);
+
+    const handleDeleteGenderTemplate = useCallback(async (id: number, name: string) => {
+        const confirmed = await themedConfirm({
+            title: 'Delete Gender Template',
+            message: `Delete gender template "${name}"?`,
+            confirmText: 'Delete Now',
+            confirmStyle: 'danger',
+            iconKey: 'delete'
+        });
+
+        if (confirmed) {
+            const success = await deleteGenderTemplate(id);
+            if (success && window.WFToast) window.WFToast.success('Gender template deleted');
+        }
+    }, [themedConfirm, deleteGenderTemplate]);
 
     const handleDeleteGlobalColor = useCallback(async (id: number, name: string) => {
         const confirmed = await themedConfirm({
@@ -217,7 +244,12 @@ export const useAttributesManager = () => {
         if (template) setEditingColor(template);
     }, [fetchColorTemplate]);
 
-    const syncTemplateCategoryLink = useCallback(async (option_type: 'color_template' | 'size_template', option_id: number, categoryLabel?: string | null) => {
+    const handleEditGenderTemplate = useCallback(async (id: number) => {
+        const template = await fetchGenderTemplate(id);
+        if (template) setEditingGenderTemplate(template);
+    }, [fetchGenderTemplate]);
+
+    const syncTemplateCategoryLink = useCallback(async (option_type: 'color_template' | 'size_template' | 'gender_template', option_id: number, categoryLabel?: string | null) => {
         if (!option_id) return { changed: false as const };
         const raw = String(categoryLabel || '').trim();
         if (!raw) return { changed: false as const };
@@ -292,15 +324,33 @@ export const useAttributesManager = () => {
                 window.WFToast.error(res?.message || 'Failed to save color template');
                 return false;
             }
+        } else if (localGenderTemplate) {
+            const res = await saveGenderTemplate(localGenderTemplate);
+            if (res?.success) {
+                const templateId = Number((res as any)?.template_id || localGenderTemplate.id || 0);
+                const linkRes = await syncTemplateCategoryLink('gender_template', templateId, localGenderTemplate.category);
+                if ((linkRes as any)?.skippedBecauseMultiple) {
+                    window.WFToast?.info('This template is assigned to multiple categories; manage assignments in the Assignments tab.');
+                }
+
+                setEditingGenderTemplate(null);
+                setLocalGenderTemplate(null);
+                if (window.WFToast) window.WFToast.success('Gender template saved');
+                return true;
+            } else if (window.WFToast) {
+                window.WFToast.error(res?.message || 'Failed to save gender template');
+                return false;
+            }
         }
         return false;
-    }, [localSize, localColor, saveSizeTemplate, saveColorTemplate, syncTemplateCategoryLink]);
+    }, [localSize, localColor, localGenderTemplate, saveSizeTemplate, saveColorTemplate, saveGenderTemplate, syncTemplateCategoryLink]);
 
     const isDirty = useMemo(() => {
         if (localSize && editingSize) return JSON.stringify(localSize) !== JSON.stringify(editingSize);
         if (localColor && editingColor) return JSON.stringify(localColor) !== JSON.stringify(editingColor);
+        if (localGenderTemplate && editingGenderTemplate) return JSON.stringify(localGenderTemplate) !== JSON.stringify(editingGenderTemplate);
         return false;
-    }, [localSize, editingSize, localColor, editingColor]);
+    }, [localSize, editingSize, localColor, editingColor, localGenderTemplate, editingGenderTemplate]);
 
     const handleOpenSizeColorRedesign = useCallback(() => {
         setIsRedesignOpen(true);
@@ -330,6 +380,7 @@ export const useAttributesManager = () => {
         genders,
         sizeTemplates,
         colorTemplates,
+        genderTemplates,
         cascadeConfigs: cascadeApi.configs,
         materials: materialsApi.materials,
         optionLinks: linksApi.links,
@@ -346,15 +397,21 @@ export const useAttributesManager = () => {
         setEditingColor,
         localColor,
         setLocalColor,
+        editingGenderTemplate,
+        setEditingGenderTemplate,
+        localGenderTemplate,
+        setLocalGenderTemplate,
         isRedesignOpen,
         setIsRedesignOpen,
         isDirty,
         fetchAll,
         handleDuplicateSize,
         handleDuplicateColor,
+        handleDuplicateGenderTemplate,
         handleDeleteGender,
         handleDeleteSizeTemplate,
         handleDeleteColorTemplate,
+        handleDeleteGenderTemplate,
         handleDeleteGlobalColor,
         handleDeleteGlobalSize,
         handleAddGlobalColor,
@@ -362,6 +419,7 @@ export const useAttributesManager = () => {
         handleAddGender,
         handleEditSize,
         handleEditColor,
+        handleEditGenderTemplate,
         handleOpenSizeColorRedesign,
         handleSaveTemplate,
         addLink,

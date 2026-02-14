@@ -14,6 +14,7 @@ type PendingAdd = {
 interface OptionAssignmentsTabProps {
     sizeTemplates: ISizeTemplate[];
     colorTemplates: IColorTemplate[];
+    genderTemplates: Array<{ id: number; template_name: string }>;
     links: IInventoryOptionLink[];
     categories: ICategoryLite[];
     isBusy?: boolean;
@@ -26,6 +27,7 @@ interface OptionAssignmentsTabProps {
 export const OptionAssignmentsTab: React.FC<OptionAssignmentsTabProps> = ({
     sizeTemplates,
     colorTemplates,
+    genderTemplates,
     links,
     categories,
     isBusy = false,
@@ -35,6 +37,7 @@ export const OptionAssignmentsTab: React.FC<OptionAssignmentsTabProps> = ({
     const [categoryFilter, setCategoryFilter] = useState('');
     const [addColorByCategory, setAddColorByCategory] = useState<Record<number, number>>({});
     const [addSizeByCategory, setAddSizeByCategory] = useState<Record<number, number>>({});
+    const [addGenderByCategory, setAddGenderByCategory] = useState<Record<number, number>>({});
 
     const sortedCategories = useMemo(() => {
         const q = categoryFilter.trim().toLowerCase();
@@ -51,21 +54,27 @@ export const OptionAssignmentsTab: React.FC<OptionAssignmentsTabProps> = ({
         return [...(sizeTemplates || [])].sort((a, b) => (a.template_name || '').localeCompare((b.template_name || ''), undefined, { sensitivity: 'base' }));
     }, [sizeTemplates]);
 
+    const sortedGenderTemplates = useMemo(() => {
+        return [...(genderTemplates || [])].sort((a, b) => (a.template_name || '').localeCompare((b.template_name || ''), undefined, { sensitivity: 'base' }));
+    }, [genderTemplates]);
+
     const categoryTemplateLinks = useMemo(() => {
-        const byCat = new Map<number, { color: IInventoryOptionLink[]; size: IInventoryOptionLink[] }>();
+        const byCat = new Map<number, { color: IInventoryOptionLink[]; size: IInventoryOptionLink[]; gender: IInventoryOptionLink[] }>();
         (links || []).forEach((l) => {
             if (l.applies_to_type !== 'category') return;
             const catId = Number(l.category_id || 0);
             if (!catId) return;
-            if (l.option_type !== 'color_template' && l.option_type !== 'size_template') return;
-            const cur = byCat.get(catId) || { color: [], size: [] };
+            if (l.option_type !== 'color_template' && l.option_type !== 'size_template' && l.option_type !== 'gender_template') return;
+            const cur = byCat.get(catId) || { color: [], size: [], gender: [] };
             if (l.option_type === 'color_template') cur.color.push(l);
             if (l.option_type === 'size_template') cur.size.push(l);
+            if (l.option_type === 'gender_template') cur.gender.push(l);
             byCat.set(catId, cur);
         });
         byCat.forEach((v, k) => {
             v.color.sort((a, b) => (a.option_label || '').localeCompare((b.option_label || ''), undefined, { sensitivity: 'base' }));
             v.size.sort((a, b) => (a.option_label || '').localeCompare((b.option_label || ''), undefined, { sensitivity: 'base' }));
+            v.gender.sort((a, b) => (a.option_label || '').localeCompare((b.option_label || ''), undefined, { sensitivity: 'base' }));
             byCat.set(k, v);
         });
         return byCat;
@@ -74,13 +83,15 @@ export const OptionAssignmentsTab: React.FC<OptionAssignmentsTabProps> = ({
     const skuLinkCount = useMemo(() => {
         return (links || []).filter((l) =>
             l.applies_to_type === 'sku'
-            && (l.option_type === 'color_template' || l.option_type === 'size_template')
+            && (l.option_type === 'color_template' || l.option_type === 'size_template' || l.option_type === 'gender_template')
         ).length;
     }, [links]);
 
-    const addTemplateToCategory = async (category_id: number, option_type: 'color_template' | 'size_template', option_id: number) => {
+    const addTemplateToCategory = async (category_id: number, option_type: 'color_template' | 'size_template' | 'gender_template', option_id: number) => {
         const existing = categoryTemplateLinks.get(category_id);
-        const list = existing?.[option_type === 'color_template' ? 'color' : 'size'] || [];
+        const list = existing?.[
+            option_type === 'color_template' ? 'color' : option_type === 'size_template' ? 'size' : 'gender'
+        ] || [];
         const already = list.some((l) => l.option_id === option_id);
         if (already) {
             window.WFToast?.info('Already assigned');
@@ -123,9 +134,10 @@ export const OptionAssignmentsTab: React.FC<OptionAssignmentsTabProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {sortedCategories.map((cat) => {
-                    const cur = categoryTemplateLinks.get(cat.id) || { color: [], size: [] };
+                    const cur = categoryTemplateLinks.get(cat.id) || { color: [], size: [], gender: [] };
                     const selectedColor = addColorByCategory[cat.id] || 0;
                     const selectedSize = addSizeByCategory[cat.id] || 0;
+                    const selectedGender = addGenderByCategory[cat.id] || 0;
 
                     return (
                         <div key={cat.id} className="p-4 border rounded-2xl bg-white shadow-sm space-y-3">
@@ -216,6 +228,47 @@ export const OptionAssignmentsTab: React.FC<OptionAssignmentsTabProps> = ({
                                         </button>
                                     </div>
                                 </div>
+
+                                <div>
+                                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Gender Templates</div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {cur.gender.length === 0 && <span className="text-xs text-slate-500">None</span>}
+                                        {cur.gender.map((l) => (
+                                            <span key={l.id} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700">
+                                                <span className="truncate max-w-[220px]">{l.option_label || `#${l.option_id}`}</span>
+                                                <button
+                                                    type="button"
+                                                    className="admin-action-btn btn-icon--close !w-6 !h-6 !min-w-6 !min-h-6 !text-xs"
+                                                    disabled={isBusy}
+                                                    onClick={() => { void deleteLinkWithToast(l.id); }}
+                                                    data-help-id="inventory-options-delete-link"
+                                                />
+                                            </span>
+                                        ))}
+                                    </div>
+
+                                    <div className="mt-2 flex gap-2">
+                                        <select
+                                            className="form-input w-full text-sm"
+                                            value={String(selectedGender || '')}
+                                            disabled={isBusy}
+                                            onChange={(e) => setAddGenderByCategory((prev) => ({ ...prev, [cat.id]: Number(e.target.value || 0) }))}
+                                        >
+                                            <option value="">Select template...</option>
+                                            {sortedGenderTemplates.map((t) => (
+                                                <option key={t.id} value={String(t.id)}>{t.template_name}</option>
+                                            ))}
+                                        </select>
+                                        <button
+                                            type="button"
+                                            className="btn btn-primary px-3 py-2"
+                                            disabled={isBusy || !selectedGender}
+                                            onClick={() => { void addTemplateToCategory(cat.id, 'gender_template', selectedGender); }}
+                                        >
+                                            Add
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     );
@@ -224,4 +277,3 @@ export const OptionAssignmentsTab: React.FC<OptionAssignmentsTabProps> = ({
         </div>
     );
 };
-

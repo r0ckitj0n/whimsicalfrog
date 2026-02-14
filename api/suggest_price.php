@@ -9,6 +9,7 @@ require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/../includes/ai_manager.php';
 require_once __DIR__ . '/../includes/ai/helpers/PricingHeuristics.php';
 require_once __DIR__ . '/../includes/ai/helpers/TierScalingHelper.php';
+require_once __DIR__ . '/../includes/ai/helpers/AICostEventStore.php';
 
 AuthHelper::requireAdmin();
 
@@ -169,6 +170,38 @@ try {
             ]);
         } catch (PDOException $e) {
             error_log("Error saving price suggestion: " . $e->getMessage());
+        }
+    }
+
+    // Record job-based cost for this completed AI run (used for reporting and to keep pricing rates warm).
+    // Skip when heuristic fallback was used (no external AI call).
+    if ($fallbackKind !== 'heuristic') {
+        try {
+            $settings = is_object($aiProviders) ? ($aiProviders->getSettings() ?? []) : [];
+            $pm = AICostEventStore::resolveProviderAndModelFromSettings(is_array($settings) ? $settings : []);
+
+            // If a local provider fallback was used, don't record external-cost events.
+            if (!$fallbackUsed) {
+                $textJobs = (!empty($images) && $useImages) ? 0 : 1;
+                $analysisJobs = (!empty($images) && $useImages) ? 1 : 0; // single multimodal call
+                AICostEventStore::logEvent([
+                    'endpoint' => 'suggest_price.php',
+                    'step' => 'generate_price',
+                    'provider' => (string) ($pm['provider'] ?? 'default'),
+                    'model' => (string) ($pm['model'] ?? 'default-model'),
+                    'sku' => $sku !== '' ? $sku : null,
+                    'text_jobs' => $textJobs,
+                    'image_analysis_jobs' => $analysisJobs,
+                    'image_creation_jobs' => 0,
+                    'request_meta' => [
+                        'quality_tier' => $qualityTier,
+                        'use_images' => (bool) $useImages,
+                        'image_count' => is_array($images) ? count($images) : 0,
+                    ]
+                ]);
+            }
+        } catch (Throwable $e) {
+            error_log('Failed to log AI cost event for suggest_price: ' . $e->getMessage());
         }
     }
 

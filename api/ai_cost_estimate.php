@@ -292,6 +292,11 @@ try {
     $expectedTotal = 0.0;
     $minTotal = 0.0;
     $maxTotal = 0.0;
+    $totalJobCounts = [
+        AIPricingStore::JOB_TEXT_GENERATION => 0,
+        AIPricingStore::JOB_IMAGE_ANALYSIS => 0,
+        AIPricingStore::JOB_IMAGE_CREATION => 0,
+    ];
 
     foreach ($ops as $op) {
         $imageCount = max(0, (int) ($op['image_count'] ?? 0));
@@ -301,6 +306,10 @@ try {
         $textJobs = (int) ($jobs[AIPricingStore::JOB_TEXT_GENERATION] ?? 0);
         $analysisJobs = (int) ($jobs[AIPricingStore::JOB_IMAGE_ANALYSIS] ?? 0);
         $creationJobs = (int) ($jobs[AIPricingStore::JOB_IMAGE_CREATION] ?? 0);
+
+        $totalJobCounts[AIPricingStore::JOB_TEXT_GENERATION] += $textJobs;
+        $totalJobCounts[AIPricingStore::JOB_IMAGE_ANALYSIS] += $analysisJobs;
+        $totalJobCounts[AIPricingStore::JOB_IMAGE_CREATION] += $creationJobs;
 
         $expectedCents = ($textJobs * $textRate) + ($analysisJobs * $analysisRate) + ($creationJobs * $creationRate);
         $expected = round($expectedCents / 100, 6);
@@ -330,17 +339,31 @@ try {
         ];
     }
 
+    // Only consider fallback pricing "in effect" if a job type with fallback source
+    // is actually used by this action (job count > 0). This prevents confusing warnings
+    // like "fallback image_analysis" when the estimate uses a0.
+    $fallbackSources = ['fallback', 'fallback_default', 'fallback_manual'];
+    $usedFallbackReasons = [];
+    foreach ($totalJobCounts as $jt => $count) {
+        if ($count <= 0) continue;
+        $rate = $ratesByJob[$jt] ?? null;
+        $src = is_array($rate) ? strtolower(trim((string) ($rate['source'] ?? ''))) : '';
+        if (in_array($src, $fallbackSources, true)) {
+            $note = is_array($rate) ? trim((string) ($rate['note'] ?? '')) : '';
+            $usedFallbackReasons[] = $note !== '' ? $note : "Fallback pricing: stored rate marked as fallback for {$provider}/{$jt}.";
+        }
+    }
+    $usedFallbackReasons = array_values(array_unique(array_filter(array_map('strval', $usedFallbackReasons))));
+    $isFallbackForThisEstimate = !empty($usedFallbackReasons);
+    $fallbackNoteForThisEstimate = $isFallbackForThisEstimate ? ('Fallback pricing in effect: ' . $usedFallbackReasons[0]) : '';
+
     $assumptions = [];
     $assumptions[] = 'Estimate uses weekly stored per-job pricing (text generation / image analysis / image creation).';
     $assumptions[] = 'Includes the operations requested by this action and sums costs across all jobs.';
     $assumptions[] = 'Does not include extra cost from retries, provider-side token accounting, or model-specific pricing differences.';
-    if (!empty($pricing['is_fallback'])) {
-        $fallbackReasons = (array) ($pricing['fallback_reasons'] ?? []);
-        $fallbackReasons = array_values(array_filter(array_map('strval', $fallbackReasons)));
-        $assumptions[] = (string) ($pricing['fallback_note'] ?? 'Fallback pricing was used for at least one job type.');
-        if (!empty($fallbackReasons)) {
-            $assumptions[] = 'Fallback reason(s): ' . implode(' | ', array_slice($fallbackReasons, 0, 4));
-        }
+    if ($isFallbackForThisEstimate) {
+        $assumptions[] = $fallbackNoteForThisEstimate;
+        $assumptions[] = 'Fallback reason(s): ' . implode(' | ', array_slice($usedFallbackReasons, 0, 4));
     }
 
     Response::json([
@@ -354,9 +377,9 @@ try {
                 'week_start' => (string) ($pricing['week_start'] ?? ''),
                 'provider' => (string) ($pricing['provider'] ?? $provider),
                 'rates' => array_values((array) ($pricing['rates'] ?? [])),
-                'is_fallback_pricing' => !empty($pricing['is_fallback']),
-                'fallback_note' => (string) ($pricing['fallback_note'] ?? ''),
-                'fallback_reasons' => array_values(array_filter(array_map('strval', (array) ($pricing['fallback_reasons'] ?? []))))
+                'is_fallback_pricing' => $isFallbackForThisEstimate,
+                'fallback_note' => $fallbackNoteForThisEstimate,
+                'fallback_reasons' => $usedFallbackReasons
             ],
             'expected_cost' => round($expectedTotal, 6),
             'min_cost' => round($minTotal, 6),

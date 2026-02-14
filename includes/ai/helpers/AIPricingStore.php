@@ -29,6 +29,10 @@ class AIPricingStore
         self::JOB_IMAGE_ANALYSIS => 2,
     ];
 
+    // "Seeded" default rates are used when a provider/job_type has no historic rates at all.
+    // They are not treated as fallback pricing, but they do carry a note to prompt later tuning.
+    private const SEEDED_SOURCE = 'seeded_default';
+
     /**
      * @return array{
      *   week_start:string,
@@ -70,6 +74,15 @@ class AIPricingStore
             $currency = (string)($row['currency'] ?? 'USD');
             $source = (string)($row['source'] ?? 'stored');
             $note = (string)($row['note'] ?? '');
+            // Old rows may have been inserted as "fallback" even though they just represent
+            // a seeded default due to missing history. Treat those as seeded defaults so the
+            // UI doesn't warn about "fallback pricing" forever.
+            if (self::shouldTreatFallbackAsSeededDefault($source, $note)) {
+                $source = self::SEEDED_SOURCE;
+                $note = "Default pricing: no stored price available for {$provider}/{$jt}. Seeded default rate.";
+                // Normalize the stored row so future reads are consistent.
+                self::upsertRate($weekStart, $provider, $jt, $cents, $currency, $source, $note);
+            }
             $rates[$jt] = [
                 'job_type' => $jt,
                 'unit_cost_cents' => $cents,
@@ -117,20 +130,19 @@ class AIPricingStore
                 continue;
             }
 
-            // No stored price available at all -> fallback.
+            // No stored price available at all -> seed a default rate.
             $fallbackCents = (int)(self::FALLBACK_CENTS[$jobType] ?? 0);
-            $note = "Fallback pricing: no stored price available for {$provider}/{$jobType}.";
-            self::upsertRate($weekStart, $provider, $jobType, $fallbackCents, 'USD', 'fallback', $note);
+            $note = "Default pricing: no stored price available for {$provider}/{$jobType}. Seeded default rate.";
+            self::upsertRate($weekStart, $provider, $jobType, $fallbackCents, 'USD', self::SEEDED_SOURCE, $note);
             $rates[$jobType] = [
                 'job_type' => $jobType,
                 'unit_cost_cents' => $fallbackCents,
                 'unit_cost_usd' => round($fallbackCents / 100, 4),
                 'currency' => 'USD',
-                'source' => 'fallback',
+                'source' => self::SEEDED_SOURCE,
                 'note' => $note,
             ];
-            $anyFallback = true;
-            $fallbackReasons[] = $note;
+            // Seeded defaults are not treated as fallback pricing.
         }
 
         if ($anyFallback) {
@@ -185,6 +197,9 @@ class AIPricingStore
             $currency = (string)($row['currency'] ?? 'USD');
             $source = (string)($row['source'] ?? 'stored');
             $note = (string)($row['note'] ?? '');
+            if (self::shouldTreatFallbackAsSeededDefault($source, $note)) {
+                $source = self::SEEDED_SOURCE;
+            }
             $rates[$jt] = [
                 'job_type' => $jt,
                 'unit_cost_cents' => $cents,
@@ -219,6 +234,9 @@ class AIPricingStore
                 $currency = (string)($latest['currency'] ?? 'USD');
                 $source = (string)($latest['source'] ?? 'stored_copy');
                 $note = (string)($latest['note'] ?? 'Copied from most recent stored rate.');
+                if (self::shouldTreatFallbackAsSeededDefault($source, $note)) {
+                    $source = self::SEEDED_SOURCE;
+                }
                 $rates[$jobType] = [
                     'job_type' => $jobType,
                     'unit_cost_cents' => $copiedCents,
@@ -235,17 +253,16 @@ class AIPricingStore
             }
 
             $fallbackCents = (int)(self::FALLBACK_CENTS[$jobType] ?? 0);
-            $note = "Fallback pricing: no stored price available for {$provider}/{$jobType}.";
+            $note = "Default pricing: no stored price available for {$provider}/{$jobType}. Seeded default rate.";
             $rates[$jobType] = [
                 'job_type' => $jobType,
                 'unit_cost_cents' => $fallbackCents,
                 'unit_cost_usd' => round($fallbackCents / 100, 4),
                 'currency' => 'USD',
-                'source' => 'fallback',
+                'source' => self::SEEDED_SOURCE,
                 'note' => $note,
             ];
-            $anyFallback = true;
-            $fallbackReasons[] = $note;
+            // Seeded defaults are not treated as fallback pricing.
         }
 
         if ($anyFallback) {
@@ -277,6 +294,21 @@ class AIPricingStore
     {
         $s = strtolower(trim($source));
         return $s === 'fallback' || $s === 'fallback_default' || $s === 'fallback_manual';
+    }
+
+    private static function shouldTreatFallbackAsSeededDefault(string $source, string $note): bool
+    {
+        if (!self::isFallbackSource($source)) {
+            return false;
+        }
+        $n = strtolower(trim($note));
+        if ($n === '') {
+            return false;
+        }
+        // We used to insert "fallback" rows just to represent an initial default seed.
+        // Those shouldn't show as "fallback pricing" forever in the estimate UI.
+        return (strpos($n, 'no stored price available') !== false)
+            || (strpos($n, 'seeded default rate') !== false);
     }
 
     private static function upsertRate(

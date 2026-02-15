@@ -27,6 +27,20 @@ try {
 
     $input = json_decode(file_get_contents('php://input'), true) ?? [];
     $action = $_GET['action'] ?? $_POST['action'] ?? ($input['action'] ?? 'list');
+    $action = is_string($action) ? trim($action) : 'list';
+
+    // Backward/forward compatibility aliases:
+    // Frontend uses generic API_ACTION constants: create/update/delete/list.
+    // This endpoint historically used add_word/update_word/delete_word.
+    $actionAliases = [
+        'create' => 'add_word',
+        'add' => 'add_word',
+        'update' => 'update_word',
+        'delete' => 'delete_word',
+    ];
+    if (isset($actionAliases[$action])) {
+        $action = $actionAliases[$action];
+    }
 
     switch ($action) {
         case 'log_usage':

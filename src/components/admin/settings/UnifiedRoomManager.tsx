@@ -4,7 +4,6 @@ import { useUnifiedRoomManager } from '../../../hooks/admin/useUnifiedRoomManage
 import { TRoomManagerTab } from '../../../types/room.js';
 import { getRoomManagerTabs, RoomSelectPrompt } from './room-manager/RoomManagerConstants.js';
 import { OverviewTab } from './room-manager/tabs/OverviewTab.js';
-import { NavigationTab } from './room-manager/tabs/NavigationTab.js';
 import { ShortcutsTab } from './room-manager/tabs/ShortcutsTab.js';
 import { VisualsTab } from './room-manager/tabs/VisualsTab.js';
 import { CategoriesTab } from './room-manager/tabs/CategoriesTab.js';
@@ -12,6 +11,7 @@ import { BoundariesTab } from './room-manager/tabs/BoundariesTab.js';
 import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 import { useAIImageEdit } from '../../../hooks/admin/useAIImageEdit.js';
 import { useModalContext } from '../../../context/ModalContext.js';
+import { RoomNavigationModal } from '../../modals/admin/settings/RoomNavigationModal.js';
 
 interface UnifiedRoomManagerProps {
     onClose?: () => void;
@@ -24,6 +24,9 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
     initialTab = 'overview',
     title
 }) => {
+    const normalizedInitialTab: TRoomManagerTab = initialTab === 'navigation' ? 'overview' : initialTab;
+    const [isNavigationModalOpen, setIsNavigationModalOpen] = React.useState<boolean>(initialTab === 'navigation');
+
     const {
         activeTab, setActiveTab,
         selectedRoom,
@@ -78,11 +81,15 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
         cancelRoomEdit,
         createRoom,
         getImageUrl
-    } = useUnifiedRoomManager({ onClose, initialTab });
+    } = useUnifiedRoomManager({ onClose, initialTab: normalizedInitialTab });
     const [imageTweakPrompt, setImageTweakPrompt] = React.useState('');
     const { isSubmitting: isSubmittingImageTweak, submitImageEdit } = useAIImageEdit();
     const { confirm } = useModalContext();
     const [isManagingShortcutImages, setIsManagingShortcutImages] = React.useState(false);
+
+    React.useEffect(() => {
+        if (initialTab === 'navigation') setIsNavigationModalOpen(true);
+    }, [initialTab]);
 
     // UI Wrappers to sync local state with roomForm
     const handleBgUrlChange = (val: string) => { setBgUrl(val); if (selectedRoom) setRoomForm(prev => ({ ...prev, background_url: val })); };
@@ -286,7 +293,7 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                             ))}
                         </div>
 
-                        {activeTab !== 'overview' && activeTab !== 'navigation' && activeTab !== 'categories' && (
+                        {activeTab !== 'overview' && activeTab !== 'categories' && (
                             <select
                                 value={selectedRoom}
                                 onChange={e => handleRoomChange(e.target.value)}
@@ -329,6 +336,7 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                             roomForm={roomForm}
                             setRoomForm={setRoomForm}
                             categoriesHook={categoriesHook}
+                            onOpenNavigationModal={() => setIsNavigationModalOpen(true)}
                             onSaveRoom={handleSaveRoom}
                             onDeleteRoom={handleDeleteRoom}
                             onToggleActive={handleToggleActive}
@@ -338,14 +346,6 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                             onCreateRoom={createRoom}
                             onGenerateBackground={handleGenerateBackground}
                             isProtectedRoom={isProtectedRoom}
-                        />
-                    ) : activeTab === 'navigation' ? (
-                        <NavigationTab
-                            connections={connections}
-                            externalLinks={externalLinks}
-                            headerLinks={headerLinks}
-                            isDetecting={isDetecting}
-                            onDetectConnections={handleDetectConnections}
                         />
                     ) : activeTab === 'categories' ? (
                         <div className="h-full flex flex-col min-h-0">
@@ -477,6 +477,16 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                     )}
                 </div>
             </div>
+
+            <RoomNavigationModal
+                isOpen={isNavigationModalOpen}
+                onClose={() => setIsNavigationModalOpen(false)}
+                connections={connections}
+                externalLinks={externalLinks}
+                headerLinks={headerLinks}
+                isDetecting={isDetecting}
+                onDetectConnections={handleDetectConnections}
+            />
 
             {/* Preview Overlay */}
             {preview_image && (

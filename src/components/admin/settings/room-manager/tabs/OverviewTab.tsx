@@ -19,6 +19,7 @@ interface OverviewTabProps {
     roomForm: Partial<IRoomData>;
     setRoomForm: React.Dispatch<React.SetStateAction<Partial<IRoomData>>>;
     categoriesHook: import('../../../../../types/room.js').ICategoriesHook;
+    onOpenNavigationModal: () => void;
     onSaveRoom: () => Promise<void>;
     onDeleteRoom: (roomNumber: string) => Promise<void>;
     onToggleActive: (roomNumber: string, currentActive: boolean | number) => Promise<void>;
@@ -37,6 +38,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
     roomForm,
     setRoomForm,
     categoriesHook,
+    onOpenNavigationModal,
     onSaveRoom,
     onDeleteRoom,
     onToggleActive,
@@ -167,15 +169,25 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             <div className="p-6 overflow-y-auto flex-1">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest">All Rooms</h3>
-                    {!isCreating && !editingRoom && (
+                    <div className="flex items-center gap-3">
                         <button
-                            onClick={() => setIsCreateModalOpen(true)}
-                            className="btn btn-text-primary"
-                            data-help-id="room-create-btn"
+                            type="button"
+                            onClick={onOpenNavigationModal}
+                            className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-secondary)] transition-colors"
+                            data-help-id="room-navigation-open"
                         >
-                            + Create Room
+                            Navigation
                         </button>
-                    )}
+                        {!isCreating && !editingRoom && (
+                            <button
+                                onClick={() => setIsCreateModalOpen(true)}
+                                className="btn btn-text-primary"
+                                data-help-id="room-create-btn"
+                            >
+                                + Create Room
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Rooms Table */}

@@ -17,7 +17,6 @@ export const getRoomManagerTabs = (
     isBoundaryDirty: boolean
 ): ITabDef[] => [
         { id: 'overview', label: 'Overview', icon: '📋', isDirty: isRoomFormDirty },
-        { id: 'navigation', label: 'Navigation', icon: '🔗' },
         { id: 'categories', label: 'Categories', icon: '🏷️' },
         { id: 'visuals', label: 'Backgrounds', icon: '🖼️' },
         { id: 'content', label: 'Shortcuts', icon: '🍱', isDirty: isContentDirty },

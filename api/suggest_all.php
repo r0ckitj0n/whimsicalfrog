@@ -39,6 +39,7 @@ $imageData = $input['imageData'] ?? null;
 $brandVoice = trim($input['brandVoice'] ?? '');
 $contentTone = trim($input['contentTone'] ?? '');
 $whimsicalTheme = isset($input['whimsicalTheme']) ? (bool) $input['whimsicalTheme'] : null;
+$debugThemeWords = !empty($input['debug_theme_words']);
 $step = trim($input['step'] ?? ''); // Step-by-step mode: 'info', 'cost', 'price', 'marketing', or empty for full
 $lockedWords = is_array($input['locked_words'] ?? null) ? $input['locked_words'] : [];
 $imageFirstPriority = array_key_exists('image_first_priority', $input)
@@ -520,7 +521,14 @@ try {
                     $themeInspiration = [];
                     $themeWordTokens = [];
                     if ($themeWordsEnabled && $themeModeRequested && ($themeWordsEnabledName || $themeWordsEnabledDescription)) {
+                        require_once __DIR__ . '/../includes/theme_words/initializer.php';
                         require_once __DIR__ . '/../includes/theme_words/manager.php';
+                        // Ensure schema + seed defaults so theme words are available even on fresh/live DBs.
+                        try {
+                            ensure_theme_words_tables(Database::getInstance());
+                        } catch (Throwable $e) {
+                            error_log('suggest_all.php theme words schema init failed: ' . $e->getMessage());
+                        }
                         $themeInspiration = get_whimsical_inspiration(3);
                         $themeWordTokens = array_values(array_filter(array_map(function ($item) {
                             return is_array($item) ? (string) ($item['text'] ?? '') : '';
@@ -531,8 +539,9 @@ try {
                     $rawDescription = (string) ($bestAnalysis['description'] ?? '');
                     $titleWithTheme = $themeWordsEnabledName ? wf_apply_theme_word_to_title($rawTitle, $themeWordTokens) : $rawTitle;
                     $descriptionWithTheme = $themeWordsEnabledDescription ? wf_apply_theme_word_to_description($rawDescription, $themeWordTokens) : $rawDescription;
+                    $themeApplied = ($rawTitle !== $titleWithTheme) || ($rawDescription !== $descriptionWithTheme);
 
-                    if (!empty($themeInspiration)) {
+                    if (!empty($themeInspiration) && $themeApplied) {
                         // Source = SKU when we have it, otherwise a stable label.
                         log_theme_words_usage($themeInspiration, 'info_suggestion', $sku !== '' ? $sku : 'suggest_all_info');
                     }
@@ -543,7 +552,16 @@ try {
                         'description' => wf_apply_locked_words($descriptionWithTheme, $lockedWords['description'] ?? ''),
                         'category' => wf_apply_locked_words($resolvedCategory, $lockedWords['category'] ?? ''),
                         'confidence' => $bestAnalysis['confidence'] ?? 'medium',
-                        'reasoning' => ($bestAnalysis['reasoning'] ?? '') . $reasoningSuffix
+                        'reasoning' => ($bestAnalysis['reasoning'] ?? '') . $reasoningSuffix,
+                        'theme_words_debug' => $debugThemeWords ? [
+                            'theme_words_enabled' => $themeWordsEnabled,
+                            'theme_mode_requested' => (bool) $themeModeRequested,
+                            'enabled_name' => (bool) $themeWordsEnabledName,
+                            'enabled_description' => (bool) $themeWordsEnabledDescription,
+                            'tokens' => $themeWordTokens,
+                            'applied' => (bool) $themeApplied,
+                            'inspiration' => $themeInspiration,
+                        ] : null,
                     ];
                     // Update local variables for subsequent suggestions (image-first chain).
                     $name = $results['info_suggestion']['name'];

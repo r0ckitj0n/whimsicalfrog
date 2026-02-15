@@ -6,8 +6,19 @@
  * This file delegates functionality to specialized modular helper files.
  */
 
-// Include Vite helper for asset management
-require_once __DIR__ . '/vite_helper.php';
+// Include Vite helper for asset management.
+// APIs don't need it and production deployments may temporarily miss Vite loader files,
+// so avoid pulling it into /api/* requests.
+$__wfReqPath = '';
+try {
+    $__wfReqPath = (string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
+} catch (Throwable $_ignored) {
+    $__wfReqPath = '';
+}
+$__wfIsApiRequest = $__wfReqPath !== '' && preg_match('#^/api/#', $__wfReqPath) === 1;
+if (!$__wfIsApiRequest) {
+    require_once __DIR__ . '/vite_helper.php';
+}
 require_once __DIR__ . '/branding_tokens_helper.php';
 
 // Include modular helper files

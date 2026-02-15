@@ -5,10 +5,51 @@
  * Handles Vite asset loading by delegating to modular components.
  */
 
-require_once __DIR__ . '/vite/ViteConfig.php';
-require_once __DIR__ . '/vite/ViteManifest.php';
-require_once __DIR__ . '/vite/ViteDevLoader.php';
-require_once __DIR__ . '/vite/ViteProdLoader.php';
+// This file is used for page rendering, but historically it has also been pulled
+// into some API endpoints via includes/functions.php. Production deployments can
+// temporarily miss Vite loader files/manifest, so guard against hard fatals.
+
+$__wfViteDir = __DIR__ . '/vite';
+$__wfViteRequired = [
+    $__wfViteDir . '/ViteConfig.php',
+    $__wfViteDir . '/ViteManifest.php',
+    $__wfViteDir . '/ViteDevLoader.php',
+    $__wfViteDir . '/ViteProdLoader.php',
+];
+
+$__wfViteMissing = [];
+foreach ($__wfViteRequired as $__wfVitePath) {
+    if (!is_file($__wfVitePath)) {
+        $__wfViteMissing[] = $__wfVitePath;
+    }
+}
+
+if (!empty($__wfViteMissing)) {
+    if (!function_exists('vite')) {
+        function vite(string $entry): string
+        {
+            return '<!-- vite unavailable (missing Vite modules) -->';
+        }
+    }
+    if (!function_exists('vite_css')) {
+        function vite_css(string $entry): string
+        {
+            return '<!-- vite_css unavailable (missing Vite modules) -->';
+        }
+    }
+    if (!function_exists('vite_entry')) {
+        function vite_entry(string $entry): string
+        {
+            return vite($entry);
+        }
+    }
+    return;
+}
+
+require_once $__wfViteDir . '/ViteConfig.php';
+require_once $__wfViteDir . '/ViteManifest.php';
+require_once $__wfViteDir . '/ViteDevLoader.php';
+require_once $__wfViteDir . '/ViteProdLoader.php';
 
 function vite(string $entry): string
 {

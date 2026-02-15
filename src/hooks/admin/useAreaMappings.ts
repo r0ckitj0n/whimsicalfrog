@@ -20,6 +20,7 @@ import type {
     IShortcutSignAssetsResponse,
     IShortcutSignAssetActionResponse
 } from '../../types/room-shortcuts.js';
+import type { IAreaMappingUpsertResponse } from '../../types/area-mappings.js';
 
 export const useAreaMappings = (): IAreaMappingsHook => {
     const [isLoading, setIsLoading] = useState(false);
@@ -150,12 +151,18 @@ export const useAreaMappings = (): IAreaMappingsHook => {
         try {
             const isEdit = !!mapping.id;
             const action = isEdit ? API_ACTION.UPDATE_MAPPING : API_ACTION.ADD_MAPPING;
-            const res = await ApiClient.post<IMappingsResponse>('/api/area_mappings.php', {
+            const res = await ApiClient.post<IAreaMappingUpsertResponse>('/api/area_mappings.php', {
                 action,
                 ...mapping
             });
 
-            if (res) {
+            if (res?.success) {
+                const updated = res.data?.updated;
+                if (updated === false) {
+                    window.WFToast?.info?.(res.data?.message || 'No changes to save');
+                    return false;
+                }
+
                 if (mapping.room_number) {
                     await fetchMappings(String(mapping.room_number));
                     // Invalidate the room modal cache so fresh content is loaded
@@ -164,9 +171,8 @@ export const useAreaMappings = (): IAreaMappingsHook => {
                     }
                 }
                 return true;
-            } else {
-                throw new Error('Failed to save mapping');
             }
+            throw new Error(res?.error || res?.data?.message || res?.message || 'Failed to save mapping');
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Unknown error';
             logger.error('saveMapping failed', err);

@@ -199,7 +199,9 @@ try {
             } elseif ($action === 'add_mapping') {
                 Response::success(AreaMappingActionHelper::addMapping($input));
             } elseif ($action === 'update_mapping') {
-                Response::json(AreaMappingActionHelper::updateMapping($input));
+                // Standardize response shape to { success: true, data: ... }
+                // so the frontend can reliably check res.success and res.data.
+                Response::success(AreaMappingActionHelper::updateMapping($input));
             } elseif ($action === 'delete_mapping') {
                 Response::json(AreaMappingActionHelper::deleteMapping($input['id'] ?? $input['area_id'] ?? null));
             } elseif ($action === 'swap') {
@@ -223,7 +225,7 @@ try {
 
         case 'PUT':
             requireAdmin(true);
-            Response::json(AreaMappingActionHelper::updateMapping($input));
+            Response::success(AreaMappingActionHelper::updateMapping($input));
             break;
 
         case 'DELETE':

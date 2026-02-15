@@ -6,6 +6,22 @@ require_once __DIR__ . '/AreaMappingSignHelper.php';
 class AreaMappingActionHelper
 {
     /**
+     * Normalize selectors like "area-5" to ".area-5" for consistent storage.
+     * Leave non-standard selectors unchanged.
+     */
+    private static function normalizeAreaSelector($selectorRaw)
+    {
+        $s = trim((string) $selectorRaw);
+        if ($s === '') {
+            return $s;
+        }
+        if (preg_match('/^area-(\\d+)$/', $s, $m)) {
+            return '.area-' . $m[1];
+        }
+        return $s;
+    }
+
+    /**
      * Add or update an area mapping
      */
     public static function addMapping($input)
@@ -63,7 +79,7 @@ class AreaMappingActionHelper
                 [$mappingType, $item_sku, $category_id, $linkUrl, $linkLabel, $linkIcon, $linkImage, $contentTarget, $contentImage, $effectiveOrder, $existing['id']]
             );
             self::maybeRecordSignAsset((int) $existing['id'], $room_number, $contentImage, $linkImage, 'mapping_update');
-            return ['message' => 'Area mapping updated successfully', 'id' => $existing['id']];
+            return ['updated' => true, 'message' => 'Area mapping updated successfully', 'id' => $existing['id']];
         } else {
             if (!$hasDisplayOrder || $displayOrder <= 0) {
                 $row = Database::queryOne("SELECT COALESCE(MAX(display_order),0) AS max_order FROM area_mappings WHERE room_number = ?", [$room_number]);
@@ -76,7 +92,7 @@ class AreaMappingActionHelper
             );
             $newId = (int) Database::lastInsertId();
             self::maybeRecordSignAsset($newId, $room_number, $contentImage, $linkImage, 'mapping_create');
-            return ['message' => 'Area mapping added successfully', 'id' => $newId];
+            return ['updated' => true, 'message' => 'Area mapping added successfully', 'id' => $newId];
         }
     }
 
@@ -89,32 +105,52 @@ class AreaMappingActionHelper
         if (!$id)
             throw new Exception('Mapping ID is required');
 
-        $room_number = AreaMappingFetchHelper::normalizeRoomNumber($input['room'] ?? $input['room_number'] ?? null);
+        $existingRow = Database::queryOne("SELECT id, room_number, area_selector, is_active FROM area_mappings WHERE id = ? LIMIT 1", [$id]);
+        if (!$existingRow) {
+            throw new Exception('Mapping not found', 404);
+        }
+
+        $roomProvided = array_key_exists('room', $input) || array_key_exists('room_number', $input);
+        $room_number = $roomProvided
+            ? AreaMappingFetchHelper::normalizeRoomNumber($input['room'] ?? $input['room_number'] ?? null)
+            : null;
+        $effectiveRoom = $room_number;
+        if ($effectiveRoom === null || $effectiveRoom === '') {
+            $effectiveRoom = AreaMappingFetchHelper::normalizeRoomNumber($existingRow['room_number'] ?? null);
+        }
 
         $isActiveProvided = array_key_exists('is_active', $input);
-        $isActivating = $isActiveProvided && !empty($input['is_active']);
-        if ($isActivating) {
-            // Enforce single active mapping per (room_number, area_selector) when activating an existing row.
-            // list_room_raw can include historical inactive rows; activating one should deactivate any other active peers.
-            $row = Database::queryOne("SELECT room_number, area_selector FROM area_mappings WHERE id = ? LIMIT 1", [$id]);
-            $effectiveRoom = $room_number;
-            if (($effectiveRoom === null || $effectiveRoom === '') && is_array($row)) {
-                $effectiveRoom = AreaMappingFetchHelper::normalizeRoomNumber($row['room_number'] ?? null);
+        $existingIsActive = ((int) ($existingRow['is_active'] ?? 0)) === 1;
+        $nextIsActive = $isActiveProvided ? (!empty($input['is_active'])) : $existingIsActive;
+
+        $areaSelectorProvided = array_key_exists('area_selector', $input);
+        $nextSelector = $existingRow['area_selector'] ?? null;
+        if ($areaSelectorProvided) {
+            $raw = $input['area_selector'];
+            $rawStr = trim((string) ($raw ?? ''));
+            if ($rawStr === '') {
+                throw new Exception('Area selector is required', 400);
             }
-            $effectiveSelector = $input['area_selector'] ?? (is_array($row) ? ($row['area_selector'] ?? null) : null);
-            if ($effectiveRoom !== null && $effectiveRoom !== '' && $effectiveSelector !== null && $effectiveSelector !== '') {
-                $effectiveSelector = self::resolveAutoAreaSelector($effectiveRoom, $effectiveSelector);
-                Database::execute(
-                    "UPDATE area_mappings SET is_active = 0 WHERE room_number = ? AND area_selector = ? AND id <> ?",
-                    [$effectiveRoom, $effectiveSelector, $id]
-                );
-            }
+            // Resolve auto-placement and normalize selectors for consistent storage.
+            $nextSelector = self::resolveAutoAreaSelector($effectiveRoom, $rawStr);
+        }
+        $nextSelector = self::normalizeAreaSelector($nextSelector);
+
+        // Enforce single active mapping per (room_number, area_selector) when:
+        // - activating, or
+        // - moving an active mapping to a different area selector.
+        if ($nextIsActive && $effectiveRoom !== null && $effectiveRoom !== '' && $nextSelector !== null && $nextSelector !== '') {
+            Database::execute(
+                "UPDATE area_mappings SET is_active = 0 WHERE room_number = ? AND area_selector = ? AND id <> ? AND is_active = 1",
+                [$effectiveRoom, $nextSelector, $id]
+            );
         }
 
         $fields = [
-            'room_number' => $room_number,
+            // Only update room_number if the caller provided it.
+            'room_number' => $roomProvided ? $effectiveRoom : null,
             'mapping_type' => $input['mapping_type'] ?? null,
-            'area_selector' => $input['area_selector'] ?? null,
+            'area_selector' => $areaSelectorProvided ? $nextSelector : null,
             'item_sku' => $input['item_sku'] ?? null,
             'category_id' => $input['category_id'] ?? null,
             'link_url' => $input['link_url'] ?? null,
@@ -134,8 +170,10 @@ class AreaMappingActionHelper
         $values = [];
         foreach ($fields as $col => $val) {
             if ($val !== null) {
-                if ($col === 'area_selector')
-                    $val = self::resolveAutoAreaSelector($room_number, $val);
+                if ($col === 'area_selector') {
+                    // Ensure storage is consistently ".area-N" when applicable.
+                    $val = self::normalizeAreaSelector($val);
+                }
                 $updateFields[] = "`$col` = ?";
                 $values[] = $val;
             }
@@ -147,15 +185,10 @@ class AreaMappingActionHelper
         $values[] = $id;
         $result = Database::execute("UPDATE area_mappings SET " . implode(', ', $updateFields) . " WHERE id = ?", $values);
         if ($result > 0) {
-            $effectiveRoom = $room_number;
-            if ($effectiveRoom === null || $effectiveRoom === '') {
-                $row = Database::queryOne("SELECT room_number FROM area_mappings WHERE id = ? LIMIT 1", [$id]);
-                $effectiveRoom = (string) ($row['room_number'] ?? '');
-            }
-            if ($effectiveRoom !== '') {
+            if ((string) $effectiveRoom !== '') {
                 self::maybeRecordSignAsset(
                     (int) $id,
-                    $effectiveRoom,
+                    (string) $effectiveRoom,
                     (string) ($input['content_image'] ?? ''),
                     (string) ($input['link_image'] ?? ''),
                     'mapping_update'
@@ -164,8 +197,8 @@ class AreaMappingActionHelper
         }
 
         return $result > 0
-            ? ['success' => true, 'message' => 'Area mapping updated successfully']
-            : ['success' => true, 'message' => 'No changes made or mapping not found'];
+            ? ['updated' => true, 'message' => 'Area mapping updated successfully', 'id' => (int) $id]
+            : ['updated' => false, 'message' => 'No changes made', 'id' => (int) $id];
     }
 
     /**
@@ -264,7 +297,7 @@ class AreaMappingActionHelper
     private static function resolveAutoAreaSelector($room_number, $selectorRaw)
     {
         if ($selectorRaw !== '-beginning-' && $selectorRaw !== '-end-')
-            return $selectorRaw;
+            return self::normalizeAreaSelector($selectorRaw);
 
         $coordsRow = Database::queryOne("SELECT coordinates FROM room_maps WHERE room_number = ? ORDER BY updated_at DESC LIMIT 1", [$room_number]);
         $coords = $coordsRow ? json_decode($coordsRow['coordinates'] ?? '[]', true) : [];

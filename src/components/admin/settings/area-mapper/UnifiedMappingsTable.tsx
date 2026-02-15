@@ -196,9 +196,12 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
 
         // Sort by area number
         return Array.from(slotMap.values()).sort((a, b) => {
-            const numA = parseInt(a.area.replace(/\D/g, '')) || 0;
-            const numB = parseInt(b.area.replace(/\D/g, '')) || 0;
-            return numA - numB;
+            const mA = a.area.match(/\.area-(\d+)/i);
+            const mB = b.area.match(/\.area-(\d+)/i);
+            const numA = mA ? Number(mA[1]) : Number.POSITIVE_INFINITY;
+            const numB = mB ? Number(mB[1]) : Number.POSITIVE_INFINITY;
+            if (numA !== numB) return numA - numB;
+            return a.area.localeCompare(b.area);
         });
     }, [explicitMappings, derivedMappings]);
 

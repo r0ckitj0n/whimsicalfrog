@@ -69,6 +69,7 @@ export const MappingForm: React.FC<MappingFormProps> = ({
                     <option value="">Select Area...</option>
                     <option value="-beginning-">Auto-place @ Start</option>
                     <option value="-end-">Auto-place @ End</option>
+                    <option value="N/A">N/A (no open slot)</option>
                     {availableAreas.map(a => <option key={a.val} value={a.val}>{a.label}</option>)}
                 </select>
             </div>

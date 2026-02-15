@@ -59,12 +59,16 @@ class AreaMappingActionHelper
 
         // Auto-placement logic
         $areaSelector = self::resolveAutoAreaSelector($room_number, $areaSelector);
+        $areaSelector = self::normalizeAreaSelector($areaSelector);
 
         // Check if exists
-        $existing = Database::queryOne(
-            "SELECT id, display_order FROM area_mappings WHERE room_number = ? AND area_selector = ? AND is_active = 1",
-            [$room_number, $areaSelector]
-        );
+        $existing = null;
+        if ($areaSelector !== 'N/A') {
+            $existing = Database::queryOne(
+                "SELECT id, display_order FROM area_mappings WHERE room_number = ? AND area_selector = ? AND is_active = 1",
+                [$room_number, $areaSelector]
+            );
+        }
 
         if ($existing) {
             $effectiveOrder = $hasDisplayOrder ? $displayOrder : ($existing['display_order'] ?? 0);
@@ -139,7 +143,14 @@ class AreaMappingActionHelper
         // Enforce single active mapping per (room_number, area_selector) when:
         // - activating, or
         // - moving an active mapping to a different area selector.
-        if ($nextIsActive && $effectiveRoom !== null && $effectiveRoom !== '' && $nextSelector !== null && $nextSelector !== '') {
+        if (
+            $nextIsActive
+            && $effectiveRoom !== null
+            && $effectiveRoom !== ''
+            && $nextSelector !== null
+            && $nextSelector !== ''
+            && $nextSelector !== 'N/A'
+        ) {
             Database::execute(
                 "UPDATE area_mappings SET is_active = 0 WHERE room_number = ? AND area_selector = ? AND id <> ? AND is_active = 1",
                 [$effectiveRoom, $nextSelector, $id]
@@ -296,23 +307,50 @@ class AreaMappingActionHelper
      */
     private static function resolveAutoAreaSelector($room_number, $selectorRaw)
     {
-        if ($selectorRaw !== '-beginning-' && $selectorRaw !== '-end-')
+        if ($selectorRaw !== '-beginning-' && $selectorRaw !== '-end-') {
             return self::normalizeAreaSelector($selectorRaw);
+        }
 
         $coordsRow = Database::queryOne("SELECT coordinates FROM room_maps WHERE room_number = ? ORDER BY updated_at DESC LIMIT 1", [$room_number]);
-        $coords = $coordsRow ? json_decode($coordsRow['coordinates'] ?? '[]', true) : [];
-        if (is_array($coords) && isset($coords['polygons']))
-            $coords = $coords['polygons'];
-        $totalSlots = is_array($coords) ? count($coords) : 0;
+        $coords = $coordsRow ? ($coordsRow['coordinates'] ?? '[]') : '[]';
 
-        if ($totalSlots < 1)
-            return '.area-1';
+        // Decode nested legacy payloads (double/triple encoded JSON).
+        for ($i = 0; $i < 4 && is_string($coords); $i++) {
+            $decoded = json_decode($coords, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                break;
+            }
+            $coords = $decoded;
+        }
+
+        // Extract a list from common structures.
+        $list = [];
+        if (is_array($coords)) {
+            if (isset($coords['rectangles']) && is_array($coords['rectangles'])) {
+                $list = $coords['rectangles'];
+            } elseif (isset($coords['polygons']) && is_array($coords['polygons'])) {
+                $list = $coords['polygons'];
+            } elseif (isset($coords['coordinates']) && is_array($coords['coordinates'])) {
+                $list = $coords['coordinates'];
+            } elseif (array_values($coords) === $coords) {
+                $list = $coords;
+            }
+        }
+
+        $totalSlots = is_array($list) ? count($list) : 0;
+
+        // No map defined: nothing to auto-place into.
+        if ($totalSlots < 1) {
+            return 'N/A';
+        }
 
         $existing = Database::queryAll("SELECT area_selector FROM area_mappings WHERE room_number = ? AND is_active = 1", [$room_number]);
         $taken = [];
         foreach ($existing as $row) {
-            if (preg_match('/\.area-(\d+)/', $row['area_selector'], $m))
+            $sel = self::normalizeAreaSelector($row['area_selector'] ?? '');
+            if (preg_match('/\.area-(\d+)/i', $sel, $m)) {
                 $taken[(int) $m[1]] = true;
+            }
         }
 
         if ($selectorRaw === '-beginning-') {
@@ -327,7 +365,8 @@ class AreaMappingActionHelper
             }
         }
 
-        return '.area-1';
+        // Everything is taken.
+        return 'N/A';
     }
 
     private static function maybeRecordSignAsset(int $mappingId, string $roomNumber, ?string $contentImage, ?string $linkImage, string $source): void

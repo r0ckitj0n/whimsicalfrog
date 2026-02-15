@@ -116,7 +116,7 @@ export const useAreaMappings = (): IAreaMappingsHook => {
                 room
             });
             if (res?.success) {
-                let coords: Array<{ selector: string }> = [];
+                let coords: Array<{ selector?: string | null }> = [];
                 const rawCoords = res.data?.coordinates || res.coordinates || [];
 
                 // Handle nested JSON structure: coordinates may be ["{\"rectangles\":[...]}"]
@@ -136,10 +136,37 @@ export const useAreaMappings = (): IAreaMappingsHook => {
                     }
                 }
 
-                setAvailableAreas(coords.map((c, i) => ({
-                    val: c.selector || `.area-${i + 1}`,
-                    label: c.selector || `.area-${i + 1}`
-                })));
+                const normalize = (sel: string): string => {
+                    const s = sel.trim();
+                    const m = s.match(/^area-(\d+)$/i);
+                    if (m) return `.area-${m[1]}`;
+                    return s;
+                };
+
+                const seen = new Set<string>();
+                const extras: string[] = [];
+                let maxAreaIndex = 0;
+                for (const c of coords) {
+                    const raw = String(c?.selector || '').trim();
+                    if (!raw) continue;
+                    const s = normalize(raw);
+                    const m = s.match(/^\.(?:area|AREA)-(\d+)$/);
+                    if (m) maxAreaIndex = Math.max(maxAreaIndex, Number(m[1]) || 0);
+                    if (!seen.has(s)) {
+                        seen.add(s);
+                        extras.push(s);
+                    }
+                }
+
+                // Prefer ".area-1..N" based on map size; include any extra non-standard selectors too.
+                const totalSlots = Math.max(maxAreaIndex, coords.length);
+                const baseSlots: string[] = [];
+                for (let i = 1; i <= totalSlots; i++) baseSlots.push(`.area-${i}`);
+
+                const nonStandard = extras.filter(s => !/^\.(?:area|AREA)-\d+$/.test(s) && s !== 'N/A');
+                const final = [...baseSlots, ...nonStandard.filter(s => !baseSlots.includes(s))];
+
+                setAvailableAreas(final.map((s) => ({ val: s, label: s })));
             }
         } catch (err) {
             logger.error('fetchAvailableAreas failed', err);

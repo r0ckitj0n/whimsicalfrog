@@ -114,12 +114,40 @@ export const LandingPage: React.FC = () => {
     const worldCoord: { top: number; left: number; width: number; height: number; selector: string } = { top: 0, left: 0, width: 1280, height: 896, selector: 'world' };
     const worldStyles = getScaledStyles(worldCoord);
 
+    const resolveHref = (target: string): string => {
+        const t = (target || '').trim();
+        if (!t) return '/room_main';
+
+        if (/^https?:\/\//i.test(t)) return t;
+        // Common legacy PHP entrypoints (accept both '/shop.php' and 'shop.php')
+        const php = t.replace(/^\//, '');
+        if (php === 'shop.php' || t === 'shop') return '/shop';
+        if (php === 'about.php' || t === 'about') return '/about';
+        if (php === 'contact.php' || t === 'contact') return '/contact';
+        if (php === 'room_main.php' || t === 'room_main') return '/room_main';
+
+        if (t.startsWith('/')) return t;
+
+        if (t.startsWith('room:')) {
+            const room = t.slice('room:'.length).trim();
+            return room ? `/room_main?room_id=${encodeURIComponent(room)}` : '/room_main';
+        }
+
+        // Common mapping conventions
+        if (t.startsWith('item:')) return '/shop';
+        if (t.startsWith('category:')) return '/shop';
+
+        // Default: treat target as a room_id value
+        return `/room_main?room_id=${encodeURIComponent(t)}`;
+    };
+
     return (
         <div
             ref={containerRef}
             id="landingPage-react"
             className="fixed inset-0 w-full h-full overflow-hidden bg-black z-base transition-opacity duration-700"
         >
+            <h1 className="sr-only">Whimsical Frog</h1>
             <div
                 className="absolute inset-0 pointer-events-none overflow-hidden"
                 style={{
@@ -149,8 +177,9 @@ export const LandingPage: React.FC = () => {
                     return (
                         <a
                             key={idx}
-                            href="/room_main"
+                            href={resolveHref(dest.target)}
                             className={`room-item-icon absolute group transition-opacity duration-300 overflow-visible ${!isLoading && coordinates.length > 0 ? 'opacity-100' : 'opacity-0'}`}
+                            aria-label={dest.label || 'Explore'}
                             style={{
                                 ...styles,
                                 height: 'var(--door-height)',
@@ -168,7 +197,7 @@ export const LandingPage: React.FC = () => {
                                 <source srcSet={imgWebp} type="image/webp" />
                                 <img
                                     src={imgUrl}
-                                    alt=""
+                                    alt={dest.label || 'Whimsical Frog'}
                                     className="w-full h-full"
                                     style={{
                                         objectFit: 'contain',
@@ -183,6 +212,21 @@ export const LandingPage: React.FC = () => {
                         </a>
                     );
                 })}
+            </div>
+
+            {/* Visible, crawlable text and links (SEO + accessibility) without disrupting the visual landing experience */}
+            <div className="absolute bottom-4 left-4 right-4 flex justify-center pointer-events-auto">
+                <div className="max-w-2xl w-full rounded-2xl bg-black/60 text-white px-4 py-3 backdrop-blur-sm ring-1 ring-white/10">
+                    <p className="text-sm sm:text-base leading-snug">
+                        Whimsical Frog is a cozy shop for handmade decor, gifts, and seasonal treasures.
+                        Browse the shop, learn our story, or get in touch.
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-3 justify-center text-sm">
+                        <a href="/shop" className="underline underline-offset-4 hover:opacity-90">Shop</a>
+                        <a href="/about" className="underline underline-offset-4 hover:opacity-90">About</a>
+                        <a href="/contact" className="underline underline-offset-4 hover:opacity-90">Contact</a>
+                    </div>
+                </div>
             </div>
         </div>
     );

@@ -31,8 +31,8 @@ while IFS= read -r f; do
   [ -z "$f" ] && continue
   # Normalize leading ./
   rel="${f#./}"
-  # Keep robots.txt at repo root (site requirement)
-  if [[ "$rel" == "robots.txt" ]]; then
+  # Keep robots.txt and llms.txt at repo root (site requirement)
+  if [[ "$rel" == "robots.txt" ]] || [[ "$rel" == "llms.txt" ]]; then
     continue
   fi
   # Skip already under backups/ or node_modules/

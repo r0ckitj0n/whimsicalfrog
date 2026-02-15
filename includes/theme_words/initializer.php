@@ -147,35 +147,79 @@ function wf_seed_theme_word_categories(PDO $db): void
 function wf_seed_theme_words(PDO $db): void
 {
   try {
+    $normalizeTags = function ($raw): string {
+      $raw = is_array($raw) ? implode(',', $raw) : (string) $raw;
+      $parts = preg_split('/\\s*,\\s*/', strtolower(trim($raw))) ?: [];
+      $parts = array_values(array_unique(array_filter(array_map('trim', $parts))));
+      return implode(',', $parts);
+    };
+    $mergeTags = function ($existing, array $add) use ($normalizeTags): string {
+      $existingNorm = $normalizeTags($existing);
+      $addNorm = $normalizeTags($add);
+      $parts = array_filter(array_merge(
+        $existingNorm !== '' ? explode(',', $existingNorm) : [],
+        $addNorm !== '' ? explode(',', $addNorm) : []
+      ));
+      return $normalizeTags($parts);
+    };
+
     $seeds = [
-      ['base' => 'Ribbit', 'cat' => 'Frog', 'variants' => ['Ribbit', 'Rrrribbit', 'Croak', 'Deep Croaker', 'Hop']],
-      ['base' => 'Lilypad', 'cat' => 'Frog', 'variants' => ['Lilypad', 'Floating Leaf', 'Green Landing', 'Pond Platform']],
-      ['base' => 'Tadpole', 'cat' => 'Frog', 'variants' => ['Tadpole', 'Pollywog', 'Baby Frog', 'Little Swimmer']],
-      ['base' => 'Leap', 'cat' => 'Frog', 'variants' => ['Leap', 'Hop', 'Spring', 'Great Bounds']],
+      // Frog (punny-forward)
+      ['base' => 'Ribbit', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Ribbit', 'Rrrribbit', 'Croak', 'Deep Croaker', 'Hop']],
+      ['base' => 'Lilypad', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Lilypad', 'Floating Leaf', 'Green Landing', 'Pond Platform']],
+      ['base' => 'Tadpole', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Tadpole', 'Pollywog', 'Baby Frog', 'Little Swimmer']],
+      ['base' => 'Leap', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Leap', 'Hop', 'Spring', 'Great Bounds']],
       // Punny "twist" variants for the whimsical frog brand voice (inspired by: "Ponder-ful crafts - Hoppy by design")
-      ['base' => 'Hoppy', 'cat' => 'Frog', 'variants' => ['Hoppy', 'Hop-py', 'Hop-py vibes', 'Hoppy-go-lucky']],
-      ['base' => 'Ponder', 'cat' => 'Whimsical', 'variants' => ['Ponder-ful', 'Ponder-ish', 'Ponder-licious']],
-      ['base' => 'Toad', 'cat' => 'Frog', 'variants' => ['Toad', 'Toad-ally', 'Toad-ally charming', 'Toad-ally delightful', 'Bumpy Friend', 'Earth Dweller', 'Bufo']],
-      ['base' => 'Frog', 'cat' => 'Frog', 'variants' => ['Frog-tastic', 'Frog-mazing', 'Frog-ward bound']],
-      ['base' => 'Ribbiting', 'cat' => 'Frog', 'variants' => ['Ribbit-ing', 'Ribbiting', 'Ribbit-worthy']],
-      ['base' => 'Tad', 'cat' => 'Frog', 'variants' => ['Tad whimsical', 'Tad-bit magical', 'Tad-bit extra']],
+      ['base' => 'Hoppy', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Hoppy', 'Hop-py', 'Hop-py vibes', 'Hoppy-go-lucky']],
+      ['base' => 'Ponder', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Ponder-ful', 'Ponder-ish', 'Ponder-licious']],
+      ['base' => 'Toad', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Toad', 'Toad-ally', 'Toad-ally charming', 'Toad-ally delightful', 'Bumpy Friend', 'Earth Dweller', 'Bufo']],
+      ['base' => 'Frog', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Frog-tastic', 'Frog-mazing', 'Frog-ward bound']],
+      ['base' => 'Ribbiting', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Ribbit-ing', 'Ribbiting', 'Ribbit-worthy']],
+      ['base' => 'Tad', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Tad whimsical', 'Tad-bit magical', 'Tad-bit extra']],
       // Extra frog-forward puns so we don't run out of on-brand options before the lifetime cap.
-      ['base' => 'Pond-er', 'cat' => 'Frog', 'variants' => ['Pond-erful', 'Pond-er time', 'Pond-er & wander', 'Pond-erfully yours']],
-      ['base' => 'Hopportunity', 'cat' => 'Frog', 'variants' => ['Hopportunity', 'Hop-portunity knocks', 'A hop-portunity', 'Hop-portunity vibes']],
-      ['base' => 'Tad-orable', 'cat' => 'Frog', 'variants' => ['Tad-orable', 'Tad-orable charm', 'Tad-orable and proud']],
-      ['base' => 'Froggy', 'cat' => 'Frog', 'variants' => ['Froggy', 'Froggy fresh', 'Freshly froggy', 'Froggy flair']],
-      ['base' => 'Croak', 'cat' => 'Frog', 'variants' => ['Croak', 'Croak-tastic', 'Croak-worthy', 'Croak & giggle']],
-      ['base' => 'Ribbit & Sip', 'cat' => 'Frog', 'variants' => ['Ribbit & sip', 'Ribbit-sip repeat', 'Sip. Ribbit. Repeat.']],
-      ['base' => 'Hoptimism', 'cat' => 'Frog', 'variants' => ['Hoptimism', 'Hop-timistic', 'Hop-timism', 'Hoptimistic glow']],
-      ['base' => 'Lily Laughs', 'cat' => 'Frog', 'variants' => ['Lily laughs', 'Lilypad laughs', 'Laughs on lilypads']],
-      ['base' => 'Puddle Party', 'cat' => 'Frog', 'variants' => ['Puddle party', 'Pond party', 'Splashy puddle party']],
-      ['base' => 'Marsh-mellow', 'cat' => 'Frog', 'variants' => ['Marsh-mellow', 'Marsh-mellow mood', 'Marsh-mellow magic']],
-      ['base' => 'Tumbler Toad', 'cat' => 'Frog', 'variants' => ['Tumbler toad', 'Toad in a tumbler', 'Toad-ally tumbler-ready']],
-      ['base' => 'Ribbit Rhythm', 'cat' => 'Frog', 'variants' => ['Ribbit rhythm', 'Ribbitin rhythm', 'Ribbit beat']],
-      ['base' => 'Pond Vibes', 'cat' => 'Frog', 'variants' => ['Pond vibes', 'Pond-side vibes', 'Pond-day vibes']],
-      ['base' => 'Hop & Glow', 'cat' => 'Frog', 'variants' => ['Hop & glow', 'Hop-glow charm', 'Hop, glow, go']],
-      ['base' => 'Amphi-buzzy', 'cat' => 'Frog', 'variants' => ['Amphi-buzzy', 'Amphi-busy', 'Amphi-buzzy energy']],
-      ['base' => 'Frog & Fancy', 'cat' => 'Frog', 'variants' => ['Frog & fancy', 'Frog-fancy flair', 'Fancy-frog fun']],
+      ['base' => 'Pond-er', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Pond-erful', 'Pond-er time', 'Pond-er and wander', 'Pond-erfully yours']],
+      ['base' => 'Hopportunity', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Hopportunity', 'Hop-portunity knocks', 'A hop-portunity', 'Hop-portunity vibes']],
+      ['base' => 'Tad-orable', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Tad-orable', 'Tad-orable charm', 'Tad-orable and proud']],
+      ['base' => 'Froggy', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Froggy', 'Froggy fresh', 'Freshly froggy', 'Froggy flair']],
+      ['base' => 'Croak', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Croak', 'Croak-tastic', 'Croak-worthy', 'Croak and giggle']],
+      // Keep variants mostly word/hyphen tokens so matching/tracking remains reliable.
+      ['base' => 'Ribbit-sip', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Ribbit-sip', 'Ribbit-sip repeat', 'Ribbit-sip routine', 'Ribbit-sip bliss']],
+      ['base' => 'Hoptimism', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Hoptimism', 'Hop-timistic', 'Hop-timism', 'Hoptimistic glow']],
+      ['base' => 'Lily Laughs', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Lily laughs', 'Lilypad laughs', 'Laughs on lilypads']],
+      ['base' => 'Puddle Party', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Puddle party', 'Pond party', 'Splashy puddle party']],
+      ['base' => 'Marsh-mellow', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Marsh-mellow', 'Marsh-mellow mood', 'Marsh-mellow magic']],
+      ['base' => 'Tumbler Toad', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Tumbler toad', 'Toad in a tumbler', 'Toad-ally tumbler-ready']],
+      ['base' => 'Ribbit Rhythm', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Ribbit rhythm', 'Ribbitin rhythm', 'Ribbit beat']],
+      ['base' => 'Pond Vibes', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Pond vibes', 'Pond-side vibes', 'Pond-day vibes']],
+      // Deprecated: "Hop & Glow" (symbol matching is fiddly). Use "Hop-glow" below.
+      ['base' => 'Hop & Glow', 'cat' => 'Frog', 'punny' => false, 'variants' => ['Hop & glow', 'Hop-glow charm', 'Hop, glow, go']],
+      ['base' => 'Hop-glow', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Hop-glow', 'Hop-glow charm', 'Hop-glow vibes']],
+      ['base' => 'Amphi-buzzy', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Amphi-buzzy', 'Amphi-busy', 'Amphi-buzzy energy']],
+      ['base' => 'Frog & Fancy', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Frog and fancy', 'Frog-fancy flair', 'Fancy-frog fun']],
+      ['base' => 'Frog-et', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Frog-et me not', 'Frog-et the ordinary', 'Frog-et about it']],
+      ['base' => 'Hopscotch', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Hop-scotch', 'Hopscotch joy', 'Hop-scotch charm']],
+      ['base' => 'Croak-cuterie', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Croak-cuterie', 'Croak-cuterie vibes', 'Croak-cuterie charm']],
+      ['base' => 'Pondemonium', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Pondemonium', 'Pondemonium energy', 'Pondemonium pop']],
+      ['base' => 'Hop-piness', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Hop-piness', 'Hop-piness ahead', 'Hop-piness in a cup']],
+      ['base' => 'Ribbit-ique', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Ribbit-ique', 'Ribbit-ique flair', 'Ribbit-ique charm']],
+      ['base' => 'Toad-ally', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Toad-ally', 'Toad-ally fun', 'Toad-ally you']],
+      ['base' => 'Tad-bit', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Tad-bit magical', 'Tad-bit extra', 'Tad-bit whimsical']],
+      ['base' => 'Leapfrog', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Leapfrog', 'Leapfrog joy', 'Leapfrog whimsy']],
+      ['base' => 'Pondside', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Pond-side', 'Pond-side daydream', 'Pond-side glow']],
+      ['base' => 'Lilypad Lounge', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Lilypad lounge', 'Lilypad-lounge vibes', 'Lounge on lilypads']],
+      ['base' => 'Croak-n-roll', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Croak-n-roll', 'Croak-n-roll energy', 'Croak-n-roll charm']],
+      ['base' => 'Hop-to-it', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Hop-to-it', 'Hop-to-it hustle', 'Hop-to-it happy']],
+      ['base' => 'Ribbit-ready', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Ribbit-ready', 'Ribbit-ready to go', 'Ribbit-ready vibes']],
+      ['base' => 'Puddle-perfect', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Puddle-perfect', 'Puddle-perfect pop', 'Puddle-perfect charm']],
+      ['base' => 'Swamp-sational', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Swamp-sational', 'Swamp-sational style', 'Swamp-sational charm']],
+      ['base' => 'Marsh-velous', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Marsh-velous', 'Marsh-velous mood', 'Marsh-velous magic']],
+      ['base' => 'Ribbit-Glow', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Ribbit-glow', 'Ribbit-glow vibes', 'Ribbit-glow charm']],
+      ['base' => 'Frogshine', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Frogshine', 'Frogshine glow', 'Frogshine sparkle']],
+      ['base' => 'Pond Spark', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Pond-spark', 'Pond-spark pop', 'Pond-spark charm']],
+      ['base' => 'Sippin Lilypads', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Sippin lilypads', 'Sippin on lilypads', 'Lilypad sips']],
+      ['base' => 'Croak-mazing', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Croak-mazing', 'Croak-mazing charm', 'Croak-mazing pop']],
+      ['base' => 'Hop-penstance', 'cat' => 'Frog', 'punny' => true, 'variants' => ['Hop-penstance', 'Happy hop-penstance', 'Hop-penstance magic']],
+      // Legacy/non-punny frog words below will be auto-deactivated by the seeded-non-punny pruning pass.
       ['base' => 'Bullfrog', 'cat' => 'Frog', 'variants' => ['Bullfrog', 'Bellow', 'King of the Pond', 'Jungle Jumper']],
       ['base' => 'Pond', 'cat' => 'Frog', 'variants' => ['Pond', 'Water Hole', 'Still Water', 'Frog Home']],
       ['base' => 'Swamp', 'cat' => 'Frog', 'variants' => ['Swamp', 'Marsh', 'Bog', 'Wetlands']],
@@ -184,6 +228,39 @@ function wf_seed_theme_words(PDO $db): void
       ['base' => 'Slippery', 'cat' => 'Frog', 'variants' => ['Slippery', 'Slick', 'Wet Skin', 'Hard to Catch']],
       ['base' => 'Webbed', 'cat' => 'Frog', 'variants' => ['Webbed', 'Paddle Feet', 'Swimmer Hands', 'Aquatic Grip']],
       ['base' => 'Night-singer', 'cat' => 'Frog', 'variants' => ['Night-singer', 'Moonlit Croaker', 'Evening Chorus', 'Dark Pond Vocals']],
+      // Whimsical category: punny, twisty, brand-voice phrases that read like your tagline.
+      ['base' => 'Whimsi-hop', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Whimsi-hop', 'Whimsi-hop charm', 'Whimsi-hop vibes']],
+      ['base' => 'Ponder-spark', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Ponder-spark', 'Ponder-spark pop', 'Ponder-spark glow']],
+      ['base' => 'Wander-ful', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Wander-ful', 'Wander-fully made', 'Wander-ful whimsy']],
+      ['base' => 'Crafty', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Crafty', 'Crafty-cute', 'Crafty-kinda magic']],
+      ['base' => 'Giggle-worthy', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Giggle-worthy', 'Giggle-worthy charm', 'Giggle-worthy pop']],
+      ['base' => 'Doodle-dream', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Doodle-dream', 'Doodle-dream vibes', 'Doodle-dream charm']],
+      ['base' => 'Fancy-free', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Fancy-free', 'Fancy-free fun', 'Fancy-free flair']],
+      ['base' => 'Sprinkle-spark', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Sprinkle-spark', 'Sprinkle-spark charm', 'Sprinkle-spark pop']],
+      ['base' => 'Whim-whirl', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Whim-whirl', 'Whim-whirl wonder', 'Whim-whirl vibes']],
+      ['base' => 'Punny', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Punny', 'Punny by design', 'Punny little twist']],
+      ['base' => 'Hoppily', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Hoppily ever after', 'Hoppily made', 'Hoppily by design']],
+      ['base' => 'Delightful', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Delightful', 'Delight-ful', 'Delight-fully made']],
+      ['base' => 'Wonder-ful', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Wonder-ful', 'Wonder-fully weird', 'Wonder-ful charm']],
+      ['base' => 'Cozy-core', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Cozy-core', 'Cozy-core charm', 'Cozy-core vibes']],
+      ['base' => 'Daydreamy', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Daydreamy', 'Daydreamy charm', 'Daydreamy glow']],
+      ['base' => 'Twinkle-pop', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Twinkle-pop', 'Twinkle-pop charm', 'Twinkle-pop vibes']],
+      ['base' => 'Whimsy-spritz', 'cat' => 'Whimsical', 'punny' => true, 'variants' => ['Whimsy-spritz', 'Whimsy-spritz charm', 'Whimsy-spritz vibes']],
+      // Other categories: add punny options too (these categories can be activated later).
+      ['base' => 'Fern-tastic', 'cat' => 'Nature', 'punny' => true, 'variants' => ['Fern-tastic', 'Fern-tastic flair', 'Fern-tastic charm']],
+      ['base' => 'Leaf-it', 'cat' => 'Nature', 'punny' => true, 'variants' => ['Leaf-it be', 'Leaf-it to me', 'Leaf-it and smile']],
+      ['base' => 'Bloom-boom', 'cat' => 'Nature', 'punny' => true, 'variants' => ['Bloom-boom', 'Bloom-boom pop', 'Bloom-boom vibes']],
+      ['base' => 'Moss-ly', 'cat' => 'Nature', 'punny' => true, 'variants' => ['Moss-ly magical', 'Moss-ly made', 'Moss-ly charming']],
+      ['base' => 'Petal-to-the-metal', 'cat' => 'Nature', 'punny' => true, 'variants' => ['Petal-to-the-metal', 'Petal-to-the-metal pop', 'Petal-to-the-metal charm']],
+      ['base' => 'Branch-out', 'cat' => 'Nature', 'punny' => true, 'variants' => ['Branch-out', 'Branch-out bliss', 'Branch-out vibes']],
+      ['base' => 'Spell-abrate', 'cat' => 'Magic', 'punny' => true, 'variants' => ['Spell-abrate', 'Spell-abrate sparkle', 'Spell-abrate charm']],
+      ['base' => 'Rune-derful', 'cat' => 'Magic', 'punny' => true, 'variants' => ['Rune-derful', 'Rune-derful charm', 'Rune-derful vibes']],
+      ['base' => 'Hex-tra', 'cat' => 'Magic', 'punny' => true, 'variants' => ['Hex-tra', 'Hex-tra sparkle', 'Hex-tra charm']],
+      ['base' => 'Potion-ally', 'cat' => 'Magic', 'punny' => true, 'variants' => ['Potion-ally magical', 'Potion-ally perfect', 'Potion-ally delightful']],
+      ['base' => 'Wand-erful', 'cat' => 'Magic', 'punny' => true, 'variants' => ['Wand-erful', 'Wand-erful charm', 'Wand-erful vibes']],
+      ['base' => 'Pun-derful', 'cat' => 'General', 'punny' => true, 'variants' => ['Pun-derful', 'Pun-derful by design', 'Pun-derful twist']],
+      ['base' => 'Quirk-tastic', 'cat' => 'General', 'punny' => true, 'variants' => ['Quirk-tastic', 'Quirk-tastic charm', 'Quirk-tastic pop']],
+      ['base' => 'Craft-astic', 'cat' => 'General', 'punny' => true, 'variants' => ['Craft-astic', 'Craft-astic charm', 'Craft-astic vibes']],
       ['base' => 'Glimmer', 'cat' => 'Whimsical', 'variants' => ['Glimmer', 'Sparkle', 'Shimmer', 'Faint Glow']],
       ['base' => 'Pixie', 'cat' => 'Whimsical', 'variants' => ['Pixie', 'Sprite', 'Forest Helper', 'Tiny Wing']],
       ['base' => 'Enchanted', 'cat' => 'Whimsical', 'variants' => ['Enchanted', 'Magical', 'Spellbinding', 'Charmed']],
@@ -253,6 +330,10 @@ function wf_seed_theme_words(PDO $db): void
 
     foreach ($seeds as $seed) {
       $catId = $catsMap[$seed['cat']] ?? ($catsMap['General'] ?? null);
+      $seedTags = ['seeded'];
+      if (!empty($seed['punny'])) {
+        $seedTags[] = 'punny';
+      }
 
       // Check if word exists
       $existing = $db->prepare("SELECT id FROM theme_words WHERE base_word = ?");
@@ -260,15 +341,23 @@ function wf_seed_theme_words(PDO $db): void
       $wordId = $existing->fetchColumn();
 
       if (!$wordId) {
-        $sql = "INSERT INTO theme_words (base_word, category, category_id, is_active) VALUES (?, ?, ?, ?)";
+        $sql = "INSERT INTO theme_words (base_word, category, category_id, tags, is_active) VALUES (?, ?, ?, ?, ?)";
         $stmt = $db->prepare($sql);
-        $stmt->execute([$seed['base'], $seed['cat'], $catId, 1]);
+        $stmt->execute([$seed['base'], $seed['cat'], $catId, $normalizeTags($seedTags), 1]);
         $wordId = $db->lastInsertId();
       } else {
         // Update existing word's category_id if missing or different
         // We also update the category name string to match the current name in categories table
         $currentCatName = array_search($catId, $catsMap);
-        $db->prepare("UPDATE theme_words SET category_id = ?, category = ? WHERE id = ?")->execute([$catId, $currentCatName ?: $seed['cat'], $wordId]);
+        $rowTags = '';
+        try {
+          $row = $db->prepare("SELECT tags FROM theme_words WHERE id = ?");
+          $row->execute([$wordId]);
+          $rowTags = (string) ($row->fetchColumn() ?? '');
+        } catch (Throwable $e) {
+        }
+        $merged = $mergeTags($rowTags, $seedTags);
+        $db->prepare("UPDATE theme_words SET category_id = ?, category = ?, tags = ? WHERE id = ?")->execute([$catId, $currentCatName ?: $seed['cat'], $merged, $wordId]);
       }
 
       foreach ($seed['variants'] as $v) {
@@ -281,6 +370,19 @@ function wf_seed_theme_words(PDO $db): void
           $stmtV->execute([$wordId, $v, 1]);
         }
       }
+    }
+
+    // Cleanup: disable a couple legacy entries that use symbol-heavy tokens.
+    // This reduces matching/tracking edge cases and keeps the list "punny but clean".
+    try {
+      $db->exec("UPDATE theme_words SET is_active = 0 WHERE base_word IN ('Ribbit & Sip', 'Hop & Glow')");
+      $db->exec("UPDATE theme_word_variants SET is_active = 0 WHERE variant_text LIKE '%&%'");
+      $db->exec("UPDATE theme_word_variants SET is_active = 0 WHERE variant_text LIKE 'Hop, glow, go%'");
+
+      // Main prune: deactivate seeded theme words that are not marked punny.
+      // (User asked to remove non-punny theme words across categories.)
+      $db->exec("UPDATE theme_words SET is_active = 0 WHERE tags LIKE '%seeded%' AND tags NOT LIKE '%punny%'");
+    } catch (Throwable $e) {
     }
   } catch (Throwable $e) {
     // Fail silently in initializer

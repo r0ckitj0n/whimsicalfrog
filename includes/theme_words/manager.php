@@ -206,7 +206,28 @@ function get_whimsical_inspiration($limit = 5): array
     $picked = [];
     $seen = [];
 
-    $frogWords = get_diverse_theme_words($desiredFrog, 'Frog');
+    $scoreVariant = function ($text): int {
+        $t = strtolower(trim((string) $text));
+        if ($t === '') return -999;
+
+        $score = 0;
+        if (strpos($t, '-') !== false) $score += 4; // hyphenated puns read most "Whimsical Frog"
+        if (preg_match('/\\b(hop|hoppy|ribbit|croak|toad|frog|tad|pond|lily)\\b/i', $t)) $score += 3;
+        if (preg_match('/(by design|ever after|vibes|charm|pop|glow)/i', $t)) $score += 1;
+        if (strlen($t) > 34) $score -= 1; // avoid very long tokens
+        if (preg_match('/\\b(wetlands|dual life|water\\s*&\\s*land|skin breather)\\b/i', $t)) $score -= 3;
+        return $score;
+    };
+
+    // Pull a larger pool, then pick the puniest variants first.
+    $frogWords = get_diverse_theme_words($desiredFrog * 4, 'Frog');
+    usort($frogWords, function ($a, $b) use ($scoreVariant) {
+        $aText = (string) (($a['selected_variant']['variant_text'] ?? '') ?: ($a['base_word'] ?? ''));
+        $bText = (string) (($b['selected_variant']['variant_text'] ?? '') ?: ($b['base_word'] ?? ''));
+        $cmp = $scoreVariant($bText) <=> $scoreVariant($aText);
+        if ($cmp !== 0) return $cmp;
+        return (($a['usage_count'] ?? 0) <=> ($b['usage_count'] ?? 0));
+    });
     foreach ($frogWords as $w) {
         $id = (int) ($w['id'] ?? 0);
         if ($id <= 0 || isset($seen[$id])) {
@@ -214,6 +235,9 @@ function get_whimsical_inspiration($limit = 5): array
         }
         $picked[] = $w;
         $seen[$id] = true;
+        if (count($picked) >= $limit) {
+            break;
+        }
     }
 
     if (count($picked) < $limit) {

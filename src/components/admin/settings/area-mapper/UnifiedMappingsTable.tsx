@@ -17,7 +17,7 @@ interface UnifiedMappingsTableProps {
     onPreviewImage: (mapping: IAreaMapping) => void;
 }
 
-type SlotStatus = 'explicit' | 'derived' | 'inactive' | 'empty';
+type SlotStatus = 'explicit' | 'derived' | 'inactive' | 'blocked' | 'empty';
 
 interface UnifiedSlot {
     area: string;
@@ -55,7 +55,8 @@ const getDestinationLabel = (m: IAreaMapping | undefined, roomOptions: IRoomOpti
 
     // Content/Shortcut mapping (room navigation)
     if (type === 'content' || type === 'button') {
-        const target = m.content_target || '';
+        const rawTarget = m.content_target || '';
+        const target = rawTarget.toLowerCase().startsWith('room:') ? rawTarget.slice(5) : rawTarget;
         const roomName = resolveRoomName(target, roomOptions);
         return {
             primary: roomName || m.link_label || target,
@@ -104,6 +105,8 @@ const getStatusIndicator = (status: SlotStatus): { icon: string; label: string; 
             return { icon: '↻', label: 'Derived', className: 'bg-blue-100 text-blue-700 border-blue-200' };
         case 'inactive':
             return { icon: '●', label: 'Inactive', className: 'bg-slate-100 text-slate-500 border-slate-200' };
+        case 'blocked':
+            return { icon: '!', label: 'Blocked', className: 'bg-amber-100 text-amber-800 border-amber-200' };
         case 'empty':
             return { icon: '○', label: 'Empty', className: 'bg-gray-100 text-gray-500 border-gray-200' };
     }
@@ -219,8 +222,9 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                         {unifiedSlots.map(slot => {
                             const hasExplicit = !!slot.explicit;
                             const explicitIsLive = hasExplicit && !!slot.live && String(slot.live?.id ?? '') === String(slot.explicit?.id ?? '');
+                            const explicitRowActive = hasExplicit && (slot.explicit!.is_active === true || Number(slot.explicit!.is_active) === 1);
                             const effectiveStatus: SlotStatus = hasExplicit
-                                ? (explicitIsLive ? 'explicit' : 'inactive')
+                                ? (!explicitRowActive ? 'inactive' : (explicitIsLive ? 'explicit' : 'blocked'))
                                 : (slot.live?.derived ? 'derived' : (slot.live ? 'explicit' : 'empty'));
                             const statusInfo = getStatusIndicator(effectiveStatus);
                             const mapping = slot.explicit || slot.live;
@@ -229,7 +233,7 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                             const destination = getDestinationLabel(mapping, roomOptions);
                             const isItemDerived = effectiveStatus === 'derived' && (slot.live?.item_sku || slot.live?.sku);
                             const isExplicitSlot = hasExplicit;
-                            const isActive = hasExplicit ? explicitIsLive : Boolean(slot.live);
+                            const isActive = hasExplicit ? explicitRowActive : Boolean(slot.live);
 
                             return (
                                 <tr key={slot.area} className="hover:bg-[var(--brand-primary)]/5 group transition-colors">
@@ -291,7 +295,7 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                                                 <input
                                                     type="checkbox"
                                                     checked={isActive}
-                                                    onChange={() => onToggleActive(slot.explicit!.id, slot.explicit!.is_active)}
+                                                    onChange={() => onToggleActive(slot.explicit!.id, isActive)}
                                                     className="sr-only peer"
                                                 />
                                                 <div className={`w-9 h-5 rounded-full peer-focus:ring-2 peer-focus:ring-blue-200 transition-colors ${isActive ? 'bg-emerald-500' : 'bg-slate-300'} peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-transform after:shadow-sm`}></div>

@@ -206,7 +206,8 @@ export const useAreaMappings = (): IAreaMappingsHook => {
     const toggleMappingActive = useCallback(async (room: string, id: number, currentActive: boolean | number) => {
         setIsLoading(true);
         try {
-            const nextActive = !(currentActive === true || currentActive === 1);
+            const curActive = currentActive === true || Number(currentActive) === 1;
+            const nextActive = !curActive;
             const res = await ApiClient.post<{ success: boolean; message?: string; error?: string }>('/api/area_mappings.php', {
                 action: API_ACTION.UPDATE_MAPPING,
                 id,

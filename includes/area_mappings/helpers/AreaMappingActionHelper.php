@@ -91,6 +91,26 @@ class AreaMappingActionHelper
 
         $room_number = AreaMappingFetchHelper::normalizeRoomNumber($input['room'] ?? $input['room_number'] ?? null);
 
+        $isActiveProvided = array_key_exists('is_active', $input);
+        $isActivating = $isActiveProvided && !empty($input['is_active']);
+        if ($isActivating) {
+            // Enforce single active mapping per (room_number, area_selector) when activating an existing row.
+            // list_room_raw can include historical inactive rows; activating one should deactivate any other active peers.
+            $row = Database::queryOne("SELECT room_number, area_selector FROM area_mappings WHERE id = ? LIMIT 1", [$id]);
+            $effectiveRoom = $room_number;
+            if (($effectiveRoom === null || $effectiveRoom === '') && is_array($row)) {
+                $effectiveRoom = AreaMappingFetchHelper::normalizeRoomNumber($row['room_number'] ?? null);
+            }
+            $effectiveSelector = $input['area_selector'] ?? (is_array($row) ? ($row['area_selector'] ?? null) : null);
+            if ($effectiveRoom !== null && $effectiveRoom !== '' && $effectiveSelector !== null && $effectiveSelector !== '') {
+                $effectiveSelector = self::resolveAutoAreaSelector($effectiveRoom, $effectiveSelector);
+                Database::execute(
+                    "UPDATE area_mappings SET is_active = 0 WHERE room_number = ? AND area_selector = ? AND id <> ?",
+                    [$effectiveRoom, $effectiveSelector, $id]
+                );
+            }
+        }
+
         $fields = [
             'room_number' => $room_number,
             'mapping_type' => $input['mapping_type'] ?? null,
@@ -106,7 +126,7 @@ class AreaMappingActionHelper
             'display_order' => $input['display_order'] ?? null
         ];
 
-        if (array_key_exists('is_active', $input)) {
+        if ($isActiveProvided) {
             $fields['is_active'] = !empty($input['is_active']) ? 1 : 0;
         }
 

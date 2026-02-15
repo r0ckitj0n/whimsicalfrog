@@ -9,6 +9,7 @@ import { AddressSection } from './business/AddressSection.js';
 import { LegalSection } from './business/LegalSection.js';
 import { FooterSection } from './business/FooterSection.js';
 import { AboutSection } from './business/AboutSection.js';
+import { SocialLinksSection } from './business/SocialLinksSection.js';
 import { PoliciesSection } from './business/PoliciesSection.js';
 import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 import { useBusinessLocalizationOptions } from '../../../hooks/admin/useBusinessLocalizationOptions.js';
@@ -182,6 +183,7 @@ export const BusinessInfoManager: React.FC<BusinessInfoManagerProps> = ({ onClos
                                 localeOptions={localizationOptions.locales}
                                 optionsLoading={areLocalizationOptionsLoading}
                             />
+                            <SocialLinksSection info={editInfo} onChange={handleChange} />
                             <FooterSection info={editInfo} onChange={handleChange} />
                             <AboutSection info={editInfo} onChange={handleChange} />
                         </div>

@@ -89,8 +89,14 @@ export const Footer: React.FC<FooterProps> = ({ settings, isSlim }) => {
                         {settings.social.instagram && (
                             <a href={settings.social.instagram} className="footer-social-icon" aria-label="Instagram">IG</a>
                         )}
-                        {settings.social.twitter && (
-                            <a href={settings.social.twitter} className="footer-social-icon" aria-label="Twitter">TW</a>
+                        {(settings.social.x || settings.social.twitter) && (
+                            <a href={(settings.social.x || settings.social.twitter) as string} className="footer-social-icon" aria-label="X">X</a>
+                        )}
+                        {settings.social.linkedin && (
+                            <a href={settings.social.linkedin} className="footer-social-icon" aria-label="LinkedIn">IN</a>
+                        )}
+                        {settings.social.youtube && (
+                            <a href={settings.social.youtube} className="footer-social-icon" aria-label="YouTube">YT</a>
                         )}
                         {settings.social.pinterest && (
                             <a href={settings.social.pinterest} className="footer-social-icon" aria-label="Pinterest">PN</a>

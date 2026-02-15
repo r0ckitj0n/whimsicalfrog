@@ -39,6 +39,13 @@ export interface IBusinessInfo {
     business_description: string;
     business_support_email: string;
     business_support_phone: string;
+    business_facebook: string;
+    business_instagram: string;
+    business_twitter: string;
+    business_x: string;
+    business_pinterest: string;
+    business_linkedin: string;
+    business_youtube: string;
     business_tax_id: string;
     business_timezone: string;
     business_dst_enabled: boolean;

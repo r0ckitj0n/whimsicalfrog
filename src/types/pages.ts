@@ -61,6 +61,9 @@ export interface ISiteSettings {
         instagram: string;
         twitter: string;
         pinterest: string;
+        x?: string;
+        linkedin?: string;
+        youtube?: string;
     };
     brand_primary: string;
     brand_secondary: string;

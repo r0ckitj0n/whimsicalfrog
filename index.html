@@ -3,8 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Whimsical Frog | Handmade Decor & Gifts</title>
     <meta name="description"
         content="Whimsical Frog is a cozy shop for handmade decor, gifts, and seasonal treasures. Browse the shop, learn our story, or contact us.">
@@ -26,8 +25,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&family=Nunito:wght@400;600;700&display=swap">
-    <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐸</text></svg>">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="alternate icon" href="/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="stylesheet" href="/src/styles/entries/public-core.css">
 
     <style>
@@ -53,7 +53,63 @@
 </head>
 
 <body>
-    <div id="wf-root"></div>
+    <div id="wf-root">
+        <main style="max-width: 64rem; margin: 0 auto; padding: 2.5rem 1.25rem; color: #fff;">
+            <header>
+                <h1 style="font-family: 'Merienda', cursive; font-size: 2rem; line-height: 1.1; margin: 0 0 1rem;">
+                    Whimsical Frog
+                </h1>
+                <p style="margin: 0 0 1rem; opacity: 0.9;">
+                    Handmade decor, gifts, and seasonal treasures. Shop curated items, explore themed rooms, and discover new creations.
+                </p>
+                <nav aria-label="Primary">
+                    <a href="/shop" style="color: #fff; text-decoration: underline; margin-right: 1rem;">Shop</a>
+                    <a href="/about" style="color: #fff; text-decoration: underline; margin-right: 1rem;">About</a>
+                    <a href="/contact" style="color: #fff; text-decoration: underline;">Contact</a>
+                </nav>
+            </header>
+
+            <section style="margin-top: 2rem;">
+                <h2 style="font-size: 1.25rem; margin: 0 0 0.75rem;">What You’ll Find</h2>
+                <p style="margin: 0 0 0.75rem; opacity: 0.9;">
+                    Whimsical Frog is built around the idea that everyday spaces should feel a little more playful.
+                    You’ll find handmade and small-batch items designed to add warmth and personality to your home, your desk,
+                    and the moments you celebrate with friends and family.
+                </p>
+                <p style="margin: 0 0 0.75rem; opacity: 0.9;">
+                    Browse the shop to see what’s currently available, or explore themed rooms for seasonal collections and surprise finds.
+                    Many items rotate in and out, so if something catches your eye, it’s worth grabbing it while it’s in stock.
+                </p>
+            </section>
+
+            <section style="margin-top: 2rem;">
+                <h2 style="font-size: 1.25rem; margin: 0 0 0.75rem;">Custom Orders</h2>
+                <p style="margin: 0 0 0.75rem; opacity: 0.9;">
+                    Looking for something specific? We take custom requests when available. If you have an idea, theme, color palette,
+                    or occasion in mind, send a note through our contact page and we’ll let you know what’s possible.
+                </p>
+            </section>
+
+            <section style="margin-top: 2rem;">
+                <h2 style="font-size: 1.25rem; margin: 0 0 0.75rem;">Policies And Support</h2>
+                <p style="margin: 0 0 0.75rem; opacity: 0.9;">
+                    For shipping, returns, and other store policies, please see our policy pages.
+                    If you need help with an order, the fastest way to reach us is via the contact page.
+                </p>
+                <nav aria-label="Support">
+                    <a href="/policy" style="color: #fff; text-decoration: underline; margin-right: 1rem;">Policy</a>
+                    <a href="/privacy" style="color: #fff; text-decoration: underline; margin-right: 1rem;">Privacy</a>
+                    <a href="/terms" style="color: #fff; text-decoration: underline;">Terms</a>
+                </nav>
+            </section>
+
+            <noscript>
+                <p style="margin-top: 2rem; opacity: 0.9;">
+                    JavaScript is disabled in your browser. You can still use the links above to navigate the site.
+                </p>
+            </noscript>
+        </main>
+    </div>
     <script>
         // Synchronously apply admin-view class before React loads
         // This fixes timing issues with CSS icon selectors that depend on body.admin-view

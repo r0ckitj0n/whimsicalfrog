@@ -85,6 +85,10 @@ if (!function_exists('wf_social_links')) {
             'instagram' => '',
             'twitter' => '',
             'pinterest' => '',
+            // Additional profiles (optional)
+            'x' => '',
+            'linkedin' => '',
+            'youtube' => '',
         ];
         try {
             if (class_exists('BusinessSettings')) {
@@ -92,6 +96,13 @@ if (!function_exists('wf_social_links')) {
                 $out['instagram'] = (string) BusinessSettings::get('business_instagram', '');
                 $out['twitter'] = (string) BusinessSettings::get('business_twitter', '');
                 $out['pinterest'] = (string) BusinessSettings::get('business_pinterest', '');
+                // Allow separate X profile URL; fallback to twitter if unset.
+                $out['x'] = (string) BusinessSettings::get('business_x', '');
+                if ($out['x'] === '' && $out['twitter'] !== '') {
+                    $out['x'] = $out['twitter'];
+                }
+                $out['linkedin'] = (string) BusinessSettings::get('business_linkedin', '');
+                $out['youtube'] = (string) BusinessSettings::get('business_youtube', '');
             }
             // @reason: BusinessSettings read failure is non-critical - return empty array
         } catch (Throwable $e) {

@@ -2,8 +2,9 @@
     RewriteEngine On
     RewriteBase /
 
-    # Set dist/index.html as the primary directory index
-    DirectoryIndex dist/index.html
+    # Use router.php as the front controller so we can inject server-side SEO tags
+    # and serve crawl-critical endpoints (robots/sitemap) without SPA HTML fallthrough.
+    DirectoryIndex router.php
 
     # Force HTTPS for all requests (single-hop where possible)
     RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
@@ -37,8 +38,8 @@
         Require all denied
     </FilesMatch>
 
-    # Forward all other requests to current React build entry
-    RewriteRule . /dist/index.html [L]
+    # Forward all other requests to router.php (SPA shell + server-side SEO injection)
+    RewriteRule . router.php [L]
 </IfModule>
 
 # Security Headers

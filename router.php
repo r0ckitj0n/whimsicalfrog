@@ -273,7 +273,7 @@ if ($html === false) {
 try {
     require_once __DIR__ . '/includes/helpers/SpaSeoHelper.php';
     $seoTags = SpaSeoHelper::renderTagsForPath($requestedPath);
-    $discoverabilityNav = SpaSeoHelper::renderRoomDiscoverabilityNav();
+    $discoverabilityNav = SpaSeoHelper::renderRoomDiscoverabilityNav() . SpaSeoHelper::renderSocialDiscoverabilityNav();
     $initialRoom = SpaSeoHelper::resolveRoomNumberForPath($requestedPath);
     if (!empty($seoTags) && stripos($html, '</head>') !== false) {
         $patterns = [

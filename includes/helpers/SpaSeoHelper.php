@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../../api/config.php';
 require_once __DIR__ . '/../functions/room_helpers.php';
+require_once __DIR__ . '/../site_settings.php';
 
 /**
  * Builds crawlable server-side SEO tags for the React SPA shell.
@@ -53,6 +54,50 @@ class SpaSeoHelper
         return $html;
     }
 
+    public static function renderSocialDiscoverabilityNav(): string
+    {
+        $links = wf_social_links();
+        if (!is_array($links) || empty($links)) {
+            return '';
+        }
+
+        $pairs = [
+            'Facebook' => (string) ($links['facebook'] ?? ''),
+            'Instagram' => (string) ($links['instagram'] ?? ''),
+            'X' => (string) (($links['x'] ?? '') ?: ($links['twitter'] ?? '')),
+            'LinkedIn' => (string) ($links['linkedin'] ?? ''),
+            'YouTube' => (string) ($links['youtube'] ?? ''),
+            'Pinterest' => (string) ($links['pinterest'] ?? ''),
+        ];
+
+        $items = [];
+        foreach ($pairs as $label => $url) {
+            $url = trim($url);
+            if ($url === '') {
+                continue;
+            }
+            $items[] = [
+                'label' => $label,
+                'url' => $url,
+            ];
+        }
+
+        if (empty($items)) {
+            return '';
+        }
+
+        $style = 'position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;border:0!important;white-space:nowrap!important;';
+        $html = '<nav aria-label="Social links" data-wf-seo-nav="social" style="' . $style . '"><ul>';
+        foreach ($items as $item) {
+            $safeUrl = self::escape($item['url']);
+            $safeLabel = self::escape($item['label']);
+            $html .= '<li><a href="' . $safeUrl . '">' . $safeLabel . '</a></li>';
+        }
+        $html .= '</ul></nav>';
+
+        return $html;
+    }
+
     private static function buildSeoPayload(string $path): array
     {
         $roomNumber = self::resolveRoomNumberForPath($path);
@@ -73,13 +118,19 @@ class SpaSeoHelper
         $description = trim((string) ($settings['meta_description'] ?? $settings['site_description'] ?? 'Whimsical products and custom creations.'));
         $keywords = trim((string) ($settings['site_keywords'] ?? 'whimsical frog, custom gifts, handmade products'));
 
+        $siteName = wf_site_name();
+        if ($siteName === '') {
+            $siteName = self::DEFAULT_SITE_NAME;
+        }
+        $socialLinks = wf_social_links();
+
         return [
             'title' => $title,
             'description' => $description,
             'keywords' => $keywords,
             'canonical' => $baseUrl . $canonicalPath,
             'image' => $baseUrl . '/images/backgrounds/background-roomA.webp',
-            'structured_data' => null,
+            'structured_data' => self::buildOrganizationStructuredData($siteName, $baseUrl, $socialLinks),
         ];
     }
 
@@ -204,14 +255,15 @@ class SpaSeoHelper
         $list = [];
         $position = 1;
         foreach ($items as $item) {
-            if ($position > 100) {
+            // Keep JSON-LD reasonably small to avoid bloating the HTML shell.
+            if ($position > 24) {
                 break;
             }
             $price = number_format((float) ($item['retail_price'] ?? 0), 2, '.', '');
             $product = [
                 '@type' => 'Product',
                 'name' => $item['title'],
-                'description' => self::truncate($item['description'], 400),
+                'description' => self::truncate($item['description'], 200),
                 'sku' => $item['sku'],
                 'category' => $item['category_name'],
                 'image' => self::absoluteUrl((string) $item['image_url'], $baseUrl),
@@ -256,14 +308,15 @@ class SpaSeoHelper
         $list = [];
         $position = 1;
         foreach ($items as $item) {
-            if ($position > 100) {
+            // Keep JSON-LD reasonably small to avoid bloating the HTML shell.
+            if ($position > 24) {
                 break;
             }
             $price = number_format((float) ($item['retail_price'] ?? 0), 2, '.', '');
             $product = [
                 '@type' => 'Product',
                 'name' => $item['title'],
-                'description' => self::truncate($item['description'], 400),
+                'description' => self::truncate($item['description'], 200),
                 'sku' => $item['sku'],
                 'category' => $item['category_name'],
                 'image' => self::absoluteUrl((string) $item['image_url'], $baseUrl),
@@ -538,12 +591,39 @@ class SpaSeoHelper
         $canonical = self::escape($seo['canonical'] ?? (self::baseUrl() . '/'));
         $image = self::escape($seo['image'] ?? (self::baseUrl() . '/images/backgrounds/background-roomA.webp'));
         $structured = '';
+        $hreflang = "\n<link rel=\"alternate\" hreflang=\"en\" href=\"{$canonical}\">\n<link rel=\"alternate\" hreflang=\"x-default\" href=\"{$canonical}\">";
 
         if (!empty($seo['structured_data']) && is_array($seo['structured_data'])) {
             $structured = "\n<script type=\"application/ld+json\">" . json_encode($seo['structured_data'], JSON_UNESCAPED_SLASHES) . "</script>";
         }
 
-        return "\n<title>{$title}</title>\n<meta name=\"description\" content=\"{$description}\">\n<meta name=\"keywords\" content=\"{$keywords}\">\n<link rel=\"canonical\" href=\"{$canonical}\">\n<meta property=\"og:title\" content=\"{$title}\">\n<meta property=\"og:description\" content=\"{$description}\">\n<meta property=\"og:image\" content=\"{$image}\">\n<meta property=\"og:url\" content=\"{$canonical}\">\n<meta property=\"og:type\" content=\"website\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:title\" content=\"{$title}\">\n<meta name=\"twitter:description\" content=\"{$description}\">\n<meta name=\"twitter:image\" content=\"{$image}\">{$structured}\n";
+        return "\n<title>{$title}</title>\n<meta name=\"description\" content=\"{$description}\">\n<meta name=\"keywords\" content=\"{$keywords}\">\n<link rel=\"canonical\" href=\"{$canonical}\">{$hreflang}\n<meta property=\"og:title\" content=\"{$title}\">\n<meta property=\"og:description\" content=\"{$description}\">\n<meta property=\"og:image\" content=\"{$image}\">\n<meta property=\"og:url\" content=\"{$canonical}\">\n<meta property=\"og:type\" content=\"website\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:title\" content=\"{$title}\">\n<meta name=\"twitter:description\" content=\"{$description}\">\n<meta name=\"twitter:image\" content=\"{$image}\">{$structured}\n";
+    }
+
+    private static function buildOrganizationStructuredData(string $siteName, string $baseUrl, array $socialLinks): array
+    {
+        $sameAs = [];
+        foreach (['facebook', 'instagram', 'twitter', 'pinterest', 'x', 'linkedin', 'youtube'] as $key) {
+            $val = isset($socialLinks[$key]) ? trim((string) $socialLinks[$key]) : '';
+            if ($val === '') {
+                continue;
+            }
+            $sameAs[] = $val;
+        }
+
+        $payload = [
+            '@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            'name' => $siteName,
+            'url' => rtrim($baseUrl, '/') . '/',
+            'logo' => self::absoluteUrl(wf_brand_logo_path(), $baseUrl),
+        ];
+
+        if (!empty($sameAs)) {
+            $payload['sameAs'] = array_values(array_unique($sameAs));
+        }
+
+        return $payload;
     }
 
     private static function baseUrl(): string

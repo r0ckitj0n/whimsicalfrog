@@ -144,7 +144,16 @@ function get_diverse_theme_words($limit = 3, $category = null): array
             {$joinClause}
             WHERE $where
             AND tw.usage_count < {$effectiveMaxUsageTotal}
-            ORDER BY tw.usage_count ASC, tw.last_used_at ASC
+            ORDER BY
+              CASE
+                WHEN LOWER(tw.category) = 'frog' THEN 0
+                WHEN LOWER(tw.category) = 'whimsical' THEN 1
+                WHEN LOWER(tw.category) = 'nature' THEN 2
+                WHEN LOWER(tw.category) = 'magic' THEN 3
+                ELSE 4
+              END ASC,
+              tw.usage_count ASC,
+              tw.last_used_at ASC
             LIMIT " . (int) $limit;
 
     $words = Database::queryAll($sql, $params);
@@ -159,7 +168,18 @@ function get_diverse_theme_words($limit = 3, $category = null): array
              WHERE theme_word_id = ?
                AND is_active = 1
                AND usage_count < {$effectiveVariantMaxUsageTotal}
-             ORDER BY usage_count ASC, last_used_at ASC, RAND()
+             ORDER BY
+               usage_count ASC,
+               last_used_at ASC,
+               CASE
+                 WHEN variant_text LIKE '%-%' THEN 0
+                 WHEN LOWER(variant_text) LIKE '%hop%' THEN 0
+                 WHEN LOWER(variant_text) LIKE '%ribbit%' THEN 0
+                 WHEN LOWER(variant_text) LIKE '%toad%' THEN 0
+                 WHEN LOWER(variant_text) LIKE '%frog%' THEN 0
+                 ELSE 1
+               END ASC,
+               RAND()
              LIMIT 1",
             [$w['id']]
         );
@@ -174,7 +194,59 @@ function get_diverse_theme_words($limit = 3, $category = null): array
  */
 function get_whimsical_inspiration($limit = 5): array
 {
-    $words = get_diverse_theme_words($limit);
+    $limit = (int) $limit;
+    if ($limit <= 0) {
+        return [];
+    }
+
+    // Strongly bias toward the Whimsical Frog brand voice.
+    // Prefer Frog category first; only pull from other categories if Frog is exhausted by caps.
+    $desiredFrog = $limit;
+
+    $picked = [];
+    $seen = [];
+
+    $frogWords = get_diverse_theme_words($desiredFrog, 'Frog');
+    foreach ($frogWords as $w) {
+        $id = (int) ($w['id'] ?? 0);
+        if ($id <= 0 || isset($seen[$id])) {
+            continue;
+        }
+        $picked[] = $w;
+        $seen[$id] = true;
+    }
+
+    if (count($picked) < $limit) {
+        $whimWords = get_diverse_theme_words($limit - count($picked), 'Whimsical');
+        foreach ($whimWords as $w) {
+            $id = (int) ($w['id'] ?? 0);
+            if ($id <= 0 || isset($seen[$id])) {
+                continue;
+            }
+            $picked[] = $w;
+            $seen[$id] = true;
+            if (count($picked) >= $limit) {
+                break;
+            }
+        }
+    }
+
+    if (count($picked) < $limit) {
+        $fill = get_diverse_theme_words($limit - count($picked));
+        foreach ($fill as $w) {
+            $id = (int) ($w['id'] ?? 0);
+            if ($id <= 0 || isset($seen[$id])) {
+                continue;
+            }
+            $picked[] = $w;
+            $seen[$id] = true;
+            if (count($picked) >= $limit) {
+                break;
+            }
+        }
+    }
+
+    $words = $picked;
     $inspiration = [];
     foreach ($words as $w) {
         $inspiration[] = [

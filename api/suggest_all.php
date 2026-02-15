@@ -310,18 +310,28 @@ function wf_apply_theme_word_to_title($title, $themeWords): string
     if ($title === '' || !is_array($themeWords) || empty($themeWords)) {
         return $title;
     }
-    if (wf_text_has_any_token($title, $themeWords)) {
+
+    $tokens = array_values(array_unique(array_filter(array_map(function ($v) {
+        return trim((string) $v);
+    }, $themeWords))));
+    $t0 = (string) ($tokens[0] ?? '');
+    $t1 = (string) ($tokens[1] ?? '');
+    if ($t0 === '') {
         return $title;
     }
 
-    $w = trim((string) ($themeWords[0] ?? ''));
-    if ($w === '') {
-        return $title;
+    $result = $title;
+    if (!wf_text_has_any_token($result, [$t0])) {
+        $result = trim($t0 . ' ' . $result);
     }
 
-    // Keep it simple and consistent: a single brand-aligned lead word.
-    $candidate = trim($w . ' ' . $title);
-    return $candidate;
+    // Sprinkle a second twist token when available (matches "Ponder-ful ... - Hoppy ..." style).
+    // Keep name to 1-2 theme words; avoid forcing a second token if the title is already long.
+    if ($t1 !== '' && strlen($result) <= 56 && !wf_text_has_any_token($result, [$t1])) {
+        $result = trim($result . ' - ' . $t1);
+    }
+
+    return $result;
 }
 
 function wf_apply_theme_word_to_description($description, $themeWords): string
@@ -330,17 +340,56 @@ function wf_apply_theme_word_to_description($description, $themeWords): string
     if ($description === '' || !is_array($themeWords) || empty($themeWords)) {
         return $description;
     }
-    if (wf_text_has_any_token($description, $themeWords)) {
+
+    $tokens = array_values(array_unique(array_filter(array_map(function ($v) {
+        return trim((string) $v);
+    }, $themeWords))));
+
+    // Target: 2-4 theme tokens in the description.
+    // We'll add up to two short sentences, each can carry up to two tokens.
+    $result = rtrim((string) $description);
+
+    // Pick up to 4 tokens not already present.
+    $missing = [];
+    foreach ($tokens as $t) {
+        if ($t === '') continue;
+        if (!wf_text_has_any_token($result, [$t])) {
+            $missing[] = $t;
+        }
+        if (count($missing) >= 4) break;
+    }
+
+    // If the original text already has some tokens, we still want to land in the 2-4 range.
+    // We'll add missing tokens opportunistically; if none are missing, we leave text unchanged.
+    if (empty($missing)) {
         return $description;
     }
 
-    $w = trim((string) ($themeWords[1] ?? $themeWords[0] ?? ''));
-    if ($w === '') {
+    $t0 = (string) ($missing[0] ?? '');
+    $t1 = (string) ($missing[1] ?? '');
+    $t2 = (string) ($missing[2] ?? '');
+    $t3 = (string) ($missing[3] ?? '');
+
+    $s1 = '';
+    if ($t0 !== '' && $t1 !== '') {
+        $s1 = "{$t0} crafts - {$t1} by design.";
+    } elseif ($t0 !== '') {
+        $s1 = "{$t0} by design.";
+    }
+
+    $s2 = '';
+    if ($t2 !== '' && $t3 !== '') {
+        $s2 = "A {$t2} splash of {$t3} whimsy in every refill.";
+    } elseif ($t2 !== '') {
+        $s2 = "A touch of {$t2} whimsy in every refill.";
+    }
+
+    $suffixes = array_values(array_filter([trim($s1), trim($s2)]));
+    if (empty($suffixes)) {
         return $description;
     }
 
-    // Short, low-risk suffix sentence that naturally includes the token.
-    return rtrim($description, ". \t\n\r\0\x0B") . ". A touch of {$w} charm.";
+    return trim(rtrim($result, ". \t\n\r\0\x0B") . '. ' . implode(' ', $suffixes));
 }
 
 try {
@@ -529,7 +578,9 @@ try {
                         } catch (Throwable $e) {
                             error_log('suggest_all.php theme words schema init failed: ' . $e->getMessage());
                         }
-                        $themeInspiration = get_whimsical_inspiration(3);
+                        // Pull a slightly larger pool so we can reliably land 1-2 name tokens
+                        // and 2-4 description tokens after de-duplication.
+                        $themeInspiration = get_whimsical_inspiration(6);
                         $themeWordTokens = array_values(array_filter(array_map(function ($item) {
                             return is_array($item) ? (string) ($item['text'] ?? '') : '';
                         }, $themeInspiration)));
@@ -541,9 +592,21 @@ try {
                     $descriptionWithTheme = $themeWordsEnabledDescription ? wf_apply_theme_word_to_description($rawDescription, $themeWordTokens) : $rawDescription;
                     $themeApplied = ($rawTitle !== $titleWithTheme) || ($rawDescription !== $descriptionWithTheme);
 
-                    if (!empty($themeInspiration) && $themeApplied) {
+                    // Only count words that actually appear in final outputs.
+                    $usedInspiration = [];
+                    if (!empty($themeInspiration)) {
+                        $finalCombined = trim($titleWithTheme . ' ' . $descriptionWithTheme);
+                        foreach ($themeInspiration as $tw) {
+                            $tok = is_array($tw) ? (string) ($tw['text'] ?? '') : '';
+                            if ($tok !== '' && wf_text_has_any_token($finalCombined, [$tok])) {
+                                $usedInspiration[] = $tw;
+                            }
+                        }
+                    }
+
+                    if (!empty($usedInspiration) && $themeApplied) {
                         // Source = SKU when we have it, otherwise a stable label.
-                        log_theme_words_usage($themeInspiration, 'info_suggestion', $sku !== '' ? $sku : 'suggest_all_info');
+                        log_theme_words_usage($usedInspiration, 'info_suggestion', $sku !== '' ? $sku : 'suggest_all_info');
                     }
 
                     $results['info_suggestion'] = [
@@ -586,15 +649,69 @@ try {
             try {
                 $analysis = $aiProviders->generateMarketingContent('', '', $category);
                 if ($analysis && !empty($analysis['title'])) {
+                    // Theme words (AI Settings controlled) for name/description.
+                    $aiThemeSettings = AISettingsManager::getAISettings();
+                    $themeWordsEnabled = (bool) ($aiThemeSettings['ai_theme_words_enabled'] ?? true);
+                    $themeWordsEnabledName = (bool) ($aiThemeSettings['ai_theme_words_enabled_name'] ?? true);
+                    $themeWordsEnabledDescription = (bool) ($aiThemeSettings['ai_theme_words_enabled_description'] ?? true);
+                    $themeModeRequested = ($whimsicalTheme === true)
+                        || (strtolower($contentTone) === 'whimsical_frog')
+                        || (strtolower((string) ($aiThemeSettings['ai_content_tone'] ?? '')) === 'whimsical_frog');
+
+                    $themeInspiration = [];
+                    $themeWordTokens = [];
+                    if ($themeWordsEnabled && $themeModeRequested && ($themeWordsEnabledName || $themeWordsEnabledDescription)) {
+                        require_once __DIR__ . '/../includes/theme_words/initializer.php';
+                        require_once __DIR__ . '/../includes/theme_words/manager.php';
+                        try {
+                            ensure_theme_words_tables(Database::getInstance());
+                        } catch (Throwable $e) {
+                            error_log('suggest_all.php theme words schema init failed (category-only info): ' . $e->getMessage());
+                        }
+                        $themeInspiration = get_whimsical_inspiration(6);
+                        $themeWordTokens = array_values(array_filter(array_map(function ($item) {
+                            return is_array($item) ? (string) ($item['text'] ?? '') : '';
+                        }, $themeInspiration)));
+                    }
+
+                    $rawTitle = (string) ($analysis['title'] ?? '');
+                    $rawDescription = (string) ($analysis['description'] ?? '');
+                    $titleWithTheme = $themeWordsEnabledName ? wf_apply_theme_word_to_title($rawTitle, $themeWordTokens) : $rawTitle;
+                    $descriptionWithTheme = $themeWordsEnabledDescription ? wf_apply_theme_word_to_description($rawDescription, $themeWordTokens) : $rawDescription;
+                    $themeApplied = ($rawTitle !== $titleWithTheme) || ($rawDescription !== $descriptionWithTheme);
+
+                    $usedInspiration = [];
+                    if (!empty($themeInspiration)) {
+                        $finalCombined = trim($titleWithTheme . ' ' . $descriptionWithTheme);
+                        foreach ($themeInspiration as $tw) {
+                            $tok = is_array($tw) ? (string) ($tw['text'] ?? '') : '';
+                            if ($tok !== '' && wf_text_has_any_token($finalCombined, [$tok])) {
+                                $usedInspiration[] = $tw;
+                            }
+                        }
+                    }
+                    if (!empty($usedInspiration) && $themeApplied) {
+                        log_theme_words_usage($usedInspiration, 'info_suggestion', $sku !== '' ? $sku : 'suggest_all_info');
+                    }
+
                     $results['info_suggestion'] = [
                         'success' => true,
-                        'name' => $analysis['title'],
-                        'description' => $analysis['description'] ?? '',
+                        'name' => wf_apply_locked_words($titleWithTheme, $lockedWords['name'] ?? ''),
+                        'description' => wf_apply_locked_words($descriptionWithTheme, $lockedWords['description'] ?? ''),
                         'category' => $category,
                         'confidence' => 'medium',
-                        'reasoning' => "Generated based on category: {$category}"
+                        'reasoning' => "Generated based on category: {$category}",
+                        'theme_words_debug' => $debugThemeWords ? [
+                            'theme_words_enabled' => $themeWordsEnabled,
+                            'theme_mode_requested' => (bool) $themeModeRequested,
+                            'enabled_name' => (bool) $themeWordsEnabledName,
+                            'enabled_description' => (bool) $themeWordsEnabledDescription,
+                            'tokens' => $themeWordTokens,
+                            'applied' => (bool) $themeApplied,
+                            'inspiration' => $themeInspiration,
+                        ] : null,
                     ];
-                    $name = $analysis['title'];
+                    $name = $results['info_suggestion']['name'];
                     $description = $results['info_suggestion']['description'];
                 }
             } catch (Exception $e) {

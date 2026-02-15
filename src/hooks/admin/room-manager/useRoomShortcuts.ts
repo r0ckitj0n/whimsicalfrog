@@ -10,6 +10,7 @@ export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHo
         area_selector: ''
     });
     const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+    const [baselineMapping, setBaselineMapping] = useState<Partial<IAreaMapping> | null>(null);
 
     const validateMappingForSave = useCallback((mapping: Partial<IAreaMapping>): string | null => {
         const areaSelector = String(mapping.area_selector || '').trim();
@@ -51,7 +52,10 @@ export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHo
         const success = await mappings.saveMapping({ ...newMapping, room_number: selectedRoom });
         if (success) {
             setNewMapping({ mapping_type: 'item', area_selector: '' });
+            setBaselineMapping(null);
             if (window.WFToast) window.WFToast.success('Mapping saved');
+        } else {
+            window.WFToast?.error?.('Save failed');
         }
     }, [selectedRoom, newMapping, mappings, validateMappingForSave]);
 
@@ -85,6 +89,7 @@ export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHo
 
     const handleContentEdit = useCallback(async (mapping: IAreaMapping) => {
         setNewMapping({ ...mapping, shortcut_images: [] });
+        setBaselineMapping({ ...mapping, shortcut_images: [] });
         const mappingId = Number(mapping.id || 0);
         if (!mappingId || !selectedRoom) return;
         try {
@@ -173,9 +178,50 @@ export const useRoomShortcuts = (selectedRoom: string, mappings: IAreaMappingsHo
         }
     }, [confirmWithEstimate, mappings, newMapping, selectedRoom, validateMappingForSave]);
 
-    const isContentDirty = useMemo(() =>
-        !!newMapping.area_selector || !!newMapping.item_sku || !!newMapping.category_id || !!newMapping.content_target
-        , [newMapping]);
+    const isContentDirty = useMemo(() => {
+        const normStr = (v: unknown) => String(v ?? '').trim();
+        const normNum = (v: unknown) => {
+            if (v === null || v === undefined || v === '') return '';
+            const n = Number(v);
+            return Number.isFinite(n) ? String(n) : String(v);
+        };
+
+        const pick = (m: Partial<IAreaMapping> | null) => ({
+            mapping_type: normStr(m?.mapping_type),
+            area_selector: normStr(m?.area_selector),
+            item_sku: normStr(m?.item_sku),
+            category_id: normNum(m?.category_id),
+            link_url: normStr(m?.link_url),
+            link_label: normStr(m?.link_label),
+            link_icon: normStr(m?.link_icon),
+            content_target: normStr(m?.content_target),
+            content_image: normStr(m?.content_image),
+            link_image: normStr(m?.link_image),
+            display_order: normNum(m?.display_order),
+            is_active: String((m?.is_active ?? '') as unknown)
+        });
+
+        if (baselineMapping) {
+            const a = pick(baselineMapping);
+            const b = pick(newMapping);
+            return Object.keys(a).some((k) => (a as any)[k] !== (b as any)[k]);
+        }
+
+        // Creating: treat as dirty if user has supplied anything beyond defaults.
+        const cur = pick(newMapping);
+        const hasAny =
+            cur.area_selector !== '' ||
+            cur.item_sku !== '' ||
+            cur.category_id !== '' ||
+            cur.content_target !== '' ||
+            cur.link_url !== '' ||
+            cur.link_label !== '' ||
+            cur.link_icon !== '' ||
+            cur.content_image !== '' ||
+            cur.link_image !== '';
+        const typeChanged = cur.mapping_type !== '' && cur.mapping_type !== 'item';
+        return hasAny || typeChanged;
+    }, [baselineMapping, newMapping]);
 
     return {
         newMapping,

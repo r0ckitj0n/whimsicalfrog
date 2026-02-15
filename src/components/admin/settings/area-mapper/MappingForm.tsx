@@ -311,6 +311,16 @@ export const MappingForm: React.FC<MappingFormProps> = ({
                 </div>
             )}
 
+            <div className="pt-2">
+                <button
+                    type="submit"
+                    disabled={isLoading || isGeneratingImage}
+                    className="btn btn-primary w-full text-center transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-60"
+                >
+                    {mapping.id ? 'Save Changes' : 'Save Mapping'}
+                </button>
+            </div>
+
         </form>
     );
 };

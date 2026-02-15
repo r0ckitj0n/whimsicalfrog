@@ -204,6 +204,7 @@ export const useAreaMappings = (): IAreaMappingsHook => {
             const message = err instanceof Error ? err.message : 'Unknown error';
             logger.error('saveMapping failed', err);
             setError(message);
+            window.WFToast?.error?.(message);
             return false;
         } finally {
             setIsLoading(false);

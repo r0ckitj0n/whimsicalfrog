@@ -50,7 +50,9 @@ function wf_theme_words_has_category_id_column(): bool
 
 function get_theme_words_list($db)
 {
-    $rows = Database::queryAll('SELECT * FROM theme_words ORDER BY base_word ASC');
+    // Hide "user_deleted" tombstones from the default admin list.
+    // (We soft-delete seeded words to prevent reseeding from resurrecting them.)
+    $rows = Database::queryAll("SELECT * FROM theme_words WHERE COALESCE(tags,'') NOT LIKE '%user_deleted%' ORDER BY base_word ASC");
     $ids = array_column($rows, 'id');
     $variantsByWord = [];
     if (!empty($ids)) {

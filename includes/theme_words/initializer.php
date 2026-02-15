@@ -356,6 +356,10 @@ function wf_seed_theme_words(PDO $db): void
           $rowTags = (string) ($row->fetchColumn() ?? '');
         } catch (Throwable $e) {
         }
+        // If a user deleted this word, don't resurrect it via seeding.
+        if (stripos(',' . $rowTags . ',', 'user_deleted') !== false) {
+          continue;
+        }
         $merged = $mergeTags($rowTags, $seedTags);
         $db->prepare("UPDATE theme_words SET category_id = ?, category = ?, tags = ? WHERE id = ?")->execute([$catId, $currentCatName ?: $seed['cat'], $merged, $wordId]);
       }

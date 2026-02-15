@@ -118,8 +118,28 @@ try {
             break;
 
         case 'delete_word':
-            Database::execute("DELETE FROM theme_words WHERE id = ?", [$input['id'] ?? $_GET['id']]);
-            Response::updated(['id' => $input['id'] ?? $_GET['id']]);
+            // Soft-delete to prevent seed initializer from re-adding a removed word.
+            $id = (int) ($input['id'] ?? $_GET['id'] ?? 0);
+            if ($id <= 0) {
+                Response::validationError(['id' => 'Required']);
+            }
+
+            $row = Database::queryOne("SELECT id, tags FROM theme_words WHERE id = ?", [$id]);
+            if (!$row) {
+                Response::updated(['id' => $id]);
+            }
+
+            $tags = (string) ($row['tags'] ?? '');
+            $tagParts = preg_split('/\\s*,\\s*/', strtolower(trim($tags))) ?: [];
+            $tagParts = array_values(array_unique(array_filter(array_map('trim', $tagParts))));
+            if (!in_array('user_deleted', $tagParts, true)) {
+                $tagParts[] = 'user_deleted';
+            }
+            $newTags = implode(',', $tagParts);
+
+            Database::execute("UPDATE theme_words SET is_active = 0, tags = ? WHERE id = ?", [$newTags, $id]);
+            Database::execute("UPDATE theme_word_variants SET is_active = 0 WHERE theme_word_id = ?", [$id]);
+            Response::updated(['id' => $id]);
             break;
 
         case 'list_categories':

@@ -167,17 +167,17 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
     return (
         <div className="h-full flex flex-col min-h-0 overflow-hidden">
             <div className="p-6 overflow-y-auto flex-1">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest">All Rooms</h3>
-                    <div className="flex items-center gap-3">
-                        <button
-                            type="button"
-                            onClick={onOpenNavigationModal}
-                            className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-secondary)] transition-colors"
-                            data-help-id="room-navigation-open"
-                        >
-                            Navigation
-                        </button>
+                <div className="mb-6 grid grid-cols-3 items-center gap-3">
+                    <h3 className="justify-self-start text-sm font-black text-slate-600 uppercase tracking-widest">All Rooms</h3>
+                    <button
+                        type="button"
+                        onClick={onOpenNavigationModal}
+                        className="justify-self-center px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-secondary)] transition-colors"
+                        data-help-id="room-navigation-open"
+                    >
+                        Navigation
+                    </button>
+                    <div className="justify-self-end">
                         {!isCreating && !editingRoom && (
                             <button
                                 onClick={() => setIsCreateModalOpen(true)}

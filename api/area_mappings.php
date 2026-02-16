@@ -203,7 +203,7 @@ try {
                 // so the frontend can reliably check res.success and res.data.
                 Response::success(AreaMappingActionHelper::updateMapping($input));
             } elseif ($action === 'delete_mapping') {
-                Response::json(AreaMappingActionHelper::deleteMapping($input['id'] ?? $input['area_id'] ?? null));
+                Response::json(AreaMappingActionHelper::deleteMapping($input));
             } elseif ($action === 'swap') {
                 Response::success(AreaMappingActionHelper::swapMappings($input['area1_id'] ?? null, $input['area2_id'] ?? null));
             } elseif ($action === 'set_shortcut_sign_active') {
@@ -230,7 +230,7 @@ try {
 
         case 'DELETE':
             requireAdmin(true);
-            Response::json(AreaMappingActionHelper::deleteMapping($input['id'] ?? null));
+            Response::json(AreaMappingActionHelper::deleteMapping($input));
             break;
 
         default:

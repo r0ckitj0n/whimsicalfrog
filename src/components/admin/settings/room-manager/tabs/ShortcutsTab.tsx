@@ -98,7 +98,7 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
                         roomOptions={mappings.roomOptions}
                         onEdit={onContentEdit}
                         onToggleActive={onToggleMappingActive}
-                        onDelete={async (id: number) => {
+                        onDelete={async (id: number, area: string) => {
                             const confirmed = await confirm({
                                 title: 'Delete Shortcut Mapping',
                                 message: 'Delete this shortcut mapping? Active mappings will be deactivated; already-inactive mappings will be permanently removed.',
@@ -109,7 +109,7 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
                             });
                             if (!confirmed) return;
 
-                            const res = await mappings.deleteMapping(id, selectedRoom);
+                            const res = await mappings.deleteMapping(id, selectedRoom, area);
                             if (!res?.success) {
                                 window.WFToast?.error?.(res?.message || 'Failed to delete mapping');
                             } else if (res.action === 'deactivated') {

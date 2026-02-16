@@ -188,13 +188,14 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         };
     }, [roomId]);
 
-    const filteredAreas = useMemo(() => {
+    const mappedAreas = useMemo(() => {
         if (activeAreaSelectors.length === 0) {
             return [];
         }
         const activeSet = new Set(activeAreaSelectors);
         return areas.filter((area) => activeSet.has(normalizeSelector(area.selector)));
     }, [areas, activeAreaSelectors]);
+    const visibleAreas = isEditMode ? areas : mappedAreas;
 
     const finalBgUrl = bgUrl ? (bgUrl.startsWith('http') || bgUrl.startsWith('/') ? bgUrl : `/images/${bgUrl}`) : '';
     const containerStyle: React.CSSProperties = {
@@ -228,7 +229,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
             {/* 1. Live Sign Images Layer */}
             <SignLayer
-                areas={filteredAreas}
+                areas={visibleAreas}
                 signDestinations={previewItems}
                 dims={dims}
                 iconPanelColor={iconPanelColor}
@@ -237,7 +238,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
             {/* 2. Hotspots Layer */}
             <HotspotLayer
                 svgRef={svgRef}
-                areas={filteredAreas}
+                areas={visibleAreas}
                 selectedIds={selectedIds}
                 isEditMode={isEditMode}
                 dims={dims}

@@ -12,7 +12,7 @@ interface UnifiedMappingsTableProps {
     roomOptions: IRoomOption[];
     onEdit: (mapping: IAreaMapping) => void;
     onToggleActive: (id: number, currentActive: boolean | number) => void;
-    onDelete: (id: number) => void;
+    onDelete: (id: number, area: string) => void;
     onConvert: (area: string, sku: string) => void;
     onPreviewImage: (mapping: IAreaMapping) => void;
 }
@@ -319,7 +319,7 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                                                     />
                                                     <button
                                                         type="button"
-                                                        onClick={() => onDelete(slot.explicit!.id)}
+                                                        onClick={() => onDelete(Number(slot.explicit!.id || 0), slot.area)}
                                                         className="admin-action-btn btn-icon--delete"
                                                         data-help-id="mapping-delete-btn"
                                                     />

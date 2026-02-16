@@ -215,25 +215,87 @@ class AreaMappingActionHelper
     /**
      * Soft delete a mapping
      */
-    public static function deleteMapping($id)
+    public static function deleteMapping($payload)
     {
-        if (!$id)
-            throw new Exception('Mapping ID is required');
-        // Idempotent delete: if it's already inactive or missing, treat as success so the UI can self-heal.
-        $row = Database::queryOne("SELECT id, is_active FROM area_mappings WHERE id = ? LIMIT 1", [$id]);
-        if (!$row) {
+        $id = null;
+        $roomNumber = null;
+        $areaSelector = null;
+
+        if (is_array($payload)) {
+            $id = isset($payload['id']) ? (int) $payload['id'] : 0;
+            $roomNumber = AreaMappingFetchHelper::normalizeRoomNumber($payload['room'] ?? $payload['room_number'] ?? null);
+            $areaSelector = self::normalizeAreaSelector($payload['area_selector'] ?? '');
+            if ($areaSelector === '') {
+                $areaSelector = null;
+            }
+        } else {
+            $id = (int) $payload;
+        }
+
+        // Preferred path: delete by concrete ID.
+        if ($id > 0) {
+            $row = Database::queryOne(
+                "SELECT id, room_number, area_selector, is_active FROM area_mappings WHERE id = ? LIMIT 1",
+                [$id]
+            );
+            if (!$row) {
+                return ['success' => true, 'action' => 'noop', 'message' => 'Mapping already removed'];
+            }
+
+            $isActive = (int) ($row['is_active'] ?? 0) === 1;
+            if ($isActive) {
+                $result = Database::execute("UPDATE area_mappings SET is_active = 0 WHERE id = ? LIMIT 1", [$id]);
+                return $result > 0
+                    ? ['success' => true, 'action' => 'deactivated', 'message' => 'Area mapping deactivated']
+                    : ['success' => true, 'action' => 'noop', 'message' => 'Mapping already removed'];
+            }
+
+            // If already inactive, hard-delete so it disappears from raw listings (list_room_raw includes inactive rows).
+            $deleted = Database::execute("DELETE FROM area_mappings WHERE id = ? LIMIT 1", [$id]);
+            if ($deleted > 0) {
+                return ['success' => true, 'action' => 'deleted', 'message' => 'Area mapping permanently deleted'];
+            }
+
+            // Fallback: if row exists but ID delete failed for any reason, try selector-based cleanup.
+            $roomNumber = $roomNumber ?: AreaMappingFetchHelper::normalizeRoomNumber($row['room_number'] ?? null);
+            $areaSelector = $areaSelector ?: self::normalizeAreaSelector($row['area_selector'] ?? '');
+        }
+
+        // Recovery path: cleanup by room + selector, useful for corrupted/ID-less rows.
+        if (($roomNumber === null || $roomNumber === '') || ($areaSelector === null || $areaSelector === '')) {
+            throw new Exception('Mapping ID or (room_number + area_selector) is required');
+        }
+
+        $rows = Database::queryAll(
+            "SELECT id, is_active FROM area_mappings WHERE room_number = ? AND area_selector = ? ORDER BY is_active DESC, id DESC",
+            [$roomNumber, $areaSelector]
+        );
+        if (!$rows || count($rows) === 0) {
             return ['success' => true, 'action' => 'noop', 'message' => 'Mapping already removed'];
         }
-        $isActive = (int)($row['is_active'] ?? 0) === 1;
-        if ($isActive) {
-            $result = Database::execute("UPDATE area_mappings SET is_active = 0 WHERE id = ? LIMIT 1", [$id]);
-            return $result > 0
+
+        $hasActive = false;
+        foreach ($rows as $row) {
+            if ((int) ($row['is_active'] ?? 0) === 1) {
+                $hasActive = true;
+                break;
+            }
+        }
+
+        if ($hasActive) {
+            $changed = Database::execute(
+                "UPDATE area_mappings SET is_active = 0 WHERE room_number = ? AND area_selector = ? AND is_active = 1",
+                [$roomNumber, $areaSelector]
+            );
+            return $changed > 0
                 ? ['success' => true, 'action' => 'deactivated', 'message' => 'Area mapping deactivated']
                 : ['success' => true, 'action' => 'noop', 'message' => 'Mapping already removed'];
         }
 
-        // If already inactive, hard-delete so it disappears from raw listings (list_room_raw includes inactive rows).
-        $deleted = Database::execute("DELETE FROM area_mappings WHERE id = ? LIMIT 1", [$id]);
+        $deleted = Database::execute(
+            "DELETE FROM area_mappings WHERE room_number = ? AND area_selector = ? AND is_active = 0",
+            [$roomNumber, $areaSelector]
+        );
         if ($deleted < 1) {
             return ['success' => false, 'action' => 'noop', 'message' => 'Failed to permanently delete mapping'];
         }

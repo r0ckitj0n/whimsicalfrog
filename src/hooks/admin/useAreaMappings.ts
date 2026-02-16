@@ -211,12 +211,14 @@ export const useAreaMappings = (): IAreaMappingsHook => {
         }
     }, [fetchMappings]);
 
-    const deleteMapping = useCallback(async (id: number, room: string): Promise<IDeleteAreaMappingResponse> => {
+    const deleteMapping = useCallback(async (id: number, room: string, areaSelector?: string): Promise<IDeleteAreaMappingResponse> => {
         setIsLoading(true);
         try {
             const res = await ApiClient.post<IDeleteAreaMappingResponse>('/api/area_mappings.php', {
                 action: API_ACTION.DELETE_MAPPING,
-                id
+                id,
+                room_number: room,
+                area_selector: areaSelector
             });
             if (res?.success) {
                 await fetchMappings(room);

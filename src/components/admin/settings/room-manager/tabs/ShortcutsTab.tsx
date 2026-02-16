@@ -95,6 +95,8 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
                     <UnifiedMappingsTable
                         explicitMappings={mappings.explicitMappings}
                         derivedMappings={mappings.derivedMappings}
+                        availableAreas={mappings.availableAreas}
+                        derivedCategory={mappings.derivedCategory}
                         roomOptions={mappings.roomOptions}
                         onEdit={onContentEdit}
                         onToggleActive={onToggleMappingActive}

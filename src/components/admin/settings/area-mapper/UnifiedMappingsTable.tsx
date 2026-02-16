@@ -9,6 +9,8 @@ interface IRoomOption {
 interface UnifiedMappingsTableProps {
     explicitMappings: IAreaMapping[];
     derivedMappings: IAreaMapping[];
+    availableAreas: Array<{ val: string; label: string }>;
+    derivedCategory: string;
     roomOptions: IRoomOption[];
     onEdit: (mapping: IAreaMapping) => void;
     onToggleActive: (id: number, currentActive: boolean | number) => void;
@@ -46,6 +48,9 @@ const getDestinationLabel = (m: IAreaMapping | undefined, roomOptions: IRoomOpti
             primary: m.name || sku,
             secondary: m.name ? sku : undefined
         };
+    }
+    if (type === 'item') {
+        return { primary: '-' };
     }
 
     // Category mapping
@@ -124,6 +129,8 @@ const getImageSource = (m: IAreaMapping | undefined): string => {
 export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
     explicitMappings,
     derivedMappings,
+    availableAreas,
+    derivedCategory,
     roomOptions,
     onEdit,
     onToggleActive,
@@ -194,6 +201,27 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
             }
         }
 
+        const hasCategoryDerivation = String(derivedCategory || '').trim() !== '';
+        if (hasCategoryDerivation) {
+            for (const area of availableAreas) {
+                const selector = String(area?.val || '').trim();
+                if (!selector || slotMap.has(selector)) continue;
+                // Reserve every mapped area as a derived item slot so inventory growth
+                // naturally fills the next open position.
+                slotMap.set(selector, {
+                    area: selector,
+                    status: 'derived',
+                    explicit: undefined,
+                    live: {
+                        area_selector: selector,
+                        mapping_type: 'item',
+                        derived: true,
+                        image_url: '/images/items/placeholder.webp'
+                    } as IAreaMapping
+                });
+            }
+        }
+
         // Sort by area number
         return Array.from(slotMap.values()).sort((a, b) => {
             const mA = a.area.match(/\.area-(\d+)/i);
@@ -203,7 +231,7 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
             if (numA !== numB) return numA - numB;
             return a.area.localeCompare(b.area);
         });
-    }, [explicitMappings, derivedMappings]);
+    }, [explicitMappings, derivedMappings, availableAreas, derivedCategory]);
 
     return (
         <section>

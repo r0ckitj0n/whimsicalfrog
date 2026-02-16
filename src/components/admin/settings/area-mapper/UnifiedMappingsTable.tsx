@@ -138,6 +138,24 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
     onConvert,
     onPreviewImage
 }) => {
+    const hasLiveDerivedContent = (mapping: IAreaMapping | undefined): boolean => {
+        if (!mapping || !mapping.derived) return false;
+        const type = String(mapping.mapping_type || '').toLowerCase();
+        if (type === 'item') {
+            return String(mapping.item_sku || mapping.sku || '').trim() !== '';
+        }
+        if (type === 'content' || type === 'button' || type === 'page' || type === 'modal' || type === 'action') {
+            return String(mapping.content_target || '').trim() !== '' || String(mapping.link_url || '').trim() !== '';
+        }
+        if (type === 'link') {
+            return String(mapping.link_url || '').trim() !== '';
+        }
+        if (type === 'category') {
+            return Number(mapping.category_id || 0) > 0;
+        }
+        return false;
+    };
+
     // Merge mappings into unified slots
     const unifiedSlots = useMemo<UnifiedSlot[]>(() => {
         const slotMap = new Map<string, UnifiedSlot>();
@@ -254,9 +272,10 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                             const hasExplicit = !!slot.explicit;
                             const explicitIsLive = hasExplicit && !!slot.live && String(slot.live?.id ?? '') === String(slot.explicit?.id ?? '');
                             const explicitRowActive = hasExplicit && (slot.explicit!.is_active === true || Number(slot.explicit!.is_active) === 1);
+                            const liveDerivedHasContent = hasLiveDerivedContent(slot.live);
                             const effectiveStatus: SlotStatus = hasExplicit
                                 ? (!explicitRowActive ? 'inactive' : (explicitIsLive ? 'explicit' : 'blocked'))
-                                : (slot.live?.derived ? 'derived' : (slot.live ? 'explicit' : 'empty'));
+                                : (slot.live?.derived ? (liveDerivedHasContent ? 'derived' : 'inactive') : (slot.live ? 'explicit' : 'empty'));
                             const statusInfo = getStatusIndicator(effectiveStatus);
                             const mapping = slot.explicit || slot.live;
                             const liveMapping = slot.live || slot.explicit;
@@ -264,7 +283,7 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                             const destination = getDestinationLabel(mapping, roomOptions);
                             const isItemDerived = effectiveStatus === 'derived' && (slot.live?.item_sku || slot.live?.sku);
                             const isExplicitSlot = hasExplicit;
-                            const isActive = hasExplicit ? explicitRowActive : Boolean(slot.live);
+                            const isActive = hasExplicit ? explicitRowActive : liveDerivedHasContent;
 
                             return (
                                 <tr key={slot.area} className="hover:bg-[var(--brand-primary)]/5 group transition-colors">
@@ -332,7 +351,9 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                                                 <div className={`w-9 h-5 rounded-full peer-focus:ring-2 peer-focus:ring-blue-200 transition-colors ${isActive ? 'bg-emerald-500' : 'bg-slate-300'} peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-transform after:shadow-sm`}></div>
                                             </label>
                                         ) : (
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">Derived</span>
+                                            <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-emerald-600' : 'text-slate-300'}`}>
+                                                {isActive ? 'Auto' : 'Disabled'}
+                                            </span>
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-right">

@@ -214,20 +214,6 @@ export const LandingPage: React.FC = () => {
                 })}
             </div>
 
-            {/* Visible, crawlable text and links (SEO + accessibility) without disrupting the visual landing experience */}
-            <div className="absolute bottom-4 left-4 right-4 flex justify-center pointer-events-auto">
-                <div className="max-w-2xl w-full rounded-2xl bg-black/60 text-white px-4 py-3 backdrop-blur-sm ring-1 ring-white/10">
-                    <p className="text-sm sm:text-base leading-snug">
-                        Whimsical Frog is a cozy shop for handmade decor, gifts, and seasonal treasures.
-                        Browse the shop, learn our story, or get in touch.
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-3 justify-center text-sm">
-                        <a href="/shop" className="underline underline-offset-4 hover:opacity-90">Shop</a>
-                        <a href="/about" className="underline underline-offset-4 hover:opacity-90">About</a>
-                        <a href="/contact" className="underline underline-offset-4 hover:opacity-90">Contact</a>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 };

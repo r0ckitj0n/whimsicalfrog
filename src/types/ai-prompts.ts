@@ -6,6 +6,7 @@ export interface IAIPromptTemplate {
     context_type: string;
     prompt_text: string;
     is_active: number | boolean;
+    is_default?: number | boolean;
     created_at?: string;
     updated_at?: string;
 }

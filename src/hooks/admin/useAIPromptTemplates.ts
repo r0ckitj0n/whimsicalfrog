@@ -155,6 +155,25 @@ export const useAIPromptTemplates = () => {
         }
     }, [fetchTemplates]);
 
+    const setDefaultTemplate = useCallback(async (templateKey: string) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const res = await ApiClient.post<IAIPromptTemplateActionResponse>('/api/ai_prompt_templates.php?action=set_default_template', { template_key: templateKey });
+            if (!res?.success) {
+                throw new Error(res?.error || 'Failed to set default template');
+            }
+            await fetchTemplates();
+            return { success: true };
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Failed to set default template';
+            setError(message);
+            return { success: false, error: message };
+        } finally {
+            setIsLoading(false);
+        }
+    }, [fetchTemplates]);
+
     return {
         templates,
         variables,
@@ -168,6 +187,7 @@ export const useAIPromptTemplates = () => {
         fetchDropdownOptions,
         saveTemplate,
         deleteTemplate,
+        setDefaultTemplate,
         saveDropdownOptions,
         saveVariables
     };

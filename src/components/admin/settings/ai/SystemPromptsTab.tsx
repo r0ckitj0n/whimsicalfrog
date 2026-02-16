@@ -23,6 +23,7 @@ export const SystemPromptsTab: React.FC = () => {
         fetchDropdownOptions,
         saveTemplate,
         deleteTemplate,
+        setDefaultTemplate,
         saveDropdownOptions
     } = useAIPromptTemplates();
 
@@ -45,9 +46,10 @@ export const SystemPromptsTab: React.FC = () => {
         }
 
         const existingSelected = selectedTemplateId && templates.some(t => t.id === selectedTemplateId);
+        const dbDefault = templates.find(t => Boolean(t.is_default));
         const nextTemplate = existingSelected
             ? templates.find(t => t.id === selectedTemplateId)
-            : templates[0];
+            : (dbDefault || templates[0]);
 
         if (nextTemplate) {
             setSelectedTemplateId(nextTemplate.id);
@@ -59,6 +61,8 @@ export const SystemPromptsTab: React.FC = () => {
         () => templates.find(t => t.id === selectedTemplateId) || null,
         [templates, selectedTemplateId]
     );
+
+    const isSelectedDefault = Boolean(selectedTemplate?.is_default);
 
     const isDirty = useMemo(() => {
         if (!selectedTemplate || !draft) return false;
@@ -117,6 +121,17 @@ export const SystemPromptsTab: React.FC = () => {
         }
     };
 
+    const handleSetDefault = async () => {
+        const templateKey = String(selectedTemplate?.template_key || '').trim();
+        if (!templateKey) return;
+        const res = await setDefaultTemplate(templateKey);
+        if (res.success) {
+            window.WFToast?.success?.('Default prompt template updated');
+        } else {
+            window.WFToast?.error?.(res.error || 'Failed to set default template');
+        }
+    };
+
     const handleVariableInsert = (variableKey: string) => {
         const token = `{{${variableKey}}}`;
         setDraft(prev => {
@@ -164,11 +179,19 @@ export const SystemPromptsTab: React.FC = () => {
                         className="w-full text-xs font-bold p-3 border border-slate-200 rounded-xl bg-white"
                     >
                         {templates.map(t => (
-                            <option key={t.id} value={t.id}>{t.template_name}</option>
+                            <option key={t.id} value={t.id}>{t.template_name}{t.is_default ? ' (Default)' : ''}</option>
                         ))}
                     </select>
                 </div>
                 <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={handleSetDefault}
+                        disabled={!selectedTemplate || isSelectedDefault || isLoading}
+                        className="px-3 py-2 rounded-lg border border-slate-300 text-[10px] font-black uppercase tracking-widest text-slate-700 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isSelectedDefault ? 'Default' : 'Set Default'}
+                    </button>
                     <button
                         type="button"
                         onClick={handleNewTemplate}
@@ -204,6 +227,9 @@ export const SystemPromptsTab: React.FC = () => {
                                 onChange={(e) => setDraft(prev => prev ? { ...prev, template_name: e.target.value } : prev)}
                                 className="w-full text-xs font-bold p-3 border border-slate-200 rounded-xl bg-white"
                             />
+                            {isSelectedDefault && (
+                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">This is the current default template.</p>
+                            )}
                         </div>
 
                         <div className="space-y-2">

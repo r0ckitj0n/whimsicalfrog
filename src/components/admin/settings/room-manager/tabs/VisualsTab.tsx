@@ -202,7 +202,7 @@ export const VisualsTab: React.FC<VisualsTabProps> = ({
         if (roomTemplates.length === 0) return;
         const genericDefault = roomTemplates.find((t) => t.template_key === 'room_staging_empty_shelves_v1');
         const userPreferred = roomTemplates.find((t) => t.template_key === settingsTemplateKey);
-        setSelectedTemplateKey(genericDefault?.template_key || userPreferred?.template_key || roomTemplates[0].template_key);
+        setSelectedTemplateKey(userPreferred?.template_key || genericDefault?.template_key || roomTemplates[0].template_key);
     }, [roomTemplates, settingsTemplateKey]);
 
     const variableDefaults = useMemo(() => {

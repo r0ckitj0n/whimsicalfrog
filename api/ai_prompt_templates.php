@@ -303,6 +303,31 @@ function ai_prompt_templates_resolve_prompt_text(string $template, array $resolv
     return $prompt;
 }
 
+function ai_prompt_templates_get_default_room_template_key(): string
+{
+    $row = Database::queryOne(
+        "SELECT setting_value
+         FROM business_settings
+         WHERE category = 'ai' AND setting_key = 'room_generation_template_key'
+         LIMIT 1"
+    );
+    return trim((string) ($row['setting_value'] ?? ''));
+}
+
+function ai_prompt_templates_set_default_room_template_key(string $templateKey): void
+{
+    Database::execute(
+        "INSERT INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name)
+         VALUES ('ai', 'room_generation_template_key', ?, 'Default room generation prompt template key', 'text', 'Room Generation Template Key')
+         ON DUPLICATE KEY UPDATE
+            setting_value = VALUES(setting_value),
+            description = VALUES(description),
+            setting_type = VALUES(setting_type),
+            display_name = VALUES(display_name)",
+        [$templateKey]
+    );
+}
+
 function ai_prompt_templates_init_tables(): void
 {
     Database::execute("CREATE TABLE IF NOT EXISTS ai_prompt_templates (
@@ -534,11 +559,19 @@ try {
 
     switch ($action) {
         case 'list_templates': {
+            $defaultTemplateKey = ai_prompt_templates_get_default_room_template_key();
             $templates = Database::queryAll(
                 'SELECT id, template_key, template_name, description, context_type, prompt_text, is_active, created_at, updated_at
                  FROM ai_prompt_templates
                  ORDER BY is_active DESC, template_name ASC'
             );
+            foreach ($templates as &$template) {
+                $template['is_default'] = (
+                    $defaultTemplateKey !== ''
+                    && (string) ($template['template_key'] ?? '') === $defaultTemplateKey
+                ) ? 1 : 0;
+            }
+            unset($template);
             Response::json(['success' => true, 'templates' => $templates]);
             break;
         }
@@ -665,6 +698,28 @@ try {
                 Response::error('Template not found', null, 404);
             }
             Response::json(['success' => true, 'message' => 'Template deleted']);
+            break;
+        }
+
+        case 'set_default_template': {
+            $templateKey = trim((string) ($input['template_key'] ?? ''));
+            if ($templateKey === '') {
+                Response::error('template_key is required', null, 422);
+            }
+
+            $template = Database::queryOne(
+                "SELECT id
+                 FROM ai_prompt_templates
+                 WHERE template_key = ? AND context_type = 'room_generation' AND is_active = 1
+                 LIMIT 1",
+                [$templateKey]
+            );
+            if (!$template) {
+                Response::error('Active room_generation template not found', null, 404);
+            }
+
+            ai_prompt_templates_set_default_room_template_key($templateKey);
+            Response::json(['success' => true, 'message' => 'Default template updated']);
             break;
         }
 

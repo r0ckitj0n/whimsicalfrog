@@ -436,7 +436,17 @@ try {
     wf_ai_prompt_seed_defaults();
 
     $input = json_decode(file_get_contents('php://input'), true) ?? [];
-    $templateKey = trim((string) ($input['template_key'] ?? 'room_staging_empty_shelves_v1'));
+    $defaultTemplateRow = Database::queryOne(
+        "SELECT setting_value
+         FROM business_settings
+         WHERE category = 'ai' AND setting_key = 'room_generation_template_key'
+         LIMIT 1"
+    );
+    $defaultTemplateKey = trim((string) ($defaultTemplateRow['setting_value'] ?? ''));
+    if ($defaultTemplateKey === '') {
+        $defaultTemplateKey = 'room_staging_empty_shelves_v1';
+    }
+    $templateKey = trim((string) ($input['template_key'] ?? $defaultTemplateKey));
     $roomParam = trim((string) ($input['room_number'] ?? $input['room'] ?? ''));
     $provider = strtolower(trim((string) ($input['provider'] ?? 'openai')));
     $size = trim((string) ($input['size'] ?? '1536x1024'));

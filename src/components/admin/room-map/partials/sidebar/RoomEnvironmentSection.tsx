@@ -1,4 +1,5 @@
 import React from 'react';
+import { extractBackgroundFilename } from '../../../../../utils/background-url.js';
 
 interface RoomEnvironmentSectionProps {
     bgUrl: string;
@@ -55,6 +56,8 @@ export const RoomEnvironmentSection: React.FC<RoomEnvironmentSectionProps> = ({
     const isCustomColor = iconPanelColor !== 'var(--brand-primary)' &&
         iconPanelColor !== 'var(--brand-secondary)' &&
         iconPanelColor !== 'transparent';
+
+    const backgroundFilename = extractBackgroundFilename(bgUrl);
 
     return (
         <section className="space-y-4">
@@ -115,13 +118,18 @@ export const RoomEnvironmentSection: React.FC<RoomEnvironmentSectionProps> = ({
 
                 <div className="space-y-1">
                     <label className="text-xs font-bold text-gray-500 uppercase">Background URL</label>
-                    <input
-                        type="text"
-                        value={bgUrl}
-                        onChange={(e) => onBgUrlChange(e.target.value)}
-                        placeholder="/images/backgrounds/..."
-                        className="form-input w-full text-sm py-1.5"
-                    />
+                    <div className="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden">
+                        <span className="px-2 py-1.5 text-xs font-bold text-slate-500 bg-slate-50 border-r border-slate-200 whitespace-nowrap">
+                            /images/backgrounds/
+                        </span>
+                        <input
+                            type="text"
+                            value={backgroundFilename}
+                            onChange={(e) => onBgUrlChange(e.target.value)}
+                            placeholder="background-room1.webp"
+                            className="form-input w-full text-sm py-1.5 border-0 focus:ring-0"
+                        />
+                    </div>
                 </div>
 
                 <div className="space-y-2 bg-white p-3 rounded-xl border border-gray-100">

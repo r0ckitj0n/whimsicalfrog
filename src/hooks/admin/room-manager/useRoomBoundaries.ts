@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { IMapArea, IRoomMapEditorHook, IRoomBoundariesHook, IRoomMap } from '../../../types/room.js';
 import { useModalContext } from '../../../context/ModalContext.js';
 import { normalizeMapAreas } from './mapCoordinates.js';
+import { normalizeBackgroundUrlToLibrary } from '../../../utils/background-url.js';
 
 const normalizeAreasForDirtyCheck = (areas: IMapArea[]) =>
     areas.map((a) => ({
@@ -85,15 +86,17 @@ export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEdit
 
     const handleSaveSettings = useCallback(async (onSuccess?: () => void) => {
         if (!selectedRoom) return;
+        const normalizedBackgroundUrl = normalizeBackgroundUrlToLibrary(bgUrl);
         const res = await boundaries.updateRoomSettings(selectedRoom, {
             render_context: renderContext,
-            background_url: bgUrl,
+            background_url: normalizedBackgroundUrl,
             icon_panel_color: iconPanelColor,
             target_aspect_ratio: targetAspectRatio
         });
         if (res.success) {
             if (window.WFToast) window.WFToast.success('Settings updated');
-            setInitialSettings({ renderContext, bgUrl, iconPanelColor, targetAspectRatio });
+            setBgUrl(normalizedBackgroundUrl);
+            setInitialSettings({ renderContext, bgUrl: normalizedBackgroundUrl, iconPanelColor, targetAspectRatio });
             setPreviewKey((prev: number) => prev + 1);
             onSuccess?.();
         }

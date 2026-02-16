@@ -12,6 +12,7 @@ import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesClo
 import { useAIImageEdit } from '../../../hooks/admin/useAIImageEdit.js';
 import { useModalContext } from '../../../context/ModalContext.js';
 import { RoomNavigationModal } from '../../modals/admin/settings/RoomNavigationModal.js';
+import { buildBackgroundUrl } from '../../../utils/background-url.js';
 
 interface UnifiedRoomManagerProps {
     onClose?: () => void;
@@ -92,7 +93,11 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
     }, [initialTab]);
 
     // UI Wrappers to sync local state with roomForm
-    const handleBgUrlChange = (val: string) => { setBgUrl(val); if (selectedRoom) setRoomForm(prev => ({ ...prev, background_url: val })); };
+    const handleBgUrlChange = (val: string) => {
+        const normalized = buildBackgroundUrl(val);
+        setBgUrl(normalized);
+        if (selectedRoom) setRoomForm(prev => ({ ...prev, background_url: normalized }));
+    };
     const handleRenderContextChange = (val: string) => { setRenderContext(val); if (selectedRoom) setRoomForm(prev => ({ ...prev, render_context: val })); };
     const handleIconPanelColorChange = (val: string) => { setIconPanelColor(val); if (selectedRoom) setRoomForm(prev => ({ ...prev, icon_panel_color: val })); };
     const handleTargetAspectRatioChange = (val: number) => { setTargetAspectRatio(val); if (selectedRoom) setRoomForm(prev => ({ ...prev, target_aspect_ratio: val })); };

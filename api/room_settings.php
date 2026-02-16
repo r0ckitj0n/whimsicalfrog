@@ -9,6 +9,26 @@ require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/rooms/settings_manager.php';
 
+function wf_normalize_background_url($value) {
+    $raw = trim((string) ($value ?? ''));
+    if ($raw === '') {
+        return '';
+    }
+
+    $path = parse_url($raw, PHP_URL_PATH);
+    if (!is_string($path) || $path === '') {
+        $path = $raw;
+    }
+
+    $filename = basename(str_replace('\\', '/', $path));
+    $filename = trim($filename);
+    if ($filename === '' || $filename === '.' || $filename === '..') {
+        return '';
+    }
+
+    return '/images/backgrounds/' . $filename;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
@@ -101,6 +121,8 @@ try {
                         }
                         if ($f === 'display_order' || $f === 'show_search_bar')
                             $val = (int) $val;
+                        if ($f === 'background_url')
+                            $val = wf_normalize_background_url($val);
                         $params[] = $val;
                     }
                 }
@@ -155,6 +177,8 @@ try {
                         }
                         if ($f === 'display_order' || $f === 'show_search_bar')
                             $val = (int) $val;
+                        if ($f === 'background_url')
+                            $val = wf_normalize_background_url($val);
                         $params[] = $val;
                     }
                 }

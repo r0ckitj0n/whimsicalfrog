@@ -21,6 +21,7 @@ import { useRoomShortcuts } from './room-manager/useRoomShortcuts.js';
 import { useRoomBoundaries } from './room-manager/useRoomBoundaries.js';
 import { normalizeMapAreas } from './room-manager/mapCoordinates.js';
 import { useAICostEstimateConfirm } from './useAICostEstimateConfirm.js';
+import { normalizeBackgroundUrlToLibrary } from '../../utils/background-url.js';
 
 interface UseUnifiedRoomManagerProps {
     onClose?: () => void;
@@ -86,15 +87,16 @@ export const useUnifiedRoomManager = ({
         if (settings) {
             const context = settings.render_context || 'modal';
             const ratio = parseFloat(String(settings.target_aspect_ratio)) || (context === 'fullscreen' ? 1280 / 896 : 1024 / 768);
+            const normalizedBackgroundUrl = normalizeBackgroundUrlToLibrary(String(settings.background_url || ''));
 
             boundariesTab.setRenderContext(context);
-            boundariesTab.setBgUrl(settings.background_url || '');
+            boundariesTab.setBgUrl(normalizedBackgroundUrl);
             boundariesTab.setIconPanelColor(settings.icon_panel_color || 'transparent');
             boundariesTab.setTargetAspectRatio(ratio);
 
             boundariesTab.setInitialSettings({
                 renderContext: context,
-                bgUrl: settings.background_url || '',
+                bgUrl: normalizedBackgroundUrl,
                 iconPanelColor: settings.icon_panel_color || 'transparent',
                 targetAspectRatio: ratio
             });
@@ -102,6 +104,7 @@ export const useUnifiedRoomManager = ({
             overview.setRoomForm(prev => ({
                 ...prev,
                 ...settings,
+                background_url: normalizedBackgroundUrl,
                 room_number: roomId
             }));
         } else {

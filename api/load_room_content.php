@@ -57,18 +57,56 @@ try {
         [$room_number]
     ) ?: null;
 
-    // Use manually set background_url from room_settings if present
-    if (!empty($metadata['background_url'])) {
-        if (!$bgMeta) {
-            $bgMeta = [
-                'name' => 'Custom Background',
-                'image_filename' => $metadata['background_url'],
-                'webp_filename' => null
-            ];
+    // Use manually set background_url from room_settings if present, but only when resolvable.
+    $manualBackgroundUrl = trim((string) ($metadata['background_url'] ?? ''));
+    if ($manualBackgroundUrl !== '') {
+        $manualResolvedUrl = $manualBackgroundUrl;
+        $manualIsUsable = true;
+
+        if (!preg_match('/^https?:\/\//i', $manualBackgroundUrl)) {
+            $parsedPath = parse_url($manualBackgroundUrl, PHP_URL_PATH);
+            if (!is_string($parsedPath) || trim($parsedPath) === '') {
+                $parsedPath = $manualBackgroundUrl;
+            }
+
+            $normalizedPath = '/' . ltrim(str_replace('\\', '/', $parsedPath), '/');
+            $projectRoot = realpath(__DIR__ . '/..') ?: (__DIR__ . '/..');
+            $candidate = '';
+
+            if (str_starts_with($normalizedPath, '/images/')) {
+                $candidate = rtrim($projectRoot, '/') . $normalizedPath;
+                $manualResolvedUrl = $normalizedPath;
+            } else {
+                $filename = basename($normalizedPath);
+                if ($filename === '' || $filename === '.' || $filename === '..') {
+                    $manualIsUsable = false;
+                } else {
+                    $manualResolvedUrl = '/images/backgrounds/' . $filename;
+                    $candidate = rtrim($projectRoot, '/') . $manualResolvedUrl;
+                }
+            }
+
+            if ($manualIsUsable && !is_file($candidate)) {
+                $manualIsUsable = false;
+            }
+        }
+
+        if ($manualIsUsable) {
+            $metadata['background_url'] = $manualResolvedUrl;
+            if (!$bgMeta) {
+                $bgMeta = [
+                    'name' => 'Custom Background',
+                    'image_filename' => $manualResolvedUrl,
+                    'webp_filename' => null
+                ];
+            } else {
+                // Override the filename with the custom URL
+                $bgMeta['image_filename'] = $manualResolvedUrl;
+                $bgMeta['webp_filename'] = null;
+            }
         } else {
-            // Override the filename with the custom URL
-            $bgMeta['image_filename'] = $metadata['background_url'];
-            $bgMeta['webp_filename'] = null;
+            // Invalid override should not mask a valid active background.
+            $metadata['background_url'] = '';
         }
     }
 

@@ -146,7 +146,15 @@ if [ "${WF_DRY_RUN:-0}" = "1" ]; then
   echo -e "${YELLOW}DRY-RUN: Skipping live website backup API call${NC}"
 else
   echo -e "${GREEN}💾 Backing up website...${NC}"
-  curl -s -X POST "${BASE_URL}/api/backup_website.php" || echo -e "${YELLOW}⚠️  Website backup failed, continuing deployment...${NC}"
+  BACKUP_URL="${BASE_URL}/api/backup_website.php"
+  if [ -n "${WF_ADMIN_TOKEN:-}" ]; then
+    BACKUP_URL="${BACKUP_URL}?admin_token=${WF_ADMIN_TOKEN}"
+  fi
+  if curl -fsS -X POST "$BACKUP_URL" >/dev/null; then
+    echo -e "${GREEN}✅ Website backup API triggered${NC}"
+  else
+    echo -e "${YELLOW}⚠️  Website backup failed (auth/token or endpoint issue), continuing deployment...${NC}"
+  fi
 fi
 echo -e "${YELLOW}⏭️  Skipping database updates in fast deploy (use deploy_full.sh for DB restore)${NC}"
 
@@ -203,9 +211,7 @@ set ssl:verify-certificate no
 set cmd:fail-exit no
 open sftp://$USER:$PASS@$HOST
 rm -f .tmp* ".tmp2 *" *.bak *.bak.*
-cd src
-rm -f .tmp* ".tmp2 *" *.bak *.bak.*
-cd ..
+rm -f src/.tmp* src/".tmp2 *" src/*.bak src/*.bak.*
 ${PRECLEAN_IMAGE_LINES}
 bye
 EOL
@@ -269,6 +275,14 @@ fi
 
 # Create lftp commands for file deployment
 echo -e "${GREEN}📁 Preparing file deployment...${NC}"
+DOC_HTACCESS_INCLUDE=""
+if [ -f documentation/.htaccess ]; then
+  DOC_HTACCESS_INCLUDE=' --include-glob documentation/.htaccess'
+fi
+REPORTS_HTACCESS_INCLUDE=""
+if [ -f reports/.htaccess ]; then
+  REPORTS_HTACCESS_INCLUDE=' --include-glob reports/.htaccess'
+fi
 cat > deploy_commands.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
@@ -295,9 +309,7 @@ mirror $MIRROR_FLAGS \
   --exclude-glob "backups/**" \
   --exclude-glob "logs/**" \
   --exclude-glob "dist/**" \
-  --exclude-glob "src/**" \
-  --include-glob documentation/.htaccess \
-  --include-glob reports/.htaccess \
+  --exclude-glob "src/**"${DOC_HTACCESS_INCLUDE}${REPORTS_HTACCESS_INCLUDE} \
   --exclude-glob "*.log" \
   --exclude-glob "**/*.log" \
   --exclude-glob "**/*.sh" \

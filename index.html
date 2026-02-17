@@ -70,7 +70,9 @@
         (async function loadViteBuiltAssets() {
             const candidates = [
                 { manifestUrl: '/dist/.vite/manifest.json', assetPrefix: '/dist/' },
-                { manifestUrl: '/.vite/manifest.json', assetPrefix: '/' }
+                { manifestUrl: '/dist/manifest.json', assetPrefix: '/dist/' },
+                { manifestUrl: '/.vite/manifest.json', assetPrefix: '/' },
+                { manifestUrl: '/manifest.json', assetPrefix: '/' }
             ];
 
             const tryLoadManifest = async (url) => {
@@ -99,6 +101,22 @@
 
                     const cssFiles = new Set();
                     collectCss(manifest, entryKey, new Set(), cssFiles);
+
+                    // Include base stylesheet entries produced as independent Vite inputs.
+                    const pathname = String(window.location.pathname || '').toLowerCase();
+                    const isAdminPath = pathname === '/admin' || pathname.startsWith('/admin/') || pathname.includes('admin_router.php');
+                    const extraCssEntryKeys = ['src/styles/entries/public-core.css'];
+                    if (isAdminPath) {
+                        extraCssEntryKeys.push('src/styles/entries/admin-core.css');
+                    }
+
+                    for (const cssEntryKey of extraCssEntryKeys) {
+                        const cssEntry = manifest[cssEntryKey];
+                        if (cssEntry && typeof cssEntry.file === 'string' && cssEntry.file !== '') {
+                            cssFiles.add(cssEntry.file);
+                        }
+                    }
+
                     for (const css of cssFiles) {
                         const link = document.createElement('link');
                         link.rel = 'stylesheet';

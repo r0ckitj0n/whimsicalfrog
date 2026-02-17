@@ -52,6 +52,19 @@
     display: block;
 }
 
+body[data-page='room_main'] .room-item-icon[data-mapping-type='content'] .room-item-shortcut-img,
+#wf-root .room-item-icon[data-mapping-type='content'] .room-item-shortcut-img,
+#mainRoomPage-react .room-item-icon[data-mapping-type='content'] .room-item-shortcut-img {
+    transition: transform 0.2s ease;
+    transform-origin: center center;
+}
+
+body[data-page='room_main'] .room-item-icon[data-mapping-type='content']:hover .room-item-shortcut-img,
+#wf-root .room-item-icon[data-mapping-type='content']:hover .room-item-shortcut-img,
+#mainRoomPage-react .room-item-icon[data-mapping-type='content']:hover .room-item-shortcut-img {
+    transform: scale(1.5) !important;
+}
+
 .room-title-overlay {
     position: absolute;
     top: 1rem;

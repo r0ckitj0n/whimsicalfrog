@@ -120,6 +120,8 @@ export const MainRoom: React.FC = () => {
                 {destinations.map((dest, idx) => {
                     const selector = dest.area_selector.startsWith('.') ? dest.area_selector : `.${dest.area_selector}`;
                     const coord = coordinates.find(c => c.selector.toLowerCase() === selector.toLowerCase());
+                    const mappingType = String(dest.mapping_type || '').toLowerCase();
+                    const isShortcutType = mappingType === 'content';
 
                     if (!coord) return null;
 
@@ -131,7 +133,8 @@ export const MainRoom: React.FC = () => {
                     return (
                         <div
                             key={idx}
-                            className={`room-item-icon absolute group cursor-pointer transition-opacity duration-300 overflow-visible ${!isLoading && coordinates.length > 0 ? 'opacity-100' : 'opacity-0'}`}
+                            className={`room-item-icon absolute group cursor-pointer transition-opacity duration-300 overflow-visible ${isShortcutType ? 'room-item-shortcut' : ''} ${!isLoading && coordinates.length > 0 ? 'opacity-100' : 'opacity-0'}`}
+                            data-mapping-type={mappingType || undefined}
                             style={{
                                 ...styles,
                                 height: 'var(--door-height)',
@@ -159,24 +162,13 @@ export const MainRoom: React.FC = () => {
                                 <img
                                     src={imgUrl}
                                     alt=""
-                                    className="block"
+                                    className="block room-item-icon-img room-item-shortcut-img"
                                     style={{
                                         width: '100%',
                                         height: '100%',
                                         objectFit: 'contain',
                                         maxWidth: '100%',
-                                        transition: 'filter 0.3s ease, transform 0.2s ease',
-                                        transformOrigin: 'center center',
                                         willChange: 'filter, transform'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        const isShortcutType = String(dest.mapping_type || '').toLowerCase() === 'content';
-                                        e.currentTarget.style.filter = 'brightness(1.1) drop-shadow(0 0 15px rgba(135,172,58,0.5))';
-                                        e.currentTarget.style.transform = isShortcutType ? 'scale(1.5)' : 'none';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.filter = 'none';
-                                        e.currentTarget.style.transform = 'none';
                                     }}
                                     loading="lazy"
                                 />

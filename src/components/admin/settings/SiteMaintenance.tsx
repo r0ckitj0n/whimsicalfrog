@@ -29,6 +29,7 @@ export const SiteMaintenance: React.FC<SiteMaintenanceProps> = ({ onClose, initi
         compactRepairDatabase,
         listBackups,
         restoreDatabaseBackup,
+        restoreDatabaseBackupUpload,
         restoreWebsiteBackup
     } = useSiteMaintenance();
 
@@ -146,6 +147,7 @@ export const SiteMaintenance: React.FC<SiteMaintenanceProps> = ({ onClose, initi
                                     backupFiles={backupFiles}
                                     setBackupFiles={setBackupFiles}
                                     restoreDatabaseBackup={restoreDatabaseBackup}
+                                    restoreDatabaseBackupUpload={restoreDatabaseBackupUpload}
                                     restoreWebsiteBackup={restoreWebsiteBackup}
                                     restoreResult={restoreResult}
                                     setRestoreResult={setRestoreResult}

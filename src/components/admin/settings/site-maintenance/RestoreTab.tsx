@@ -8,6 +8,7 @@ interface RestoreTabProps {
     backupFiles: IMaintenanceBackupFile[];
     setBackupFiles: (files: IMaintenanceBackupFile[]) => void;
     restoreDatabaseBackup: (serverBackupPath: string) => Promise<IRestoreResult>;
+    restoreDatabaseBackupUpload: (backupFile: File, options?: { ignore_errors?: boolean }) => Promise<IRestoreResult>;
     restoreWebsiteBackup: (backupFile: string) => Promise<IRestoreResult>;
     restoreResult: IRestoreResult | null;
     setRestoreResult: (res: IRestoreResult | null) => void;
@@ -32,6 +33,7 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
     backupFiles,
     setBackupFiles,
     restoreDatabaseBackup,
+    restoreDatabaseBackupUpload,
     restoreWebsiteBackup,
     restoreResult,
     setRestoreResult
@@ -39,6 +41,7 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
     const { confirm } = useModalContext();
     const [selectedWebsiteBackup, setSelectedWebsiteBackup] = useState<string>('');
     const [selectedDatabaseBackup, setSelectedDatabaseBackup] = useState<string>('');
+    const [localDatabaseBackup, setLocalDatabaseBackup] = useState<File | null>(null);
 
     const websiteBackups = useMemo(
         () => backupFiles.filter((f) => f.type === 'website'),
@@ -87,14 +90,16 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
     };
 
     const handleRestoreDatabase = async () => {
-        if (!selectedDatabaseBackup) {
-            window.WFToast?.error('Select a database backup file first.');
+        if (!selectedDatabaseBackup && !localDatabaseBackup) {
+            window.WFToast?.error('Select a server backup or choose a local backup file first.');
             return;
         }
 
         const confirmed = await confirm({
             title: 'Restore Database',
-            message: 'This can replace table data in your current database. Continue only if you have a current backup and want to roll back data.',
+            message: localDatabaseBackup
+                ? `This uploads and restores ${localDatabaseBackup.name}. Existing database data may be replaced. Continue?`
+                : 'This can replace table data in your current database. Continue only if you have a current backup and want to roll back data.',
             confirmText: 'Restore Database',
             cancelText: 'Cancel',
             confirmStyle: 'danger',
@@ -102,11 +107,14 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
         });
         if (!confirmed) return;
 
-        const result = await restoreDatabaseBackup(selectedDatabaseBackup);
+        const result = localDatabaseBackup
+            ? await restoreDatabaseBackupUpload(localDatabaseBackup)
+            : await restoreDatabaseBackup(selectedDatabaseBackup);
         setRestoreResult(result);
 
         if (result.success) {
             window.WFToast?.success('Database backup restored successfully.');
+            setLocalDatabaseBackup(null);
         } else {
             window.WFToast?.error(result.error || 'Database restore failed.');
         }
@@ -160,7 +168,7 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
 
                 <div className="p-6 border-2 border-dashed rounded-xl">
                     <h4 className="font-bold text-gray-800">Database Backup Restore</h4>
-                    <p className="text-sm text-gray-500 mt-1 mb-4">Restore SQL data from a `.sql` or `.sql.gz` backup file.</p>
+                    <p className="text-sm text-gray-500 mt-1 mb-4">Restore SQL data from a server backup list or upload a `.sql` / `.sql.gz` file from your computer.</p>
                     <select
                         value={selectedDatabaseBackup}
                         onChange={(e) => setSelectedDatabaseBackup(e.target.value)}
@@ -174,14 +182,34 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
                             </option>
                         ))}
                     </select>
+                    <div className="mt-4">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                            Or choose local backup file
+                        </label>
+                        <input
+                            type="file"
+                            accept=".sql,.gz,.sql.gz,application/sql,application/gzip"
+                            disabled={isLoading}
+                            onChange={(e) => {
+                                const file = e.target.files?.[0] ?? null;
+                                setLocalDatabaseBackup(file);
+                            }}
+                            className="block w-full text-xs text-slate-700 file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border file:border-slate-300 file:bg-white file:text-slate-700 file:font-semibold hover:file:bg-slate-50"
+                        />
+                        {localDatabaseBackup && (
+                            <p className="mt-2 text-xs text-slate-500">
+                                Selected local file: <span className="font-semibold text-slate-700">{localDatabaseBackup.name}</span>
+                            </p>
+                        )}
+                    </div>
                     <button
                         type="button"
                         onClick={() => void handleRestoreDatabase()}
-                        disabled={isLoading || !selectedDatabaseBackup}
+                        disabled={isLoading || (!selectedDatabaseBackup && !localDatabaseBackup)}
                         className="mt-4 w-full btn-text-primary py-3 disabled:opacity-60"
                         data-help-id="maintenance-restore-database"
                     >
-                        {isLoading ? 'Restoring Database...' : 'Restore Database Backup'}
+                        {isLoading ? 'Restoring Database...' : localDatabaseBackup ? 'Upload & Restore Local Backup' : 'Restore Database Backup'}
                     </button>
                 </div>
             </div>
@@ -194,7 +222,13 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
                     <div className={`mt-2 text-xs font-mono space-y-1 ${restoreResult.success ? 'text-emerald-700/90' : 'text-rose-700/90'}`}>
                         {restoreResult.message && <p>{restoreResult.message}</p>}
                         {restoreResult.error && <p>{restoreResult.error}</p>}
+                        {restoreResult.pre_restore_backup && <p><strong>Safety Backup:</strong> {restoreResult.pre_restore_backup}</p>}
                         {restoreResult.restored_file && <p><strong>File:</strong> {restoreResult.restored_file}</p>}
+                        {restoreResult.preflight && (
+                            <p>
+                                <strong>Preflight:</strong> {restoreResult.preflight.statements} statements, {restoreResult.preflight.tables_touched} table(s) touched
+                            </p>
+                        )}
                         {typeof restoreResult.extracted_files === 'number' && <p><strong>Extracted Files:</strong> {restoreResult.extracted_files}</p>}
                         {typeof restoreResult.tables_restored === 'number' && <p><strong>Tables Restored:</strong> {restoreResult.tables_restored}</p>}
                         {typeof restoreResult.records_restored === 'number' && <p><strong>Records Restored:</strong> {restoreResult.records_restored}</p>}

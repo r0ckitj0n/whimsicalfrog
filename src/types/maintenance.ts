@@ -71,6 +71,22 @@ export interface IRestoreResult {
     tables_restored?: number;
     records_restored?: number;
     statements_executed?: number;
+    pre_restore_backup?: string | null;
+    preflight?: {
+        statements: number;
+        tables_touched: number;
+        tables_recreated: number;
+        tables_data_restored: number;
+    };
+}
+
+export interface IRestoreDatabaseRequest {
+    server_backup_path: string;
+    ignore_errors?: '1' | '0';
+}
+
+export interface IRestoreDatabaseUploadOptions {
+    ignore_errors?: boolean;
 }
 
 export interface IDatabaseInfo {

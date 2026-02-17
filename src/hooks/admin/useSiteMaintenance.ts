@@ -7,6 +7,8 @@ import type {
     IBackupListResponse,
     IDatabaseInfo,
     IMaintenanceBackupFile,
+    IRestoreDatabaseRequest,
+    IRestoreDatabaseUploadOptions,
     IRestoreResult,
     IScanResult,
     ISystemConfig
@@ -131,13 +133,35 @@ export const useSiteMaintenance = () => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await ApiClient.post<IRestoreResult>('/api/database_maintenance.php?action=restore_database', {
+            const payload: IRestoreDatabaseRequest = {
                 server_backup_path: serverBackupPath
-            });
+            };
+            const res = await ApiClient.post<IRestoreResult>('/api/database_maintenance.php?action=restore_database', payload);
             return res;
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Unknown error';
             logger.error('restoreDatabaseBackup failed', err);
+            setError(message);
+            return { success: false, error: message } as IRestoreResult;
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    const restoreDatabaseBackupUpload = useCallback(async (backupFile: File, options: IRestoreDatabaseUploadOptions = {}) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const formData = new FormData();
+            formData.append('backup_file', backupFile);
+            if (options.ignore_errors) {
+                formData.append('ignore_errors', '1');
+            }
+            const res = await ApiClient.upload<IRestoreResult>('/api/database_maintenance.php?action=restore_database', formData);
+            return res;
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Unknown error';
+            logger.error('restoreDatabaseBackupUpload failed', err);
             setError(message);
             return { success: false, error: message } as IRestoreResult;
         } finally {
@@ -215,6 +239,7 @@ export const useSiteMaintenance = () => {
         compactRepairDatabase,
         listBackups,
         restoreDatabaseBackup,
+        restoreDatabaseBackupUpload,
         restoreWebsiteBackup,
         scanConnections,
         convertConnections

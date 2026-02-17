@@ -50,34 +50,27 @@ class AreaMappingUploadHelper
         }
         @chmod($absOriginal, 0644);
 
-        $finalWebp = null;
-        if (class_exists('AIImageProcessor')) {
-            $processor = new AIImageProcessor();
-            try {
-                // Use processBackgroundImage which handles dual format (webp+png)
-                $result = $processor->processBackgroundImage($absOriginal, [
-                    'createDualFormat' => true,
-                    'webp_quality' => 90,
-                    'png_compression' => 1,
-                    'preserve_transparency' => true,
-                    'resizeDimensions' => ['width' => 500, 'height' => 500],
-                    'resizeMode' => 'contain'
-                ]);
-                if ($result && !empty($result['webp_path'])) {
-                    $finalWebp = $result['webp_path'];
-                } else {
-                    $finalWebp = $absOriginal;
-                }
-                if (!empty($result['png_path']) && file_exists($result['png_path'])) {
-                    @chmod($result['png_path'], 0644);
-                }
-            } catch (Throwable $e) {
-                error_log("Sign upload processor error: " . $e->getMessage());
-                $finalWebp = $absOriginal;
-            }
-        } else {
-            $finalWebp = $absOriginal;
+        if (!class_exists('AIImageProcessor')) {
+            throw new Exception('AIImageProcessor is required for sign upload processing', 500);
         }
+        if (!function_exists('imagewebp')) {
+            throw new Exception('WEBP support is required for sign uploads', 500);
+        }
+
+        $processor = new AIImageProcessor();
+        $result = $processor->convertToDualFormat($absOriginal, [
+            'webp_quality' => 92,
+            'png_compression' => 1,
+            'preserve_transparency' => true,
+            'force_png' => true
+        ]);
+        if (empty($result['success']) || empty($result['webp_path']) || empty($result['png_path'])) {
+            throw new Exception('Failed to generate PNG/WebP sign outputs', 500);
+        }
+        $finalWebp = (string) $result['webp_path'];
+        $finalPng = (string) $result['png_path'];
+        @chmod($finalWebp, 0644);
+        @chmod($finalPng, 0644);
 
         // Normalize to canonical sign URL format.
         $relative = ltrim(str_replace($projectRoot, '', $finalWebp), '/');

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 
 // Enable CORS for development
 header('Access-Control-Allow-Origin: *');
@@ -18,7 +19,34 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'error' => 'Method not allowed']);
     exit();
 }
-requireAdmin(true);
+
+function wf_db_backup_has_valid_token(): bool
+{
+    $provided = $_GET['admin_token'] ?? $_POST['admin_token'] ?? '';
+    if ($provided === '') {
+        $jsonInput = json_decode(file_get_contents('php://input'), true);
+        if (is_array($jsonInput)) {
+            $provided = $jsonInput['admin_token'] ?? '';
+        }
+    }
+    if ($provided === '') {
+        return false;
+    }
+
+    $expected = getenv('WF_ADMIN_TOKEN') ?: '';
+    if ($expected === '' && defined('WF_ADMIN_TOKEN') && WF_ADMIN_TOKEN) {
+        $expected = WF_ADMIN_TOKEN;
+    }
+    if ($expected === '' && defined('AuthHelper::ADMIN_TOKEN')) {
+        $expected = AuthHelper::ADMIN_TOKEN;
+    }
+
+    return $expected !== '' && hash_equals($expected, $provided);
+}
+
+if (!wf_db_backup_has_valid_token()) {
+    requireAdmin(true);
+}
 
 // Change working directory to parent directory (project root)
 chdir(dirname(__DIR__));

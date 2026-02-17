@@ -69,44 +69,43 @@ try {
     if (!move_uploaded_file($file['tmp_name'], $destOriginalAbs))
         throw new Exception('Failed to move upload');
 
+    if (!function_exists('imagewebp')) {
+        throw new Exception('WEBP support is required for background uploads');
+    }
+
     $destPngRel = 'backgrounds/' . $unique . '.png';
     $destWebpRel = 'backgrounds/' . $unique . '.webp';
-    $hasWebpSupport = function_exists('imagewebp') && function_exists('imagecreatefromwebp');
-    $processed = false;
+    $destPngAbs = $imagesRoot . '/' . $destPngRel;
+    $destWebpAbs = $imagesRoot . '/' . $destWebpRel;
 
-    if ($hasWebpSupport) {
-        try {
-            $proc = (new AIImageProcessor())->processBackgroundImage($destOriginalAbs, [
-                'createDualFormat' => true,
-                'webp_quality' => 90,
-                'png_compression' => 1,
-                'preserve_transparency' => true,
-                'useAI' => false,
-                'resizeDimensions' => ['width' => 1280, 'height' => 896],
-                'resizeMode' => 'fill'
-            ]);
-            if (!empty($proc['png_path']))
-                @rename($proc['png_path'], $imagesRoot . '/' . $destPngRel);
-            if (!empty($proc['webp_path']))
-                @rename($proc['webp_path'], $imagesRoot . '/' . $destWebpRel);
-            $processed = true;
-        } catch (Throwable $e) {
-            $processed = false;
-        }
+    $processor = new AIImageProcessor();
+    $format = $processor->convertToDualFormat($destOriginalAbs, [
+        'webp_quality' => 92,
+        'png_compression' => 1,
+        'preserve_transparency' => true,
+        'force_png' => true
+    ]);
+    if (empty($format['success']) || empty($format['webp_path']) || empty($format['png_path'])) {
+        throw new Exception('Failed to generate required WEBP/PNG background outputs');
     }
 
-    if (!$processed) {
-        ImageUploadHelper::resizeFillToPng($destOriginalAbs, $imagesRoot . '/' . $destPngRel);
-        if ($hasWebpSupport) {
-            try {
-                ImageUploadHelper::convertToWebP($imagesRoot . '/' . $destPngRel, $imagesRoot . '/' . $destWebpRel, 92);
-            } catch (Exception $e) {
-            }
+    $copyIfNeeded = static function (string $src, string $dest): bool {
+        if (realpath($src) === realpath($dest)) {
+            return true;
         }
+        return @copy($src, $dest);
+    };
+    if (!$copyIfNeeded((string) $format['png_path'], $destPngAbs) || !$copyIfNeeded((string) $format['webp_path'], $destWebpAbs)) {
+        throw new Exception('Failed to persist processed background image files');
     }
+    @chmod($destPngAbs, 0644);
+    @chmod($destWebpAbs, 0644);
 
-    if (file_exists($destOriginalAbs))
+    $keepPaths = [realpath($destPngAbs) ?: $destPngAbs, realpath($destWebpAbs) ?: $destWebpAbs];
+    $originalReal = realpath($destOriginalAbs) ?: $destOriginalAbs;
+    if (!in_array($originalReal, $keepPaths, true) && file_exists($destOriginalAbs)) {
         @unlink($destOriginalAbs);
+    }
 
     Database::getInstance();
     $finalName = $backgroundName ?: ucwords(str_replace('-', ' ', $safeName));
@@ -120,8 +119,9 @@ try {
         'id' => Database::lastInsertId(),
         'room_type' => $roomType,
         'name' => $finalName,
-        'image_url' => '/images/' . $destPngRel,
-        'webp_url' => $destWebpRel ? '/images/' . $destWebpRel : null
+        'image_url' => '/images/' . $destWebpRel,
+        'webp_url' => '/images/' . $destWebpRel,
+        'png_url' => '/images/' . $destPngRel
     ]);
 
 } catch (Throwable $e) {

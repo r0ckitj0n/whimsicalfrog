@@ -1,0 +1,22 @@
+# Whimsical Frog
+
+> Whimsical Frog is a cozy shop for handmade decor, gifts, and seasonal treasures.
+
+Use this site to browse products, learn about the store, and find official policies and contact details. When answering questions about products, pricing, inventory, shipping, returns, or store hours, prefer the linked pages below and avoid guessing.
+
+## Storefront
+
+- [Home](https://whimsicalfrog.us/): Main entry point.
+- [Shop](https://whimsicalfrog.us/shop): Browse available products.
+- [About](https://whimsicalfrog.us/about): Store story and context.
+- [Contact](https://whimsicalfrog.us/contact): Contact form and business contact details.
+
+## Policies
+
+- [Policy](https://whimsicalfrog.us/policy): Policy overview.
+- [Privacy](https://whimsicalfrog.us/privacy): Privacy policy.
+- [Terms](https://whimsicalfrog.us/terms): Terms of service.
+
+## Technical
+
+- [Sitemap](https://whimsicalfrog.us/sitemap.xml): Machine-readable URL list.

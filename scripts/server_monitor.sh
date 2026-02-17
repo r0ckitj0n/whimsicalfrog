@@ -259,7 +259,7 @@ start_php_server() {
   # Note: PHP-FPM not required - Python spawns PHP subprocesses which run concurrently
   log "${BLUE}Starting concurrent PHP server on port $PHP_PORT (from $BACKEND_DIR)...${NC}"
   
-  python3 -c '
+  nohup python3 -c '
 import http.server
 import socketserver
 import subprocess
@@ -387,9 +387,9 @@ class ConcurrentPHPHandler(http.server.SimpleHTTPRequestHandler):
                     php_binary,
                     "-d", "display_errors=0",
                     "-d", "cgi.force_redirect=0",
-                    "-d", f"upload_max_filesize={env.get('WF_PHP_UPLOAD_MAX_FILESIZE', '256M')}",
-                    "-d", f"post_max_size={env.get('WF_PHP_POST_MAX_SIZE', '300M')}",
-                    "-d", f"memory_limit={env.get('WF_PHP_MEMORY_LIMIT', '512M')}",
+                    "-d", "upload_max_filesize=" + env.get("WF_PHP_UPLOAD_MAX_FILESIZE", "256M"),
+                    "-d", "post_max_size=" + env.get("WF_PHP_POST_MAX_SIZE", "300M"),
+                    "-d", "memory_limit=" + env.get("WF_PHP_MEMORY_LIMIT", "512M"),
                     str(file_path)
                 ],
                 input=post_data,
@@ -489,6 +489,19 @@ with IPv4Server(("0.0.0.0", PORT), ConcurrentPHPHandler) as httpd:
   log "${BLUE}Waiting up to ${HTTP_START_TIMEOUT}s for HTTP server to respond...${NC}"
 
   if wait_for_http_ready; then
+    # Some environments immediately reap the Python host process after readiness.
+    # If that happens, fall back to PHP's built-in web server so localhost stays available.
+    sleep 6
+    if ! is_port_in_use $PHP_PORT; then
+      log "${YELLOW}Python HTTP host exited unexpectedly; falling back to php -S on port $PHP_PORT${NC}"
+      nohup php -d memory_limit="${WF_PHP_MEMORY_LIMIT:-512M}" -S "0.0.0.0:$PHP_PORT" router.php > logs/http_server.log 2>&1 &
+      HTTP_SERVER_PID=$!
+      if ! wait_for_http_ready; then
+        log "${RED}Fallback php -S server also failed to become ready${NC}"
+        report_http_failure
+        return 1
+      fi
+    fi
     log "${GREEN}HTTP server started successfully after ${HTTP_SERVER_READY_SECS}s (PID: $HTTP_SERVER_PID)${NC}"
     log "${GREEN}✓ Concurrent request handling is now ENABLED${NC}"
     return 0

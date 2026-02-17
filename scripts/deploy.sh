@@ -147,13 +147,15 @@ if [ "${WF_DRY_RUN:-0}" = "1" ]; then
 else
   echo -e "${GREEN}💾 Backing up website...${NC}"
   BACKUP_URL="${BASE_URL}/api/backup_website.php"
-  if [ -n "${WF_ADMIN_TOKEN:-}" ]; then
-    BACKUP_URL="${BACKUP_URL}?admin_token=${WF_ADMIN_TOKEN}"
-  fi
-  if curl -fsS -X POST "$BACKUP_URL" >/dev/null; then
-    echo -e "${GREEN}✅ Website backup API triggered${NC}"
+  BACKUP_TOKEN="${WF_ADMIN_TOKEN:-${WF_DEPLOY_ADMIN_TOKEN:-}}"
+  if [ -n "$BACKUP_TOKEN" ]; then
+    if curl -fsS -X POST "${BACKUP_URL}?admin_token=${BACKUP_TOKEN}" >/dev/null; then
+      echo -e "${GREEN}✅ Website backup API triggered${NC}"
+    else
+      echo -e "${YELLOW}⚠️  Website backup failed (auth/token or endpoint issue), continuing deployment...${NC}"
+    fi
   else
-    echo -e "${YELLOW}⚠️  Website backup failed (auth/token or endpoint issue), continuing deployment...${NC}"
+    echo -e "${YELLOW}⏭️  Skipping website backup API (set WF_ADMIN_TOKEN or WF_DEPLOY_ADMIN_TOKEN to enable)${NC}"
   fi
 fi
 echo -e "${YELLOW}⏭️  Skipping database updates in fast deploy (use deploy_full.sh for DB restore)${NC}"
@@ -279,10 +281,6 @@ DOC_HTACCESS_INCLUDE=""
 if [ -f documentation/.htaccess ]; then
   DOC_HTACCESS_INCLUDE=' --include-glob documentation/.htaccess'
 fi
-REPORTS_HTACCESS_INCLUDE=""
-if [ -f reports/.htaccess ]; then
-  REPORTS_HTACCESS_INCLUDE=' --include-glob reports/.htaccess'
-fi
 cat > deploy_commands.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
@@ -294,6 +292,7 @@ open sftp://$USER:$PASS@$HOST
 # In fast mode, we use size-only + only-newer to avoid re-uploading identical files.
 mirror $MIRROR_FLAGS \
   --exclude-glob .git/ \
+  --exclude-glob .git \
   --exclude-glob node_modules/ \
   --exclude-glob vendor/** \
   --exclude-glob .local/ \
@@ -309,7 +308,7 @@ mirror $MIRROR_FLAGS \
   --exclude-glob "backups/**" \
   --exclude-glob "logs/**" \
   --exclude-glob "dist/**" \
-  --exclude-glob "src/**"${DOC_HTACCESS_INCLUDE}${REPORTS_HTACCESS_INCLUDE} \
+  --exclude-glob "src/**"${DOC_HTACCESS_INCLUDE} \
   --exclude-glob "*.log" \
   --exclude-glob "**/*.log" \
   --exclude-glob "**/*.sh" \
@@ -488,13 +487,7 @@ EOL
     cat > deploy_image_htaccess.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
-set cmd:fail-exit no
 open sftp://$USER:$PASS@$HOST
-mkdir -p images
-mkdir -p images/backgrounds
-mkdir -p images/items
-mkdir -p images/signs
-set cmd:fail-exit yes
 put images/backgrounds/.htaccess -o images/backgrounds/.htaccess
 put images/items/.htaccess -o images/items/.htaccess
 put images/signs/.htaccess -o images/signs/.htaccess

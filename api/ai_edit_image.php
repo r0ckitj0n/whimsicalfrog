@@ -458,12 +458,25 @@ try {
             $pngAbs = $imagesRoot . '/' . $pngRel;
             $webpAbs = $imagesRoot . '/' . $webpRel;
 
-            ImageUploadHelper::resizeFillToPng($editedTemp, $pngAbs, 1280, 896);
-            if (function_exists('imagewebp')) {
-                ImageUploadHelper::convertToWebP($pngAbs, $webpAbs, 92);
-            } else {
-                $webpRel = '';
+            if (!function_exists('imagewebp')) {
+                throw new RuntimeException('WEBP support is required for AI background edits');
             }
+
+            $processor = new AIImageProcessor();
+            $formatResult = $processor->convertToDualFormat($editedTemp, [
+                'webp_quality' => 92,
+                'png_compression' => 1,
+                'preserve_transparency' => true,
+                'force_png' => true
+            ]);
+            if (empty($formatResult['success']) || empty($formatResult['webp_path']) || empty($formatResult['png_path'])) {
+                throw new RuntimeException('Failed to convert edited background to required formats');
+            }
+            if (!@copy((string) $formatResult['png_path'], $pngAbs) || !@copy((string) $formatResult['webp_path'], $webpAbs)) {
+                throw new RuntimeException('Failed to save edited background image files');
+            }
+            @chmod($pngAbs, 0644);
+            @chmod($webpAbs, 0644);
 
             $namePrefix = trim((string) ($input['background_name'] ?? 'AI Edited Background'));
             $backgroundName = $namePrefix . ' ' . date('Y-m-d H:i');
@@ -486,8 +499,9 @@ try {
                     'image_filename' => $pngRel,
                     'webp_filename' => $webpRel,
                     'is_active' => 0,
-                    'image_url' => '/images/' . $pngRel,
-                    'webp_url' => $webpRel !== '' ? '/images/' . $webpRel : null
+                    'image_url' => '/images/' . $webpRel,
+                    'webp_url' => '/images/' . $webpRel,
+                    'png_url' => '/images/' . $pngRel
                 ]
             ];
             $responseMessage = 'Edited background image saved';
@@ -511,11 +525,26 @@ try {
             $pngAbs = $imagesRoot . '/' . $pngRel;
             $webpAbs = $imagesRoot . '/' . $webpRel;
 
-            ImageUploadHelper::resizeFillToPng($editedTemp, $pngAbs, 500, 500);
             if (!function_exists('imagewebp')) {
                 throw new RuntimeException('WEBP support is required for shortcut sign edits');
             }
-            ImageUploadHelper::convertToWebP($pngAbs, $webpAbs, 92);
+
+            $processor = new AIImageProcessor();
+            $formatResult = $processor->convertToDualFormat($editedTemp, [
+                'webp_quality' => 92,
+                'png_compression' => 1,
+                'preserve_transparency' => true,
+                'force_png' => true
+            ]);
+            if (empty($formatResult['success']) || empty($formatResult['webp_path']) || empty($formatResult['png_path'])) {
+                throw new RuntimeException('Failed to convert edited shortcut sign to required formats');
+            }
+            if (!@copy((string) $formatResult['png_path'], $pngAbs) || !@copy((string) $formatResult['webp_path'], $webpAbs)) {
+                throw new RuntimeException('Failed to save edited shortcut sign files');
+            }
+            @chmod($pngAbs, 0644);
+            @chmod($webpAbs, 0644);
+
             if (!file_exists($pngAbs) || !file_exists($webpAbs)) {
                 throw new RuntimeException('Failed to save edited shortcut sign files');
             }

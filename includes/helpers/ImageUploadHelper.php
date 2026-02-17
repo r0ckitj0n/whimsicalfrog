@@ -89,4 +89,57 @@ class ImageUploadHelper {
         chmod($destPath, 0644);
         return $destPath;
     }
+
+    /**
+     * Copy an image to PNG while preserving original dimensions and transparency.
+     */
+    public static function toPngPreserveDimensions($srcPath, $destPath, $compression = 1) {
+        $info = getimagesize($srcPath);
+        if (!$info) throw new Exception('Invalid image file.');
+
+        switch ($info[2]) {
+            case IMAGETYPE_JPEG:
+                $src = imagecreatefromjpeg($srcPath);
+                break;
+            case IMAGETYPE_PNG:
+                $src = imagecreatefrompng($srcPath);
+                break;
+            case IMAGETYPE_WEBP:
+                if (!function_exists('imagecreatefromwebp')) throw new Exception('No WEBP support');
+                $src = imagecreatefromwebp($srcPath);
+                break;
+            case IMAGETYPE_GIF:
+                $src = imagecreatefromgif($srcPath);
+                break;
+            default:
+                throw new Exception('Unsupported type');
+        }
+
+        if (!$src) throw new Exception('Failed to decode source image');
+
+        $width = imagesx($src);
+        $height = imagesy($src);
+        if ($width <= 0 || $height <= 0) {
+            imagedestroy($src);
+            throw new Exception('Invalid image dimensions');
+        }
+
+        $dst = imagecreatetruecolor($width, $height);
+        imagealphablending($dst, false);
+        imagesavealpha($dst, true);
+        $transparent = imagecolorallocatealpha($dst, 0, 0, 0, 127);
+        imagefill($dst, 0, 0, $transparent);
+        imagecopy($dst, $src, 0, 0, 0, 0, $width, $height);
+
+        if (!imagepng($dst, $destPath, $compression)) {
+            imagedestroy($src);
+            imagedestroy($dst);
+            throw new Exception('Failed to write PNG');
+        }
+
+        imagedestroy($src);
+        imagedestroy($dst);
+        chmod($destPath, 0644);
+        return $destPath;
+    }
 }

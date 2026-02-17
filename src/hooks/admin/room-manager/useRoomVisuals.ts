@@ -7,7 +7,7 @@ export const useRoomVisuals = (): IRoomVisualsHook => {
 
     const getImageUrl = useCallback((bg: { webp_filename?: string; image_filename?: string }) => {
         if (!bg) return '';
-        return resolveBackgroundAssetUrl(bg.image_filename || bg.webp_filename || '');
+        return resolveBackgroundAssetUrl(bg.webp_filename || bg.image_filename || '');
     }, []);
 
     return {

@@ -68,15 +68,13 @@ try {
             chmod($absPath, 0644);
             $finalPath = 'images/items/' . $filename;
             $aiProcessed = false;
-            $isJpegSource = in_array($ext, ['jpg', 'jpeg', 'jfif'], true);
-
             $res = MultiImageUploadHelper::processImageForDualFormat($absPath, $sku, $suffix, $itemsDir, $projectRoot, $useAI);
             if ($res['success']) {
                 $finalPath = $res['path'];
-                $aiProcessed = $useAI;
-            } else if ($isJpegSource) {
+                $aiProcessed = false;
+            } else {
                 @unlink($absPath);
-                $errors[] = "Failed to crop/convert JPEG source to PNG/WebP for file " . ($i + 1);
+                $errors[] = "Failed to convert image to required PNG/WebP outputs for file " . ($i + 1);
                 continue;
             }
 

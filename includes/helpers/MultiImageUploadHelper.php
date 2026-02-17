@@ -18,16 +18,7 @@ class MultiImageUploadHelper {
 
     public static function processImageAtPathForDualFormat($absPath, $projectRoot, $useAI = true) {
         $processor = new AIImageProcessor();
-        $aiResult = $processor->processImage($absPath, [
-            'convertToWebP' => false,
-            'quality' => 90,
-            'preserveTransparency' => true,
-            'useAI' => (bool) $useAI,
-            'fallbackTrimPercent' => 0.05
-        ]);
-
-        $processedPath = $aiResult['success'] ? $aiResult['processed_path'] : $absPath;
-        $formatResult = $processor->convertToDualFormat($processedPath, [
+        $formatResult = $processor->convertToDualFormat($absPath, [
             'webp_quality' => 92,
             'png_compression' => 1,
             'preserve_transparency' => true,
@@ -36,12 +27,9 @@ class MultiImageUploadHelper {
 
         if ($formatResult['success']) {
             $finalPath = ltrim(str_replace($projectRoot . '/', '', $formatResult['webp_path']), '/');
-            if ($processedPath !== $absPath && file_exists($processedPath)) {
-                unlink($processedPath);
-            }
             return [
                 'success' => true,
-                'ai_used' => !empty($aiResult['ai_analysis']),
+                'ai_used' => false,
                 'path' => $finalPath,
                 'webp_path' => $formatResult['webp_path'] ?? null,
                 'png_path' => $formatResult['png_path'] ?? null

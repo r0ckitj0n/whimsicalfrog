@@ -269,10 +269,23 @@ class DatabaseBackupHelper
         }
 
         if (isset($files['backup_file']) && isset($files['backup_file']['error']) && (int)$files['backup_file']['error'] !== UPLOAD_ERR_NO_FILE) {
-            throw new Exception('Backup upload failed with code ' . (int)$files['backup_file']['error']);
+            $code = (int)$files['backup_file']['error'];
+            throw new Exception('Backup upload failed: ' . self::mapUploadErrorCode($code));
         }
 
         if (empty($input['server_backup_path'])) {
+            $contentLength = isset($_SERVER['CONTENT_LENGTH']) ? (int)$_SERVER['CONTENT_LENGTH'] : 0;
+            if ($contentLength > 0) {
+                $postMaxBytes = self::iniSizeToBytes((string)ini_get('post_max_size'));
+                $uploadMaxBytes = self::iniSizeToBytes((string)ini_get('upload_max_filesize'));
+                if (($postMaxBytes > 0 && $contentLength > $postMaxBytes) || ($uploadMaxBytes > 0 && $contentLength > $uploadMaxBytes)) {
+                    throw new Exception(
+                        'Backup upload exceeded PHP limits (post_max_size=' . (string)ini_get('post_max_size') .
+                        ', upload_max_filesize=' . (string)ini_get('upload_max_filesize') .
+                        '). Upload a smaller/compressed file or place it under backups/sql and restore via server path.'
+                    );
+                }
+            }
             throw new Exception('No backup file provided (via upload or server path)');
         }
 
@@ -311,6 +324,40 @@ class DatabaseBackupHelper
         if ($size === false || (int)$size <= 0) {
             throw new Exception('Backup file is empty');
         }
+    }
+
+    private static function mapUploadErrorCode(int $code): string
+    {
+        return match ($code) {
+            UPLOAD_ERR_INI_SIZE => 'file exceeds upload_max_filesize (' . (string)ini_get('upload_max_filesize') . ')',
+            UPLOAD_ERR_FORM_SIZE => 'file exceeds MAX_FILE_SIZE from form',
+            UPLOAD_ERR_PARTIAL => 'file was only partially uploaded',
+            UPLOAD_ERR_NO_FILE => 'no file was uploaded',
+            UPLOAD_ERR_NO_TMP_DIR => 'missing temporary upload directory',
+            UPLOAD_ERR_CANT_WRITE => 'failed to write file to disk',
+            UPLOAD_ERR_EXTENSION => 'a PHP extension stopped the upload',
+            default => 'unknown upload error code ' . $code,
+        };
+    }
+
+    private static function iniSizeToBytes(string $value): int
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return 0;
+        }
+        $unit = strtolower(substr($value, -1));
+        $number = (float)$value;
+        if ($unit === 'g') {
+            return (int)($number * 1024 * 1024 * 1024);
+        }
+        if ($unit === 'm') {
+            return (int)($number * 1024 * 1024);
+        }
+        if ($unit === 'k') {
+            return (int)($number * 1024);
+        }
+        return (int)$number;
     }
 
     private static function analyzeBackupFile(string $filePath, bool $isGzip): array

@@ -90,6 +90,17 @@
     background: transparent !important;
 }
 
+body:not([data-page^='admin']) .room-modal-body .room-item-shortcut img,
+body:not([data-page^='admin']) .room-overlay-wrapper .room-item-shortcut img {
+    transition: transform 0.2s ease;
+    transform-origin: center center;
+}
+
+body:not([data-page^='admin']) .room-modal-body .room-item-shortcut:hover img,
+body:not([data-page^='admin']) .room-overlay-wrapper .room-item-shortcut:hover img {
+    transform: scale(1.5);
+}
+
 .room-modal-body .room-item-icon:hover,
 .room-overlay-wrapper .room-item-icon:hover {
     /* Use filter instead of scale to avoid showing rectangular bounds */

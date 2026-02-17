@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ApiClient } from '../../core/ApiClient.js';
 import { CATEGORY } from '../../core/constants.js';
 import { IShopCategory as Category, IShopItem as Item } from '../../types/index.js';
+import { resolveBackgroundAssetUrl } from '../../utils/background-url.js';
 
 interface UseShopUIProps {
     categories: Record<string, Category>;
@@ -27,8 +28,7 @@ export const useShopUI = ({ categories, isVisible }: UseShopUIProps) => {
                 );
                 const fetchedBg = bgData?.background?.webp_filename || bgData?.background?.png_filename || bgData?.background?.image_filename;
                 if (fetchedBg) {
-                    const cleanPath = fetchedBg.replace(/^backgrounds\//, '').replace(/^\//, '');
-                    setBgUrl(/^https?:\/\//i.test(fetchedBg) ? fetchedBg : `/images/backgrounds/${cleanPath}`);
+                    setBgUrl(resolveBackgroundAssetUrl(fetchedBg));
                 }
             } catch (err) {
                 console.error('[ShopView] Failed to load background', err);

@@ -2,6 +2,7 @@
 /**
  * Backgrounds Manager Logic
  */
+require_once __DIR__ . '/../helpers/ImagePathNormalizer.php';
 
 function normalizeRoomNumber($room) {
     if ($room === null || $room === '') return '';
@@ -28,13 +29,14 @@ function getBackgrounds($room_number, $activeOnly = false) {
 function saveBackground($data) {
     $room = normalizeRoomNumber($data['room'] ?? $data['room_number'] ?? '');
     $name = $data['name'] ?? '';
-    $img = $data['image_filename'] ?? '';
+    $img = ImagePathNormalizer::normalizeBackgroundDbRef((string) ($data['image_filename'] ?? ''));
+    $webp = ImagePathNormalizer::normalizeBackgroundDbRef((string) ($data['webp_filename'] ?? ''));
     if (!$room || !$name || !$img) throw new Exception('Missing fields');
     
     $exists = Database::queryOne("SELECT id FROM backgrounds WHERE room_number = ? AND name = ? LIMIT 1", [$room, $name]);
     if ($exists) throw new Exception('Name exists for this room');
     
-    return Database::execute("INSERT INTO backgrounds (room_number, name, image_filename, webp_filename, is_active) VALUES (?, ?, ?, ?, 0)", [$room, $name, $img, $data['webp_filename'] ?? null]);
+    return Database::execute("INSERT INTO backgrounds (room_number, name, image_filename, webp_filename, is_active) VALUES (?, ?, ?, ?, 0)", [$room, $name, $img, $webp !== '' ? $webp : null]);
 }
 
 function applyBackground($room, $id) {
@@ -66,18 +68,7 @@ function applyBackground($room, $id) {
         $pickRel = trim((string)($bg['webp_filename'] ?? ''));
         if ($pickRel === '') $pickRel = trim((string)($bg['png_filename'] ?? ''));
         if ($pickRel === '') $pickRel = trim((string)($bg['image_filename'] ?? ''));
-        $url = '';
-        if ($pickRel !== '') {
-            if (preg_match('/^https?:\\/\\//i', $pickRel)) {
-                $url = $pickRel;
-            } elseif (str_starts_with($pickRel, '/images/')) {
-                $url = $pickRel;
-            } elseif (str_starts_with($pickRel, 'images/')) {
-                $url = '/' . $pickRel;
-            } else {
-                $url = '/images/' . ltrim($pickRel, '/');
-            }
-        }
+        $url = ImagePathNormalizer::normalizeBackgroundUrl($pickRel);
         Database::execute(
             "UPDATE room_settings SET background_url = ? WHERE room_number = ?",
             [$url, $room]

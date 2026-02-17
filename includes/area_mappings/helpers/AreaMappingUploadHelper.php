@@ -2,6 +2,7 @@
 // includes/area_mappings/helpers/AreaMappingUploadHelper.php
 
 require_once __DIR__ . '/../../helpers/ImageUploadHelper.php';
+require_once __DIR__ . '/../../helpers/ImagePathNormalizer.php';
 require_once __DIR__ . '/../../secret_store.php';
 
 class AreaMappingUploadHelper
@@ -78,8 +79,9 @@ class AreaMappingUploadHelper
             $finalWebp = $absOriginal;
         }
 
-        // Normalize to site-relative URL
-        return '/' . ltrim(str_replace($projectRoot, '', $finalWebp), '/');
+        // Normalize to canonical sign URL format.
+        $relative = ltrim(str_replace($projectRoot, '', $finalWebp), '/');
+        return ImagePathNormalizer::normalizeSignUrl($relative);
     }
 
     public static function handleGenerateShortcutImage(array $input): array
@@ -208,11 +210,11 @@ class AreaMappingUploadHelper
             }
         }
 
-        $pngUrl = '/' . ltrim($pngRel, '/');
+        $pngUrl = ImagePathNormalizer::normalizeSignUrl($pngRel);
         $result = [
-            'image_url' => $webpUrl ?: $pngUrl,
+            'image_url' => $webpUrl ? ImagePathNormalizer::normalizeSignUrl($webpUrl) : $pngUrl,
             'png_url' => $pngUrl,
-            'webp_url' => $webpUrl,
+            'webp_url' => $webpUrl ? ImagePathNormalizer::normalizeSignUrl($webpUrl) : null,
             'room_number' => $roomNumber,
             'target_room_number' => $targetRoomNumber,
             'prompt_text' => $prompt,

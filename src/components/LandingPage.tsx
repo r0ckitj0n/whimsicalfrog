@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useRoomCoordinates } from '../hooks/useRoomCoordinates.js';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ApiClient } from '../core/ApiClient.js';
+import { resolveBackgroundAssetUrl } from '../utils/background-url.js';
 
 interface IDoorDestination {
     area_selector: string;
@@ -72,14 +73,7 @@ export const LandingPage: React.FC = () => {
                     || bgRes.value?.background?.image_filename;
 
                 if (fetchedBg) {
-                    const buildUrl = (v: string) => {
-                        if (!v) return '';
-                        if (/^https?:\/\//i.test(v)) return v;
-                        // Clean up redundant path segments from DB
-                        const cleanPath = v.replace(/^backgrounds\//, '').replace(/^\//, '');
-                        return `/images/backgrounds/${cleanPath}`;
-                    };
-                    setBgUrl(buildUrl(fetchedBg));
+                    setBgUrl(resolveBackgroundAssetUrl(fetchedBg));
                 }
             } else {
                 console.error('[LandingPage] Failed to load background', bgRes.reason);

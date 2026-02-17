@@ -2,6 +2,7 @@
 // includes/area_mappings/helpers/AreaMappingSignHelper.php
 
 require_once __DIR__ . '/AreaMappingFetchHelper.php';
+require_once __DIR__ . '/../../helpers/ImagePathNormalizer.php';
 
 class AreaMappingSignHelper
 {
@@ -26,6 +27,9 @@ class AreaMappingSignHelper
         }
         if (preg_match('/^https?:\\/\\//i', $clean)) {
             return $clean;
+        }
+        if (self::isSignImageUrl($clean) || preg_match('#(^|/)signs/#i', $clean) || !str_contains($clean, '/')) {
+            return ImagePathNormalizer::normalizeSignUrl($clean);
         }
         if (str_starts_with($clean, '/')) {
             return $clean;

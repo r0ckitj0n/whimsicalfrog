@@ -8,25 +8,10 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/rooms/settings_manager.php';
+require_once __DIR__ . '/../includes/helpers/ImagePathNormalizer.php';
 
 function wf_normalize_background_url($value) {
-    $raw = trim((string) ($value ?? ''));
-    if ($raw === '') {
-        return '';
-    }
-
-    $path = parse_url($raw, PHP_URL_PATH);
-    if (!is_string($path) || $path === '') {
-        $path = $raw;
-    }
-
-    $filename = basename(str_replace('\\', '/', $path));
-    $filename = trim($filename);
-    if ($filename === '' || $filename === '.' || $filename === '..') {
-        return '';
-    }
-
-    return '/images/backgrounds/' . $filename;
+    return ImagePathNormalizer::normalizeBackgroundUrl((string) ($value ?? ''));
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {

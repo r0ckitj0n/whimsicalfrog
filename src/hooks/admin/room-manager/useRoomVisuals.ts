@@ -1,21 +1,13 @@
 import { useState, useCallback } from 'react';
 import { IRoomVisualsHook } from '../../../types/room.js';
+import { resolveBackgroundAssetUrl } from '../../../utils/background-url.js';
 
 export const useRoomVisuals = (): IRoomVisualsHook => {
     const [preview_image, setPreviewImage] = useState<IRoomVisualsHook['preview_image']>(null);
 
     const getImageUrl = useCallback((bg: { webp_filename?: string; image_filename?: string }) => {
         if (!bg) return '';
-        // Prefer PNG/JPG asset path first; WEBP can be missing or stale in legacy rows.
-        let filename = bg.image_filename || bg.webp_filename;
-        if (!filename) return '';
-        if (filename.startsWith('http')) return filename;
-        if (filename.startsWith('/images/')) return filename;
-        // Strip 'backgrounds/' prefix if present to avoid duplicate path segment
-        if (filename.startsWith('backgrounds/')) {
-            filename = filename.slice('backgrounds/'.length);
-        }
-        return `/images/backgrounds/${filename}`;
+        return resolveBackgroundAssetUrl(bg.image_filename || bg.webp_filename || '');
     }, []);
 
     return {

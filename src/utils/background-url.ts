@@ -17,3 +17,20 @@ export const buildBackgroundUrl = (filename: string): string => {
 export const normalizeBackgroundUrlToLibrary = (value: string): string => {
     return buildBackgroundUrl(extractBackgroundFilename(value));
 };
+
+export const resolveBackgroundAssetUrl = (value: string): string => {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (raw.startsWith('/images/backgrounds/')) return raw;
+    if (raw.startsWith('/images/')) {
+        return buildBackgroundUrl(extractBackgroundFilename(raw));
+    }
+    if (raw.startsWith('images/backgrounds/')) {
+        return `/${raw}`;
+    }
+    if (raw.startsWith('backgrounds/')) {
+        return `/images/${raw}`;
+    }
+    return buildBackgroundUrl(raw);
+};

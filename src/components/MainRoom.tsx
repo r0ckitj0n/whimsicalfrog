@@ -4,6 +4,7 @@ import { ApiClient } from '../core/ApiClient.js';
 import { useLocation } from 'react-router-dom';
 import logger from '../core/logger.js';
 import useRoomManager from '../hooks/use-room-manager.js';
+import { resolveBackgroundAssetUrl } from '../utils/background-url.js';
 
 interface IDoorDestination {
     area_selector: string;
@@ -55,14 +56,7 @@ export const MainRoom: React.FC = () => {
                 const fetchedBg = bgData?.background?.webp_filename || bgData?.background?.png_filename || bgData?.background?.image_filename;
 
                 if (fetchedBg) {
-                    const buildUrl = (v: string) => {
-                        if (!v) return '';
-                        if (/^https?:\/\//i.test(v)) return v;
-                        // Clean up redundant path segments from DB
-                        const cleanPath = v.replace(/^backgrounds\//, '').replace(/^\//, '');
-                        return `/images/backgrounds/${cleanPath}`;
-                    };
-                    setBgUrl(buildUrl(fetchedBg));
+                    setBgUrl(resolveBackgroundAssetUrl(fetchedBg));
                 }
             } catch (err) {
                 logger.error('[MainRoom] Failed to load room data', err);

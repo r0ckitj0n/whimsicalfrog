@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { RoomModalOverlay } from './room/RoomModalOverlay.js';
 import { useRoomModalEffects } from '../../hooks/modals/useRoomModalEffects.js';
 import { IRoomMetadata as RoomMetadata, IRoomBackground as RoomBackground } from '../../types/index.js';
+import { resolveBackgroundAssetUrl } from '../../utils/background-url.js';
 
 interface RoomModalProps {
     isOpen: boolean;
@@ -61,13 +62,7 @@ export const RoomModal: React.FC<RoomModalProps> = ({
 
     const getBgUrl = (bg: RoomBackground | null) => {
         if (!bg) return '';
-        const file = String(bg.webp_filename || bg.image_filename || '').trim();
-        if (!file) return '';
-        if (file.startsWith('https') || file.startsWith('http') || file.startsWith('/')) return file;
-        // Handle stored values like `images/backgrounds/foo.webp` (missing leading slash).
-        if (file.startsWith('images/')) return `/${file}`;
-        if (file.startsWith('backgrounds/')) return `/images/${file}`;
-        return `/images/backgrounds/${file}`;
+        return resolveBackgroundAssetUrl(String(bg.webp_filename || bg.image_filename || '').trim());
     };
 
     const bgUrl = getBgUrl(background);

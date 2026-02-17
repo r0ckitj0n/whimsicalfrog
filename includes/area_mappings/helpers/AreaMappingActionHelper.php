@@ -40,6 +40,8 @@ class AreaMappingActionHelper
         $linkImage = $input['link_image'] ?? null;
         $contentTarget = $input['content_target'] ?? null;
         $contentImage = $input['content_image'] ?? null;
+        $linkImage = is_string($linkImage) ? AreaMappingSignHelper::normalizeImageUrl($linkImage) : $linkImage;
+        $contentImage = is_string($contentImage) ? AreaMappingSignHelper::normalizeImageUrl($contentImage) : $contentImage;
 
         if ($room_number === null || !$areaSelector || !$mappingType) {
             throw new Exception('Room number, area selector, and mapping type are required');
@@ -167,9 +169,9 @@ class AreaMappingActionHelper
             'link_url' => $input['link_url'] ?? null,
             'link_label' => $input['link_label'] ?? null,
             'link_icon' => $input['link_icon'] ?? null,
-            'link_image' => $input['link_image'] ?? null,
+            'link_image' => isset($input['link_image']) && is_string($input['link_image']) ? AreaMappingSignHelper::normalizeImageUrl((string) $input['link_image']) : ($input['link_image'] ?? null),
             'content_target' => $input['content_target'] ?? null,
-            'content_image' => $input['content_image'] ?? null,
+            'content_image' => isset($input['content_image']) && is_string($input['content_image']) ? AreaMappingSignHelper::normalizeImageUrl((string) $input['content_image']) : ($input['content_image'] ?? null),
             'display_order' => $input['display_order'] ?? null
         ];
 

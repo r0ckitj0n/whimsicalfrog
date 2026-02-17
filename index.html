@@ -66,7 +66,62 @@
             opacity: 0.7;
         }
     </style>
-    <script type="module" src="/src/entries/main.tsx"></script>
+    <script>
+        (async function loadViteBuiltAssets() {
+            const candidates = [
+                { manifestUrl: '/dist/.vite/manifest.json', assetPrefix: '/dist/' },
+                { manifestUrl: '/.vite/manifest.json', assetPrefix: '/' }
+            ];
+
+            const tryLoadManifest = async (url) => {
+                const res = await fetch(url, { cache: 'no-store' });
+                if (!res.ok) return null;
+                return await res.json();
+            };
+
+            const collectCss = (manifest, key, seenEntries, outCss) => {
+                if (!key || seenEntries.has(key) || !manifest[key]) return;
+                seenEntries.add(key);
+                const entry = manifest[key];
+                const css = Array.isArray(entry.css) ? entry.css : [];
+                for (const href of css) outCss.add(href);
+                const imports = Array.isArray(entry.imports) ? entry.imports : [];
+                for (const imp of imports) collectCss(manifest, imp, seenEntries, outCss);
+            };
+
+            for (const candidate of candidates) {
+                try {
+                    const manifest = await tryLoadManifest(candidate.manifestUrl);
+                    if (!manifest) continue;
+
+                    const entryKey = manifest['index.html'] ? 'index.html' : (manifest['src/entries/main.tsx'] ? 'src/entries/main.tsx' : null);
+                    if (!entryKey) continue;
+
+                    const cssFiles = new Set();
+                    collectCss(manifest, entryKey, new Set(), cssFiles);
+                    for (const css of cssFiles) {
+                        const link = document.createElement('link');
+                        link.rel = 'stylesheet';
+                        link.href = candidate.assetPrefix + css;
+                        link.crossOrigin = 'anonymous';
+                        document.head.appendChild(link);
+                    }
+
+                    const entry = manifest[entryKey];
+                    const script = document.createElement('script');
+                    script.type = 'module';
+                    script.crossOrigin = 'anonymous';
+                    script.src = candidate.assetPrefix + entry.file;
+                    document.head.appendChild(script);
+                    return;
+                } catch (_e) {
+                    // Try next manifest candidate.
+                }
+            }
+
+            console.error('[index] Unable to load Vite manifest for app assets.');
+        })();
+    </script>
 </head>
 
 <body>

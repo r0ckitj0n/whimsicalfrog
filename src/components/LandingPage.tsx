@@ -3,13 +3,7 @@ import { useRoomCoordinates } from '../hooks/useRoomCoordinates.js';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ApiClient } from '../core/ApiClient.js';
 import { resolveBackgroundAssetUrl } from '../utils/background-url.js';
-
-interface IDoorDestination {
-    area_selector: string;
-    target: string;
-    label: string;
-    image: string;
-}
+import type { IDoorDestination } from '../types/room.js';
 
 /**
  * LandingPage - Visual Golden Master Refactor

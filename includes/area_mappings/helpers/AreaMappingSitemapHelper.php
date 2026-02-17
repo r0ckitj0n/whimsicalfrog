@@ -60,6 +60,7 @@ class AreaMappingSitemapHelper
                     $areaNum = (int) $m[1];
                     $rows[] = [
                         'area_selector' => $r['area_selector'],
+                        'mapping_type' => $r['mapping_type'] ?? null,
                         'label' => $r['link_label'] ?? "Door Sign {$areaNum}",
                         'target' => $r['content_target'] ?? $r['link_url'] ?? (string) $areaNum,
                         'image' => $r['content_image'] ?? "/images/signs/sign-door-room{$areaNum}.png",
@@ -107,6 +108,7 @@ class AreaMappingSitemapHelper
                     $areaNum = (int) $m[1];
                     $rows[] = [
                         'area_selector' => $r['area_selector'],
+                        'mapping_type' => $r['mapping_type'] ?? null,
                         'label' => $r['link_label'] ?? "Door Sign {$areaNum}",
                         'target' => $r['content_target'] ?? $r['link_url'] ?? (string) $areaNum,
                         'image' => $r['content_image'] ?? "/images/signs/sign-door-room{$areaNum}.png",

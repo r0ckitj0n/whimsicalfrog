@@ -87,6 +87,7 @@ export interface IDoorDestination {
     target: string;
     label: string;
     image: string;
+    mapping_type?: string | null;
 }
 
 // Navigation Connection Types

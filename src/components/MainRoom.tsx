@@ -5,13 +5,7 @@ import { useLocation } from 'react-router-dom';
 import logger from '../core/logger.js';
 import useRoomManager from '../hooks/use-room-manager.js';
 import { resolveBackgroundAssetUrl } from '../utils/background-url.js';
-
-interface IDoorDestination {
-    area_selector: string;
-    target: string;
-    label: string;
-    image: string;
-}
+import type { IDoorDestination } from '../types/room.js';
 
 /**
  * MainRoom - Visual Golden Master Refactor
@@ -171,11 +165,19 @@ export const MainRoom: React.FC = () => {
                                         height: '100%',
                                         objectFit: 'contain',
                                         maxWidth: '100%',
-                                        transition: 'filter 0.3s ease',
-                                        willChange: 'filter'
+                                        transition: 'filter 0.3s ease, transform 0.2s ease',
+                                        transformOrigin: 'center center',
+                                        willChange: 'filter, transform'
                                     }}
-                                    onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(1.1) drop-shadow(0 0 15px rgba(135,172,58,0.5))')}
-                                    onMouseLeave={(e) => (e.currentTarget.style.filter = 'none')}
+                                    onMouseEnter={(e) => {
+                                        const isShortcutType = String(dest.mapping_type || '').toLowerCase() === 'content';
+                                        e.currentTarget.style.filter = 'brightness(1.1) drop-shadow(0 0 15px rgba(135,172,58,0.5))';
+                                        e.currentTarget.style.transform = isShortcutType ? 'scale(1.5)' : 'none';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.filter = 'none';
+                                        e.currentTarget.style.transform = 'none';
+                                    }}
                                     loading="lazy"
                                 />
                             </picture>

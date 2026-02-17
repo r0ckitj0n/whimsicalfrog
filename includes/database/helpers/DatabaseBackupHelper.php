@@ -124,12 +124,13 @@ class DatabaseBackupHelper
         try {
             $pdo = Database::getInstance();
             $ignoreErrors = isset($input['ignore_errors']) && $input['ignore_errors'] === '1';
+            $tableWhitelist = self::resolveTableWhitelist($input, $files);
             $source = self::resolveRestoreSource($input, $files);
             $filePath = $source['filePath'];
             $isGzip = $source['isGzip'];
 
             $startTime = microtime(true);
-            $preflight = self::analyzeBackupFile($filePath, $isGzip);
+            $preflight = self::analyzeBackupFile($filePath, $isGzip, $tableWhitelist);
 
             // Mandatory safety snapshot before any destructive step.
             $preRestoreBackup = self::createBackup();
@@ -164,6 +165,11 @@ class DatabaseBackupHelper
                     if ($stmt !== '') {
                         if (substr($stmt, -1) === ';') {
                             $stmt = substr($stmt, 0, -1);
+                        }
+                        $table = self::extractTableNameFromStatement($stmt);
+                        if (!empty($tableWhitelist) && $table !== null && !isset($tableWhitelist[strtolower($table)])) {
+                            $buffer = '';
+                            continue;
                         }
                         try {
                             $result = $pdo->exec($stmt);
@@ -206,6 +212,7 @@ class DatabaseBackupHelper
                     'tables_recreated' => count($preflight['tablesWithCreate']),
                     'tables_data_restored' => count($preflight['tablesWithData'])
                 ],
+                'table_whitelist' => !empty($tableWhitelist) ? array_values(array_keys($tableWhitelist)) : [],
                 'warnings' => !empty($errors) ? count($errors) . ' errors encountered' : null,
                 'error_details' => $errors
             ];
@@ -315,6 +322,131 @@ class DatabaseBackupHelper
         return ['filePath' => $candidate, 'isGzip' => (bool)preg_match('/\.gz$/i', $candidate)];
     }
 
+    private static function resolveTableWhitelist($input, $files): array
+    {
+        $dataGroups = self::resolveJsonArrayInput($input['data_groups'] ?? null);
+        $normalizedGroups = self::normalizeDataGroups($dataGroups);
+        if (!empty($normalizedGroups)) {
+            $tables = self::tablesForDataGroups($normalizedGroups);
+            $out = [];
+            foreach ($tables as $table) {
+                $name = strtolower(trim((string)$table));
+                if ($name !== '') {
+                    $out[$name] = $name;
+                }
+            }
+            return $out;
+        }
+
+        $raw = self::resolveJsonArrayInput($input['table_whitelist'] ?? null);
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($raw as $table) {
+            $name = strtolower(trim((string)$table));
+            if ($name === '') {
+                continue;
+            }
+            if (!preg_match('/^[a-z0-9_]+$/', $name)) {
+                throw new Exception('Invalid table name in whitelist: ' . (string)$table);
+            }
+            $out[$name] = $name;
+        }
+        return $out;
+    }
+
+    private static function resolveJsonArrayInput($raw): ?array
+    {
+        if (is_string($raw) && $raw !== '') {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) {
+                $raw = $decoded;
+            }
+        }
+        return is_array($raw) ? $raw : null;
+    }
+
+    private static function normalizeDataGroups(array $raw): array
+    {
+        $allowed = ['room_maps', 'customers', 'inventory', 'orders'];
+        $groups = [];
+        foreach ($raw as $group) {
+            $value = strtolower(trim((string)$group));
+            if ($value !== '' && in_array($value, $allowed, true) && !in_array($value, $groups, true)) {
+                $groups[] = $value;
+            }
+        }
+        return $groups;
+    }
+
+    private static function getExistingTables(): array
+    {
+        $rows = Database::queryAll('SHOW TABLES');
+        $tables = [];
+        foreach ($rows as $row) {
+            if (!is_array($row) || empty($row)) {
+                continue;
+            }
+            $name = (string)reset($row);
+            if ($name !== '') {
+                $tables[strtolower($name)] = $name;
+            }
+        }
+        return $tables;
+    }
+
+    private static function tablesForDataGroups(array $groups): array
+    {
+        $wanted = [];
+        $add = static function (string $name) use (&$wanted): void {
+            $value = strtolower(trim($name));
+            if ($value !== '' && !in_array($value, $wanted, true)) {
+                $wanted[] = $value;
+            }
+        };
+
+        foreach ($groups as $group) {
+            if ($group === 'room_maps') {
+                $add('room_maps');
+            } elseif ($group === 'customers') {
+                $add('users');
+                $add('users_meta');
+                $add('addresses');
+                $add('customer_notes');
+            } elseif ($group === 'inventory') {
+                $add('items');
+                $add('item_images');
+                $add('categories');
+                $add('inventory_option_links');
+                $add('gender_template_items');
+                $add('size_template_items');
+                $add('color_template_items');
+            } elseif ($group === 'orders') {
+                $add('orders');
+                $add('order_items');
+            }
+        }
+
+        $existing = self::getExistingTables();
+        if (in_array('inventory', $groups, true)) {
+            foreach (array_keys($existing) as $table) {
+                if (str_starts_with($table, 'inventory_') && !in_array($table, $wanted, true)) {
+                    $wanted[] = $table;
+                }
+            }
+        }
+
+        $resolved = [];
+        foreach ($wanted as $table) {
+            if (isset($existing[$table])) {
+                $resolved[] = $existing[$table];
+            }
+        }
+        return $resolved;
+    }
+
     private static function assertValidBackupFile(string $filePath): void
     {
         if (!is_file($filePath)) {
@@ -360,7 +492,7 @@ class DatabaseBackupHelper
         return (int)$number;
     }
 
-    private static function analyzeBackupFile(string $filePath, bool $isGzip): array
+    private static function analyzeBackupFile(string $filePath, bool $isGzip, array $tableWhitelist = []): array
     {
         $handle = self::openBackupStream($filePath, $isGzip);
         $buffer = '';
@@ -391,9 +523,13 @@ class DatabaseBackupHelper
             if (substr($stmt, -1) === ';') {
                 $stmt = substr($stmt, 0, -1);
             }
-            $statementCount++;
 
             $table = self::extractTableNameFromStatement($stmt);
+            if (!empty($tableWhitelist) && $table !== null && !isset($tableWhitelist[strtolower($table)])) {
+                continue;
+            }
+
+            $statementCount++;
             if ($table === null) {
                 continue;
             }

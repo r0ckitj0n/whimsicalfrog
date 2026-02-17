@@ -43,6 +43,12 @@ export interface IBackupDetails {
     size?: number;
     timestamp?: number;
     destinations?: string[];
+    scope?: {
+        type: 'full' | 'images' | 'database_tables';
+        image_groups?: Array<'items' | 'backgrounds' | 'signs'>;
+        data_groups?: Array<'room_maps' | 'customers' | 'inventory' | 'orders'>;
+        tables?: string[];
+    };
     error?: string;
 }
 
@@ -83,10 +89,27 @@ export interface IRestoreResult {
 export interface IRestoreDatabaseRequest {
     server_backup_path: string;
     ignore_errors?: '1' | '0';
+    table_whitelist?: string[];
+    data_groups?: DatabaseDataGroup[];
 }
 
 export interface IRestoreDatabaseUploadOptions {
     ignore_errors?: boolean;
+    table_whitelist?: string[];
+    data_groups?: DatabaseDataGroup[];
+}
+
+export type WebsiteImageGroup = 'items' | 'backgrounds' | 'signs';
+export type DatabaseDataGroup = 'room_maps' | 'customers' | 'inventory' | 'orders';
+
+export interface IWebsiteBackupScope {
+    mode: 'full' | 'images';
+    image_groups?: WebsiteImageGroup[];
+}
+
+export interface IDatabaseBackupScope {
+    mode: 'full' | 'tables';
+    data_groups?: DatabaseDataGroup[];
 }
 
 export interface IDatabaseInfo {

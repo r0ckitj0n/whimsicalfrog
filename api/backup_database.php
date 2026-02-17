@@ -44,6 +44,115 @@ function wf_db_backup_has_valid_token(): bool
     return $expected !== '' && hash_equals($expected, $provided);
 }
 
+function wf_db_normalize_data_groups($raw): array
+{
+    $allowed = ['room_maps', 'customers', 'inventory', 'orders'];
+    if (!is_array($raw)) {
+        return [];
+    }
+    $groups = [];
+    foreach ($raw as $group) {
+        $value = strtolower(trim((string)$group));
+        if ($value !== '' && in_array($value, $allowed, true) && !in_array($value, $groups, true)) {
+            $groups[] = $value;
+        }
+    }
+    return $groups;
+}
+
+function wf_db_parse_scope(array $input): array
+{
+    $scope = $input['scope'] ?? null;
+    if (!is_array($scope)) {
+        return ['mode' => 'full', 'data_groups' => []];
+    }
+    $mode = strtolower(trim((string)($scope['mode'] ?? 'full')));
+    if ($mode !== 'tables') {
+        return ['mode' => 'full', 'data_groups' => []];
+    }
+    return [
+        'mode' => 'tables',
+        'data_groups' => wf_db_normalize_data_groups($scope['data_groups'] ?? [])
+    ];
+}
+
+function wf_db_get_existing_tables(): array
+{
+    try {
+        $rows = Database::queryAll('SHOW TABLES');
+        $tables = [];
+        foreach ($rows as $row) {
+            if (!is_array($row) || empty($row)) {
+                continue;
+            }
+            $name = (string)reset($row);
+            if ($name !== '') {
+                $tables[strtolower($name)] = $name;
+            }
+        }
+        return $tables;
+    } catch (Exception $e) {
+        return [];
+    }
+}
+
+function wf_db_tables_for_groups(array $groups): array
+{
+    $wanted = [];
+    $add = static function (string $name) use (&$wanted): void {
+        $value = strtolower(trim($name));
+        if ($value !== '' && !in_array($value, $wanted, true)) {
+            $wanted[] = $value;
+        }
+    };
+
+    foreach ($groups as $group) {
+        if ($group === 'room_maps') {
+            $add('room_maps');
+            continue;
+        }
+        if ($group === 'customers') {
+            $add('users');
+            $add('users_meta');
+            $add('addresses');
+            $add('customer_notes');
+            continue;
+        }
+        if ($group === 'inventory') {
+            $add('items');
+            $add('item_images');
+            $add('categories');
+            $add('inventory_option_links');
+            $add('gender_template_items');
+            $add('size_template_items');
+            $add('color_template_items');
+            continue;
+        }
+        if ($group === 'orders') {
+            $add('orders');
+            $add('order_items');
+            continue;
+        }
+    }
+
+    $existing = wf_db_get_existing_tables();
+    if (in_array('inventory', $groups, true) && !empty($existing)) {
+        foreach (array_keys($existing) as $table) {
+            if (str_starts_with($table, 'inventory_') && !in_array($table, $wanted, true)) {
+                $wanted[] = $table;
+            }
+        }
+    }
+
+    $resolved = [];
+    foreach ($wanted as $table) {
+        if (isset($existing[$table])) {
+            $resolved[] = $existing[$table];
+        }
+    }
+    return $resolved;
+}
+
 if (!wf_db_backup_has_valid_token()) {
     requireAdmin(true);
 }
@@ -51,7 +160,7 @@ if (!wf_db_backup_has_valid_token()) {
 // Change working directory to parent directory (project root)
 chdir(dirname(__DIR__));
 
-function createDatabaseBackup($downloadToComputer = true, $keepOnServer = true)
+function createDatabaseBackup($downloadToComputer = true, $keepOnServer = true, array $scope = ['mode' => 'full', 'data_groups' => []])
 {
     try {
         $timestamp = date('Y-m-d_H-i-s');
@@ -74,11 +183,34 @@ function createDatabaseBackup($downloadToComputer = true, $keepOnServer = true)
         $username = $GLOBALS['user'];
         $password = $GLOBALS['pass'];
 
+        $isTableScope = ($scope['mode'] ?? 'full') === 'tables';
+        $selectedTables = [];
+        if ($isTableScope) {
+            $groups = $scope['data_groups'] ?? [];
+            if (empty($groups)) {
+                return [
+                    'success' => false,
+                    'error' => 'Select at least one data group (room maps, customers, inventory, orders) to back up.'
+                ];
+            }
+            $selectedTables = wf_db_tables_for_groups($groups);
+            if (empty($selectedTables)) {
+                return [
+                    'success' => false,
+                    'error' => 'None of the selected data-group tables were found in this database.'
+                ];
+            }
+        }
+
         // Create mysqldump command with correct syntax and escaping
+        $tableClause = '';
+        if ($isTableScope) {
+            $tableClause = ' ' . implode(' ', array_map('escapeshellarg', $selectedTables));
+        }
         $command = "mysqldump --host=" . escapeshellarg($dbHost) .
             " --user=" . escapeshellarg($username) .
             " --password=" . escapeshellarg($password) .
-            " --single-transaction --routines --triggers " . escapeshellarg($database) . " > " . escapeshellarg($backupPath);
+            " --single-transaction --routines --triggers " . escapeshellarg($database) . $tableClause . " > " . escapeshellarg($backupPath);
 
         exec("$command 2>&1", $output, $returnCode);
 
@@ -98,7 +230,12 @@ function createDatabaseBackup($downloadToComputer = true, $keepOnServer = true)
                 'created' => date('Y-m-d H:i:s'),
                 'table_count' => $tableCount,
                 'download_to_computer' => $downloadToComputer,
-                'keep_on_server' => $keepOnServer
+                'keep_on_server' => $keepOnServer,
+                'scope' => [
+                    'type' => $isTableScope ? 'database_tables' : 'full',
+                    'data_groups' => $isTableScope ? ($scope['data_groups'] ?? []) : [],
+                    'tables' => $isTableScope ? $selectedTables : []
+                ]
             ];
 
             // Only include download URL if downloading to computer
@@ -239,7 +376,8 @@ try {
     if (!$downloadToComputer && !$keepOnServer) {
         $result = ['success' => false, 'error' => 'At least one backup destination must be selected'];
     } else {
-        $result = createDatabaseBackup($downloadToComputer, $keepOnServer);
+        $scope = wf_db_parse_scope($input);
+        $result = createDatabaseBackup($downloadToComputer, $keepOnServer, $scope);
 
         // If successful and we need to delete after download
         if ($result['success'] && isset($result['delete_after_download']) && $result['delete_after_download']) {

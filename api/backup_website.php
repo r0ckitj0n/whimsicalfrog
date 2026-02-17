@@ -51,7 +51,42 @@ if (!wf_backup_has_valid_token()) {
 // Change working directory to parent directory (project root)
 chdir(dirname(__DIR__));
 
-function createBackup($downloadToComputer = true, $keepOnServer = true)
+function wf_normalize_image_groups($raw): array
+{
+    $allowed = ['items', 'backgrounds', 'signs'];
+    if (!is_array($raw)) {
+        return [];
+    }
+
+    $groups = [];
+    foreach ($raw as $group) {
+        $value = strtolower(trim((string) $group));
+        if ($value !== '' && in_array($value, $allowed, true) && !in_array($value, $groups, true)) {
+            $groups[] = $value;
+        }
+    }
+    return $groups;
+}
+
+function wf_parse_website_scope(array $input): array
+{
+    $scope = $input['scope'] ?? null;
+    if (!is_array($scope)) {
+        return ['mode' => 'full', 'image_groups' => []];
+    }
+
+    $mode = strtolower(trim((string) ($scope['mode'] ?? 'full')));
+    if ($mode !== 'images') {
+        return ['mode' => 'full', 'image_groups' => []];
+    }
+
+    return [
+        'mode' => 'images',
+        'image_groups' => wf_normalize_image_groups($scope['image_groups'] ?? [])
+    ];
+}
+
+function createBackup($downloadToComputer = true, $keepOnServer = true, array $scope = ['mode' => 'full', 'image_groups' => []])
 {
     try {
         $timestamp = date('Y-m-d_H-i-s');
@@ -68,29 +103,58 @@ function createBackup($downloadToComputer = true, $keepOnServer = true)
         // Clean up old backups before creating new one
         $cleanupInfo = cleanupOldBackups();
 
-        // Files and directories to exclude from backup (GNU tar syntax)
-        // Note: Exclude flags must appear BEFORE the file list (".")
-        $excludes = [
-            '--exclude=backups',
-            '--exclude=node_modules',
-            '--exclude=.git',
-            '--exclude=.DS_Store',
-            '--exclude=logs', // Exclude the entire logs directory
-            '--exclude=*.log',   // Exclude any stray .log files in root
-            '--exclude=.env', // Exclude .env to prevent cross-environment accidents
-        ];
+        $isImagesScope = ($scope['mode'] ?? 'full') === 'images';
+        $envBackupPath = null;
 
-        $excludeString = implode(' ', $excludes);
+        if ($isImagesScope) {
+            $selectedGroups = $scope['image_groups'] ?? [];
+            if (empty($selectedGroups)) {
+                return [
+                    'success' => false,
+                    'error' => 'Select at least one image group (items, backgrounds, signs) to back up.'
+                ];
+            }
 
-        // Save .env separately as .env.backup (for manual restoration if needed)
-        $envPath = '.env';
-        $envBackupPath = "backups/{$backupName}.env.backup";
-        if (file_exists($envPath)) {
-            copy($envPath, $envBackupPath);
+            $includePaths = [];
+            foreach ($selectedGroups as $group) {
+                $candidate = 'images/' . $group;
+                if (is_dir($candidate)) {
+                    $includePaths[] = $candidate;
+                }
+            }
+
+            if (empty($includePaths)) {
+                return [
+                    'success' => false,
+                    'error' => 'None of the selected image directories exist on disk.'
+                ];
+            }
+
+            $includeString = implode(' ', array_map('escapeshellarg', $includePaths));
+            $command = 'tar -czf ' . escapeshellarg($backupPath) . ' ' . $includeString;
+        } else {
+            // Files and directories to exclude from backup (GNU tar syntax)
+            // Note: Exclude flags must appear BEFORE the file list (".")
+            $excludes = [
+                '--exclude=backups',
+                '--exclude=node_modules',
+                '--exclude=.git',
+                '--exclude=.DS_Store',
+                '--exclude=logs',
+                '--exclude=*.log',
+                '--exclude=.env',
+            ];
+            $excludeString = implode(' ', $excludes);
+
+            // Save .env separately as .env.backup (for manual restoration if needed)
+            $envPath = '.env';
+            $envBackupPath = "backups/{$backupName}.env.backup";
+            if (file_exists($envPath)) {
+                copy($envPath, $envBackupPath);
+            }
+
+            $command = 'tar -czf ' . escapeshellarg($backupPath) . ' ' . $excludeString . ' .';
         }
-
-        // Create tar.gz archive
-        $command = 'tar -czf ' . escapeshellarg($backupPath) . ' ' . $excludeString . ' .';
 
         exec("$command 2>&1", $output, $returnCode);
 
@@ -107,7 +171,11 @@ function createBackup($downloadToComputer = true, $keepOnServer = true)
                 'created' => date('Y-m-d H:i:s'),
                 'download_to_computer' => $downloadToComputer,
                 'keep_on_server' => $keepOnServer,
-                'env_backup' => file_exists($envBackupPath) ? $envBackupPath : null
+                'env_backup' => $envBackupPath && file_exists($envBackupPath) ? $envBackupPath : null,
+                'scope' => [
+                    'type' => $isImagesScope ? 'images' : 'full',
+                    'image_groups' => $isImagesScope ? ($scope['image_groups'] ?? []) : []
+                ]
             ];
 
             // Only include download URL if downloading to computer
@@ -233,7 +301,8 @@ try {
     if (!$downloadToComputer && !$keepOnServer) {
         $result = ['success' => false, 'error' => 'At least one backup destination must be selected'];
     } else {
-        $result = createBackup($downloadToComputer, $keepOnServer);
+        $scope = wf_parse_website_scope($input);
+        $result = createBackup($downloadToComputer, $keepOnServer, $scope);
 
         // If successful and we need to delete after download
         if ($result['success'] && isset($result['delete_after_download']) && $result['delete_after_download']) {

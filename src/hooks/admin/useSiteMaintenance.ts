@@ -5,13 +5,15 @@ import { AUTH, BACKUP_TYPE, BACKUP_DESTINATION } from '../../core/constants.js';
 import type {
     IBackupDetails,
     IBackupListResponse,
+    IDatabaseBackupScope,
     IDatabaseInfo,
     IMaintenanceBackupFile,
     IRestoreDatabaseRequest,
     IRestoreDatabaseUploadOptions,
     IRestoreResult,
     IScanResult,
-    ISystemConfig
+    ISystemConfig,
+    IWebsiteBackupScope
 } from '../../types/maintenance.js';
 
 // Re-export for backward compatibility
@@ -65,12 +67,19 @@ export const useSiteMaintenance = () => {
         }
     }, []);
 
-    const executeBackup = useCallback(async (type: typeof BACKUP_TYPE[keyof typeof BACKUP_TYPE] = BACKUP_TYPE.FULL) => {
+    const executeBackup = useCallback(async (
+        type: typeof BACKUP_TYPE[keyof typeof BACKUP_TYPE] = BACKUP_TYPE.FULL,
+        scope?: IWebsiteBackupScope | IDatabaseBackupScope
+    ) => {
         setIsLoading(true);
         setError(null);
         try {
             const endpoint = type === BACKUP_TYPE.DATABASE ? '/api/backup_database.php' : '/api/backup_website.php';
-            const res = await ApiClient.post<any>(endpoint, { destination: BACKUP_DESTINATION.CLOUD });
+            const payload: Record<string, unknown> = { destination: BACKUP_DESTINATION.CLOUD };
+            if (scope) {
+                payload.scope = scope;
+            }
+            const res = await ApiClient.post<any>(endpoint, payload);
 
             if (res && res.success) {
                 // Normalize response: API uses 'path', IBackupDetails expects 'filepath'
@@ -129,12 +138,14 @@ export const useSiteMaintenance = () => {
         }
     }, []);
 
-    const restoreDatabaseBackup = useCallback(async (serverBackupPath: string) => {
+    const restoreDatabaseBackup = useCallback(async (serverBackupPath: string, options: IRestoreDatabaseUploadOptions = {}) => {
         setIsLoading(true);
         setError(null);
         try {
             const payload: IRestoreDatabaseRequest = {
-                server_backup_path: serverBackupPath
+                server_backup_path: serverBackupPath,
+                table_whitelist: options.table_whitelist,
+                data_groups: options.data_groups
             };
             const res = await ApiClient.post<IRestoreResult>('/api/database_maintenance.php?action=restore_database', payload);
             return res;
@@ -157,6 +168,12 @@ export const useSiteMaintenance = () => {
             if (options.ignore_errors) {
                 formData.append('ignore_errors', '1');
             }
+            if (Array.isArray(options.table_whitelist) && options.table_whitelist.length > 0) {
+                formData.append('table_whitelist', JSON.stringify(options.table_whitelist));
+            }
+            if (Array.isArray(options.data_groups) && options.data_groups.length > 0) {
+                formData.append('data_groups', JSON.stringify(options.data_groups));
+            }
             const res = await ApiClient.upload<IRestoreResult>('/api/database_maintenance.php?action=restore_database', formData);
             return res;
         } catch (err: unknown) {
@@ -169,13 +186,14 @@ export const useSiteMaintenance = () => {
         }
     }, []);
 
-    const restoreWebsiteBackup = useCallback(async (backupFile: string) => {
+    const restoreWebsiteBackup = useCallback(async (backupFile: string, scope?: IWebsiteBackupScope) => {
         setIsLoading(true);
         setError(null);
         try {
             const res = await ApiClient.post<IRestoreResult>('/api/restore_website_backup.php', {
                 file: backupFile,
-                confirm_restore: true
+                confirm_restore: true,
+                scope
             });
             return res;
         } catch (err: unknown) {
@@ -188,13 +206,16 @@ export const useSiteMaintenance = () => {
         }
     }, []);
 
-    const restoreWebsiteBackupUpload = useCallback(async (backupFile: File) => {
+    const restoreWebsiteBackupUpload = useCallback(async (backupFile: File, scope?: IWebsiteBackupScope) => {
         setIsLoading(true);
         setError(null);
         try {
             const formData = new FormData();
             formData.append('backup_file', backupFile);
             formData.append('confirm_restore', '1');
+            if (scope) {
+                formData.append('scope', JSON.stringify(scope));
+            }
             const res = await ApiClient.upload<IRestoreResult>('/api/restore_website_backup.php', formData);
             return res;
         } catch (err: unknown) {

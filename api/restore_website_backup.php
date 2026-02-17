@@ -45,6 +45,44 @@ function map_upload_error_code(int $code): string
     };
 }
 
+function normalize_image_groups($raw): array
+{
+    $allowed = ['items', 'backgrounds', 'signs'];
+    if (!is_array($raw)) {
+        return [];
+    }
+    $groups = [];
+    foreach ($raw as $group) {
+        $value = strtolower(trim((string)$group));
+        if ($value !== '' && in_array($value, $allowed, true) && !in_array($value, $groups, true)) {
+            $groups[] = $value;
+        }
+    }
+    return $groups;
+}
+
+function parse_restore_scope(array $input): array
+{
+    $scope = $input['scope'] ?? null;
+    if (is_string($scope) && $scope !== '') {
+        $decoded = json_decode($scope, true);
+        if (is_array($decoded)) {
+            $scope = $decoded;
+        }
+    }
+    if (!is_array($scope)) {
+        return ['mode' => 'full', 'image_groups' => []];
+    }
+    $mode = strtolower(trim((string)($scope['mode'] ?? 'full')));
+    if ($mode !== 'images') {
+        return ['mode' => 'full', 'image_groups' => []];
+    }
+    return [
+        'mode' => 'images',
+        'image_groups' => normalize_image_groups($scope['image_groups'] ?? [])
+    ];
+}
+
 function create_pre_restore_backup(string $projectRoot, string $backupRoot): array
 {
     if (!is_dir($backupRoot) && !mkdir($backupRoot, 0755, true)) {
@@ -99,6 +137,7 @@ if (!$confirmRestore) {
     echo json_encode(['success' => false, 'error' => 'Restore confirmation is required']);
     exit;
 }
+$scope = parse_restore_scope($input);
 
 $candidate = '';
 $normalized = '';
@@ -208,6 +247,47 @@ foreach ($listOutput as $entry) {
     }
 }
 
+$isImagesScope = ($scope['mode'] ?? 'full') === 'images';
+$entriesToExtract = [];
+if ($isImagesScope) {
+    $selectedGroups = $scope['image_groups'] ?? [];
+    if (empty($selectedGroups)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Select at least one image group (items, backgrounds, signs) to restore.']);
+        exit;
+    }
+
+    $prefixes = [];
+    foreach ($selectedGroups as $group) {
+        $prefixes[] = 'images/' . $group . '/';
+        $prefixes[] = 'images/' . $group;
+        $prefixes[] = './images/' . $group . '/';
+        $prefixes[] = './images/' . $group;
+    }
+
+    foreach ($listOutput as $entry) {
+        $trimmed = trim((string)$entry);
+        if ($trimmed === '') {
+            continue;
+        }
+        foreach ($prefixes as $prefix) {
+            if (str_starts_with($trimmed, $prefix)) {
+                $entriesToExtract[$trimmed] = true;
+                break;
+            }
+        }
+    }
+
+    if (empty($entriesToExtract)) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Selected image groups were not found inside this backup archive.',
+        ]);
+        exit;
+    }
+}
+
 try {
     $preRestoreBackup = create_pre_restore_backup($projectRoot, $backupRoot);
 } catch (Throwable $e) {
@@ -222,7 +302,12 @@ try {
 $extractCmd =
     'tar -xzf ' . escapeshellarg($candidate) .
     ' -C ' . escapeshellarg($projectRoot) .
-    ' --no-same-owner --overwrite 2>&1';
+    ' --no-same-owner --overwrite';
+
+if ($isImagesScope) {
+    $extractCmd .= ' ' . implode(' ', array_map('escapeshellarg', array_keys($entriesToExtract)));
+}
+$extractCmd .= ' 2>&1';
 
 exec($extractCmd, $extractOutput, $extractCode);
 
@@ -238,9 +323,13 @@ if ($extractCode !== 0) {
 
 echo json_encode([
     'success' => true,
-    'message' => 'Website backup restored successfully.',
+    'message' => $isImagesScope ? 'Selected image groups restored successfully.' : 'Website backup restored successfully.',
     'restored_file' => $normalized,
     'pre_restore_backup' => $preRestoreBackup['filename'] ?? null,
-    'extracted_files' => count($listOutput),
+    'extracted_files' => $isImagesScope ? count($entriesToExtract) : count($listOutput),
+    'scope' => [
+        'type' => $isImagesScope ? 'images' : 'full',
+        'image_groups' => $isImagesScope ? ($scope['image_groups'] ?? []) : []
+    ],
     'restore_time_seconds' => round(microtime(true) - $start, 2),
 ], JSON_UNESCAPED_SLASHES);

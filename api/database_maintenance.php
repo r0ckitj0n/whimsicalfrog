@@ -32,6 +32,12 @@ if (!wf_is_token_valid()) {
 header('Content-Type: application/json');
 
 $input = json_decode(file_get_contents('php://input'), true) ?? [];
+if (!is_array($input)) {
+    $input = [];
+}
+if (!empty($_POST)) {
+    $input = array_merge($input, $_POST);
+}
 $action = $_GET['action'] ?? $_POST['action'] ?? $input['action'] ?? '';
 $allowedActions = [
     'get_config',

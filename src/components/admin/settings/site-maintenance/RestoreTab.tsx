@@ -1,16 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useModalContext } from '../../../../context/ModalContext.js';
-import type { IMaintenanceBackupFile, IRestoreResult } from '../../../../types/maintenance.js';
+import type { IMaintenanceBackupFile, IRestoreResult, IWebsiteBackupScope } from '../../../../types/maintenance.js';
 
 interface RestoreTabProps {
     isLoading: boolean;
     listBackups: () => Promise<IMaintenanceBackupFile[]>;
     backupFiles: IMaintenanceBackupFile[];
     setBackupFiles: (files: IMaintenanceBackupFile[]) => void;
-    restoreDatabaseBackup: (serverBackupPath: string) => Promise<IRestoreResult>;
-    restoreDatabaseBackupUpload: (backupFile: File, options?: { ignore_errors?: boolean }) => Promise<IRestoreResult>;
-    restoreWebsiteBackup: (backupFile: string) => Promise<IRestoreResult>;
-    restoreWebsiteBackupUpload: (backupFile: File) => Promise<IRestoreResult>;
+    restoreDatabaseBackup: (serverBackupPath: string, options?: { ignore_errors?: boolean; table_whitelist?: string[]; data_groups?: Array<'room_maps' | 'customers' | 'inventory' | 'orders'> }) => Promise<IRestoreResult>;
+    restoreDatabaseBackupUpload: (backupFile: File, options?: { ignore_errors?: boolean; table_whitelist?: string[]; data_groups?: Array<'room_maps' | 'customers' | 'inventory' | 'orders'> }) => Promise<IRestoreResult>;
+    restoreWebsiteBackup: (backupFile: string, scope?: IWebsiteBackupScope) => Promise<IRestoreResult>;
+    restoreWebsiteBackupUpload: (backupFile: File, scope?: IWebsiteBackupScope) => Promise<IRestoreResult>;
     restoreResult: IRestoreResult | null;
     setRestoreResult: (res: IRestoreResult | null) => void;
 }
@@ -45,6 +45,10 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
     const [selectedDatabaseBackup, setSelectedDatabaseBackup] = useState<string>('');
     const [localWebsiteBackup, setLocalWebsiteBackup] = useState<File | null>(null);
     const [localDatabaseBackup, setLocalDatabaseBackup] = useState<File | null>(null);
+    const [websiteMode, setWebsiteMode] = useState<'full' | 'images'>('full');
+    const [imageGroups, setImageGroups] = useState<Array<'items' | 'backgrounds' | 'signs'>>(['items', 'backgrounds', 'signs']);
+    const [databaseMode, setDatabaseMode] = useState<'full' | 'groups'>('full');
+    const [dataGroups, setDataGroups] = useState<Array<'room_maps' | 'customers' | 'inventory' | 'orders'>>(['room_maps', 'customers', 'inventory', 'orders']);
 
     const websiteBackups = useMemo(
         () => backupFiles.filter((f) => f.type === 'website'),
@@ -60,6 +64,19 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
         setBackupFiles(files);
     };
 
+    const toggleImageGroup = (group: 'items' | 'backgrounds' | 'signs') => {
+        setImageGroups((prev) => (prev.includes(group) ? prev.filter((v) => v !== group) : [...prev, group]));
+    };
+
+    const toggleDataGroup = (group: 'room_maps' | 'customers' | 'inventory' | 'orders') => {
+        setDataGroups((prev) => (prev.includes(group) ? prev.filter((v) => v !== group) : [...prev, group]));
+    };
+
+    const selectedDataGroups = useMemo(
+        () => (databaseMode === 'groups' ? dataGroups : []),
+        [databaseMode, dataGroups]
+    );
+
     useEffect(() => {
         if (!backupFiles.length) {
             void refreshBackups();
@@ -71,6 +88,14 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
             window.WFToast?.error('Select a server backup or choose a local website backup file first.');
             return;
         }
+        if (websiteMode === 'images' && imageGroups.length === 0) {
+            window.WFToast?.error('Select at least one image group to restore.');
+            return;
+        }
+
+        const scope: IWebsiteBackupScope = websiteMode === 'images'
+            ? { mode: 'images', image_groups: imageGroups }
+            : { mode: 'full' };
 
         const confirmed = await confirm({
             title: 'Restore Website Files',
@@ -85,8 +110,8 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
         if (!confirmed) return;
 
         const result = localWebsiteBackup
-            ? await restoreWebsiteBackupUpload(localWebsiteBackup)
-            : await restoreWebsiteBackup(selectedWebsiteBackup);
+            ? await restoreWebsiteBackupUpload(localWebsiteBackup, scope)
+            : await restoreWebsiteBackup(selectedWebsiteBackup, scope);
         setRestoreResult(result);
 
         if (result.success) {
@@ -100,6 +125,10 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
     const handleRestoreDatabase = async () => {
         if (!selectedDatabaseBackup && !localDatabaseBackup) {
             window.WFToast?.error('Select a server backup or choose a local backup file first.');
+            return;
+        }
+        if (databaseMode === 'groups' && selectedDataGroups.length === 0) {
+            window.WFToast?.error('Select at least one data group to restore.');
             return;
         }
 
@@ -116,8 +145,8 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
         if (!confirmed) return;
 
         const result = localDatabaseBackup
-            ? await restoreDatabaseBackupUpload(localDatabaseBackup)
-            : await restoreDatabaseBackup(selectedDatabaseBackup);
+            ? await restoreDatabaseBackupUpload(localDatabaseBackup, { data_groups: selectedDataGroups })
+            : await restoreDatabaseBackup(selectedDatabaseBackup, { data_groups: selectedDataGroups });
         setRestoreResult(result);
 
         if (result.success) {
@@ -150,6 +179,23 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
                 <div className="p-6 border-2 border-dashed rounded-xl">
                     <h4 className="font-bold text-gray-800">Website Backup Restore</h4>
                     <p className="text-sm text-gray-500 mt-1 mb-4">Restore site files from a server backup list or upload a `.tar.gz` backup from your computer.</p>
+                    <div className="mb-4 p-3 rounded-lg border border-slate-200 bg-slate-50 space-y-2 text-sm">
+                        <label className="flex items-center gap-2">
+                            <input type="radio" checked={websiteMode === 'full'} onChange={() => setWebsiteMode('full')} disabled={isLoading} />
+                            <span>Restore all website files from archive</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                            <input type="radio" checked={websiteMode === 'images'} onChange={() => setWebsiteMode('images')} disabled={isLoading} />
+                            <span>Restore only selected image groups</span>
+                        </label>
+                        {websiteMode === 'images' && (
+                            <div className="grid grid-cols-1 gap-1 pt-1">
+                                <label className="flex items-center gap-2"><input type="checkbox" checked={imageGroups.includes('items')} onChange={() => toggleImageGroup('items')} disabled={isLoading} />Item images</label>
+                                <label className="flex items-center gap-2"><input type="checkbox" checked={imageGroups.includes('backgrounds')} onChange={() => toggleImageGroup('backgrounds')} disabled={isLoading} />Background images</label>
+                                <label className="flex items-center gap-2"><input type="checkbox" checked={imageGroups.includes('signs')} onChange={() => toggleImageGroup('signs')} disabled={isLoading} />Sign images</label>
+                            </div>
+                        )}
+                    </div>
                     <select
                         value={selectedWebsiteBackup}
                         onChange={(e) => setSelectedWebsiteBackup(e.target.value)}
@@ -186,7 +232,7 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
                     <button
                         type="button"
                         onClick={() => void handleRestoreWebsite()}
-                        disabled={isLoading || (!selectedWebsiteBackup && !localWebsiteBackup)}
+                        disabled={isLoading || (!selectedWebsiteBackup && !localWebsiteBackup) || (websiteMode === 'images' && imageGroups.length === 0)}
                         className="mt-4 w-full btn-text-secondary py-3 disabled:opacity-60"
                         data-help-id="maintenance-restore-website"
                     >
@@ -197,6 +243,24 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
                 <div className="p-6 border-2 border-dashed rounded-xl">
                     <h4 className="font-bold text-gray-800">Database Backup Restore</h4>
                     <p className="text-sm text-gray-500 mt-1 mb-4">Restore SQL data from a server backup list or upload a `.sql` / `.sql.gz` file from your computer.</p>
+                    <div className="mb-4 p-3 rounded-lg border border-slate-200 bg-slate-50 space-y-2 text-sm">
+                        <label className="flex items-center gap-2">
+                            <input type="radio" checked={databaseMode === 'full'} onChange={() => setDatabaseMode('full')} disabled={isLoading} />
+                            <span>Restore full SQL backup</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                            <input type="radio" checked={databaseMode === 'groups'} onChange={() => setDatabaseMode('groups')} disabled={isLoading} />
+                            <span>Restore selected data groups only</span>
+                        </label>
+                        {databaseMode === 'groups' && (
+                            <div className="grid grid-cols-1 gap-1 pt-1">
+                                <label className="flex items-center gap-2"><input type="checkbox" checked={dataGroups.includes('room_maps')} onChange={() => toggleDataGroup('room_maps')} disabled={isLoading} />Room maps</label>
+                                <label className="flex items-center gap-2"><input type="checkbox" checked={dataGroups.includes('customers')} onChange={() => toggleDataGroup('customers')} disabled={isLoading} />Customers</label>
+                                <label className="flex items-center gap-2"><input type="checkbox" checked={dataGroups.includes('inventory')} onChange={() => toggleDataGroup('inventory')} disabled={isLoading} />Inventory</label>
+                                <label className="flex items-center gap-2"><input type="checkbox" checked={dataGroups.includes('orders')} onChange={() => toggleDataGroup('orders')} disabled={isLoading} />Orders</label>
+                            </div>
+                        )}
+                    </div>
                     <select
                         value={selectedDatabaseBackup}
                         onChange={(e) => setSelectedDatabaseBackup(e.target.value)}
@@ -233,7 +297,7 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
                     <button
                         type="button"
                         onClick={() => void handleRestoreDatabase()}
-                        disabled={isLoading || (!selectedDatabaseBackup && !localDatabaseBackup)}
+                        disabled={isLoading || (!selectedDatabaseBackup && !localDatabaseBackup) || (databaseMode === 'groups' && selectedDataGroups.length === 0)}
                         className="mt-4 w-full btn-text-primary py-3 disabled:opacity-60"
                         data-help-id="maintenance-restore-database"
                     >

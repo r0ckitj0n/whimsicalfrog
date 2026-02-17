@@ -53,16 +53,21 @@
 }
 
 body[data-page='room_main'] .room-item-icon[data-mapping-type='content'] .room-item-shortcut-img,
+body[data-page='landing'] .room-item-icon[data-mapping-type='content'] .room-item-shortcut-img,
 #wf-root .room-item-icon[data-mapping-type='content'] .room-item-shortcut-img,
+#landingPage-react .room-item-icon[data-mapping-type='content'] .room-item-shortcut-img,
 #mainRoomPage-react .room-item-icon[data-mapping-type='content'] .room-item-shortcut-img {
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, filter 0.2s ease;
     transform-origin: center center;
 }
 
 body[data-page='room_main'] .room-item-icon[data-mapping-type='content']:hover .room-item-shortcut-img,
+body[data-page='landing'] .room-item-icon[data-mapping-type='content']:hover .room-item-shortcut-img,
 #wf-root .room-item-icon[data-mapping-type='content']:hover .room-item-shortcut-img,
+#landingPage-react .room-item-icon[data-mapping-type='content']:hover .room-item-shortcut-img,
 #mainRoomPage-react .room-item-icon[data-mapping-type='content']:hover .room-item-shortcut-img {
-    transform: scale(1.5) !important;
+    transform: scale(2) !important;
+    filter: brightness(1.1) drop-shadow(0 0 15px rgba(135, 172, 58, 0.5));
 }
 
 .room-title-overlay {

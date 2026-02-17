@@ -98,7 +98,8 @@ body:not([data-page^='admin']) .room-overlay-wrapper .room-item-icon[data-mappin
 
 body:not([data-page^='admin']) .room-modal-body .room-item-icon[data-mapping-type='content']:hover img,
 body:not([data-page^='admin']) .room-overlay-wrapper .room-item-icon[data-mapping-type='content']:hover img {
-    transform: scale(1.5);
+    transform: scale(2);
+    filter: brightness(1.1) drop-shadow(0 0 15px rgba(135, 172, 58, 0.5));
 }
 
 .room-modal-body .room-item-icon:hover,

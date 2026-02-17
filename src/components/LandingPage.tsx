@@ -154,6 +154,8 @@ export const LandingPage: React.FC = () => {
                 {destinations.map((dest, idx) => {
                     const selector = dest.area_selector.startsWith('.') ? dest.area_selector : `.${dest.area_selector}`;
                     const coord = coordinates.find(c => c.selector.toLowerCase() === selector.toLowerCase());
+                    const mappingType = String(dest.mapping_type || '').toLowerCase();
+                    const isShortcutType = mappingType === 'content';
 
                     if (!coord) return null;
 
@@ -166,7 +168,8 @@ export const LandingPage: React.FC = () => {
                         <a
                             key={idx}
                             href={resolveHref(dest.target)}
-                            className={`room-item-icon absolute group transition-opacity duration-300 overflow-visible ${!isLoading && coordinates.length > 0 ? 'opacity-100' : 'opacity-0'}`}
+                            className={`room-item-icon absolute group transition-opacity duration-300 overflow-visible ${isShortcutType ? 'room-item-shortcut' : ''} ${!isLoading && coordinates.length > 0 ? 'opacity-100' : 'opacity-0'}`}
+                            data-mapping-type={mappingType || undefined}
                             aria-label={dest.label || 'Explore'}
                             style={{
                                 ...styles,
@@ -186,14 +189,11 @@ export const LandingPage: React.FC = () => {
                                 <img
                                     src={imgUrl}
                                     alt={dest.label || 'Whimsical Frog'}
-                                    className="w-full h-full"
+                                    className="w-full h-full room-item-icon-img room-item-shortcut-img"
                                     style={{
                                         objectFit: 'contain',
-                                        transition: 'filter 0.3s ease',
-                                        willChange: 'filter'
+                                        willChange: 'filter, transform'
                                     }}
-                                    onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(1.1)')}
-                                    onMouseLeave={(e) => (e.currentTarget.style.filter = 'none')}
                                     loading="eager"
                                 />
                             </picture>

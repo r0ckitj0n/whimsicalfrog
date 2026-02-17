@@ -68,7 +68,7 @@ body[data-page='admin/settings'] {
   /* Background is now database-driven via useSiteHydration/bootstrap.php
      The --wf-body-bg variable is set by JS from the API response.
      Fallback to roomX background for pre-JS loading states only. */
-  background-image: var(--wf-body-bg, url("/images/backgrounds/background-roomX.webp")) !important;
+  background-image: var(--wf-body-bg, var(--wf-bg-roomx-image)) !important;
   background-size: cover !important;
   background-position: center !important;
   background-repeat: no-repeat !important;

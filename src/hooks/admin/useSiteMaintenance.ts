@@ -188,6 +188,25 @@ export const useSiteMaintenance = () => {
         }
     }, []);
 
+    const restoreWebsiteBackupUpload = useCallback(async (backupFile: File) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const formData = new FormData();
+            formData.append('backup_file', backupFile);
+            formData.append('confirm_restore', '1');
+            const res = await ApiClient.upload<IRestoreResult>('/api/restore_website_backup.php', formData);
+            return res;
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Unknown error';
+            logger.error('restoreWebsiteBackupUpload failed', err);
+            setError(message);
+            return { success: false, error: message } as IRestoreResult;
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
     const scanConnections = useCallback(async () => {
         setIsLoading(true);
         setError(null);
@@ -241,6 +260,7 @@ export const useSiteMaintenance = () => {
         restoreDatabaseBackup,
         restoreDatabaseBackupUpload,
         restoreWebsiteBackup,
+        restoreWebsiteBackupUpload,
         scanConnections,
         convertConnections
     };

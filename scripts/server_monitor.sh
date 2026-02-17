@@ -383,7 +383,15 @@ class ConcurrentPHPHandler(http.server.SimpleHTTPRequestHandler):
             # print(f"Executing {php_binary} for {file_path}", file=sys.stderr)
             
             result = subprocess.run(
-                [php_binary, "-d", "display_errors=0", "-d", "cgi.force_redirect=0", "-d", "upload_max_filesize=20M", "-d", "post_max_size=25M", "-d", "memory_limit=256M", str(file_path)],
+                [
+                    php_binary,
+                    "-d", "display_errors=0",
+                    "-d", "cgi.force_redirect=0",
+                    "-d", f"upload_max_filesize={env.get('WF_PHP_UPLOAD_MAX_FILESIZE', '256M')}",
+                    "-d", f"post_max_size={env.get('WF_PHP_POST_MAX_SIZE', '300M')}",
+                    "-d", f"memory_limit={env.get('WF_PHP_MEMORY_LIMIT', '512M')}",
+                    str(file_path)
+                ],
                 input=post_data,
                 capture_output=True,
                 env=env,

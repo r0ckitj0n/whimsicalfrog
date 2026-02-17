@@ -10,9 +10,7 @@ export default defineConfig({
   base: isProd ? '/dist/' : '/',
   resolve: {
     extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
-    alias: {
-      '/images': resolve(__dirname, 'images'),
-    },
+    alias: {},
   },
   define: {
     'process.env': {},
@@ -79,10 +77,6 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/policy': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-      '/images': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },

@@ -28,6 +28,23 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="alternate icon" href="/favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <script>
+        (() => {
+            const root = document.documentElement;
+            const set = (k, v) => root.style.setProperty(k, v);
+            set('--wf-bg-room1-webp-image', 'url("/images/backgrounds/background-room1.webp")');
+            set('--wf-bg-room1-png-image', 'url("/images/backgrounds/background-room1.png")');
+            set('--wf-bg-room2-webp-image', 'url("/images/backgrounds/background-room2.webp")');
+            set('--wf-bg-room2-png-image', 'url("/images/backgrounds/background-room2.png")');
+            set('--wf-bg-room3-webp-image', 'url("/images/backgrounds/background-room3.webp")');
+            set('--wf-bg-room3-png-image', 'url("/images/backgrounds/background-room3.png")');
+            set('--wf-bg-room4-webp-image', 'url("/images/backgrounds/background-room4.webp")');
+            set('--wf-bg-room4-png-image', 'url("/images/backgrounds/background-room4.png")');
+            set('--wf-bg-roomx-image', 'url("/images/backgrounds/background-roomX.webp")');
+            set('--wf-cloud-bg-webp-image', 'url("/images/backgrounds/cloud-bg.webp")');
+            set('--wf-cloud-bg-png-image', 'url("/images/backgrounds/cloud-bg.png")');
+        })();
+    </script>
     <link rel="stylesheet" href="/src/styles/entries/public-core.css">
 
     <style>

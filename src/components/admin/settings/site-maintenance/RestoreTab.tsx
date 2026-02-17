@@ -10,6 +10,7 @@ interface RestoreTabProps {
     restoreDatabaseBackup: (serverBackupPath: string) => Promise<IRestoreResult>;
     restoreDatabaseBackupUpload: (backupFile: File, options?: { ignore_errors?: boolean }) => Promise<IRestoreResult>;
     restoreWebsiteBackup: (backupFile: string) => Promise<IRestoreResult>;
+    restoreWebsiteBackupUpload: (backupFile: File) => Promise<IRestoreResult>;
     restoreResult: IRestoreResult | null;
     setRestoreResult: (res: IRestoreResult | null) => void;
 }
@@ -35,12 +36,14 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
     restoreDatabaseBackup,
     restoreDatabaseBackupUpload,
     restoreWebsiteBackup,
+    restoreWebsiteBackupUpload,
     restoreResult,
     setRestoreResult
 }) => {
     const { confirm } = useModalContext();
     const [selectedWebsiteBackup, setSelectedWebsiteBackup] = useState<string>('');
     const [selectedDatabaseBackup, setSelectedDatabaseBackup] = useState<string>('');
+    const [localWebsiteBackup, setLocalWebsiteBackup] = useState<File | null>(null);
     const [localDatabaseBackup, setLocalDatabaseBackup] = useState<File | null>(null);
 
     const websiteBackups = useMemo(
@@ -64,14 +67,16 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
     }, []);
 
     const handleRestoreWebsite = async () => {
-        if (!selectedWebsiteBackup) {
-            window.WFToast?.error('Select a website backup file first.');
+        if (!selectedWebsiteBackup && !localWebsiteBackup) {
+            window.WFToast?.error('Select a server backup or choose a local website backup file first.');
             return;
         }
 
         const confirmed = await confirm({
             title: 'Restore Website Files',
-            message: 'This overwrites files in the current site with the selected backup. Continue only if you intend to roll back the code and assets.',
+            message: localWebsiteBackup
+                ? `This uploads and restores ${localWebsiteBackup.name}. Current website files will be overwritten after a safety backup is created. Continue?`
+                : 'This overwrites files in the current site with the selected backup. Continue only if you intend to roll back the code and assets.',
             confirmText: 'Restore Website',
             cancelText: 'Cancel',
             confirmStyle: 'danger',
@@ -79,11 +84,14 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
         });
         if (!confirmed) return;
 
-        const result = await restoreWebsiteBackup(selectedWebsiteBackup);
+        const result = localWebsiteBackup
+            ? await restoreWebsiteBackupUpload(localWebsiteBackup)
+            : await restoreWebsiteBackup(selectedWebsiteBackup);
         setRestoreResult(result);
 
         if (result.success) {
             window.WFToast?.success('Website backup restored successfully.');
+            setLocalWebsiteBackup(null);
         } else {
             window.WFToast?.error(result.error || 'Website restore failed.');
         }
@@ -141,7 +149,7 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-6 border-2 border-dashed rounded-xl">
                     <h4 className="font-bold text-gray-800">Website Backup Restore</h4>
-                    <p className="text-sm text-gray-500 mt-1 mb-4">Restore site files from a `.tar.gz` website backup archive.</p>
+                    <p className="text-sm text-gray-500 mt-1 mb-4">Restore site files from a server backup list or upload a `.tar.gz` backup from your computer.</p>
                     <select
                         value={selectedWebsiteBackup}
                         onChange={(e) => setSelectedWebsiteBackup(e.target.value)}
@@ -155,14 +163,34 @@ export const RestoreTab: React.FC<RestoreTabProps> = ({
                             </option>
                         ))}
                     </select>
+                    <div className="mt-4">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                            Or choose local website backup
+                        </label>
+                        <input
+                            type="file"
+                            accept=".tar.gz,application/gzip,application/x-gzip"
+                            disabled={isLoading}
+                            onChange={(e) => {
+                                const file = e.target.files?.[0] ?? null;
+                                setLocalWebsiteBackup(file);
+                            }}
+                            className="block w-full text-xs text-slate-700 file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border file:border-slate-300 file:bg-white file:text-slate-700 file:font-semibold hover:file:bg-slate-50"
+                        />
+                        {localWebsiteBackup && (
+                            <p className="mt-2 text-xs text-slate-500">
+                                Selected local file: <span className="font-semibold text-slate-700">{localWebsiteBackup.name}</span>
+                            </p>
+                        )}
+                    </div>
                     <button
                         type="button"
                         onClick={() => void handleRestoreWebsite()}
-                        disabled={isLoading || !selectedWebsiteBackup}
+                        disabled={isLoading || (!selectedWebsiteBackup && !localWebsiteBackup)}
                         className="mt-4 w-full btn-text-secondary py-3 disabled:opacity-60"
                         data-help-id="maintenance-restore-website"
                     >
-                        {isLoading ? 'Restoring Website...' : 'Restore Website Backup'}
+                        {isLoading ? 'Restoring Website...' : localWebsiteBackup ? 'Upload & Restore Local Website Backup' : 'Restore Website Backup'}
                     </button>
                 </div>
 

@@ -1,8 +1,7 @@
 # Allow access to image files
-<Files ~ "\.(png|jpe?g|gif|webp|svg)$">
-    Order allow,deny
-    Allow from all
-</Files>
+<FilesMatch "\.(png|jpe?g|gif|webp|avif|svg)$">
+    Require all granted
+</FilesMatch>
 
 # Enable content type headers
 <IfModule mod_mime.c>
@@ -14,25 +13,29 @@
     AddType image/svg+xml .svg
 </IfModule>
 
-# Set proper cache headers for images
+# Cache policy for admin-editable runtime media:
+# - keep cache modest (1 hour) to reduce stale images after admin updates
+# - require revalidation when max-age expires
 <IfModule mod_expires.c>
-    ExpiresActive on
-    ExpiresByType image/png "access plus 1 month"
-    ExpiresByType image/jpg "access plus 1 month"
-    ExpiresByType image/jpeg "access plus 1 month"
-    ExpiresByType image/gif "access plus 1 month"
-    ExpiresByType image/webp "access plus 1 month"
-    ExpiresByType image/avif "access plus 1 month"
-    ExpiresByType image/svg+xml "access plus 1 month"
-
-    # Use Cache-Control as well
-    <IfModule mod_headers.c>
-        Header set Cache-Control "public, max-age=2592000"
-    </IfModule>
+    ExpiresActive On
+    ExpiresByType image/png "access plus 1 hour"
+    ExpiresByType image/jpg "access plus 1 hour"
+    ExpiresByType image/jpeg "access plus 1 hour"
+    ExpiresByType image/gif "access plus 1 hour"
+    ExpiresByType image/webp "access plus 1 hour"
+    ExpiresByType image/avif "access plus 1 hour"
+    ExpiresByType image/svg+xml "access plus 1 hour"
 </IfModule>
+
+<IfModule mod_headers.c>
+    Header set Cache-Control "public, max-age=3600, must-revalidate"
+    Header set Vary "Accept"
+</IfModule>
+
+FileETag MTime Size
 
 # Prevent directory browsing
 Options -Indexes
 
 # Allow direct access to files
-Options +FollowSymLinks 
+Options +FollowSymLinks

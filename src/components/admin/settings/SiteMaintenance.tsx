@@ -30,7 +30,8 @@ export const SiteMaintenance: React.FC<SiteMaintenanceProps> = ({ onClose, initi
         listBackups,
         restoreDatabaseBackup,
         restoreDatabaseBackupUpload,
-        restoreWebsiteBackup
+        restoreWebsiteBackup,
+        restoreWebsiteBackupUpload
     } = useSiteMaintenance();
 
     const [activeTab, setActiveTab] = useState<TabType>(initialTab);
@@ -149,6 +150,7 @@ export const SiteMaintenance: React.FC<SiteMaintenanceProps> = ({ onClose, initi
                                     restoreDatabaseBackup={restoreDatabaseBackup}
                                     restoreDatabaseBackupUpload={restoreDatabaseBackupUpload}
                                     restoreWebsiteBackup={restoreWebsiteBackup}
+                                    restoreWebsiteBackupUpload={restoreWebsiteBackupUpload}
                                     restoreResult={restoreResult}
                                     setRestoreResult={setRestoreResult}
                                 />

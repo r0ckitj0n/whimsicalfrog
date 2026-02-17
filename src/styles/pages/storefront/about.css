@@ -105,12 +105,13 @@
     width: calc(100% + 20%);
     height: calc(100% + 20%);
     transform: translate(-50%, -50%);
-    background: url('/images/backgrounds/cloud-bg.webp') center/100% 100% no-repeat;
-    /* Fallback for environments where WebP might not be supported/bundled yet */
-    background: image-set(url('/images/backgrounds/cloud-bg.webp') 1x,
-        url('/images/backgrounds/cloud-bg.png') 1x) center/100% 100% no-repeat;
+    background: var(--wf-cloud-bg-webp-image) center/100% 100% no-repeat;
     z-index: var(--wf-z-negative);
     pointer-events: none;
+  }
+
+  .no-webp .wf-cloud-card::after {
+    background-image: var(--wf-cloud-bg-png-image);
   }
 
   @media (max-width: 520px) {

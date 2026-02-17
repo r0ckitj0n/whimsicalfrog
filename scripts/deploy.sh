@@ -481,6 +481,35 @@ EOL
   fi
   rm -f deploy_dist.txt
 
+  # Always sync image directory cache-policy files, even in full-replace mode.
+  # This updates runtime media cache behavior without bulk image mirroring.
+  if [ "$MODE" != "dist-only" ]; then
+    echo -e "${GREEN}🧾 Syncing image cache-policy files (.htaccess)...${NC}"
+    cat > deploy_image_htaccess.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+set cmd:fail-exit no
+open sftp://$USER:$PASS@$HOST
+mkdir -p images
+mkdir -p images/backgrounds
+mkdir -p images/items
+mkdir -p images/signs
+set cmd:fail-exit yes
+put images/backgrounds/.htaccess -o images/backgrounds/.htaccess
+put images/items/.htaccess -o images/items/.htaccess
+put images/signs/.htaccess -o images/signs/.htaccess
+bye
+EOL
+    if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+      echo -e "${YELLOW}DRY-RUN: Skipping image .htaccess sync${NC}"
+    elif lftp -f deploy_image_htaccess.txt; then
+      echo -e "${GREEN}✅ Image cache-policy files synced${NC}"
+    else
+      echo -e "${YELLOW}⚠️  Image .htaccess sync failed; continuing${NC}"
+    fi
+    rm -f deploy_image_htaccess.txt
+  fi
+
   # Secondary passes are unnecessary in full-replace mode
   if [ "${WF_FULL_REPLACE:-0}" != "1" ]; then
     if [ "$MODE" != "dist-only" ]; then

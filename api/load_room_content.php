@@ -275,14 +275,19 @@ try {
                 // content/button types - use content_target as a room shortcut
                 $target = $mapping['content_target'] ?? '';
                 $label = $mapping['link_label'] ?? 'Content';
+                $isShortcutType = ($type === 'content');
+                $typeClass = $isShortcutType ? 'room-item-shortcut' : 'room-item-button';
+                $escapedType = htmlspecialchars((string) $type);
                 // Check if target is a room reference
                 if (preg_match('/^room:(\w+)$/', $target, $matches)) {
                     $roomNum = $matches[1];
                     $htmlContent .= sprintf(
-                        '<div class="room-item room-item-icon room-item-shortcut %s" data-action="openRoom" data-room="%s" data-params=\'{"room":"%s"}\' %s %s>
+                        '<div class="room-item room-item-icon %s %s" data-mapping-type="%s" data-action="openRoom" data-room="%s" data-params=\'{"room":"%s"}\' %s %s>
                         <img src="%s" alt="%s" loading="lazy">
                     </div>',
+                        $typeClass,
                         $selectorClass,
+                        $escapedType,
                         htmlspecialchars($roomNum),
                         htmlspecialchars($roomNum),
                         $coordAttrs,
@@ -293,11 +298,13 @@ try {
                 } else {
                     // Fallback to page navigation
                     $htmlContent .= sprintf(
-                        '<a href="%s" class="room-item room-item-icon room-item-content %s" %s %s>
+                        '<a href="%s" class="room-item room-item-icon room-item-content %s %s" data-mapping-type="%s" %s %s>
                         <img src="%s" alt="%s" loading="lazy">
                     </a>',
                         htmlspecialchars($target ?: '/'),
+                        $typeClass,
                         $selectorClass,
+                        $escapedType,
                         $coordAttrs,
                         $inlineStyle,
                         htmlspecialchars($imgUrl),

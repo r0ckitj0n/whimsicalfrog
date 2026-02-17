@@ -48,7 +48,7 @@ pnpm-debug.log*
 *.swp
 
 # --- Backups / Legacy ---
-backups/
+backups/**
 # Exceptions: Allow specific quarantined files if necessary
 !backups/duplicates/**
 !backups/debug/README.md

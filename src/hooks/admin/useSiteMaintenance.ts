@@ -2,7 +2,15 @@ import { useState, useCallback } from 'react';
 import { ApiClient } from '../../core/ApiClient.js';
 import logger from '../../core/logger.js';
 import { AUTH, BACKUP_TYPE, BACKUP_DESTINATION } from '../../core/constants.js';
-import type { IBackupDetails, IDatabaseInfo, ISystemConfig, IScanResult } from '../../types/maintenance.js';
+import type {
+    IBackupDetails,
+    IBackupListResponse,
+    IDatabaseInfo,
+    IMaintenanceBackupFile,
+    IRestoreResult,
+    IScanResult,
+    ISystemConfig
+} from '../../types/maintenance.js';
 
 // Re-export for backward compatibility
 export type { IBackupDetails, IDatabaseInfo, ISystemConfig, IScanResult } from '../../types/maintenance.js';
@@ -103,6 +111,59 @@ export const useSiteMaintenance = () => {
         }
     }, []);
 
+    const listBackups = useCallback(async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const res = await ApiClient.get<IBackupListResponse>('/api/list_maintenance_backups.php');
+            return Array.isArray(res?.files) ? res.files : [];
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Unknown error';
+            logger.error('listBackups failed', err);
+            setError(message);
+            return [] as IMaintenanceBackupFile[];
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    const restoreDatabaseBackup = useCallback(async (serverBackupPath: string) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const res = await ApiClient.post<IRestoreResult>('/api/database_maintenance.php?action=restore_database', {
+                server_backup_path: serverBackupPath
+            });
+            return res;
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Unknown error';
+            logger.error('restoreDatabaseBackup failed', err);
+            setError(message);
+            return { success: false, error: message } as IRestoreResult;
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    const restoreWebsiteBackup = useCallback(async (backupFile: string) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const res = await ApiClient.post<IRestoreResult>('/api/restore_website_backup.php', {
+                file: backupFile,
+                confirm_restore: true
+            });
+            return res;
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Unknown error';
+            logger.error('restoreWebsiteBackup failed', err);
+            setError(message);
+            return { success: false, error: message } as IRestoreResult;
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
     const scanConnections = useCallback(async () => {
         setIsLoading(true);
         setError(null);
@@ -152,6 +213,9 @@ export const useSiteMaintenance = () => {
         fetchSystemConfig,
         executeBackup,
         compactRepairDatabase,
+        listBackups,
+        restoreDatabaseBackup,
+        restoreWebsiteBackup,
         scanConnections,
         convertConnections
     };

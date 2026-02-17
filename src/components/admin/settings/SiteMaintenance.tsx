@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useModalContext } from '../../../context/ModalContext.js';
-import { useSiteMaintenance, IBackupDetails, IScanResult } from '../../../hooks/admin/useSiteMaintenance.js';
+import { useSiteMaintenance, IBackupDetails } from '../../../hooks/admin/useSiteMaintenance.js';
+import type { IMaintenanceBackupFile, IRestoreResult } from '../../../types/maintenance.js';
 
 import { StatusTab } from './site-maintenance/StatusTab.js';
 import { DatabaseTab } from './site-maintenance/DatabaseTab.js';
 import { BackupTab } from './site-maintenance/BackupTab.js';
 import { CleanupTab } from './site-maintenance/CleanupTab.js';
+import { RestoreTab } from './site-maintenance/RestoreTab.js';
 
-export type TabType = 'status' | 'database' | 'backup' | 'cleanup';
+export type TabType = 'status' | 'database' | 'backup' | 'restore' | 'cleanup';
 
 interface SiteMaintenanceProps {
     onClose?: () => void;
@@ -25,11 +26,16 @@ export const SiteMaintenance: React.FC<SiteMaintenanceProps> = ({ onClose, initi
         fetchSystemConfig,
         fetchDatabaseInfo,
         executeBackup,
-        compactRepairDatabase
+        compactRepairDatabase,
+        listBackups,
+        restoreDatabaseBackup,
+        restoreWebsiteBackup
     } = useSiteMaintenance();
 
     const [activeTab, setActiveTab] = useState<TabType>(initialTab);
     const [backupResult, setBackupResult] = useState<IBackupDetails | null>(null);
+    const [backupFiles, setBackupFiles] = useState<IMaintenanceBackupFile[]>([]);
+    const [restoreResult, setRestoreResult] = useState<IRestoreResult | null>(null);
 
     useEffect(() => {
         // Only fetch if data is missing
@@ -44,6 +50,7 @@ export const SiteMaintenance: React.FC<SiteMaintenanceProps> = ({ onClose, initi
         { id: 'status', label: 'System Status' },
         { id: 'database', label: 'Database' },
         { id: 'backup', label: 'Backups' },
+        { id: 'restore', label: 'Restore' },
         { id: 'cleanup', label: 'Cleanup' }
     ];
 
@@ -130,6 +137,19 @@ export const SiteMaintenance: React.FC<SiteMaintenanceProps> = ({ onClose, initi
 
                             {activeTab === 'cleanup' && (
                                 <CleanupTab isLoading={isLoading} />
+                            )}
+
+                            {activeTab === 'restore' && (
+                                <RestoreTab
+                                    isLoading={isLoading}
+                                    listBackups={listBackups}
+                                    backupFiles={backupFiles}
+                                    setBackupFiles={setBackupFiles}
+                                    restoreDatabaseBackup={restoreDatabaseBackup}
+                                    restoreWebsiteBackup={restoreWebsiteBackup}
+                                    restoreResult={restoreResult}
+                                    setRestoreResult={setRestoreResult}
+                                />
                             )}
                         </div>
                     </div>

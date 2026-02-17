@@ -46,6 +46,33 @@ export interface IBackupDetails {
     error?: string;
 }
 
+export type BackupArtifactType = 'website' | 'database';
+
+export interface IMaintenanceBackupFile {
+    name: string;
+    size: number;
+    mtime: number;
+    rel: string;
+    type: BackupArtifactType;
+}
+
+export interface IBackupListResponse {
+    success: boolean;
+    files: IMaintenanceBackupFile[];
+}
+
+export interface IRestoreResult {
+    success: boolean;
+    message?: string;
+    error?: string;
+    restored_file?: string;
+    restore_time_seconds?: number;
+    extracted_files?: number;
+    tables_restored?: number;
+    records_restored?: number;
+    statements_executed?: number;
+}
+
 export interface IDatabaseInfo {
     total_active: number;
     total_backup: number;
@@ -174,4 +201,3 @@ export interface IHealthItemResponse {
         };
     };
 }
-

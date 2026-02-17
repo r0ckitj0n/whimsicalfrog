@@ -1,0 +1,10 @@
+# Deny direct web access to backup artifacts.
+# Admin users must use authenticated API endpoints (e.g. /api/download_backup.php).
+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+</IfModule>

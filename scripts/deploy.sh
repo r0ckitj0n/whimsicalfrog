@@ -671,8 +671,17 @@ if [ "$MODE" != "env-only" ]; then
     VERIFY_FAILED=1
   fi
   
-  # Extract one JS and one CSS asset from homepage HTML and verify
+  # Homepage should never reference source paths in production.
   HOME_HTML=$(curl -s "$BASE_URL/")
+  if echo "$HOME_HTML" | grep -q "/src/"; then
+    echo -e "${YELLOW}⚠️  Homepage still references /src/ paths${NC}"
+    VERIFY_FAILED=1
+  else
+    echo -e "${GREEN}✅ Homepage has no /src/ references${NC}"
+  fi
+
+  # Extract one JS and one CSS asset from homepage HTML and verify when present.
+  # Some pages load assets dynamically from Vite manifest, so missing static tags is not fatal.
   APP_JS=$(echo "$HOME_HTML" | grep -Eo "/(dist/assets|build-assets)/[^\"']+\\.js" | head -n1)
   MAIN_CSS=$(echo "$HOME_HTML" | grep -Eo "/(dist/assets|build-assets)/[^\"']*public-core[^\"']+\\.css" | head -n1)
   if [ -n "$APP_JS" ]; then
@@ -680,16 +689,14 @@ if [ "$MODE" != "env-only" ]; then
     echo -e "  • JS $APP_JS -> HTTP $CODE_JS"
     if [ "$CODE_JS" != "200" ]; then VERIFY_FAILED=1; fi
   else
-    echo -e "  • JS: ⚠️ Not found in homepage HTML"
-    VERIFY_FAILED=1
+    echo -e "  • JS: ℹ️ Not found in homepage HTML (manifest loader may be in use)"
   fi
   if [ -n "$MAIN_CSS" ]; then
     CODE_CSS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL$MAIN_CSS")
     echo -e "  • CSS $MAIN_CSS -> HTTP $CODE_CSS"
     if [ "$CODE_CSS" != "200" ]; then VERIFY_FAILED=1; fi
   else
-    echo -e "  • CSS: ⚠️ Not found in homepage HTML"
-    VERIFY_FAILED=1
+    echo -e "  • CSS: ℹ️ Not found in homepage HTML (manifest loader may be in use)"
   fi
   
   # Fix permissions automatically after deployment

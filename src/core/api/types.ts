@@ -1,6 +1,7 @@
 export interface RequestOptions extends RequestInit {
     responseType?: 'json' | 'text';
     onProgress?: (event: ProgressEvent) => void;
+    skipDeleteConfirm?: boolean;
 }
 
 export interface ApiResponse<T = unknown> {

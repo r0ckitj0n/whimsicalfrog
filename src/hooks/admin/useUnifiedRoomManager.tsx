@@ -204,9 +204,19 @@ export const useUnifiedRoomManager = ({
             if (selectedRoom) await backgrounds.applyBackground(selectedRoom, bgId);
         }, [selectedRoom, backgrounds]),
 
-        handleDeleteBackground: useCallback(async (bgId: number) => {
-            if (selectedRoom) await backgrounds.deleteBackground(bgId, selectedRoom);
-        }, [selectedRoom, backgrounds]),
+        handleDeleteBackground: useCallback(async (bgId: number, name?: string) => {
+            if (!selectedRoom) return;
+            const label = String(name || '').trim() || `Background #${bgId}`;
+            const confirmed = await confirmModal({
+                title: 'Delete Background',
+                message: `Delete "${label}" from this room?`,
+                confirmText: 'Delete',
+                confirmStyle: 'danger',
+                iconKey: 'delete'
+            });
+            if (!confirmed) return;
+            await backgrounds.deleteBackground(bgId, selectedRoom);
+        }, [selectedRoom, backgrounds, confirmModal]),
 
         handleBackgroundUpload: useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
             const file = e.target.files?.[0];

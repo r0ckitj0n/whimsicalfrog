@@ -425,7 +425,7 @@ export interface IUnifiedRoomManagerHook extends IRoomOverviewHook, IRoomNavigat
     handleRoomChange: (roomId: string) => Promise<void>;
     handleGlobalSave: () => Promise<void>;
     handleApplyBackground: (bgId: number) => Promise<void>;
-    handleDeleteBackground: (bgId: number) => Promise<void>;
+    handleDeleteBackground: (bgId: number, name?: string) => Promise<void>;
     handleBackgroundUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
     handleGenerateBackground: (request: import('./room-generation.js').IRoomImageGenerationRequest) => Promise<{ success: boolean; data?: import('./room-generation.js').IRoomImageGenerationResponse['data']; error?: string }>;
     handleActivateMap: (id: string | number) => Promise<void>;

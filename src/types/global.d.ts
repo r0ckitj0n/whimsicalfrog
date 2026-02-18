@@ -111,6 +111,9 @@ declare global {
     __WF_BACKEND_ORIGIN?: string;
     __WF_DEBUG?: boolean;
     __WF_DEV_MODE?: boolean;
+    __WF_LAST_MODAL_CONFIRM_AT?: number;
+    __WF_LAST_MODAL_CONFIRM_STYLE?: string;
+    __WF_LAST_MODAL_CONFIRM_TEXT?: string;
     __WF_OPEN_CART_ON_ADD?: boolean;
     __WF_CART_MERGE_DUPES?: boolean;
     __WF_SHOW_UPSELLS?: boolean;

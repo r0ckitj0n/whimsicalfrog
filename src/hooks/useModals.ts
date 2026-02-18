@@ -16,6 +16,16 @@ export const useModals = () => {
 
     const close = useCallback((value?: unknown) => {
         if (!modal) return;
+
+        if (
+            typeof window !== 'undefined' &&
+            modal.mode === 'confirm' &&
+            value === true
+        ) {
+            window.__WF_LAST_MODAL_CONFIRM_AT = Date.now();
+            window.__WF_LAST_MODAL_CONFIRM_STYLE = modal.confirmStyle || 'confirm';
+            window.__WF_LAST_MODAL_CONFIRM_TEXT = modal.confirmText || '';
+        }
         
         setModal(prev => prev ? { ...prev, isOpen: false } : null);
         

@@ -14,6 +14,10 @@ export class ApiClient {
      * Core request helper used by all verb-specific helpers.
      */
     static async request<T = unknown>(url: string, options: RequestOptions = {}): Promise<T> {
+        if (!(await this.ensureDeleteConfirmed(url, options))) {
+            throw new Error('Delete action canceled');
+        }
+
         const cacheBuster = `cb=${Date.now()}`;
         const finalUrl = url.includes('?') ? `${url}&${cacheBuster}` : `${url}?${cacheBuster}`;
 
@@ -59,6 +63,88 @@ export class ApiClient {
         if (contentType.includes('application/json')) return await JsonResponseParser.parse<T>(response);
 
         return (await response.text()) as unknown as T;
+    }
+
+    private static isAdminContext(): boolean {
+        const path = (window.location.pathname || '').toLowerCase();
+        const bodyPage = (document.body?.getAttribute('data-page') || '').toLowerCase();
+        return path.includes('admin') || bodyPage.startsWith('admin');
+    }
+
+    private static hasRecentDeleteConfirmation(): boolean {
+        const ts = Number(window.__WF_LAST_MODAL_CONFIRM_AT || 0);
+        if (!ts) return false;
+        const ageMs = Date.now() - ts;
+        if (ageMs < 0 || ageMs > 5000) return false;
+
+        const style = String(window.__WF_LAST_MODAL_CONFIRM_STYLE || '').toLowerCase();
+        const text = String(window.__WF_LAST_MODAL_CONFIRM_TEXT || '').toLowerCase();
+        return style === 'danger' || text.includes('delete') || text.includes('remove');
+    }
+
+    private static bodyIndicatesDelete(body: BodyInit | null | undefined): boolean {
+        if (!body) return false;
+        if (typeof body === 'string') {
+            try {
+                const parsed = JSON.parse(body) as { action?: unknown };
+                const action = String(parsed?.action || '').toLowerCase();
+                return /(delete|remove|destroy|purge)/.test(action);
+            } catch {
+                return false;
+            }
+        }
+        if (typeof FormData !== 'undefined' && body instanceof FormData) {
+            const action = String(body.get('action') || '').toLowerCase();
+            return /(delete|remove|destroy|purge)/.test(action);
+        }
+        return false;
+    }
+
+    private static isDeleteIntent(url: string, options: RequestOptions): boolean {
+        const method = String(options.method || 'GET').toUpperCase();
+        if (method === 'DELETE') return true;
+
+        const lowered = url.toLowerCase();
+        if (/\/api\/delete[_-][^/?]+\.php/.test(lowered)) return true;
+
+        try {
+            const target = new URL(url, window.location.origin);
+            const action = String(target.searchParams.get('action') || '').toLowerCase();
+            if (/(delete|remove|destroy|purge)/.test(action)) return true;
+        } catch {
+            // ignore parse failures
+        }
+
+        if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
+            return this.bodyIndicatesDelete(options.body);
+        }
+
+        return false;
+    }
+
+    private static async ensureDeleteConfirmed(url: string, options: RequestOptions): Promise<boolean> {
+        if (options.skipDeleteConfirm) return true;
+        if (!this.isAdminContext()) return true;
+        if (!this.isDeleteIntent(url, options)) return true;
+        if (this.hasRecentDeleteConfirmation()) return true;
+
+        if (window.WF_Confirm) {
+            const ok = await window.WF_Confirm({
+                title: 'Confirm Delete',
+                message: 'Are you sure you want to delete this item? This action cannot be undone.',
+                confirmText: 'Delete',
+                confirmStyle: 'danger',
+                iconKey: 'delete'
+            });
+            if (ok) {
+                window.__WF_LAST_MODAL_CONFIRM_AT = Date.now();
+                window.__WF_LAST_MODAL_CONFIRM_STYLE = 'danger';
+                window.__WF_LAST_MODAL_CONFIRM_TEXT = 'Delete';
+            }
+            return ok;
+        }
+
+        return window.confirm('Are you sure you want to delete this item?');
     }
 
     static get<T = unknown>(url: string, params: Record<string, any> = {}): Promise<T> {
@@ -135,4 +221,3 @@ export class ApiClient {
 }
 
 export default ApiClient;
-

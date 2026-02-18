@@ -60,9 +60,8 @@ try {
             requireAdmin(true);
             $id = $input['background_id'] ?? $_GET['background_id'] ?? '';
             if (!ctype_digit((string)$id)) throw new Exception('Missing ID');
-            $bg = Database::queryOne("SELECT name FROM backgrounds WHERE id = ?", [$id]);
+            $bg = Database::queryOne("SELECT id FROM backgrounds WHERE id = ?", [$id]);
             if (!$bg) Response::notFound();
-            if ($bg['name'] === 'Original') throw new Exception('Protected');
             Database::execute("DELETE FROM backgrounds WHERE id = ?", [$id]);
             Response::success(null, 'Deleted');
             break;

@@ -94,16 +94,10 @@ function handleDelete($pdo, $input)
     }
 
     try {
-        // Check if it's an Original background
         $background = Database::queryOne("SELECT name, image_filename, webp_filename FROM backgrounds WHERE id = ?", [$backgroundId]);
 
         if (!$background) {
             echo json_encode(['success' => false, 'message' => 'Background not found']);
-            return;
-        }
-
-        if ($background['name'] === 'Original') {
-            echo json_encode(['success' => false, 'message' => 'Original backgrounds cannot be deleted - they are is_protected']);
             return;
         }
 

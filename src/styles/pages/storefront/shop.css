@@ -88,5 +88,13 @@
   body[data-page='shop'] .shop-footer-help {
     max-height: none;
     overflow: visible;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  body[data-page='shop'] .shop-footer-help > section {
+    margin: 0 !important;
   }
 } 

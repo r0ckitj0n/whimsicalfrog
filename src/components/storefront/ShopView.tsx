@@ -77,7 +77,7 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
                 handleClear={handleClear}
             />
 
-            <div className="shop-footer-help w-full px-6 pb-24 max-w-6xl mx-auto relative z-20 text-white">
+            <div className="shop-footer-help w-full max-w-6xl mx-auto relative z-20 text-white">
                 <section className="rounded-2xl bg-[var(--brand-primary)]/45 p-3 text-white">
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-nunito">
                         <span className="font-merienda text-base">Shop Help</span>

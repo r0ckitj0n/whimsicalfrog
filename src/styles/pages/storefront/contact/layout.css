@@ -28,10 +28,11 @@ body[data-page='contact'] .page-content {
   margin-left: 0 !important;
   margin-right: auto !important;
   padding-top: 0 !important;
-  padding-left: 150px !important;
-  padding-right: 0 !important;
+  padding-left: clamp(16px, 6vw, 150px) !important;
+  padding-right: clamp(16px, 3vw, 40px) !important;
   padding-bottom: 24px !important;
   position: relative;
+  box-sizing: border-box;
   z-index: var(--wf-z-elevated);
   opacity: 1 !important;
   visibility: visible !important;
@@ -54,7 +55,7 @@ body[data-page='contact'] .wf-contact-card {
   box-shadow: 0 15px 45px rgb(0 0 0 / 25%);
   margin: 12px 0 0px;
   width: auto;
-  max-width: min(700px, 50vw) !important;
+  max-width: min(700px, 100%) !important;
   box-sizing: border-box;
 }
 
@@ -76,12 +77,16 @@ body[data-page='contact'] .wf-contact-card .content {
 }
 
 body[data-page='contact'] .wf-contact-card>.prose {
-  width: calc(100% - 20px) !important;
+  width: 100% !important;
   max-width: var(--contact-form-max) !important;
   margin-left: auto;
   margin-right: auto;
   padding-left: 0 !important;
   padding-right: 0 !important;
+}
+
+body[data-page='contact'] .wf-contact-page-frame {
+  margin-left: 0 !important;
 }
 
 /* POS-style receipt block used in contact reveal */

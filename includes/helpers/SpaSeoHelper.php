@@ -136,6 +136,44 @@ class SpaSeoHelper
         return $html;
     }
 
+    public static function renderSeoShellForPath(string $requestedPath): string
+    {
+        $path = self::normalizePath($requestedPath);
+        $baseUrl = self::baseUrl();
+        $siteName = wf_site_name();
+        if ($siteName === '') {
+            $siteName = self::DEFAULT_SITE_NAME;
+        }
+
+        $content = self::renderDefaultSeoShellContent($siteName);
+        $productIdentifier = self::extractProductIdentifier($path);
+        if ($productIdentifier !== null) {
+            $product = self::resolveProductForIdentifier($productIdentifier);
+            if (is_array($product)) {
+                $content = self::renderProductSeoShellContent($product);
+            }
+        } else {
+            $categorySlug = self::extractShopCategorySlug($path);
+            if ($categorySlug !== null) {
+                $content = self::renderCategorySeoShellContent($categorySlug);
+            } else {
+                $roomNumber = self::resolveRoomNumberForPath($path);
+                if ($roomNumber !== null) {
+                    $content = self::renderRoomSeoShellContent($roomNumber);
+                } else {
+                    $content = match ($path) {
+                        '/shop' => self::renderShopSeoShellContent($siteName),
+                        '/about' => self::renderAboutSeoShellContent($siteName),
+                        '/contact' => self::renderContactSeoShellContent($siteName, $baseUrl),
+                        default => self::renderDefaultSeoShellContent($siteName),
+                    };
+                }
+            }
+        }
+
+        return '<main id="wf-seo-shell" style="max-width:64rem;margin:0 auto;padding:2.5rem 1.25rem;color:#fff;">' . $content . '</main>';
+    }
+
     private static function buildSeoPayload(string $path): array
     {
         $productIdentifier = self::extractProductIdentifier($path);
@@ -225,21 +263,18 @@ class SpaSeoHelper
         $baseUrl = self::baseUrl();
         $room = self::loadRoomInfo($roomNumber);
         $items = self::loadRoomSeoItems($roomNumber);
-        $settings = self::loadSeoSettings('room');
         $canonicalPath = wf_room_canonical_path($roomNumber);
         if ($canonicalPath === null || $canonicalPath === '') {
             $canonicalPath = $path;
         }
 
         $titleBase = trim((string) ($room['room_name'] ?? 'Room ' . $roomNumber));
-        $title = trim((string) ($settings['page_title'] ?? ($titleBase . ' | ' . self::DEFAULT_SITE_NAME)));
-
-        $firstDescription = $items[0]['description'] ?? '';
-        $fallbackDescription = $firstDescription !== '' ? self::truncate($firstDescription, 160) : ('Explore ' . $titleBase . ' at ' . self::DEFAULT_SITE_NAME . '.');
-        $description = trim((string) ($room['description'] ?? ''));
-        if ($description === '') {
-            $description = trim((string) ($settings['meta_description'] ?? $settings['site_description'] ?? $fallbackDescription));
-        }
+        $titleLead = self::truncateHard($titleBase, 24);
+        $title = $titleLead . ' | Custom Gifts & Services | Whimsical Frog';
+        $description = self::truncate(
+            $titleBase . ' custom gifts and handmade services at Whimsical Frog. Shop personalized products, themed collections, and made-to-order requests with clear shipping and turnaround guidance.',
+            160
+        );
 
         $keywordSet = [];
         foreach ($items as $item) {
@@ -256,6 +291,17 @@ class SpaSeoHelper
         $roomKeyword = strtolower(trim((string) ($room['room_name'] ?? 'room')));
         if ($roomKeyword !== '' && !in_array($roomKeyword, $keywordSet, true)) {
             array_unshift($keywordSet, $roomKeyword);
+        }
+        foreach ([
+            'custom gifts',
+            'handmade services',
+            'personalized products',
+            'made-to-order gifts',
+            'custom order requests',
+        ] as $intentKeyword) {
+            if (!in_array($intentKeyword, $keywordSet, true)) {
+                $keywordSet[] = $intentKeyword;
+            }
         }
         $metaKeywords = implode(', ', $keywordSet);
         if ($metaKeywords === '') {
@@ -818,10 +864,46 @@ class SpaSeoHelper
         $payload = [
             '@context' => 'https://schema.org',
             '@type' => 'Organization',
+            '@id' => rtrim($baseUrl, '/') . '/#organization',
             'name' => $siteName,
             'url' => rtrim($baseUrl, '/') . '/',
             'logo' => self::absoluteUrl(wf_brand_logo_path(), $baseUrl),
+            'description' => 'Whimsical Frog creates handmade decor, personalized gifts, custom tumblers, apparel, and resin artwork.',
         ];
+
+        $businessEmail = wf_business_email();
+        if ($businessEmail !== '') {
+            $payload['email'] = $businessEmail;
+            $payload['contactPoint'] = [[
+                '@type' => 'ContactPoint',
+                'contactType' => 'customer support',
+                'email' => $businessEmail,
+                'url' => rtrim($baseUrl, '/') . '/contact',
+                'availableLanguage' => ['en'],
+            ]];
+        }
+
+        $ownerName = '';
+        $phone = '';
+        try {
+            if (class_exists('BusinessSettings')) {
+                $ownerName = trim((string) BusinessSettings::get('business_owner', ''));
+                $phone = trim((string) BusinessSettings::get('business_phone', ''));
+            }
+        } catch (Throwable $e) {
+            $ownerName = '';
+            $phone = '';
+        }
+
+        if ($ownerName !== '') {
+            $payload['founder'] = [
+                '@type' => 'Person',
+                'name' => $ownerName,
+            ];
+        }
+        if ($phone !== '') {
+            $payload['telephone'] = $phone;
+        }
 
         if (!empty($sameAs)) {
             $payload['sameAs'] = array_values(array_unique($sameAs));
@@ -904,6 +986,15 @@ class SpaSeoHelper
         return rtrim(mb_substr($trimmed, 0, $limit - 3)) . '...';
     }
 
+    private static function truncateHard(string $value, int $limit): string
+    {
+        $trimmed = trim($value);
+        if (mb_strlen($trimmed) <= $limit) {
+            return $trimmed;
+        }
+        return rtrim(mb_substr($trimmed, 0, $limit));
+    }
+
     private static function normalizePath(string $requestedPath): string
     {
         $path = trim($requestedPath);
@@ -950,6 +1041,178 @@ class SpaSeoHelper
             ],
             default => [],
         };
+    }
+
+    private static function renderDefaultSeoShellContent(string $siteName): string
+    {
+        return '<header>'
+            . '<h1 style="font-family:\'Merienda\',cursive;font-size:2rem;line-height:1.1;margin:0 0 1rem;">' . self::escape($siteName . ' Handmade Decor And Gifts') . '</h1>'
+            . '<p style="margin:0 0 1rem;opacity:0.9;">Shop handmade decor, personalized gifts, and seasonal treasures. Explore themed rooms, browse new arrivals, and request custom items.</p>'
+            . '<nav aria-label="Primary"><a href="/shop" style="color:#fff;text-decoration:underline;margin-right:1rem;">Shop</a><a href="/about" style="color:#fff;text-decoration:underline;margin-right:1rem;">About</a><a href="/contact" style="color:#fff;text-decoration:underline;">Contact</a></nav>'
+            . '</header>'
+            . '<section style="margin-top:2rem;"><h2 style="font-size:1.25rem;margin:0 0 0.75rem;">Custom Gifts, Handmade Decor, And Easy Ordering</h2>'
+            . '<p style="margin:0 0 0.75rem;opacity:0.9;">Whimsical Frog offers personalized tumblers, custom shirts, resin decor, and one-of-a-kind handmade gifts. Need a custom piece? Use our contact page to share your idea, timeline, and event details.</p>'
+            . '</section>'
+            . '<footer style="margin-top:2rem;"><h2 style="font-size:1.25rem;margin:0 0 0.75rem;">Policies, Shipping, And Support</h2>'
+            . '<nav aria-label="Support"><a href="/policy" style="color:#fff;text-decoration:underline;margin-right:1rem;">Policy</a><a href="/privacy" style="color:#fff;text-decoration:underline;margin-right:1rem;">Privacy</a><a href="/contact" style="color:#fff;text-decoration:underline;">Contact</a></nav></footer>';
+    }
+
+    private static function renderShopSeoShellContent(string $siteName): string
+    {
+        return '<header>'
+            . '<h1 style="font-family:\'Merienda\',cursive;font-size:2rem;line-height:1.1;margin:0 0 1rem;">Shop Custom Gifts At ' . self::escape($siteName) . '</h1>'
+            . '<p style="margin:0 0 1rem;opacity:0.9;">Browse handmade tumblers, personalized apparel, resin art, and seasonal gift collections with custom-order support.</p>'
+            . '</header>'
+            . '<section style="margin-top:2rem;"><h2 style="font-size:1.25rem;margin:0 0 0.75rem;">What You Can Customize</h2>'
+            . '<h3 style="font-size:1.05rem;margin:1rem 0 0.5rem;">Personalized Names, Colors, And Themes</h3>'
+            . '<p style="margin:0 0 0.75rem;opacity:0.9;">Many products support names, event themes, and custom design direction. If you have a deadline, include it in your request so we can confirm feasibility up front.</p>'
+            . '</section>';
+    }
+
+    private static function renderAboutSeoShellContent(string $siteName): string
+    {
+        $ownerName = '';
+        try {
+            if (class_exists('BusinessSettings')) {
+                $ownerName = trim((string) BusinessSettings::get('business_owner', ''));
+            }
+        } catch (Throwable $e) {
+            $ownerName = '';
+        }
+        $ownerLine = $ownerName !== ''
+            ? '<p style="margin:0 0 0.75rem;opacity:0.9;"><strong>Owner:</strong> ' . self::escape($ownerName) . '</p>'
+            : '';
+
+        return '<header>'
+            . '<h1 style="font-family:\'Merienda\',cursive;font-size:2rem;line-height:1.1;margin:0 0 1rem;">About ' . self::escape($siteName) . '</h1>'
+            . '<p style="margin:0 0 1rem;opacity:0.9;">Learn who runs Whimsical Frog, how products are crafted, and what to expect from custom order requests.</p>'
+            . '</header>'
+            . '<section style="margin-top:2rem;"><h2 style="font-size:1.25rem;margin:0 0 0.75rem;">Our Craft And Customer Promise</h2>'
+            . '<p style="margin:0 0 0.75rem;opacity:0.9;">We focus on small-batch quality, clear communication, and personalized products made for real events and gifts.</p>'
+            . $ownerLine
+            . '</section>';
+    }
+
+    private static function renderContactSeoShellContent(string $siteName, string $baseUrl): string
+    {
+        $businessEmail = wf_business_email();
+        $owner = '';
+        $phone = '';
+        $hours = '';
+        $address = '';
+        try {
+            if (class_exists('BusinessSettings')) {
+                $owner = trim((string) BusinessSettings::get('business_owner', ''));
+                $phone = trim((string) BusinessSettings::get('business_phone', ''));
+                $hours = trim((string) BusinessSettings::get('business_hours', ''));
+                $address = trim((string) BusinessSettings::getBusinessAddressBlock());
+            }
+        } catch (Throwable $e) {
+            $owner = '';
+            $phone = '';
+            $hours = '';
+            $address = '';
+        }
+
+        $contactBits = [];
+        if ($businessEmail !== '') {
+            $safeEmail = self::escape($businessEmail);
+            $contactBits[] = '<p style="margin:0 0 0.5rem;opacity:0.95;"><strong>Email:</strong> <a href="mailto:' . $safeEmail . '" style="color:#fff;text-decoration:underline;">' . $safeEmail . '</a></p>';
+        }
+        if ($phone !== '') {
+            $safePhone = self::escape($phone);
+            $safePhoneHref = self::escape((string) (preg_replace('/[^0-9+]/', '', $phone) ?? ''));
+            $contactBits[] = '<p style="margin:0 0 0.5rem;opacity:0.95;"><strong>Phone:</strong> <a href="tel:' . $safePhoneHref . '" style="color:#fff;text-decoration:underline;">' . $safePhone . '</a></p>';
+        }
+        if ($owner !== '') {
+            $contactBits[] = '<p style="margin:0 0 0.5rem;opacity:0.95;"><strong>Owner:</strong> ' . self::escape($owner) . '</p>';
+        }
+        if ($hours !== '') {
+            $contactBits[] = '<p style="margin:0 0 0.5rem;opacity:0.95;"><strong>Business Hours:</strong> ' . self::escape($hours) . '</p>';
+        }
+        if ($address !== '') {
+            $contactBits[] = '<p style="margin:0 0 0.5rem;opacity:0.95;"><strong>Address:</strong> ' . nl2br(self::escape($address), false) . '</p>';
+        }
+        if (empty($contactBits)) {
+            $contactBits[] = '<p style="margin:0 0 0.5rem;opacity:0.95;">Use our contact form for custom orders, shipping support, and policy questions.</p>';
+        }
+
+        return '<header>'
+            . '<h1 style="font-family:\'Merienda\',cursive;font-size:2rem;line-height:1.1;margin:0 0 1rem;">Contact ' . self::escape($siteName) . '</h1>'
+            . '<p style="margin:0 0 1rem;opacity:0.9;">Reach out for custom order requests, turnaround details, and post-purchase support.</p>'
+            . '</header>'
+            . '<section style="margin-top:2rem;"><h2 style="font-size:1.25rem;margin:0 0 0.75rem;">Business Contact Details</h2>'
+            . implode('', $contactBits)
+            . '<p style="margin:0.75rem 0 0;opacity:0.9;"><a href="' . self::escape(rtrim($baseUrl, '/') . '/policy') . '" style="color:#fff;text-decoration:underline;">Store policy</a> and <a href="' . self::escape(rtrim($baseUrl, '/') . '/privacy') . '" style="color:#fff;text-decoration:underline;">privacy details</a> are available before checkout.</p>'
+            . '</section>';
+    }
+
+    private static function renderRoomSeoShellContent(string $roomNumber): string
+    {
+        $room = self::loadRoomInfo($roomNumber);
+        $items = self::loadRoomSeoItems($roomNumber);
+        $roomName = trim((string) ($room['room_name'] ?? 'Room ' . $roomNumber));
+        $roomDescription = trim((string) ($room['description'] ?? ''));
+        if ($roomDescription === '') {
+            $roomDescription = 'Explore this themed collection of handmade gifts, personalized products, and small-batch decor.';
+        }
+
+        $count = count($items);
+        $sample = array_slice($items, 0, 3);
+        $sampleLines = [];
+        foreach ($sample as $item) {
+            $sampleLines[] = '<li>' . self::escape((string) ($item['title'] ?? $item['name'] ?? 'Featured item')) . '</li>';
+        }
+        $sampleList = !empty($sampleLines)
+            ? '<h3 style="font-size:1.05rem;margin:1rem 0 0.5rem;">Featured In This Collection</h3><ul style="margin:0 0 0.75rem 1.1rem;opacity:0.9;">' . implode('', $sampleLines) . '</ul>'
+            : '';
+
+        return '<header>'
+            . '<h1 style="font-family:\'Merienda\',cursive;font-size:2rem;line-height:1.1;margin:0 0 1rem;">' . self::escape($roomName . ' | Whimsical Frog') . '</h1>'
+            . '<p style="margin:0 0 1rem;opacity:0.9;">' . self::escape(self::truncate($roomDescription, 220)) . '</p>'
+            . '</header>'
+            . '<section style="margin-top:2rem;"><h2 style="font-size:1.25rem;margin:0 0 0.75rem;">' . self::escape($roomName . ' Handmade Gift Collection') . '</h2>'
+            . '<p style="margin:0 0 0.75rem;opacity:0.9;">This room currently includes ' . self::escape((string) $count) . ' live product' . ($count === 1 ? '' : 's') . '. Browse matching items and request customization when available.</p>'
+            . $sampleList
+            . '<p style="margin:0 0 0.75rem;opacity:0.9;">Need a made-to-order version? Use <a href="/contact" style="color:#fff;text-decoration:underline;">contact</a> to share theme, timeline, and design preferences.</p>'
+            . '</section>';
+    }
+
+    private static function renderCategorySeoShellContent(string $categorySlug): string
+    {
+        $items = self::loadShopSeoItems();
+        $matching = array_values(array_filter($items, static function (array $item) use ($categorySlug): bool {
+            return wf_slugify((string) ($item['category_slug'] ?? '')) === $categorySlug;
+        }));
+        $categoryLabel = !empty($matching[0]['category_name']) ? (string) $matching[0]['category_name'] : ucwords(str_replace('-', ' ', $categorySlug));
+        $count = count($matching);
+
+        return '<header>'
+            . '<h1 style="font-family:\'Merienda\',cursive;font-size:2rem;line-height:1.1;margin:0 0 1rem;">' . self::escape($categoryLabel . ' | Whimsical Frog Shop') . '</h1>'
+            . '<p style="margin:0 0 1rem;opacity:0.9;">Shop handmade ' . self::escape(strtolower($categoryLabel)) . ' with custom-order options, seasonal drops, and ready-to-ship picks.</p>'
+            . '</header>'
+            . '<section style="margin-top:2rem;"><h2 style="font-size:1.25rem;margin:0 0 0.75rem;">Browse ' . self::escape($categoryLabel) . '</h2>'
+            . '<p style="margin:0 0 0.75rem;opacity:0.9;">This category currently includes ' . self::escape((string) $count) . ' live product' . ($count === 1 ? '' : 's') . '. For sizing, materials, and timeline questions, submit a request through <a href="/contact" style="color:#fff;text-decoration:underline;">contact</a>.</p>'
+            . '</section>';
+    }
+
+    private static function renderProductSeoShellContent(array $product): string
+    {
+        $name = trim((string) ($product['title'] ?? $product['name'] ?? 'Product'));
+        $category = trim((string) ($product['category_name'] ?? 'Custom Gifts'));
+        $description = trim((string) ($product['description'] ?? ''));
+        if ($description === '') {
+            $description = 'Handmade product with custom-order support.';
+        }
+
+        return '<header>'
+            . '<h1 style="font-family:\'Merienda\',cursive;font-size:2rem;line-height:1.1;margin:0 0 1rem;">' . self::escape($name) . '</h1>'
+            . '<p style="margin:0 0 1rem;opacity:0.9;">Category: ' . self::escape($category) . '</p>'
+            . '</header>'
+            . '<section style="margin-top:2rem;"><h2 style="font-size:1.25rem;margin:0 0 0.75rem;">Product Details</h2>'
+            . '<p style="margin:0 0 0.75rem;opacity:0.9;">' . self::escape(self::truncate($description, 260)) . '</p>'
+            . '<p style="margin:0 0 0.75rem;opacity:0.9;">Need personalization or a matching set? Request a custom order through <a href="/contact" style="color:#fff;text-decoration:underline;">contact</a>.</p>'
+            . '</section>';
     }
 
     private static function extractProductIdentifier(string $path): ?string

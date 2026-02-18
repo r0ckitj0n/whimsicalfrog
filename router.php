@@ -306,6 +306,7 @@ if ($html === false) {
 try {
     require_once __DIR__ . '/includes/helpers/SpaSeoHelper.php';
     $seoTags = SpaSeoHelper::renderTagsForPath($requestedPath);
+    $seoShell = SpaSeoHelper::renderSeoShellForPath($requestedPath);
     $discoverabilityNav = SpaSeoHelper::renderRoomDiscoverabilityNav()
         . SpaSeoHelper::renderCatalogDiscoverabilityNav()
         . SpaSeoHelper::renderSocialDiscoverabilityNav();
@@ -333,6 +334,9 @@ try {
             $seoTags .= "\n" . $bootScript;
         }
         $html = preg_replace('/<\/head>/i', $seoTags . "\n</head>", $html, 1);
+    }
+    if (!empty($seoShell)) {
+        $html = preg_replace('/<main id="wf-seo-shell"[^>]*>.*?<\/main>/is', $seoShell, $html, 1) ?? $html;
     }
     if (!empty($discoverabilityNav) && stripos($html, '</body>') !== false) {
         $html = preg_replace('/<\/body>/i', $discoverabilityNav . "\n</body>", $html, 1);

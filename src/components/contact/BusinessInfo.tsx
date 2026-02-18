@@ -24,10 +24,10 @@ export const BusinessInfo: React.FC<BusinessInfoProps> = ({ revealed, onReveal }
                 type="button"
                 onClick={onReveal}
                 className="wf-reveal-company-btn"
-                aria-label="Solve a quick check to reveal our email, phone, and address in a secure modal"
+                aria-label="Open detailed company card in a secure modal"
                 data-help-id="captcha-explanation"
             >
-                Reveal Company Information
+                View Detailed Company Card
             </button>
         </div>
     );

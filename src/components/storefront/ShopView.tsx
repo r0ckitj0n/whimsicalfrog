@@ -54,15 +54,16 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
                 current_page={current_page}
             />
 
-            <div className="w-full px-6 max-w-6xl mx-auto relative z-20">
-                <h1 className="text-3xl md:text-4xl font-merienda text-white drop-shadow-md">Custom Gifts, Tumblers, Shirts, and Resin Keepsakes</h1>
-                <p className="mt-2 font-nunito text-white/90 max-w-4xl">
+            <div className="sr-only">
+                <h1>Custom Gifts, Tumblers, Shirts, and Resin Keepsakes</h1>
+                <p>
                     Browse handmade products built for gifting. Explore custom tumblers, personalized t-shirts, and resin gift ideas with clear turnaround and policy support.
                 </p>
-                <h2 className="sr-only">Shop featured products</h2>
-                <nav aria-label="Shop categories" className="mt-4 flex flex-wrap gap-3">
+                <h2>Shop featured products</h2>
+                <p>Filter products using the category buttons at the top of this page.</p>
+                <nav aria-label="Shop categories">
                     {visibleCategories.map((cat) => (
-                        <a key={cat.slug} href={categoryPathFromSlug(cat.slug)} className="text-sm font-nunito text-white underline underline-offset-4">
+                        <a key={cat.slug} href={categoryPathFromSlug(cat.slug)}>
                             {cat.label}
                         </a>
                     ))}

@@ -47,7 +47,6 @@ class AreaMappingSitemapHelper
                  )
                  WHERE am.room_number = ? 
                    AND am.is_active = 1 
-                   AND am.area_selector REGEXP '^\\\\.area-[0-9]+$'
                    AND am.mapping_type IN ('content', 'button', 'item', 'category')
                  HAVING room_active IS NULL OR room_active = 1
                  ORDER BY am.area_selector ASC",
@@ -56,16 +55,27 @@ class AreaMappingSitemapHelper
 
             $rows = [];
             foreach ($destRows as $r) {
-                if (preg_match('/\\.area-(\\d+)/', $r['area_selector'], $m)) {
+                $selector = trim((string) ($r['area_selector'] ?? ''));
+                if ($selector === '') continue;
+
+                $target = trim((string) ($r['content_target'] ?? $r['link_url'] ?? ''));
+                if ($target === '') continue;
+
+                $areaLabel = null;
+                $fallbackImage = '/images/signs/sign-door-room1.png';
+                if (preg_match('/\\.area-(\\d+)/', $selector, $m)) {
                     $areaNum = (int) $m[1];
-                    $rows[] = [
-                        'area_selector' => $r['area_selector'],
-                        'mapping_type' => $r['mapping_type'] ?? null,
-                        'label' => $r['link_label'] ?? "Door Sign {$areaNum}",
-                        'target' => $r['content_target'] ?? $r['link_url'] ?? (string) $areaNum,
-                        'image' => $r['content_image'] ?? "/images/signs/sign-door-room{$areaNum}.png",
-                    ];
+                    $areaLabel = "Door Sign {$areaNum}";
+                    $fallbackImage = "/images/signs/sign-door-room{$areaNum}.png";
                 }
+
+                $rows[] = [
+                    'area_selector' => $selector,
+                    'mapping_type' => $r['mapping_type'] ?? null,
+                    'label' => $r['link_label'] ?? $areaLabel ?? 'Explore',
+                    'target' => $target,
+                    'image' => $r['content_image'] ?? $fallbackImage,
+                ];
             }
             return $rows;
         } catch (Exception $e) {
@@ -95,7 +105,6 @@ class AreaMappingSitemapHelper
                  )
                  WHERE am.room_number = ? 
                    AND am.is_active = 1 
-                   AND am.area_selector REGEXP '^\\\\.area-[0-9]+$'
                    AND am.mapping_type IN ('content', 'button', 'item', 'category')
                  HAVING room_active IS NULL OR room_active = 1
                  ORDER BY am.area_selector ASC",
@@ -104,16 +113,27 @@ class AreaMappingSitemapHelper
 
             $rows = [];
             foreach ($destRows as $r) {
-                if (preg_match('/\\.area-(\\d+)/', $r['area_selector'], $m)) {
+                $selector = trim((string) ($r['area_selector'] ?? ''));
+                if ($selector === '') continue;
+
+                $target = trim((string) ($r['content_target'] ?? $r['link_url'] ?? ''));
+                if ($target === '') continue;
+
+                $areaLabel = null;
+                $fallbackImage = '/images/signs/sign-door-room1.png';
+                if (preg_match('/\\.area-(\\d+)/', $selector, $m)) {
                     $areaNum = (int) $m[1];
-                    $rows[] = [
-                        'area_selector' => $r['area_selector'],
-                        'mapping_type' => $r['mapping_type'] ?? null,
-                        'label' => $r['link_label'] ?? "Door Sign {$areaNum}",
-                        'target' => $r['content_target'] ?? $r['link_url'] ?? (string) $areaNum,
-                        'image' => $r['content_image'] ?? "/images/signs/sign-door-room{$areaNum}.png",
-                    ];
+                    $areaLabel = "Door Sign {$areaNum}";
+                    $fallbackImage = "/images/signs/sign-door-room{$areaNum}.png";
                 }
+
+                $rows[] = [
+                    'area_selector' => $selector,
+                    'mapping_type' => $r['mapping_type'] ?? null,
+                    'label' => $r['link_label'] ?? $areaLabel ?? 'Explore',
+                    'target' => $target,
+                    'image' => $r['content_image'] ?? $fallbackImage,
+                ];
             }
             return $rows;
         } catch (Exception $e) {

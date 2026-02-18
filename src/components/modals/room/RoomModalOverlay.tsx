@@ -23,6 +23,7 @@ interface RoomModalOverlayProps {
     metadata: IRoomMetadata;
     bgStyle: React.CSSProperties;
     panelColor?: string;
+    iconVerticalAlignment?: 'top' | 'middle' | 'bottom';
     renderContext: 'modal' | 'fullscreen';
     targetAspectRatio?: number | string | null;
     isLoading?: boolean;
@@ -42,6 +43,7 @@ export const RoomModalOverlay: React.FC<RoomModalOverlayProps> = ({
     metadata,
     bgStyle,
     panelColor,
+    iconVerticalAlignment = 'middle',
     renderContext,
     targetAspectRatio,
     isLoading,
@@ -118,6 +120,7 @@ export const RoomModalOverlay: React.FC<RoomModalOverlayProps> = ({
                     bgStyle={bgStyle}
                     content={content}
                     panelColor={panelColor}
+                    iconVerticalAlignment={iconVerticalAlignment}
                     renderContext={renderContext}
                     targetAspectRatio={targetAspectRatio}
                 />

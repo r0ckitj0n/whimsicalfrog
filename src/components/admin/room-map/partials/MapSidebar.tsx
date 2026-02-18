@@ -11,6 +11,8 @@ interface MapSidebarProps {
     onBgUrlChange: (val: string) => void;
     iconPanelColor: string;
     onIconPanelColorChange: (val: string) => void;
+    iconVerticalAlignment: 'top' | 'middle' | 'bottom';
+    onIconVerticalAlignmentChange: (val: 'top' | 'middle' | 'bottom') => void;
     renderContext: string;
     onRenderContextChange: (val: string) => void;
     targetAspectRatio: number;
@@ -40,6 +42,8 @@ export const MapSidebar: React.FC<MapSidebarProps> = ({
     onBgUrlChange,
     iconPanelColor,
     onIconPanelColorChange,
+    iconVerticalAlignment,
+    onIconVerticalAlignmentChange,
     renderContext,
     onRenderContextChange,
     targetAspectRatio,
@@ -73,6 +77,8 @@ export const MapSidebar: React.FC<MapSidebarProps> = ({
                 onBgUrlChange={onBgUrlChange}
                 iconPanelColor={iconPanelColor}
                 onIconPanelColorChange={onIconPanelColorChange}
+                iconVerticalAlignment={iconVerticalAlignment}
+                onIconVerticalAlignmentChange={onIconVerticalAlignmentChange}
                 renderContext={renderContext}
                 onRenderContextChange={onRenderContextChange}
                 targetAspectRatio={targetAspectRatio}
@@ -111,4 +117,3 @@ export const MapSidebar: React.FC<MapSidebarProps> = ({
         </aside>
     );
 };
-

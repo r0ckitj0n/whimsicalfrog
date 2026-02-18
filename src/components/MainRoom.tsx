@@ -33,6 +33,18 @@ export const MainRoom: React.FC = () => {
 
     // Get icon panel color from database settings
     const iconPanelColor = roomSettings?.icon_panel_color || 'transparent';
+    const iconVerticalAlignment = roomSettings?.icon_vertical_alignment || 'middle';
+    const isMiddleAligned = iconVerticalAlignment === 'middle';
+    const objectPosition = iconVerticalAlignment === 'top'
+        ? 'center top'
+        : iconVerticalAlignment === 'bottom'
+            ? 'center bottom'
+            : 'center center';
+    const flexAlignment = iconVerticalAlignment === 'top'
+        ? 'flex-start'
+        : iconVerticalAlignment === 'bottom'
+            ? 'flex-end'
+            : 'center';
 
     useEffect(() => {
         if (!isVisible) return;
@@ -142,20 +154,21 @@ export const MainRoom: React.FC = () => {
                                 borderRadius: hasPanelColor ? '10px' : undefined,
                                 padding: hasPanelColor ? '6px' : '0',
                                 boxSizing: 'border-box',
-                                overflow: 'visible',
+                                overflow: isMiddleAligned ? 'hidden' : 'visible',
                                 display: 'flex',
-                                alignItems: 'flex-start',
+                                alignItems: flexAlignment,
                                 justifyContent: 'center'
                             }}
                             onClick={() => handleDoorClick(dest)}
                         >
                             <picture
-                                className="block w-full h-full"
+                                className="block w-full"
                                 style={{
                                     display: 'flex',
-                                    alignItems: 'flex-start',
+                                    alignItems: flexAlignment,
                                     justifyContent: 'center',
-                                    overflow: 'visible'
+                                    overflow: 'visible',
+                                    height: isMiddleAligned ? '100%' : 'auto'
                                 }}
                             >
                                 <source srcSet={imgWebp} type="image/webp" />
@@ -165,8 +178,9 @@ export const MainRoom: React.FC = () => {
                                     className="block room-item-icon-img room-item-shortcut-img"
                                     style={{
                                         width: '100%',
-                                        height: '100%',
-                                        objectFit: 'contain',
+                                        height: isMiddleAligned ? '100%' : 'auto',
+                                        objectFit: isMiddleAligned ? 'contain' : undefined,
+                                        objectPosition,
                                         maxWidth: '100%',
                                         willChange: 'filter, transform'
                                     }}

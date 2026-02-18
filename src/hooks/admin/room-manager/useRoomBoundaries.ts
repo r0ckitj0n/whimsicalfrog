@@ -34,14 +34,22 @@ export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEdit
     const [renderContext, setRenderContext] = useState<string>('modal');
     const [bgUrl, setBgUrl] = useState<string>('');
     const [iconPanelColor, setIconPanelColor] = useState<string>('transparent');
+    const [iconVerticalAlignment, setIconVerticalAlignment] = useState<'top' | 'middle' | 'bottom'>('middle');
     const [targetAspectRatio, setTargetAspectRatio] = useState<number>(1024 / 768);
     const [currentMapId, setCurrentMapId] = useState<string | number | undefined>(undefined);
     const [previewKey, setPreviewKey] = useState(0);
 
-    const [initialSettings, setInitialSettings] = useState({
+    const [initialSettings, setInitialSettings] = useState<{
+        renderContext: string;
+        bgUrl: string;
+        iconPanelColor: string;
+        iconVerticalAlignment: 'top' | 'middle' | 'bottom';
+        targetAspectRatio: number;
+    }>({
         renderContext: 'modal',
         bgUrl: '',
         iconPanelColor: 'transparent',
+        iconVerticalAlignment: 'middle',
         targetAspectRatio: 1024 / 768
     });
 
@@ -94,23 +102,25 @@ export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEdit
             render_context: renderContext,
             background_url: normalizedBackgroundUrl,
             icon_panel_color: iconPanelColor,
+            icon_vertical_alignment: iconVerticalAlignment,
             target_aspect_ratio: targetAspectRatio
         });
         if (res.success) {
             if (window.WFToast) window.WFToast.success('Settings updated');
             setBgUrl(normalizedBackgroundUrl);
-            setInitialSettings({ renderContext, bgUrl: normalizedBackgroundUrl, iconPanelColor, targetAspectRatio });
+            setInitialSettings({ renderContext, bgUrl: normalizedBackgroundUrl, iconPanelColor, iconVerticalAlignment, targetAspectRatio });
             setPreviewKey((prev: number) => prev + 1);
             onSuccess?.();
         }
-    }, [selectedRoom, renderContext, bgUrl, iconPanelColor, targetAspectRatio, boundaries]);
+    }, [selectedRoom, renderContext, bgUrl, iconPanelColor, iconVerticalAlignment, targetAspectRatio, boundaries]);
 
     const isSettingsDirty = useMemo(() =>
         renderContext !== initialSettings.renderContext ||
         bgUrl !== initialSettings.bgUrl ||
         iconPanelColor !== initialSettings.iconPanelColor ||
+        iconVerticalAlignment !== initialSettings.iconVerticalAlignment ||
         Math.abs(targetAspectRatio - initialSettings.targetAspectRatio) > 0.0001
-        , [renderContext, bgUrl, iconPanelColor, targetAspectRatio, initialSettings]);
+        , [renderContext, bgUrl, iconPanelColor, iconVerticalAlignment, targetAspectRatio, initialSettings]);
 
     const isBoundaryDirty = useMemo(() => areCoordinatesDirty(areas, lastSavedAreas), [areas, lastSavedAreas]);
 
@@ -160,6 +170,7 @@ export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEdit
         renderContext, setRenderContext,
         bgUrl, setBgUrl,
         iconPanelColor, setIconPanelColor,
+        iconVerticalAlignment, setIconVerticalAlignment,
         targetAspectRatio, setTargetAspectRatio,
         currentMapId, setCurrentMapId,
         previewKey, setPreviewKey,

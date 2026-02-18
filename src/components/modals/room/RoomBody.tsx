@@ -8,6 +8,7 @@ interface RoomBodyProps {
     bgStyle: React.CSSProperties;
     content: string;
     panelColor?: string;
+    iconVerticalAlignment?: 'top' | 'middle' | 'bottom';
     renderContext?: string;
     targetAspectRatio?: number | string | null;
 }
@@ -18,10 +19,17 @@ export const RoomBody: React.FC<RoomBodyProps> = ({
     bgStyle,
     content,
     panelColor,
+    iconVerticalAlignment = 'middle',
     renderContext = 'modal',
     targetAspectRatio
 }) => {
     const isFullscreen = renderContext === 'fullscreen';
+    const isMiddleAligned = iconVerticalAlignment === 'middle';
+    const panelAlignItems = iconVerticalAlignment === 'top'
+        ? 'flex-start'
+        : iconVerticalAlignment === 'bottom'
+            ? 'flex-end'
+            : 'center';
 
     // Parse target aspect ratio or use defaults based on context
     const tar = typeof targetAspectRatio === 'number'
@@ -72,7 +80,18 @@ export const RoomBody: React.FC<RoomBodyProps> = ({
             <div
                 className="room-content-inner w-full h-full"
                 dangerouslySetInnerHTML={{ __html: content }}
-                style={{ '--icon-panel-color': panelColor || 'transparent' } as React.CSSProperties}
+                style={{
+                    '--icon-panel-color': panelColor || 'transparent',
+                    '--icon-panel-overflow': isMiddleAligned ? 'hidden' : 'visible',
+                    '--icon-panel-align-items': panelAlignItems,
+                    '--icon-panel-image-height': isMiddleAligned ? '100%' : 'auto',
+                    '--icon-panel-image-fit': isMiddleAligned ? 'contain' : 'initial',
+                    '--icon-panel-object-position': iconVerticalAlignment === 'top'
+                        ? 'center top'
+                        : iconVerticalAlignment === 'bottom'
+                            ? 'center bottom'
+                            : 'center center'
+                } as React.CSSProperties}
             />
         </div>
     );

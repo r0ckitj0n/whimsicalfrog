@@ -47,6 +47,7 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
         renderContext, setRenderContext,
         bgUrl, setBgUrl,
         iconPanelColor, setIconPanelColor,
+        iconVerticalAlignment, setIconVerticalAlignment,
         isEditMode, setIsEditMode,
         currentMapId, setCurrentMapId,
         targetAspectRatio, setTargetAspectRatio,
@@ -100,6 +101,7 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
     };
     const handleRenderContextChange = (val: string) => { setRenderContext(val); if (selectedRoom) setRoomForm(prev => ({ ...prev, render_context: val })); };
     const handleIconPanelColorChange = (val: string) => { setIconPanelColor(val); if (selectedRoom) setRoomForm(prev => ({ ...prev, icon_panel_color: val })); };
+    const handleIconVerticalAlignmentChange = (val: 'top' | 'middle' | 'bottom') => { setIconVerticalAlignment(val); if (selectedRoom) setRoomForm(prev => ({ ...prev, icon_vertical_alignment: val })); };
     const handleTargetAspectRatioChange = (val: number) => { setTargetAspectRatio(val); if (selectedRoom) setRoomForm(prev => ({ ...prev, target_aspect_ratio: val })); };
     const attemptClose = useUnsavedChangesCloseGuard({
         isDirty: isGlobalDirty,
@@ -446,6 +448,8 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                                     onBgUrlChange={handleBgUrlChange}
                                     iconPanelColor={iconPanelColor}
                                     onIconPanelColorChange={handleIconPanelColorChange}
+                                    iconVerticalAlignment={iconVerticalAlignment}
+                                    onIconVerticalAlignmentChange={handleIconVerticalAlignmentChange}
                                     renderContext={renderContext}
                                     onRenderContextChange={handleRenderContextChange}
                                     targetAspectRatio={targetAspectRatio}

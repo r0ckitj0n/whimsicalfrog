@@ -325,6 +325,7 @@ try {
         'room_number' => $room_number,
         'metadata' => $metadata,
         'panel_color' => $panelColor,
+        'icon_vertical_alignment' => wf_normalize_icon_vertical_alignment_value($metadata['icon_vertical_alignment'] ?? 'middle'),
         'render_context' => $metadata['render_context'] ?? 'modal',
         'target_aspect_ratio' => $metadata['target_aspect_ratio'] ?? null,
         'is_modal' => $isModal,

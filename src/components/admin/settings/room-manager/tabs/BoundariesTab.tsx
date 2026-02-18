@@ -9,6 +9,8 @@ interface BoundariesTabProps {
     onBgUrlChange: (val: string) => void;
     iconPanelColor: string;
     onIconPanelColorChange: (val: string) => void;
+    iconVerticalAlignment: 'top' | 'middle' | 'bottom';
+    onIconVerticalAlignmentChange: (val: 'top' | 'middle' | 'bottom') => void;
     renderContext: string;
     onRenderContextChange: (val: string) => void;
     targetAspectRatio: number;
@@ -42,6 +44,8 @@ export const BoundariesTab: React.FC<BoundariesTabProps> = ({
     onBgUrlChange,
     iconPanelColor,
     onIconPanelColorChange,
+    iconVerticalAlignment,
+    onIconVerticalAlignmentChange,
     renderContext,
     onRenderContextChange,
     targetAspectRatio,
@@ -83,6 +87,8 @@ export const BoundariesTab: React.FC<BoundariesTabProps> = ({
                 onBgUrlChange={onBgUrlChange}
                 iconPanelColor={iconPanelColor}
                 onIconPanelColorChange={onIconPanelColorChange}
+                iconVerticalAlignment={iconVerticalAlignment}
+                onIconVerticalAlignmentChange={onIconVerticalAlignmentChange}
                 renderContext={renderContext}
                 onRenderContextChange={onRenderContextChange}
                 targetAspectRatio={targetAspectRatio}
@@ -123,6 +129,7 @@ export const BoundariesTab: React.FC<BoundariesTabProps> = ({
                         isEditMode={isEditMode}
                         mapId={currentMapId}
                         iconPanelColor={iconPanelColor}
+                        iconVerticalAlignment={iconVerticalAlignment}
                         key={`${selectedRoom}-${previewKey}`}
                     />
                 </div>

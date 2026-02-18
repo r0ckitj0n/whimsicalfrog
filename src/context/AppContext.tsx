@@ -35,6 +35,7 @@ interface RoomState {
     metadata: RoomMetadata;
     background: RoomBackground | null;
     panelColor?: string;
+    iconVerticalAlignment?: 'top' | 'middle' | 'bottom';
     renderContext: 'modal' | 'fullscreen' | 'fixed';
     targetAspectRatio: number | null;
 }
@@ -89,6 +90,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         metadata: {},
         background: null,
         panelColor: '',
+        iconVerticalAlignment: 'middle',
         renderContext: 'modal',
         targetAspectRatio: null
     });

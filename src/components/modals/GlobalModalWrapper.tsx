@@ -37,6 +37,7 @@ interface GlobalModalWrapperProps {
     roomMetadata: IRoomMetadata;
     roomBackground: IRoomBackground | null;
     roomPanelColor: string;
+    roomIconVerticalAlignment: 'top' | 'middle' | 'bottom';
     roomRenderContext: 'modal' | 'fullscreen';
     roomTargetAspectRatio: number | string | null;
     isRoomLoading: boolean;
@@ -65,6 +66,7 @@ export const GlobalModalWrapper: React.FC<GlobalModalWrapperProps> = ({
     roomMetadata,
     roomBackground,
     roomPanelColor,
+    roomIconVerticalAlignment,
     roomRenderContext,
     roomTargetAspectRatio,
     isRoomLoading,
@@ -123,6 +125,7 @@ export const GlobalModalWrapper: React.FC<GlobalModalWrapperProps> = ({
                 metadata={roomMetadata}
                 background={roomBackground}
                 panelColor={roomPanelColor}
+                iconVerticalAlignment={roomIconVerticalAlignment}
                 renderContext={roomRenderContext}
                 targetAspectRatio={roomTargetAspectRatio}
                 isLoading={isRoomLoading}

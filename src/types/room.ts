@@ -25,6 +25,7 @@ export interface IRoomData {
     background_url?: string;
     target_aspect_ratio?: string | number;
     icon_panel_color?: string;
+    icon_vertical_alignment?: 'top' | 'middle' | 'bottom';
     room_role?: 'landing' | 'main' | 'shop' | 'settings' | 'room' | 'about' | 'contact';
     [key: string]: unknown;
 }
@@ -37,6 +38,7 @@ export interface IRoomState {
     metadata: IRoomMetadata;
     background: IRoomBackground | null;
     panelColor?: string;
+    iconVerticalAlignment?: 'top' | 'middle' | 'bottom';
     renderContext: 'modal' | 'fullscreen' | 'fixed';
     targetAspectRatio: number | null;
 }
@@ -70,6 +72,7 @@ export interface IRoomContentResponse {
     metadata?: IRoomMetadata;
     background?: IRoomBackground;
     panel_color?: string;
+    icon_vertical_alignment?: 'top' | 'middle' | 'bottom';
     render_context?: 'modal' | 'fullscreen' | 'fixed';
     target_aspect_ratio?: number | null;
 }
@@ -362,6 +365,8 @@ export interface IRoomBoundariesHook {
     setBgUrl: (val: string) => void;
     iconPanelColor: string;
     setIconPanelColor: (val: string) => void;
+    iconVerticalAlignment: 'top' | 'middle' | 'bottom';
+    setIconVerticalAlignment: (val: 'top' | 'middle' | 'bottom') => void;
     targetAspectRatio: number;
     setTargetAspectRatio: (val: number) => void;
     currentMapId: string | number | undefined;
@@ -372,6 +377,7 @@ export interface IRoomBoundariesHook {
         renderContext: string;
         bgUrl: string;
         iconPanelColor: string;
+        iconVerticalAlignment: 'top' | 'middle' | 'bottom';
         targetAspectRatio: number;
     };
     setInitialSettings: (val: IRoomBoundariesHook['initialSettings']) => void;

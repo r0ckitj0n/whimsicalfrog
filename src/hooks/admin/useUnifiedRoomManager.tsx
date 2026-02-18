@@ -92,12 +92,20 @@ export const useUnifiedRoomManager = ({
             boundariesTab.setRenderContext(context);
             boundariesTab.setBgUrl(normalizedBackgroundUrl);
             boundariesTab.setIconPanelColor(settings.icon_panel_color || 'transparent');
+            boundariesTab.setIconVerticalAlignment(
+                (settings.icon_vertical_alignment === 'top' || settings.icon_vertical_alignment === 'bottom')
+                    ? settings.icon_vertical_alignment
+                    : 'middle'
+            );
             boundariesTab.setTargetAspectRatio(ratio);
 
             boundariesTab.setInitialSettings({
                 renderContext: context,
                 bgUrl: normalizedBackgroundUrl,
                 iconPanelColor: settings.icon_panel_color || 'transparent',
+                iconVerticalAlignment: (settings.icon_vertical_alignment === 'top' || settings.icon_vertical_alignment === 'bottom')
+                    ? settings.icon_vertical_alignment
+                    : 'middle',
                 targetAspectRatio: ratio
             });
 
@@ -112,6 +120,7 @@ export const useUnifiedRoomManager = ({
                 renderContext: 'modal',
                 bgUrl: '',
                 iconPanelColor: 'transparent',
+                iconVerticalAlignment: 'middle',
                 targetAspectRatio: 1024 / 768
             });
         }

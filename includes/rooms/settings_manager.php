@@ -26,6 +26,39 @@ function wf_normalize_icon_panel_color($value)
     return null;
 }
 
+function wf_normalize_icon_vertical_alignment($value)
+{
+    $raw = strtolower(trim((string) ($value ?? '')));
+    if ($raw === 'top' || $raw === 'bottom') {
+        return $raw;
+    }
+    return 'middle';
+}
+
+function wf_ensure_room_settings_alignment_column()
+{
+    static $ensured = false;
+    if ($ensured) {
+        return;
+    }
+
+    $hasColumn = false;
+    try {
+        $row = Database::queryOne("SHOW COLUMNS FROM room_settings LIKE 'icon_vertical_alignment'");
+        $hasColumn = !empty($row);
+    } catch (Exception $e) {
+        throw new Exception('Unable to verify room_settings schema: ' . $e->getMessage());
+    }
+
+    if (!$hasColumn) {
+        Database::execute(
+            "ALTER TABLE room_settings ADD COLUMN icon_vertical_alignment ENUM('top','middle','bottom') NOT NULL DEFAULT 'middle' AFTER icon_panel_color"
+        );
+    }
+
+    $ensured = true;
+}
+
 function setRoomActiveState($room_number, $isActive)
 {
     if ($room_number === null || $room_number === '') {
@@ -104,6 +137,10 @@ function updateRoomFlags($room_number, $input)
                 $params[] = $color === 'transparent' ? 0 : 1;
             }
         }
+    }
+    if (array_key_exists('icon_vertical_alignment', $input)) {
+        $fields[] = 'icon_vertical_alignment = ?';
+        $params[] = wf_normalize_icon_vertical_alignment($input['icon_vertical_alignment']);
     }
     if (empty($fields))
         return 0;

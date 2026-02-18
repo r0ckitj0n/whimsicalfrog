@@ -45,6 +45,7 @@ export const useRoomManager = (): IRoomManagerHook => {
             background: null,
             metadata: {},
             panelColor: '',
+            iconVerticalAlignment: 'middle',
             renderContext: 'modal',
             targetAspectRatio: null
         }));
@@ -67,6 +68,7 @@ export const useRoomManager = (): IRoomManagerHook => {
             let metadata: IRoomMetadata = {};
             let background: IRoomBackground | null = null;
             let panelColor = '';
+            let iconVerticalAlignment: 'top' | 'middle' | 'bottom' = 'middle';
 
             if (typeof resp === 'string') {
                 content = resp;
@@ -75,6 +77,9 @@ export const useRoomManager = (): IRoomManagerHook => {
                 metadata = resp.metadata || {};
                 background = resp.background || null;
                 panelColor = resp.panel_color || '';
+                iconVerticalAlignment = resp.icon_vertical_alignment === 'top' || resp.icon_vertical_alignment === 'bottom'
+                    ? resp.icon_vertical_alignment
+                    : 'middle';
                 const renderContext = resp.render_context || 'modal';
                 const targetAspectRatio = resp.target_aspect_ratio || null;
 
@@ -91,6 +96,7 @@ export const useRoomManager = (): IRoomManagerHook => {
                     metadata,
                     background,
                     panelColor,
+                    iconVerticalAlignment,
                     renderContext,
                     targetAspectRatio
                 }));

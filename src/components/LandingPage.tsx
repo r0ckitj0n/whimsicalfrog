@@ -33,6 +33,18 @@ export const LandingPage: React.FC = () => {
 
     // Get icon panel color from database settings
     const iconPanelColor = roomSettings?.icon_panel_color || 'transparent';
+    const iconVerticalAlignment = roomSettings?.icon_vertical_alignment || 'middle';
+    const isMiddleAligned = iconVerticalAlignment === 'middle';
+    const objectPosition = iconVerticalAlignment === 'top'
+        ? 'center top'
+        : iconVerticalAlignment === 'bottom'
+            ? 'center bottom'
+            : 'center center';
+    const flexAlignment = iconVerticalAlignment === 'top'
+        ? 'flex-start'
+        : iconVerticalAlignment === 'bottom'
+            ? 'flex-end'
+            : 'center';
 
     useEffect(() => {
         if (!isVisible) return;
@@ -182,20 +194,25 @@ export const LandingPage: React.FC = () => {
                                 borderRadius: hasPanelColor ? '10px' : undefined,
                                 padding: hasPanelColor ? '6px' : '0',
                                 boxSizing: 'border-box',
-                                overflow: 'visible',
+                                overflow: isMiddleAligned ? 'hidden' : 'visible',
                                 display: 'flex',
-                                alignItems: 'center',
+                                alignItems: flexAlignment,
                                 justifyContent: 'center'
                             }}
                         >
-                            <picture className="block w-full h-full">
+                            <picture
+                                className="block w-full"
+                                style={{ height: isMiddleAligned ? '100%' : 'auto' }}
+                            >
                                 <source srcSet={imgWebp} type="image/webp" />
                                 <img
                                     src={imgUrl}
                                     alt={dest.label || 'Whimsical Frog'}
-                                    className="w-full h-full room-item-icon-img room-item-shortcut-img"
+                                    className="w-full room-item-icon-img room-item-shortcut-img"
                                     style={{
-                                        objectFit: 'contain',
+                                        height: isMiddleAligned ? '100%' : 'auto',
+                                        objectFit: isMiddleAligned ? 'contain' : undefined,
+                                        objectPosition,
                                         willChange: 'filter, transform'
                                     }}
                                     loading="eager"

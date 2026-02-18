@@ -85,6 +85,7 @@ export const AppShell: React.FC = () => {
         metadata: roomMetadata,
         background: roomBackground,
         panelColor: roomPanelColor,
+        iconVerticalAlignment: roomIconVerticalAlignment,
         renderContext: roomRenderContext,
         targetAspectRatio: roomTargetAspectRatio,
         isLoading: isRoomLoading,
@@ -236,6 +237,7 @@ export const AppShell: React.FC = () => {
                     roomMetadata={roomMetadata}
                     roomBackground={roomBackground}
                     roomPanelColor={roomPanelColor || ''}
+                    roomIconVerticalAlignment={roomIconVerticalAlignment || 'middle'}
                     roomRenderContext={roomRenderContext === 'fixed' ? 'modal' : roomRenderContext}
                     roomTargetAspectRatio={roomTargetAspectRatio}
                     isRoomLoading={isRoomLoading}

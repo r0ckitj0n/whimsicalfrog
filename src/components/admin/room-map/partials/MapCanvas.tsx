@@ -27,6 +27,7 @@ interface MapCanvasProps {
     isEditMode?: boolean;
     mapId?: string | number;
     iconPanelColor?: string;
+    iconVerticalAlignment?: 'top' | 'middle' | 'bottom';
 }
 
 export const MapCanvas: React.FC<MapCanvasProps> = ({
@@ -43,7 +44,8 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     renderContext,
     isEditMode = false,
     mapId,
-    iconPanelColor = 'transparent'
+    iconPanelColor = 'transparent',
+    iconVerticalAlignment = 'middle'
 }) => {
     const svgRef = useRef<SVGSVGElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -233,6 +235,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                 signDestinations={previewItems}
                 dims={dims}
                 iconPanelColor={iconPanelColor}
+                iconVerticalAlignment={iconVerticalAlignment}
             />
 
             {/* 2. Hotspots Layer */}

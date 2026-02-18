@@ -23,6 +23,15 @@ function wf_normalize_icon_panel_color_value($value)
     return null;
 }
 
+function wf_normalize_icon_vertical_alignment_value($value)
+{
+    $raw = strtolower(trim((string) ($value ?? '')));
+    if ($raw === 'top' || $raw === 'bottom') {
+        return $raw;
+    }
+    return 'middle';
+}
+
 function wf_cache_get($key)
 {
     if (function_exists('apcu_fetch')) {
@@ -55,6 +64,13 @@ function wf_cache_set($key, $val)
 function getRoomMetadata($room_number, $pdo)
 {
     $rs = Database::queryOne("SELECT room_name, description, render_context, background_url, target_aspect_ratio FROM room_settings WHERE room_number = ?", [$room_number]) ?: [];
+    $iconVerticalAlignment = 'middle';
+    try {
+        $alignmentRow = Database::queryOne("SELECT icon_vertical_alignment FROM room_settings WHERE room_number = ?", [$room_number]) ?: [];
+        $iconVerticalAlignment = wf_normalize_icon_vertical_alignment_value($alignmentRow['icon_vertical_alignment'] ?? 'middle');
+    } catch (Exception $e) {
+        // Keep default when schema is older and column is not present.
+    }
     $categoryRows = Database::queryAll(
         "SELECT c.id AS category_id, c.name AS category_name, rca.is_primary, rca.display_order
         FROM room_category_assignments rca
@@ -82,6 +98,7 @@ function getRoomMetadata($room_number, $pdo)
         'render_context' => $rs['render_context'] ?? 'modal',
         'background_url' => $rs['background_url'] ?? '',
         'target_aspect_ratio' => $rs['target_aspect_ratio'] ?? null,
+        'icon_vertical_alignment' => $iconVerticalAlignment,
         'category' => implode(', ', $categoryNames),
         'category_id' => $categoryIds[0] ?? null,
         'category_ids' => $categoryIds,

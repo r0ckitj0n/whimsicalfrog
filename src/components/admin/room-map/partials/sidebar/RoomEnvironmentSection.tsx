@@ -6,6 +6,8 @@ interface RoomEnvironmentSectionProps {
     onBgUrlChange: (val: string) => void;
     iconPanelColor: string;
     onIconPanelColorChange: (val: string) => void;
+    iconVerticalAlignment: 'top' | 'middle' | 'bottom';
+    onIconVerticalAlignmentChange: (val: 'top' | 'middle' | 'bottom') => void;
     renderContext: string;
     onRenderContextChange: (val: string) => void;
     targetAspectRatio: number;
@@ -17,6 +19,8 @@ export const RoomEnvironmentSection: React.FC<RoomEnvironmentSectionProps> = ({
     onBgUrlChange,
     iconPanelColor,
     onIconPanelColorChange,
+    iconVerticalAlignment,
+    onIconVerticalAlignmentChange,
     renderContext,
     onRenderContextChange,
     targetAspectRatio,
@@ -167,6 +171,20 @@ export const RoomEnvironmentSection: React.FC<RoomEnvironmentSectionProps> = ({
                         </div>
                     )}
                     <p className="text-[10px] text-gray-400 font-bold leading-tight">Controls the background tint of the interactive icon panels in-game.</p>
+                </div>
+
+                <div className="space-y-2 bg-white p-3 rounded-xl border border-gray-100">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Alignment</label>
+                    <select
+                        value={iconVerticalAlignment}
+                        onChange={(e) => onIconVerticalAlignmentChange(e.target.value as 'top' | 'middle' | 'bottom')}
+                        className="w-full p-2.5 bg-slate-50 border-0 rounded-xl text-sm font-bold text-blue-600 focus:ring-2 focus:ring-blue-500/20"
+                    >
+                        <option value="top">Top</option>
+                        <option value="middle">Middle</option>
+                        <option value="bottom">Bottom</option>
+                    </select>
+                    <p className="text-[10px] text-gray-400 font-bold leading-tight">Controls vertical image alignment inside each clickable area.</p>
                 </div>
             </div>
         </section>

@@ -11,6 +11,7 @@ interface IRoomSettings {
     render_context?: string;
     target_aspect_ratio?: number | string | null;
     icon_panel_color?: string;
+    icon_vertical_alignment?: 'top' | 'middle' | 'bottom';
 }
 
 export const useRoomCoordinates = (roomType: string = '0') => {
@@ -117,7 +118,8 @@ export const useRoomCoordinates = (roomType: string = '0') => {
                 setRoomSettings({
                     render_context: room.render_context || 'modal',
                     target_aspect_ratio: room.target_aspect_ratio,
-                    icon_panel_color: room.icon_panel_color
+                    icon_panel_color: room.icon_panel_color,
+                    icon_vertical_alignment: room.icon_vertical_alignment
                 });
             } else {
                 // Fallback for known high-res rooms if settings not found

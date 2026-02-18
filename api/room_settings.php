@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 
 try {
     Database::getInstance();
+    wf_ensure_room_settings_alignment_column();
     $method = $_SERVER['REQUEST_METHOD'];
     $input = json_decode(file_get_contents('php://input'), true);
 
@@ -122,6 +123,11 @@ try {
                     }
                 }
 
+                if (array_key_exists('icon_vertical_alignment', $input)) {
+                    $fields[] = "`icon_vertical_alignment`=?";
+                    $params[] = wf_normalize_icon_vertical_alignment($input['icon_vertical_alignment']);
+                }
+
                 if (empty($fields)) {
                     Response::success(['message' => 'No changes']);
                     return;
@@ -176,6 +182,11 @@ try {
                         $fields[] = "`has_icons_white_background`=?";
                         $params[] = ($color === 'transparent') ? 0 : 1;
                     }
+                }
+
+                if (array_key_exists('icon_vertical_alignment', $input)) {
+                    $fields[] = "`icon_vertical_alignment`=?";
+                    $params[] = wf_normalize_icon_vertical_alignment($input['icon_vertical_alignment']);
                 }
 
                 if (empty($fields)) {

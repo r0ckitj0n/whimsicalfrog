@@ -13,6 +13,7 @@ interface RoomModalProps {
     metadata: RoomMetadata;
     background: RoomBackground | null;
     panelColor?: string;
+    iconVerticalAlignment?: 'top' | 'middle' | 'bottom';
     renderContext?: 'modal' | 'fullscreen';
     targetAspectRatio?: number | string | null;
     isLoading?: boolean;
@@ -39,6 +40,7 @@ export const RoomModal: React.FC<RoomModalProps> = ({
     metadata,
     background,
     panelColor,
+    iconVerticalAlignment = 'middle',
     renderContext = 'modal',
     targetAspectRatio,
     isLoading,
@@ -85,6 +87,7 @@ export const RoomModal: React.FC<RoomModalProps> = ({
             metadata={metadata}
             bgStyle={bgStyle}
             panelColor={panelColor}
+            iconVerticalAlignment={iconVerticalAlignment}
             renderContext={renderContext}
             targetAspectRatio={targetAspectRatio}
             isLoading={isLoading}

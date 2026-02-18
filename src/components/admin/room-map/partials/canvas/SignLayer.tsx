@@ -13,14 +13,23 @@ interface SignLayerProps {
     signDestinations: ISignDestination[];
     dims: { w: number, h: number };
     iconPanelColor?: string;
+    iconVerticalAlignment?: 'top' | 'middle' | 'bottom';
 }
 
 export const SignLayer: React.FC<SignLayerProps> = ({
     areas,
     signDestinations,
     dims,
-    iconPanelColor = 'transparent'
+    iconPanelColor = 'transparent',
+    iconVerticalAlignment = 'middle'
 }) => {
+    const isMiddleAligned = iconVerticalAlignment === 'middle';
+    const objectPosition = iconVerticalAlignment === 'top'
+        ? 'center top'
+        : iconVerticalAlignment === 'bottom'
+            ? 'center bottom'
+            : 'center center';
+
     const getSignForArea = (area: IMapArea): ISignDestination | undefined => {
         const areaSelector = area.selector.startsWith('.') ? area.selector : `.${area.selector}`;
         return signDestinations.find(s => {
@@ -57,19 +66,24 @@ export const SignLayer: React.FC<SignLayerProps> = ({
                             borderRadius: '10px',
                             padding: iconPanelColor === 'transparent' ? 0 : '6px',
                             display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
+                            alignItems: isMiddleAligned ? 'center' : (iconVerticalAlignment === 'top' ? 'flex-start' : 'flex-end'),
+                            justifyContent: 'center',
+                            overflow: isMiddleAligned ? 'hidden' : 'visible'
                         }}
                     >
-                        <picture className="block w-full h-full">
+                        <picture
+                            className="block w-full"
+                            style={{ height: isMiddleAligned ? '100%' : 'auto' }}
+                        >
                             <source srcSet={imgWebp} type="image/webp" />
                             <img
                                 src={imgUrl}
                                 alt=""
                                 style={{
                                     width: '100%',
-                                    height: '100%',
-                                    objectFit: 'contain',
+                                    height: isMiddleAligned ? '100%' : 'auto',
+                                    objectFit: isMiddleAligned ? 'contain' : undefined,
+                                    objectPosition,
                                     display: 'block'
                                 }}
                             />

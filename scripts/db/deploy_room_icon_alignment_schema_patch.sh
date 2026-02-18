@@ -21,25 +21,11 @@ fi
 : "${WF_ADMIN_TOKEN:?WF_ADMIN_TOKEN not set}"
 
 WF_DEPLOY_BASE_URL="${WF_DEPLOY_BASE_URL:-https://whimsicalfrog.us}"
-PATCH_BASENAME="patch_room_icon_alignment_schema.sql"
-PATCH_LOCAL="/tmp/${PATCH_BASENAME}"
+API_URL="${WF_DEPLOY_BASE_URL%/}/api/database_maintenance.php"
 
-cat >"${PATCH_LOCAL}" <<'SQL'
-SET @db := DATABASE();
-
-SET @exists := (
-  SELECT COUNT(*)
-  FROM information_schema.columns
-  WHERE table_schema = @db
-    AND table_name = 'room_settings'
-    AND column_name = 'icon_vertical_alignment'
-);
-SET @q := IF(
-  @exists = 0,
-  'ALTER TABLE `room_settings` ADD COLUMN `icon_vertical_alignment` ENUM(''top'',''middle'',''bottom'') NOT NULL DEFAULT ''middle'' AFTER `icon_panel_color`',
-  'DO 0'
-);
-PREPARE s FROM @q; EXECUTE s; DEALLOCATE PREPARE s;
+SQL_CONTENT=$(cat <<'SQL'
+ALTER TABLE `room_settings`
+  ADD COLUMN `icon_vertical_alignment` ENUM('top','middle','bottom') NOT NULL DEFAULT 'middle' AFTER `icon_panel_color`;
 
 UPDATE `room_settings`
 SET `icon_vertical_alignment` = 'middle'
@@ -49,16 +35,16 @@ WHERE `icon_vertical_alignment` IS NULL
 ALTER TABLE `room_settings`
   MODIFY COLUMN `icon_vertical_alignment` ENUM('top','middle','bottom') NOT NULL DEFAULT 'middle';
 SQL
+)
 
-RESTORE_URL="${WF_DEPLOY_BASE_URL%/}/api/database_maintenance.php?action=restore_database"
-echo "Applying patch via ${RESTORE_URL} ..."
+echo "Applying patch via ${API_URL} (action=import_sql)..."
 TMP_RESP="/tmp/wf_room_icon_alignment_patch_response.json"
 HTTP_CODE=$(curl -sS -o "${TMP_RESP}" -w "%{http_code}" \
   -X POST \
-  -F "backup_file=@${PATCH_LOCAL}" \
-  -F "ignore_errors=1" \
-  -F "admin_token=${WF_ADMIN_TOKEN}" \
-  "${RESTORE_URL}")
+  --data-urlencode "action=import_sql" \
+  --data-urlencode "admin_token=${WF_ADMIN_TOKEN}" \
+  --data-urlencode "sql_content=${SQL_CONTENT}" \
+  "${API_URL}")
 
 echo "HTTP ${HTTP_CODE}"
 cat "${TMP_RESP}"
@@ -69,5 +55,4 @@ if [[ "${HTTP_CODE}" -lt 200 || "${HTTP_CODE}" -ge 300 ]]; then
   exit 1
 fi
 
-rm -f "${PATCH_LOCAL}"
 echo "Done."

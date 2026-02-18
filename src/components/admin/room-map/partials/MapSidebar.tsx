@@ -72,6 +72,14 @@ export const MapSidebar: React.FC<MapSidebarProps> = ({
             className="w-80 h-full flex-shrink-0 bg-gray-50 border-r overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
             style={{ scrollbarGutter: 'stable' }}
         >
+            <ToolsetSection
+                onLoadActive={onLoadActive}
+                onSaveMap={onSaveMap}
+                onToggleTool={onToggleTool}
+                activeTool={activeTool}
+                onClearAll={onClearAll}
+            />
+
             <RoomEnvironmentSection
                 bgUrl={bgUrl}
                 onBgUrlChange={onBgUrlChange}
@@ -93,14 +101,6 @@ export const MapSidebar: React.FC<MapSidebarProps> = ({
                 onDeleteMap={onDeleteMap}
                 onRenameMap={onRenameMap}
                 onLoadMap={onLoadMap}
-            />
-
-            <ToolsetSection
-                onLoadActive={onLoadActive}
-                onSaveMap={onSaveMap}
-                onToggleTool={onToggleTool}
-                activeTool={activeTool}
-                onClearAll={onClearAll}
             />
 
             <AreaListSection

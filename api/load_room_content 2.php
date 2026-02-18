@@ -59,7 +59,8 @@ try {
 
     // Use manually set background_url from room_settings if present, but only when resolvable.
     $manualBackgroundUrl = trim((string) ($metadata['background_url'] ?? ''));
-    if ($manualBackgroundUrl !== '') {
+    $isLibraryManagedPath = (bool) preg_match('/^(\/?images\/backgrounds\/|backgrounds\/)/i', $manualBackgroundUrl);
+    if ($manualBackgroundUrl !== '' && !$isLibraryManagedPath) {
         $manualResolvedUrl = $manualBackgroundUrl;
         $manualIsUsable = true;
 

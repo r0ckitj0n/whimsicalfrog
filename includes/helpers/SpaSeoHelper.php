@@ -160,6 +160,10 @@ class SpaSeoHelper
         $room = self::loadRoomInfo($roomNumber);
         $items = self::loadRoomSeoItems($roomNumber);
         $settings = self::loadSeoSettings('room');
+        $canonicalPath = wf_room_canonical_path($roomNumber);
+        if ($canonicalPath === null || $canonicalPath === '') {
+            $canonicalPath = $path;
+        }
 
         $titleBase = trim((string) ($room['room_name'] ?? 'Room ' . $roomNumber));
         $title = trim((string) ($settings['page_title'] ?? ($titleBase . ' | ' . self::DEFAULT_SITE_NAME)));
@@ -198,9 +202,9 @@ class SpaSeoHelper
             'title' => $title,
             'description' => $description,
             'keywords' => $metaKeywords,
-            'canonical' => $baseUrl . $path,
+            'canonical' => $baseUrl . $canonicalPath,
             'image' => $image,
-            'structured_data' => self::buildRoomStructuredData($items, $baseUrl, $title, $description, $path, $image),
+            'structured_data' => self::buildRoomStructuredData($items, $baseUrl, $title, $description, $canonicalPath, $image),
         ];
     }
 
@@ -255,34 +259,10 @@ class SpaSeoHelper
         $list = [];
         $position = 1;
         foreach ($items as $item) {
-            // Keep JSON-LD reasonably small to avoid bloating the HTML shell.
-            if ($position > 24) {
-                break;
-            }
-            $price = number_format((float) ($item['retail_price'] ?? 0), 2, '.', '');
-            $product = [
-                '@type' => 'Product',
-                'name' => $item['title'],
-                'description' => self::truncate($item['description'], 200),
-                'sku' => $item['sku'],
-                'category' => $item['category_name'],
-                'image' => self::absoluteUrl((string) $item['image_url'], $baseUrl),
-                'offers' => [
-                    '@type' => 'Offer',
-                    'priceCurrency' => 'USD',
-                    'price' => $price,
-                    'availability' => ((int) ($item['stock_quantity'] ?? 0)) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-                    'url' => $baseUrl . '/shop?sku=' . rawurlencode((string) $item['sku']),
-                ],
-            ];
-            if (!empty($item['seo_keywords'])) {
-                $product['keywords'] = implode(', ', $item['seo_keywords']);
-            }
-
             $list[] = [
                 '@type' => 'ListItem',
                 'position' => $position,
-                'item' => $product,
+                'item' => self::buildProductStructuredData($item, $baseUrl),
             ];
             $position++;
         }
@@ -308,34 +288,10 @@ class SpaSeoHelper
         $list = [];
         $position = 1;
         foreach ($items as $item) {
-            // Keep JSON-LD reasonably small to avoid bloating the HTML shell.
-            if ($position > 24) {
-                break;
-            }
-            $price = number_format((float) ($item['retail_price'] ?? 0), 2, '.', '');
-            $product = [
-                '@type' => 'Product',
-                'name' => $item['title'],
-                'description' => self::truncate($item['description'], 200),
-                'sku' => $item['sku'],
-                'category' => $item['category_name'],
-                'image' => self::absoluteUrl((string) $item['image_url'], $baseUrl),
-                'offers' => [
-                    '@type' => 'Offer',
-                    'priceCurrency' => 'USD',
-                    'price' => $price,
-                    'availability' => ((int) ($item['stock_quantity'] ?? 0)) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-                    'url' => $baseUrl . '/shop?sku=' . rawurlencode((string) $item['sku']),
-                ],
-            ];
-            if (!empty($item['seo_keywords'])) {
-                $product['keywords'] = implode(', ', $item['seo_keywords']);
-            }
-
             $list[] = [
                 '@type' => 'ListItem',
                 'position' => $position,
-                'item' => $product,
+                'item' => self::buildProductStructuredData($item, $baseUrl),
             ];
             $position++;
         }
@@ -370,6 +326,13 @@ class SpaSeoHelper
                     COALESCE(ms.suggested_title, i.name) AS seo_title,
                     COALESCE(ms.suggested_description, i.description) AS seo_description,
                     ms.seo_keywords,
+                    ms.keywords,
+                    ms.selling_points,
+                    ms.competitive_advantages,
+                    ms.customer_benefits,
+                    ms.unique_selling_points,
+                    ms.value_propositions,
+                    ms.target_audience,
                     COALESCE(c.name, 'Uncategorized') AS category_name
                  FROM items i
                  LEFT JOIN categories c ON i.category_id = c.id
@@ -394,6 +357,17 @@ class SpaSeoHelper
         foreach ($rows as $row) {
             $decodedKeywords = json_decode((string) ($row['seo_keywords'] ?? '[]'), true);
             $keywords = is_array($decodedKeywords) ? array_values(array_filter(array_map('trim', $decodedKeywords), static fn($v) => $v !== '')) : [];
+            $fallbackKeywords = self::decodeJsonList($row['keywords'] ?? null);
+            if (!empty($fallbackKeywords)) {
+                $keywords = array_values(array_unique(array_merge($keywords, $fallbackKeywords)));
+            }
+
+            $sellingPoints = self::decodeJsonList($row['selling_points'] ?? null);
+            $competitiveAdvantages = self::decodeJsonList($row['competitive_advantages'] ?? null);
+            $customerBenefits = self::decodeJsonList($row['customer_benefits'] ?? null);
+            $uniqueSellingPoints = self::decodeJsonList($row['unique_selling_points'] ?? null);
+            $valuePropositions = self::decodeJsonList($row['value_propositions'] ?? null);
+            $targetAudience = trim((string) ($row['target_audience'] ?? ''));
 
             $title = trim((string) ($row['seo_title'] ?? $row['name'] ?? ''));
             if ($title === '') {
@@ -414,6 +388,12 @@ class SpaSeoHelper
                 'image_url' => (string) ($row['image_url'] ?? 'images/items/placeholder.webp'),
                 'seo_keywords' => $keywords,
                 'category_name' => (string) ($row['category_name'] ?? 'Uncategorized'),
+                'target_audience' => $targetAudience,
+                'selling_points' => $sellingPoints,
+                'competitive_advantages' => $competitiveAdvantages,
+                'customer_benefits' => $customerBenefits,
+                'unique_selling_points' => $uniqueSellingPoints,
+                'value_propositions' => $valuePropositions,
             ];
         }
 
@@ -531,6 +511,13 @@ class SpaSeoHelper
                     COALESCE(ms.suggested_title, i.name) AS seo_title,
                     COALESCE(ms.suggested_description, i.description) AS seo_description,
                     ms.seo_keywords,
+                    ms.keywords,
+                    ms.selling_points,
+                    ms.competitive_advantages,
+                    ms.customer_benefits,
+                    ms.unique_selling_points,
+                    ms.value_propositions,
+                    ms.target_audience,
                     COALESCE(c.name, 'Uncategorized') AS category_name
                  FROM items i
                  LEFT JOIN categories c ON i.category_id = c.id
@@ -557,6 +544,17 @@ class SpaSeoHelper
         foreach ($rows as $row) {
             $decodedKeywords = json_decode((string) ($row['seo_keywords'] ?? '[]'), true);
             $keywords = is_array($decodedKeywords) ? array_values(array_filter(array_map('trim', $decodedKeywords), static fn($v) => $v !== '')) : [];
+            $fallbackKeywords = self::decodeJsonList($row['keywords'] ?? null);
+            if (!empty($fallbackKeywords)) {
+                $keywords = array_values(array_unique(array_merge($keywords, $fallbackKeywords)));
+            }
+
+            $sellingPoints = self::decodeJsonList($row['selling_points'] ?? null);
+            $competitiveAdvantages = self::decodeJsonList($row['competitive_advantages'] ?? null);
+            $customerBenefits = self::decodeJsonList($row['customer_benefits'] ?? null);
+            $uniqueSellingPoints = self::decodeJsonList($row['unique_selling_points'] ?? null);
+            $valuePropositions = self::decodeJsonList($row['value_propositions'] ?? null);
+            $targetAudience = trim((string) ($row['target_audience'] ?? ''));
 
             $title = trim((string) ($row['seo_title'] ?? $row['name'] ?? ''));
             if ($title === '') {
@@ -577,6 +575,12 @@ class SpaSeoHelper
                 'image_url' => (string) ($row['image_url'] ?? 'images/items/placeholder.webp'),
                 'seo_keywords' => $keywords,
                 'category_name' => (string) ($row['category_name'] ?? 'Uncategorized'),
+                'target_audience' => $targetAudience,
+                'selling_points' => $sellingPoints,
+                'competitive_advantages' => $competitiveAdvantages,
+                'customer_benefits' => $customerBenefits,
+                'unique_selling_points' => $uniqueSellingPoints,
+                'value_propositions' => $valuePropositions,
             ];
         }
 
@@ -624,6 +628,76 @@ class SpaSeoHelper
         }
 
         return $payload;
+    }
+
+    private static function buildProductStructuredData(array $item, string $baseUrl): array
+    {
+        $price = number_format((float) ($item['retail_price'] ?? 0), 2, '.', '');
+        $sku = (string) ($item['sku'] ?? '');
+        $siteName = wf_site_name();
+        if ($siteName === '') {
+            $siteName = self::DEFAULT_SITE_NAME;
+        }
+
+        $product = [
+            '@type' => 'Product',
+            'name' => (string) ($item['title'] ?? ''),
+            'description' => trim((string) ($item['description'] ?? '')),
+            'sku' => $sku,
+            'mpn' => $sku,
+            'category' => (string) ($item['category_name'] ?? 'Uncategorized'),
+            'image' => self::absoluteUrl((string) ($item['image_url'] ?? ''), $baseUrl),
+            'url' => $baseUrl . '/shop?sku=' . rawurlencode($sku),
+            'brand' => [
+                '@type' => 'Brand',
+                'name' => $siteName,
+            ],
+            'offers' => [
+                '@type' => 'Offer',
+                'priceCurrency' => 'USD',
+                'price' => $price,
+                'availability' => ((int) ($item['stock_quantity'] ?? 0)) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+                'itemCondition' => 'https://schema.org/NewCondition',
+                'url' => $baseUrl . '/shop?sku=' . rawurlencode($sku),
+            ],
+        ];
+
+        $keywordList = self::decodeJsonList($item['seo_keywords'] ?? null);
+        if (!empty($keywordList)) {
+            $product['keywords'] = implode(', ', $keywordList);
+        }
+
+        $targetAudience = trim((string) ($item['target_audience'] ?? ''));
+        if ($targetAudience !== '') {
+            $product['audience'] = [
+                '@type' => 'Audience',
+                'audienceType' => $targetAudience,
+            ];
+        }
+
+        $additionalProperty = [];
+        $marketingFields = [
+            'Selling Points' => self::decodeJsonList($item['selling_points'] ?? null),
+            'Competitive Advantages' => self::decodeJsonList($item['competitive_advantages'] ?? null),
+            'Customer Benefits' => self::decodeJsonList($item['customer_benefits'] ?? null),
+            'Unique Selling Points' => self::decodeJsonList($item['unique_selling_points'] ?? null),
+            'Value Propositions' => self::decodeJsonList($item['value_propositions'] ?? null),
+        ];
+        foreach ($marketingFields as $name => $values) {
+            if (empty($values)) {
+                continue;
+            }
+            $additionalProperty[] = [
+                '@type' => 'PropertyValue',
+                'name' => $name,
+                'value' => implode(' | ', $values),
+            ];
+        }
+        if (!empty($additionalProperty)) {
+            $product['additionalProperty'] = $additionalProperty;
+        }
+
+        return $product;
     }
 
     private static function baseUrl(): string
@@ -681,5 +755,44 @@ class SpaSeoHelper
     private static function escape(string $value): string
     {
         return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+    }
+
+    private static function decodeJsonList(mixed $raw): array
+    {
+        if ($raw === null) {
+            return [];
+        }
+        if (is_array($raw)) {
+            return self::normalizeTextList($raw);
+        }
+
+        $text = trim((string) $raw);
+        if ($text === '') {
+            return [];
+        }
+
+        $decoded = json_decode($text, true);
+        if (is_array($decoded)) {
+            return self::normalizeTextList($decoded);
+        }
+
+        return self::normalizeTextList([$text]);
+    }
+
+    private static function normalizeTextList(array $items): array
+    {
+        $out = [];
+        foreach ($items as $item) {
+            $value = trim((string) $item);
+            if ($value === '') {
+                continue;
+            }
+            $lower = strtolower($value);
+            if ($lower === 'null' || $lower === 'undefined' || $lower === 'none' || $lower === 'n/a') {
+                continue;
+            }
+            $out[] = $value;
+        }
+        return array_values(array_unique($out));
     }
 }

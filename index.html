@@ -4,6 +4,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <script>
+        document.documentElement.classList.add('wf-js');
+    </script>
     <title>Whimsical Frog | Handmade Decor & Gifts</title>
     <meta name="description"
         content="Whimsical Frog is a cozy shop for handmade decor, gifts, and seasonal treasures. Browse the shop, learn our story, or contact us.">
@@ -55,15 +58,85 @@
             font-family: 'Nunito', sans-serif;
         }
 
-        #wf-root:empty::after {
-            content: "Loading...";
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1.5rem;
-            font-weight: bold;
-            opacity: 0.7;
+        #wf-startup-loader {
+            display: none;
+        }
+
+        html.wf-js #wf-seo-shell {
+            display: none;
+        }
+
+        html.wf-js #wf-startup-loader {
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            box-sizing: border-box;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 140, 0, 0.2), transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(0, 165, 80, 0.25), transparent 45%),
+                #0a0a0a;
+        }
+
+        .wf-loader-card {
+            width: min(92vw, 28rem);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 1rem;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(2px);
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .wf-loader-brand {
+            font-family: 'Merienda', cursive;
+            font-size: 1.6rem;
+            margin: 0 0 0.5rem;
+            color: #fff;
+        }
+
+        .wf-loader-copy {
+            margin: 0;
+            opacity: 0.85;
+        }
+
+        .wf-loader-dots {
+            display: inline-flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wf-loader-dot {
+            width: 0.55rem;
+            height: 0.55rem;
+            border-radius: 9999px;
+            background: #ff8c00;
+            animation: wf-loader-bounce 1.2s ease-in-out infinite;
+        }
+
+        .wf-loader-dot:nth-child(2) {
+            animation-delay: 0.15s;
+            background: #ffd166;
+        }
+
+        .wf-loader-dot:nth-child(3) {
+            animation-delay: 0.3s;
+            background: #00a550;
+        }
+
+        @keyframes wf-loader-bounce {
+            0%, 80%, 100% {
+                transform: translateY(0);
+                opacity: 0.45;
+            }
+
+            40% {
+                transform: translateY(-0.4rem);
+                opacity: 1;
+            }
         }
     </style>
     <script>
@@ -144,7 +217,18 @@
 
 <body>
     <div id="wf-root">
-        <main style="max-width: 64rem; margin: 0 auto; padding: 2.5rem 1.25rem; color: #fff;">
+        <div id="wf-startup-loader" role="status" aria-live="polite" aria-label="Loading Whimsical Frog">
+            <div class="wf-loader-card">
+                <h1 class="wf-loader-brand">Whimsical Frog</h1>
+                <p class="wf-loader-copy">Loading your cozy room...</p>
+                <div class="wf-loader-dots" aria-hidden="true">
+                    <span class="wf-loader-dot"></span>
+                    <span class="wf-loader-dot"></span>
+                    <span class="wf-loader-dot"></span>
+                </div>
+            </div>
+        </div>
+        <main id="wf-seo-shell" style="max-width: 64rem; margin: 0 auto; padding: 2.5rem 1.25rem; color: #fff;">
             <header>
                 <h1 style="font-family: 'Merienda', cursive; font-size: 2rem; line-height: 1.1; margin: 0 0 1rem;">Whimsical Frog Handmade Decor And Gifts</h1>
                 <p style="margin: 0 0 1rem; opacity: 0.9;">

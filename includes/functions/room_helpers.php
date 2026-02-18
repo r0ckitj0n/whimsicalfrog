@@ -107,6 +107,10 @@ function wf_get_room_slug_map()
 
             $map['by_slug']['room' . $room_number] = $room_number;
             $map['by_slug']['room-' . $room_number] = $room_number;
+            $roomNumberSlug = wf_slugify((string) $room_number);
+            if ($roomNumberSlug) {
+                $map['by_slug'][$roomNumberSlug] = $room_number;
+            }
         }
     } catch (Exception $e) {
         // leave map empty on failure

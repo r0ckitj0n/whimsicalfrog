@@ -6,6 +6,7 @@ export type Item = IShopItem;
 interface ItemCardProps {
     item: IShopItem;
     categoryLabel: string;
+    productPath: string;
     isExpanded: boolean;
     onToggleExpand: (sku: string) => void;
     onAddToCart: (item: IShopItem) => void;
@@ -14,6 +15,7 @@ interface ItemCardProps {
 export const ItemCard: React.FC<ItemCardProps> = ({
     item,
     categoryLabel,
+    productPath,
     isExpanded,
     onToggleExpand,
     onAddToCart
@@ -23,10 +25,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     return (
         <div
             className={`group cursor-pointer bg-white rounded-[8px] shadow-[0_2px_8px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all duration-300 flex flex-col overflow-hidden border border-[#DDDDDD] ${item.stock <= 0 ? 'opacity-75 grayscale-[0.2]' : ''}`}
-            onClick={() => onAddToCart(item)}
         >
             {/* Product Image */}
-            <div className="relative aspect-square overflow-hidden bg-[#fbfbfb]">
+            <a href={productPath} className="relative aspect-square overflow-hidden bg-[#fbfbfb] block" aria-label={`View details for ${item.item_name}`}>
                 {item.image_url ? (
                     <img
                         src={item.image_url}
@@ -48,7 +49,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
                 {/* Subtle Hover Overlay */}
                 <div className="absolute inset-0 bg-brand-primary/0 group-hover:bg-brand-primary/2 transition-colors duration-300" />
-            </div>
+            </a>
 
             {/* Product Info */}
             <div className="p-4 flex flex-col flex-1">
@@ -57,7 +58,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({
                 </div>
 
                 <h3 className="text-[17.6px] font-merienda font-semibold text-[#333333] mb-3 line-clamp-2 min-h-[3rem] leading-snug">
-                    {item.item_name}
+                    <a href={productPath} className="hover:underline underline-offset-4">
+                        {item.item_name}
+                    </a>
                 </h3>
 
                 <p className={`text-[14px] font-nunito text-gray-600 mb-6 leading-relaxed transition-all duration-300 ${isExpanded ? '' : 'line-clamp-3'}`}>

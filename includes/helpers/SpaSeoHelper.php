@@ -10,6 +10,7 @@ require_once __DIR__ . '/../site_settings.php';
 class SpaSeoHelper
 {
     private const DEFAULT_SITE_NAME = 'WhimsicalFrog';
+    private const DEFAULT_PRODUCT_IMAGE = '/images/items/placeholder.webp';
 
     public static function renderTagsForPath(string $requestedPath): string
     {
@@ -98,8 +99,55 @@ class SpaSeoHelper
         return $html;
     }
 
+    public static function renderCatalogDiscoverabilityNav(): string
+    {
+        $items = self::loadShopSeoItems();
+        if (empty($items)) {
+            return '';
+        }
+
+        $style = 'position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;border:0!important;white-space:nowrap!important;';
+        $html = '<nav aria-label="Catalog URLs" data-wf-seo-nav="catalog" style="' . $style . '"><ul>';
+        $categoryMap = [];
+        foreach ($items as $item) {
+            $categorySlug = wf_slugify((string) ($item['category_slug'] ?? ''));
+            if ($categorySlug === null || $categorySlug === '') {
+                continue;
+            }
+            $categoryMap[$categorySlug] = (string) ($item['category_name'] ?? ucwords(str_replace('-', ' ', $categorySlug)));
+        }
+        ksort($categoryMap, SORT_NATURAL | SORT_FLAG_CASE);
+        foreach ($categoryMap as $slug => $label) {
+            $categoryPath = '/shop/category/' . rawurlencode($slug);
+            $html .= '<li><a href="' . self::escape($categoryPath) . '">' . self::escape($label) . '</a></li>';
+        }
+
+        foreach ($items as $item) {
+            $sku = trim((string) ($item['sku'] ?? ''));
+            if ($sku === '') {
+                continue;
+            }
+            $path = self::canonicalProductPath($item);
+            $label = trim((string) ($item['name'] ?? $item['title'] ?? $sku));
+            $html .= '<li><a href="' . self::escape($path) . '">' . self::escape($label) . '</a></li>';
+        }
+        $html .= '</ul></nav>';
+
+        return $html;
+    }
+
     private static function buildSeoPayload(string $path): array
     {
+        $productIdentifier = self::extractProductIdentifier($path);
+        if ($productIdentifier !== null) {
+            return self::buildProductSeoPayload($productIdentifier);
+        }
+
+        $categorySlug = self::extractShopCategorySlug($path);
+        if ($categorySlug !== null) {
+            return self::buildShopCategorySeoPayload($categorySlug);
+        }
+
         $roomNumber = self::resolveRoomNumberForPath($path);
         if ($roomNumber !== null) {
             return self::buildRoomSeoPayload($roomNumber, $path);
@@ -114,8 +162,9 @@ class SpaSeoHelper
         $baseUrl = self::baseUrl();
         $canonicalPath = $path === '' ? '/' : $path;
 
-        $title = trim((string) ($settings['page_title'] ?? $settings['site_title'] ?? self::DEFAULT_SITE_NAME));
-        $description = trim((string) ($settings['meta_description'] ?? $settings['site_description'] ?? 'Whimsical products and custom creations.'));
+        $defaults = self::defaultPageMeta($canonicalPath);
+        $title = trim((string) (($defaults['title'] ?? '') !== '' ? $defaults['title'] : ($settings['page_title'] ?? $settings['site_title'] ?? self::DEFAULT_SITE_NAME)));
+        $description = trim((string) (($defaults['description'] ?? '') !== '' ? $defaults['description'] : ($settings['meta_description'] ?? $settings['site_description'] ?? 'Whimsical products and custom creations.')));
         $keywords = trim((string) ($settings['site_keywords'] ?? 'whimsical frog, custom gifts, handmade products'));
 
         $siteName = wf_site_name();
@@ -129,9 +178,26 @@ class SpaSeoHelper
             'description' => $description,
             'keywords' => $keywords,
             'canonical' => $baseUrl . $canonicalPath,
-            'image' => $baseUrl . '/images/backgrounds/background-roomA.webp',
+            'image' => $baseUrl . ($defaults['image_path'] ?? '/images/backgrounds/background-roomA.webp'),
+            'og_type' => 'website',
             'structured_data' => self::buildOrganizationStructuredData($siteName, $baseUrl, $socialLinks),
         ];
+    }
+
+    public static function resolveCanonicalProductPathFromToken(string $identifier): ?string
+    {
+        $product = self::resolveProductForIdentifier($identifier);
+        if ($product === null) {
+            return null;
+        }
+
+        return self::canonicalProductPath($product);
+    }
+
+    public static function canonicalProductPathForNameSku(string $name, string $sku): string
+    {
+        $item = ['name' => $name, 'title' => $name, 'sku' => $sku];
+        return self::canonicalProductPath($item);
     }
 
     public static function resolveRoomNumberForPath(string $requestedPath): ?string
@@ -204,6 +270,7 @@ class SpaSeoHelper
             'keywords' => $metaKeywords,
             'canonical' => $baseUrl . $canonicalPath,
             'image' => $image,
+            'og_type' => 'website',
             'structured_data' => self::buildRoomStructuredData($items, $baseUrl, $title, $description, $canonicalPath, $image),
         ];
     }
@@ -250,7 +317,93 @@ class SpaSeoHelper
             'keywords' => $metaKeywords,
             'canonical' => $baseUrl . '/shop',
             'image' => $image,
+            'og_type' => 'website',
             'structured_data' => self::buildShopStructuredData($items, $baseUrl, $title, $description, $image),
+        ];
+    }
+
+    private static function buildShopCategorySeoPayload(string $categorySlug): array
+    {
+        $baseUrl = self::baseUrl();
+        $items = self::loadShopSeoItems();
+        $matching = array_values(array_filter($items, static function (array $item) use ($categorySlug): bool {
+            $slug = wf_slugify((string) ($item['category_slug'] ?? ''));
+            return $slug === $categorySlug;
+        }));
+
+        $categoryLabel = !empty($matching[0]['category_name']) ? (string) $matching[0]['category_name'] : ucwords(str_replace('-', ' ', $categorySlug));
+        $titleFallback = sprintf('%s | Custom Gifts & Personalized Items', $categoryLabel);
+        $descriptionFallback = sprintf('Shop %s from WhimsicalFrog, including custom tumblers, personalized t-shirts, and handmade resin gifts.', strtolower($categoryLabel));
+        $topImage = !empty($matching[0]['image_url']) ? self::absoluteUrl((string) $matching[0]['image_url'], $baseUrl) : ($baseUrl . '/images/backgrounds/background-roomS.webp');
+        $canonicalPath = '/shop/category/' . rawurlencode($categorySlug);
+
+        $keywords = [];
+        foreach ($matching as $item) {
+            foreach ($item['seo_keywords'] as $keyword) {
+                $normalized = strtolower(trim((string) $keyword));
+                if ($normalized !== '' && !in_array($normalized, $keywords, true)) {
+                    $keywords[] = $normalized;
+                }
+                if (count($keywords) >= 20) {
+                    break 2;
+                }
+            }
+        }
+        if (empty($keywords)) {
+            $keywords = [
+                strtolower($categoryLabel),
+                'custom tumblers',
+                'personalized t-shirts',
+                'handmade resin gifts',
+                'custom gift requests',
+            ];
+        }
+
+        return [
+            'title' => self::truncate($titleFallback, 60),
+            'description' => self::truncate($descriptionFallback, 160),
+            'keywords' => implode(', ', array_values(array_unique($keywords))),
+            'canonical' => $baseUrl . $canonicalPath,
+            'image' => $topImage,
+            'og_type' => 'website',
+            'structured_data' => self::buildCategoryStructuredData($matching, $baseUrl, $categoryLabel, $canonicalPath, $descriptionFallback, $topImage),
+        ];
+    }
+
+    private static function buildProductSeoPayload(string $identifier): array
+    {
+        $baseUrl = self::baseUrl();
+        $product = self::resolveProductForIdentifier($identifier);
+        if ($product === null) {
+            return [
+                'title' => 'Product Not Found | WhimsicalFrog',
+                'description' => 'The requested product could not be found.',
+                'keywords' => 'product, whimsical frog',
+                'canonical' => $baseUrl . '/shop',
+                'image' => $baseUrl . '/images/backgrounds/background-roomS.webp',
+                'og_type' => 'website',
+                'structured_data' => [],
+            ];
+        }
+
+        $canonicalPath = self::canonicalProductPath($product);
+        $name = trim((string) ($product['title'] ?? $product['name'] ?? 'Product'));
+        $categoryName = trim((string) ($product['category_name'] ?? 'Custom Gifts'));
+        $description = trim((string) ($product['description'] ?? ''));
+        if ($description === '') {
+            $description = sprintf('Shop %s by WhimsicalFrog. Handmade custom gifts with fast turnaround and transparent shipping details.', $name);
+        }
+        $image = self::absoluteUrl((string) ($product['image_url'] ?? self::DEFAULT_PRODUCT_IMAGE), $baseUrl);
+        $titleFallback = self::truncate($name . ' | ' . $categoryName . ' | WhimsicalFrog', 60);
+
+        return [
+            'title' => $titleFallback,
+            'description' => self::truncate($description, 160),
+            'keywords' => strtolower($name . ', ' . $categoryName . ', custom gifts, personalized gifts'),
+            'canonical' => $baseUrl . $canonicalPath,
+            'image' => $image,
+            'og_type' => 'product',
+            'structured_data' => self::buildProductPageStructuredData($product, $baseUrl),
         ];
     }
 
@@ -312,6 +465,46 @@ class SpaSeoHelper
         ];
     }
 
+    private static function buildCategoryStructuredData(
+        array $items,
+        string $baseUrl,
+        string $categoryLabel,
+        string $canonicalPath,
+        string $description,
+        string $image
+    ): array {
+        $list = [];
+        $position = 1;
+        foreach ($items as $item) {
+            $list[] = [
+                '@type' => 'ListItem',
+                'position' => $position,
+                'item' => self::buildProductStructuredData($item, $baseUrl),
+            ];
+            $position++;
+        }
+
+        return [
+            '@context' => 'https://schema.org',
+            '@type' => 'CollectionPage',
+            'name' => $categoryLabel . ' | WhimsicalFrog',
+            'description' => self::truncate($description, 160),
+            'url' => $baseUrl . $canonicalPath,
+            'image' => $image,
+            'mainEntity' => [
+                '@type' => 'ItemList',
+                'name' => $categoryLabel,
+                'numberOfItems' => count($list),
+                'itemListElement' => $list,
+            ],
+        ];
+    }
+
+    private static function buildProductPageStructuredData(array $item, string $baseUrl): array
+    {
+        return self::buildProductStructuredData($item, $baseUrl);
+    }
+
     private static function loadShopSeoItems(): array
     {
         try {
@@ -333,7 +526,8 @@ class SpaSeoHelper
                     ms.unique_selling_points,
                     ms.value_propositions,
                     ms.target_audience,
-                    COALESCE(c.name, 'Uncategorized') AS category_name
+                    COALESCE(c.name, 'Uncategorized') AS category_name,
+                    COALESCE(c.slug, LOWER(REPLACE(TRIM(c.name), ' ', '-')), 'uncategorized') AS category_slug
                  FROM items i
                  LEFT JOIN categories c ON i.category_id = c.id
                  LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
@@ -346,7 +540,7 @@ class SpaSeoHelper
                     )
                  WHERE i.status = 'live' AND i.is_active = 1 AND i.is_archived = 0
                  ORDER BY i.name ASC
-                 LIMIT 250"
+                 LIMIT 1000"
             );
         } catch (Throwable $e) {
             error_log('[SpaSeoHelper] Failed to load shop SEO items: ' . $e->getMessage());
@@ -381,6 +575,7 @@ class SpaSeoHelper
 
             $items[] = [
                 'sku' => (string) ($row['sku'] ?? ''),
+                'name' => (string) ($row['name'] ?? ''),
                 'title' => $title,
                 'description' => $description,
                 'retail_price' => (float) ($row['retail_price'] ?? 0),
@@ -388,6 +583,7 @@ class SpaSeoHelper
                 'image_url' => (string) ($row['image_url'] ?? 'images/items/placeholder.webp'),
                 'seo_keywords' => $keywords,
                 'category_name' => (string) ($row['category_name'] ?? 'Uncategorized'),
+                'category_slug' => wf_slugify((string) ($row['category_slug'] ?? 'uncategorized')) ?? 'uncategorized',
                 'target_audience' => $targetAudience,
                 'selling_points' => $sellingPoints,
                 'competitive_advantages' => $competitiveAdvantages,
@@ -518,7 +714,8 @@ class SpaSeoHelper
                     ms.unique_selling_points,
                     ms.value_propositions,
                     ms.target_audience,
-                    COALESCE(c.name, 'Uncategorized') AS category_name
+                    COALESCE(c.name, 'Uncategorized') AS category_name,
+                    COALESCE(c.slug, LOWER(REPLACE(TRIM(c.name), ' ', '-')), 'uncategorized') AS category_slug
                  FROM items i
                  LEFT JOIN categories c ON i.category_id = c.id
                  LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
@@ -568,6 +765,7 @@ class SpaSeoHelper
 
             $items[] = [
                 'sku' => (string) ($row['sku'] ?? ''),
+                'name' => (string) ($row['name'] ?? ''),
                 'title' => $title,
                 'description' => $description,
                 'retail_price' => (float) ($row['retail_price'] ?? 0),
@@ -575,6 +773,7 @@ class SpaSeoHelper
                 'image_url' => (string) ($row['image_url'] ?? 'images/items/placeholder.webp'),
                 'seo_keywords' => $keywords,
                 'category_name' => (string) ($row['category_name'] ?? 'Uncategorized'),
+                'category_slug' => wf_slugify((string) ($row['category_slug'] ?? 'uncategorized')) ?? 'uncategorized',
                 'target_audience' => $targetAudience,
                 'selling_points' => $sellingPoints,
                 'competitive_advantages' => $competitiveAdvantages,
@@ -594,6 +793,7 @@ class SpaSeoHelper
         $keywords = self::escape($seo['keywords'] ?? '');
         $canonical = self::escape($seo['canonical'] ?? (self::baseUrl() . '/'));
         $image = self::escape($seo['image'] ?? (self::baseUrl() . '/images/backgrounds/background-roomA.webp'));
+        $ogType = self::escape((string) ($seo['og_type'] ?? 'website'));
         $structured = '';
         $hreflang = "\n<link rel=\"alternate\" hreflang=\"en\" href=\"{$canonical}\">\n<link rel=\"alternate\" hreflang=\"x-default\" href=\"{$canonical}\">";
 
@@ -601,7 +801,7 @@ class SpaSeoHelper
             $structured = "\n<script type=\"application/ld+json\">" . json_encode($seo['structured_data'], JSON_UNESCAPED_SLASHES) . "</script>";
         }
 
-        return "\n<title>{$title}</title>\n<meta name=\"description\" content=\"{$description}\">\n<meta name=\"keywords\" content=\"{$keywords}\">\n<link rel=\"canonical\" href=\"{$canonical}\">{$hreflang}\n<meta property=\"og:title\" content=\"{$title}\">\n<meta property=\"og:description\" content=\"{$description}\">\n<meta property=\"og:image\" content=\"{$image}\">\n<meta property=\"og:url\" content=\"{$canonical}\">\n<meta property=\"og:type\" content=\"website\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:title\" content=\"{$title}\">\n<meta name=\"twitter:description\" content=\"{$description}\">\n<meta name=\"twitter:image\" content=\"{$image}\">{$structured}\n";
+        return "\n<title>{$title}</title>\n<meta name=\"description\" content=\"{$description}\">\n<meta name=\"keywords\" content=\"{$keywords}\">\n<link rel=\"canonical\" href=\"{$canonical}\">{$hreflang}\n<meta property=\"og:title\" content=\"{$title}\">\n<meta property=\"og:description\" content=\"{$description}\">\n<meta property=\"og:image\" content=\"{$image}\">\n<meta property=\"og:url\" content=\"{$canonical}\">\n<meta property=\"og:type\" content=\"{$ogType}\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:title\" content=\"{$title}\">\n<meta name=\"twitter:description\" content=\"{$description}\">\n<meta name=\"twitter:image\" content=\"{$image}\">{$structured}\n";
     }
 
     private static function buildOrganizationStructuredData(string $siteName, string $baseUrl, array $socialLinks): array
@@ -642,12 +842,12 @@ class SpaSeoHelper
         $product = [
             '@type' => 'Product',
             'name' => (string) ($item['title'] ?? ''),
-            'description' => trim((string) ($item['description'] ?? '')),
+            'description' => self::truncate(trim((string) ($item['description'] ?? '')), 300),
             'sku' => $sku,
             'mpn' => $sku,
             'category' => (string) ($item['category_name'] ?? 'Uncategorized'),
             'image' => self::absoluteUrl((string) ($item['image_url'] ?? ''), $baseUrl),
-            'url' => $baseUrl . '/shop?sku=' . rawurlencode($sku),
+            'url' => $baseUrl . self::canonicalProductPath($item),
             'brand' => [
                 '@type' => 'Brand',
                 'name' => $siteName,
@@ -658,14 +858,9 @@ class SpaSeoHelper
                 'price' => $price,
                 'availability' => ((int) ($item['stock_quantity'] ?? 0)) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
                 'itemCondition' => 'https://schema.org/NewCondition',
-                'url' => $baseUrl . '/shop?sku=' . rawurlencode($sku),
+                'url' => $baseUrl . self::canonicalProductPath($item),
             ],
         ];
-
-        $keywordList = self::decodeJsonList($item['seo_keywords'] ?? null);
-        if (!empty($keywordList)) {
-            $product['keywords'] = implode(', ', $keywordList);
-        }
 
         $targetAudience = trim((string) ($item['target_audience'] ?? ''));
         if ($targetAudience !== '') {
@@ -673,28 +868,6 @@ class SpaSeoHelper
                 '@type' => 'Audience',
                 'audienceType' => $targetAudience,
             ];
-        }
-
-        $additionalProperty = [];
-        $marketingFields = [
-            'Selling Points' => self::decodeJsonList($item['selling_points'] ?? null),
-            'Competitive Advantages' => self::decodeJsonList($item['competitive_advantages'] ?? null),
-            'Customer Benefits' => self::decodeJsonList($item['customer_benefits'] ?? null),
-            'Unique Selling Points' => self::decodeJsonList($item['unique_selling_points'] ?? null),
-            'Value Propositions' => self::decodeJsonList($item['value_propositions'] ?? null),
-        ];
-        foreach ($marketingFields as $name => $values) {
-            if (empty($values)) {
-                continue;
-            }
-            $additionalProperty[] = [
-                '@type' => 'PropertyValue',
-                'name' => $name,
-                'value' => implode(' | ', $values),
-            ];
-        }
-        if (!empty($additionalProperty)) {
-            $product['additionalProperty'] = $additionalProperty;
         }
 
         return $product;
@@ -750,6 +923,102 @@ class SpaSeoHelper
             '/shop' => 'shop',
             default => 'home',
         };
+    }
+
+    private static function defaultPageMeta(string $canonicalPath): array
+    {
+        return match ($canonicalPath) {
+            '/' => [
+                'title' => 'Whimsical Frog | Custom Gifts & Handmade Decor',
+                'description' => 'Shop custom tumblers, personalized t-shirts, handmade resin gifts, and custom gift requests at WhimsicalFrog.',
+                'image_path' => '/images/backgrounds/background-roomA.webp',
+            ],
+            '/shop' => [
+                'title' => 'Shop Custom Tumblers, Shirts & Resin Gifts',
+                'description' => 'Browse handmade custom tumblers, personalized t-shirts, resin gifts, and one-of-a-kind gift ideas.',
+                'image_path' => '/images/backgrounds/background-roomS.webp',
+            ],
+            '/about' => [
+                'title' => 'About WhimsicalFrog | Handmade Gift Studio',
+                'description' => 'Learn how WhimsicalFrog creates custom gifts, personalized apparel, and handcrafted resin keepsakes.',
+                'image_path' => '/images/backgrounds/background-roomA.webp',
+            ],
+            '/contact' => [
+                'title' => 'Contact WhimsicalFrog | Custom Order Requests',
+                'description' => 'Contact WhimsicalFrog for custom gift requests, turnaround questions, shipping support, and order help.',
+                'image_path' => '/images/backgrounds/background-roomA.webp',
+            ],
+            default => [],
+        };
+    }
+
+    private static function extractProductIdentifier(string $path): ?string
+    {
+        if (!preg_match('#^/product/([^/]+)$#', $path, $m)) {
+            return null;
+        }
+
+        $identifier = urldecode(trim((string) ($m[1] ?? '')));
+        return $identifier !== '' ? $identifier : null;
+    }
+
+    private static function extractShopCategorySlug(string $path): ?string
+    {
+        if (!preg_match('#^/shop/category/([^/]+)$#', $path, $m)) {
+            return null;
+        }
+        $slug = wf_slugify(urldecode((string) ($m[1] ?? '')));
+        return $slug ?: null;
+    }
+
+    private static function resolveProductForIdentifier(string $identifier): ?array
+    {
+        $token = trim(urldecode($identifier));
+        if ($token === '') {
+            return null;
+        }
+
+        $items = self::loadShopSeoItems();
+        if (empty($items)) {
+            return null;
+        }
+
+        $tokenSlug = wf_slugify($token);
+        foreach ($items as $item) {
+            $sku = trim((string) ($item['sku'] ?? ''));
+            if ($sku === '') {
+                continue;
+            }
+            $skuSlug = wf_slugify($sku) ?: strtolower($sku);
+            if (strcasecmp($token, $sku) === 0 || ($tokenSlug !== null && $tokenSlug === $skuSlug)) {
+                return $item;
+            }
+        }
+
+        if ($tokenSlug === null) {
+            return null;
+        }
+
+        foreach ($items as $item) {
+            $canonicalSlug = self::canonicalProductSlug($item);
+            if ($tokenSlug === wf_slugify($canonicalSlug)) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
+    private static function canonicalProductPath(array $item): string
+    {
+        return '/product/' . rawurlencode(self::canonicalProductSlug($item));
+    }
+
+    private static function canonicalProductSlug(array $item): string
+    {
+        $nameSlug = wf_slugify((string) ($item['name'] ?? $item['title'] ?? 'product')) ?: 'product';
+        $skuSlug = wf_slugify((string) ($item['sku'] ?? '')) ?: 'sku';
+        return $nameSlug . '--' . $skuSlug;
     }
 
     private static function escape(string $value): string

@@ -190,6 +190,7 @@ export const AppShell: React.FC = () => {
     const isShopVisible = Boolean(!isPOS && shop_data && (
         currentPath.includes('/shop') || roomIdParam === 'S'
     ));
+    const isProductVisible = Boolean(!isPOS && !isAdmin && currentPath.includes('/product/'));
 
     return (
         <div className={containerClasses}>
@@ -209,6 +210,7 @@ export const AppShell: React.FC = () => {
                     isMainRoomVisible={isMainRoomVisible}
                     isLandingPageVisible={isLandingPageVisible}
                     isShopVisible={isShopVisible}
+                    isProductVisible={isProductVisible}
                     isBare={Boolean(is_bare)}
                     roomIdParam={roomIdParam}
                     shopData={shop_data}

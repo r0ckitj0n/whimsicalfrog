@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../../api/config.php';
 require_once __DIR__ . '/../functions/room_helpers.php';
+require_once __DIR__ . '/SpaSeoHelper.php';
 
 class SitemapHelper
 {
@@ -74,8 +75,32 @@ class SitemapHelper
         }
 
         try {
+            $categoryRows = Database::queryAll(
+                "SELECT slug, name, updated_at
+                 FROM categories
+                 ORDER BY display_order ASC, name ASC"
+            );
+            foreach ($categoryRows as $row) {
+                $slug = wf_slugify((string) ($row['slug'] ?? $row['name'] ?? ''));
+                if ($slug === null || $slug === '') {
+                    continue;
+                }
+                $lastmodRaw = trim((string) ($row['updated_at'] ?? ''));
+                $lastmod = $lastmodRaw !== '' ? substr($lastmodRaw, 0, 10) : $today;
+                $urls[] = [
+                    'loc' => $base . '/shop/category/' . rawurlencode($slug),
+                    'lastmod' => $lastmod,
+                    'changefreq' => 'weekly',
+                    'priority' => '0.8',
+                ];
+            }
+        } catch (Throwable $e) {
+            error_log('[SitemapHelper] Failed to load categories for sitemap: ' . $e->getMessage());
+        }
+
+        try {
             $rows = Database::queryAll(
-                "SELECT sku, updated_at
+                "SELECT sku, name, updated_at
                  FROM items
                  WHERE status = 'live' AND is_active = 1 AND is_archived = 0
                  ORDER BY updated_at DESC
@@ -86,10 +111,12 @@ class SitemapHelper
                 if ($sku === '') {
                     continue;
                 }
+                $name = (string) ($row['name'] ?? '');
+                $canonicalPath = SpaSeoHelper::canonicalProductPathForNameSku($name, $sku);
                 $lastmodRaw = trim((string) ($row['updated_at'] ?? ''));
                 $lastmod = $lastmodRaw !== '' ? substr($lastmodRaw, 0, 10) : $today;
                 $urls[] = [
-                    'loc' => $base . '/shop?sku=' . rawurlencode($sku),
+                    'loc' => $base . $canonicalPath,
                     'lastmod' => $lastmod,
                     'changefreq' => 'weekly',
                     'priority' => '0.8',

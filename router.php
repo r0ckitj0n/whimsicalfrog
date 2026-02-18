@@ -63,6 +63,39 @@ if ($requestedPath === '/robots.txt' || $requestedPath === '/sitemap.xml') {
     exit;
 }
 
+// Canonicalize legacy query-param product URLs to indexable product detail pages.
+if ($requestedPath === '/shop' && isset($_GET['sku'])) {
+    $skuToken = trim((string) ($_GET['sku'] ?? ''));
+    if ($skuToken !== '') {
+        try {
+            require_once __DIR__ . '/includes/helpers/SpaSeoHelper.php';
+            $canonicalProductPath = SpaSeoHelper::resolveCanonicalProductPathFromToken($skuToken);
+            if (!empty($canonicalProductPath)) {
+                $target = $canonicalProductPath;
+                if (!empty($_GET['category'])) {
+                    $target .= '?category=' . rawurlencode((string) $_GET['category']);
+                }
+                header('Location: ' . $target, true, 301);
+                exit;
+            }
+        } catch (Throwable $e) {
+            error_log('[router] Product canonical redirect failed: ' . $e->getMessage());
+        }
+    }
+}
+
+if ($requestedPath === '/shop' && !isset($_GET['sku']) && isset($_GET['category']) && !isset($_GET['q'])) {
+    $rawCategory = trim((string) ($_GET['category'] ?? ''));
+    if ($rawCategory !== '') {
+        $categorySlug = strtolower((string) preg_replace('/[^a-z0-9]+/i', '-', $rawCategory));
+        $categorySlug = trim($categorySlug, '-');
+        if ($categorySlug !== '') {
+            header('Location: /shop/category/' . rawurlencode($categorySlug), true, 301);
+            exit;
+        }
+    }
+}
+
 // Check for manual vite mode overrides (?vite=prod or ?vite=dev)
 $viteModeQuery = $_GET['vite'] ?? null;
 $forceProd = ($viteModeQuery === 'prod');
@@ -273,7 +306,9 @@ if ($html === false) {
 try {
     require_once __DIR__ . '/includes/helpers/SpaSeoHelper.php';
     $seoTags = SpaSeoHelper::renderTagsForPath($requestedPath);
-    $discoverabilityNav = SpaSeoHelper::renderRoomDiscoverabilityNav() . SpaSeoHelper::renderSocialDiscoverabilityNav();
+    $discoverabilityNav = SpaSeoHelper::renderRoomDiscoverabilityNav()
+        . SpaSeoHelper::renderCatalogDiscoverabilityNav()
+        . SpaSeoHelper::renderSocialDiscoverabilityNav();
     $initialRoom = SpaSeoHelper::resolveRoomNumberForPath($requestedPath);
     if (!empty($seoTags) && stripos($html, '</head>') !== false) {
         $patterns = [

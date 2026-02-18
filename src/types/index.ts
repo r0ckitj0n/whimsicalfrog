@@ -57,3 +57,4 @@ export type * from './marketing.js';
 export type * from './shipping.js';
 export type * from './pos.js';
 export type * from './pricing-history.js';
+export type * from './seo.js';

@@ -6,6 +6,7 @@ const AdminConductor = lazy(() => import('./admin/AdminConductor.js').then(m => 
 const MainRoom = lazy(() => import('./MainRoom.js').then(m => ({ default: m.MainRoom })));
 const LandingPage = lazy(() => import('./LandingPage.js').then(m => ({ default: m.LandingPage })));
 const ShopView = lazy(() => import('./storefront/ShopView.js').then(m => ({ default: m.ShopView })));
+const ProductDetailView = lazy(() => import('./storefront/ProductDetailView.js').then(m => ({ default: m.ProductDetailView })));
 const ReceiptView = lazy(() => import('./storefront/ReceiptView.js').then(m => ({ default: m.ReceiptView })));
 const AboutView = lazy(() => import('./storefront/AboutView.js').then(m => ({ default: m.AboutView })));
 
@@ -15,6 +16,7 @@ interface MainPageRendererProps {
     isMainRoomVisible: boolean;
     isLandingPageVisible: boolean;
     isShopVisible: boolean;
+    isProductVisible: boolean;
     isBare: boolean;
     roomIdParam: string | null;
     shopData: IShopData | null;
@@ -29,6 +31,7 @@ export const MainPageRenderer: React.FC<MainPageRendererProps> = ({
     isMainRoomVisible,
     isLandingPageVisible,
     isShopVisible,
+    isProductVisible,
     isBare,
     roomIdParam,
     shopData,
@@ -55,6 +58,12 @@ export const MainPageRenderer: React.FC<MainPageRendererProps> = ({
                 <ShopView
                     categories={shopData.categories}
                     current_page={shopData.current_page}
+                    onOpenItem={openItemModal}
+                />
+            )}
+            {isProductVisible && shopData && (
+                <ProductDetailView
+                    categories={shopData.categories}
                     onOpenItem={openItemModal}
                 />
             )}

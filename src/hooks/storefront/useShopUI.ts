@@ -43,6 +43,27 @@ export const useShopUI = ({ categories, isVisible }: UseShopUIProps) => {
         if (q) setSearchQuery(q);
     }, [location.search]);
 
+    useEffect(() => {
+        const path = location.pathname.toLowerCase();
+        const match = path.match(/^\/shop\/category\/([^/]+)$/);
+        if (match?.[1]) {
+            const slug = decodeURIComponent(match[1]).trim().toLowerCase();
+            if (slug) {
+                setActiveCategory(slug);
+                return;
+            }
+        }
+
+        const params = new URLSearchParams(location.search);
+        const categoryParam = (params.get('category') || '').trim().toLowerCase();
+        if (categoryParam) {
+            setActiveCategory(categoryParam);
+            return;
+        }
+
+        setActiveCategory(CATEGORY.ALL);
+    }, [location.pathname, location.search]);
+
     const categoryList = useMemo(() => Object.values(categories), [categories]);
 
     const filteredItems = useMemo(() => {

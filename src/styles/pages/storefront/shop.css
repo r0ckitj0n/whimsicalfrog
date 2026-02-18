@@ -84,4 +84,10 @@
       display: block;
     }
   }
-}
+
+  body[data-page='shop'] .shop-footer-help {
+    max-height: 70px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+} 

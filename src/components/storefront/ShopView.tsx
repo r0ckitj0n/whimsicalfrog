@@ -74,30 +74,30 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
                 handleClear={handleClear}
             />
 
-            <div className="w-full px-6 pb-24 max-w-6xl mx-auto relative z-20 text-white">
-                <section className="rounded-2xl bg-black/45 p-4">
+            <div className="shop-footer-help w-full px-6 pb-24 max-w-6xl mx-auto relative z-20 text-white">
+                <section className="rounded-2xl bg-[var(--brand-primary)]/45 p-4 text-white">
                     <details className="group">
-                        <summary className="cursor-pointer list-none font-merienda text-xl sm:text-2xl select-none flex items-center justify-between gap-3">
+                        <summary className="cursor-pointer list-none font-merienda text-xl sm:text-2xl select-none flex items-center justify-between gap-3 text-white">
                             Shop Help & FAQ
-                            <span className="text-sm font-nunito opacity-80 group-open:hidden">Expand</span>
-                            <span className="text-sm font-nunito opacity-80 hidden group-open:inline">Collapse</span>
+                            <span className="text-sm font-nunito text-white/80 group-open:hidden">Expand</span>
+                            <span className="text-sm font-nunito text-white/80 hidden group-open:inline">Collapse</span>
                         </summary>
 
                         <div className="mt-4 space-y-4">
-                            <section className="rounded-xl bg-black/25 p-4">
+                            <section className="rounded-xl bg-[var(--brand-primary)]/25 p-4 text-white">
                                 <h2 className="font-merienda text-xl mb-3">Popular custom order categories</h2>
-                                <p className="font-nunito text-white/90 mb-2"><a href="/shop/category/tumblers" className="underline">Custom tumblers</a> for birthdays, weddings, and team gifts with names or event themes.</p>
-                                <p className="font-nunito text-white/90 mb-2"><a href="/shop/category/t-shirts" className="underline">Personalized t-shirts</a> for reunions, school groups, and branded small-batch apparel.</p>
-                                <p className="font-nunito text-white/90 mb-2"><a href="/shop/category/resin" className="underline">Handmade resin gifts</a> including keepsakes and decorative gift-ready pieces.</p>
-                                <p className="font-nunito text-white/90"><a href="/contact" className="underline">Custom gift requests</a> are available when you need an idea turned into a made-to-order product.</p>
+                                <p className="font-nunito text-white mb-2"><a href="/shop/category/tumblers" className="underline text-white">Custom tumblers</a> for birthdays, weddings, and team gifts with names or event themes.</p>
+                                <p className="font-nunito text-white mb-2"><a href="/shop/category/t-shirts" className="underline text-white">Personalized t-shirts</a> for reunions, school groups, and branded small-batch apparel.</p>
+                                <p className="font-nunito text-white mb-2"><a href="/shop/category/resin" className="underline text-white">Handmade resin gifts</a> including keepsakes and decorative gift-ready pieces.</p>
+                                <p className="font-nunito text-white"><a href="/contact" className="underline text-white">Custom gift requests</a> are available when you need an idea turned into a made-to-order product.</p>
                             </section>
 
-                            <section className="rounded-xl bg-black/25 p-4">
+                            <section className="rounded-xl bg-[var(--brand-primary)]/25 p-4 text-white">
                                 <h2 className="font-merienda text-xl mb-3">FAQ for orders and shipping</h2>
-                                <p className="font-nunito text-white/90 mb-2"><strong>Turnaround time:</strong> Most items are prepared within a few business days, and complex custom orders may take longer.</p>
-                                <p className="font-nunito text-white/90 mb-2"><strong>Shipping:</strong> Delivery and shipping details are listed in our <a href="/policy" className="underline">store policy</a>.</p>
-                                <p className="font-nunito text-white/90 mb-2"><strong>Returns:</strong> Review return and support terms in <a href="/policy" className="underline">store policy</a>, <a href="/privacy" className="underline">privacy</a>, and <a href="/terms" className="underline">terms</a>.</p>
-                                <p className="font-nunito text-white/90"><strong>Custom process:</strong> Submit details through <a href="/contact" className="underline">contact</a> and we confirm pricing, timeline, and production steps.</p>
+                                <p className="font-nunito text-white mb-2"><strong>Turnaround time:</strong> Most items are prepared within a few business days, and complex custom orders may take longer.</p>
+                                <p className="font-nunito text-white mb-2"><strong>Shipping:</strong> Delivery and shipping details are listed in our <a href="/policy" className="underline text-white">store policy</a>.</p>
+                                <p className="font-nunito text-white mb-2"><strong>Returns:</strong> Review return and support terms in <a href="/policy" className="underline text-white">store policy</a>, <a href="/privacy" className="underline text-white">privacy</a>, and <a href="/terms" className="underline text-white">terms</a>.</p>
+                                <p className="font-nunito text-white"><strong>Custom process:</strong> Submit details through <a href="/contact" className="underline text-white">contact</a> and we confirm pricing, timeline, and production steps.</p>
                             </section>
                         </div>
                     </details>

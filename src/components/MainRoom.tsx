@@ -154,7 +154,7 @@ export const MainRoom: React.FC = () => {
                                 borderRadius: hasPanelColor ? '10px' : undefined,
                                 padding: hasPanelColor ? '6px' : '0',
                                 boxSizing: 'border-box',
-                                overflow: isMiddleAligned ? 'hidden' : 'visible',
+                                overflow: (isMiddleAligned && !isShortcutType) ? 'hidden' : 'visible',
                                 display: 'flex',
                                 alignItems: flexAlignment,
                                 justifyContent: 'center'

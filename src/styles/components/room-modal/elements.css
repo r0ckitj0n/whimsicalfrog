@@ -91,6 +91,11 @@
     background: transparent !important;
 }
 
+body:not([data-page^='admin']) .room-modal-body .room-item-icon[data-mapping-type='content'],
+body:not([data-page^='admin']) .room-overlay-wrapper .room-item-icon[data-mapping-type='content'] {
+    overflow: visible !important;
+}
+
 body:not([data-page^='admin']) .room-modal-body .room-item-icon[data-mapping-type='content'] img,
 body:not([data-page^='admin']) .room-overlay-wrapper .room-item-icon[data-mapping-type='content'] img {
     transition: transform 0.2s ease;

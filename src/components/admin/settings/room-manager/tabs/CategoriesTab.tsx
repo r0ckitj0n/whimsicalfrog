@@ -77,7 +77,7 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
                                     disabled={isCreating}
                                     className="px-6 py-2 bg-blue-500 text-white rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-blue-600 transition-all font-inter"
                                 >
-                                    {isCreating ? 'Creating...' : 'Create Label'}
+                                    {isCreating ? 'Creating...' : 'Create Category'}
                                 </button>
                             </form>
                         </div>

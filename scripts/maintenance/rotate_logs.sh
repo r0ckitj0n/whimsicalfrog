@@ -7,10 +7,11 @@
 
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 LOG_DIR="$ROOT_DIR/logs"
-MAX_SIZE_MB="50"         # rotate if > 50 MB
-NUM_KEEP="7"             # keep last 7 rotations
+MAX_SIZE_MB="${WF_LOG_ROTATE_MAX_SIZE_MB:-50}"   # rotate if > 50 MB
+NUM_KEEP="${WF_LOG_ROTATE_NUM_KEEP:-7}"          # keep last 7 rotations
+SCREENSHOT_RETENTION_DAYS="${WF_LOG_SCREENSHOT_RETENTION_DAYS:-14}"
 DATE_SUFFIX="$(date +%Y%m%d_%H%M%S)"
 
 if [[ ! -d "$LOG_DIR" ]]; then
@@ -63,5 +64,14 @@ find "$LOG_DIR" -maxdepth 1 -type f \
   -print0 | while IFS= read -r -d '' f; do
     rotate_one "$f"
   done
+
+# Prune screenshot test output older than retention window
+if [[ -d "$LOG_DIR/screenshots" ]]; then
+  find "$LOG_DIR/screenshots" -mindepth 1 -maxdepth 1 -type d -mtime +"$SCREENSHOT_RETENTION_DAYS" -print0 \
+    | while IFS= read -r -d '' old_dir; do
+        echo "Pruning stale screenshot directory $old_dir"
+        rm -rf "$old_dir"
+      done
+fi
 
 echo "Rotation complete."

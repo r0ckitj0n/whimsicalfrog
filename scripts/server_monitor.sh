@@ -17,6 +17,7 @@ HTTP_START_INTERVAL="${WF_HTTP_START_INTERVAL:-2}"
 HTTP_WAIT_LOG_INTERVAL="${WF_HTTP_WAIT_LOG_INTERVAL:-10}"
 HTTP_FAILURE_LOG_LINES="${WF_HTTP_FAILURE_LOG_LINES:-20}"
 HTTP_SERVER_READY_SECS=0
+LOG_ROTATE_INTERVAL_LOOPS="${WF_LOG_ROTATE_INTERVAL_LOOPS:-10}"
 
 # Enable local DB usage by default in dev (can be overridden by user)
 : "${WF_DB_DEV_ALLOW:=1}"
@@ -50,6 +51,13 @@ log() {
   local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
   echo -e "${timestamp} - ${message}" >> "$LOG_FILE"
   echo -e "${timestamp} - ${message}"
+}
+
+run_log_maintenance() {
+  local rotate_script="$WEBSITE_DIR/scripts/maintenance/rotate_logs.sh"
+  if [ -x "$rotate_script" ]; then
+    "$rotate_script" >/dev/null 2>&1 || log "${YELLOW}Log maintenance failed (non-fatal)${NC}"
+  fi
 }
 
 # Check if a port is in use
@@ -698,6 +706,7 @@ check_and_restart_php() {
 
 # Start all servers
 start_all() {
+  run_log_maintenance
   if [ "$WF_MANAGE_MYSQL" = "1" ]; then
     if ! start_mysql_service; then
       log "${YELLOW}MySQL service not managed (missing brew service?). Continuing without DB control.${NC}"
@@ -782,9 +791,17 @@ show_access_info() {
 # Monitor PHP server continuously
 monitor() {
   log "${BLUE}Starting continuous monitoring (checking every $CHECK_INTERVAL seconds)...${NC}"
+  if [ "$LOG_ROTATE_INTERVAL_LOOPS" -lt 1 ] 2>/dev/null; then
+    LOG_ROTATE_INTERVAL_LOOPS=10
+  fi
+  local loop_count=0
   while true; do
+    if [ $((loop_count % LOG_ROTATE_INTERVAL_LOOPS)) -eq 0 ]; then
+      run_log_maintenance
+    fi
     check_and_restart_php
     check_and_restart_vite
+    loop_count=$((loop_count+1))
     sleep $CHECK_INTERVAL
   done
 }

@@ -19,7 +19,14 @@ require_once __DIR__ . '/../includes/database/helpers/DatabaseImportHelper.php';
 
 // Optional admin token bypass for automated deploys
 function wf_is_token_valid(): bool {
-    $provided = $_GET['admin_token'] ?? $_POST['admin_token'] ?? (json_decode(file_get_contents('php://input'), true)['admin_token'] ?? '');
+    $provided = $_GET['admin_token'] ?? $_POST['admin_token'] ?? '';
+    if ($provided === '') {
+        $raw = file_get_contents('php://input');
+        $decoded = json_decode($raw ?: '', true);
+        if (is_array($decoded)) {
+            $provided = (string)($decoded['admin_token'] ?? '');
+        }
+    }
     if ($provided === '') return false;
     $expected = getenv('WF_ADMIN_TOKEN') ?: (defined('WF_ADMIN_TOKEN') ? WF_ADMIN_TOKEN : '');
     return $expected !== '' && hash_equals($expected, $provided);
@@ -170,7 +177,7 @@ try {
         default:
             Response::error('Invalid action', 400);
     }
-} catch (Exception $e) {
-    error_log("Database Maintenance API Error: " . $e->getMessage());
+} catch (Throwable $e) {
+    error_log("Database Maintenance API Error: " . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
     Response::error($e->getMessage(), 500);
 }

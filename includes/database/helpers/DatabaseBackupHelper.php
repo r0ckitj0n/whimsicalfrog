@@ -133,7 +133,8 @@ class DatabaseBackupHelper
             $preflight = self::analyzeBackupFile($filePath, $isGzip, $tableWhitelist);
 
             // Mandatory safety snapshot before any destructive step.
-            $preRestoreBackup = self::createBackup();
+            // Use mysqldump-backed snapshot to avoid PHP memory exhaustion on large datasets.
+            $preRestoreBackup = self::createPreRestoreBackup($preflight['tablesTouched'] ?? []);
             if (empty($preRestoreBackup['success'])) {
                 throw new Exception('Failed to create pre-restore safety backup');
             }
@@ -649,5 +650,49 @@ class DatabaseBackupHelper
         $units = ['B', 'KB', 'MB', 'GB'];
         $unit = floor(log($size, 1024));
         return round(pow(1024, log($size, 1024) - $unit), 2) . ' ' . $units[$unit];
+    }
+
+    private static function createPreRestoreBackup(array $tablesTouched = []): array
+    {
+        $backupDir = dirname(__DIR__, 3) . '/backups/';
+        if (!is_dir($backupDir)) {
+            mkdir($backupDir, 0755, true);
+        }
+
+        $filename = 'pre_restore_backup_' . date('Y-m-d_H-i-s') . '.sql';
+        $filePath = $backupDir . $filename;
+
+        $tables = [];
+        foreach ($tablesTouched as $table) {
+            $name = trim((string)$table);
+            if ($name !== '' && preg_match('/^[a-zA-Z0-9_]+$/', $name)) {
+                $tables[] = $name;
+            }
+        }
+
+        global $host, $db, $user, $pass;
+        $tableClause = '';
+        if (!empty($tables)) {
+            $tableClause = ' ' . implode(' ', array_map('escapeshellarg', $tables));
+        }
+
+        $command = "mysqldump --host=" . escapeshellarg((string)$host) .
+            " --user=" . escapeshellarg((string)$user) .
+            " --password=" . escapeshellarg((string)$pass) .
+            " --single-transaction --routines --triggers " . escapeshellarg((string)$db) .
+            $tableClause . " > " . escapeshellarg($filePath);
+
+        exec($command . ' 2>&1', $output, $code);
+        if ($code !== 0 || !is_file($filePath)) {
+            throw new Exception('Failed to create pre-restore safety backup: ' . implode("\n", $output));
+        }
+
+        return [
+            'success' => true,
+            'filename' => $filename,
+            'filepath' => $filePath,
+            'size' => self::formatBytes((int)(filesize($filePath) ?: 0)),
+            'tables' => $tables
+        ];
     }
 }

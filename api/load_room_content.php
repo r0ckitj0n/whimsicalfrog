@@ -25,7 +25,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     Response::methodNotAllowed('Only GET allowed');
 }
 
-$room_number = $_GET['room'] ?? $_GET['room_number'] ?? 'A';
+$requestedRoom = (string) ($_GET['room'] ?? $_GET['room_number'] ?? 'A');
+$room_number = AreaMappingFetchHelper::normalizeRoomNumber($requestedRoom);
+if ($room_number === null || $room_number === '') {
+    $room_number = $requestedRoom;
+}
 $isModal = isset($_GET['modal']);
 $withPerf = isset($_GET['perf']);
 

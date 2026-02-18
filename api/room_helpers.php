@@ -8,6 +8,32 @@
 require_once __DIR__ . '/config.php';
 
 /**
+ * Normalize incoming room identifiers to canonical room_number values.
+ * Examples: room1 -> 1, ROOM2 -> 2, room_main -> 0.
+ */
+function wf_normalize_room_number($room_number)
+{
+    $raw = trim((string) $room_number);
+    if ($raw === '')
+        return '';
+
+    $lv = strtolower($raw);
+    if (in_array($lv, ['main', 'room_main', 'room-main', 'roommain'], true))
+        return '0';
+    if (in_array($lv, ['landing', 'room_landing', 'room-landing'], true))
+        return 'A';
+
+    if (preg_match('/^room(\d+)$/i', $raw, $m))
+        return (string) ((int) $m[1]);
+    if (preg_match('/^room([A-Za-z])$/', $raw, $m))
+        return strtoupper($m[1]);
+    if (is_numeric($raw))
+        return (string) ((int) $raw);
+
+    return $raw;
+}
+
+/**
  * Get all active item rooms (excludes A and B)
  * @return array Array of room numbers
  */
@@ -162,12 +188,13 @@ function getRoomTypeMapping()
  */
 function isValidRoom($room_number, $includeInactive = false)
 {
+    $normalized = wf_normalize_room_number($room_number);
     $validRooms = $includeInactive ? getAllRoomsIncludingInactive() : getAllValidRooms();
     // If no valid rooms available, reject validation
     if (empty($validRooms)) {
         return false;
     }
-    return in_array($room_number, $validRooms);
+    return in_array($normalized, $validRooms, true);
 }
 
 /**
@@ -177,8 +204,9 @@ function isValidRoom($room_number, $includeInactive = false)
  */
 function isItemRoom($room_number)
 {
+    $normalized = wf_normalize_room_number($room_number);
     // Treat numeric rooms >=1 as item rooms; exclude letter-coded and '0'
-    return preg_match('/^[0-9]+$/', (string)$room_number) && (int)$room_number >= 1 && isValidRoom($room_number);
+    return preg_match('/^[0-9]+$/', (string)$normalized) && (int)$normalized >= 1 && isValidRoom($normalized);
 }
 
 /**

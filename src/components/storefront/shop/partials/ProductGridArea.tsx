@@ -1,7 +1,6 @@
 import React, { useRef } from 'react';
 import { ItemCard } from '../ItemCard.js';
 import { IShopItem as Item } from '../../../../types/index.js';
-import { productPathFromItem } from '../../../../utils/product-url.js';
 
 interface ProductGridAreaProps {
     filteredItems: Array<{ item: Item; categoryLabel: string; categorySlug: string }>;
@@ -42,7 +41,6 @@ export const ProductGridArea: React.FC<ProductGridAreaProps> = ({
                                         <ItemCard
                                             item={item}
                                             categoryLabel={categoryLabel}
-                                            productPath={productPathFromItem(item)}
                                             isExpanded={expandedSkus.has(item.sku)}
                                             onToggleExpand={(sku) => onToggleExpand(sku, inStockGridRef)}
                                             onAddToCart={onAddToCart}
@@ -64,7 +62,6 @@ export const ProductGridArea: React.FC<ProductGridAreaProps> = ({
                                             <ItemCard
                                                 item={item}
                                                 categoryLabel={categoryLabel}
-                                                productPath={productPathFromItem(item)}
                                                 isExpanded={expandedSkus.has(item.sku)}
                                                 onToggleExpand={(sku) => onToggleExpand(sku, comingSoonGridRef)}
                                                 onAddToCart={onAddToCart}

@@ -10,7 +10,7 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
 
 $action = $_GET['action'] ?? 'get';
-$adminOnlyActions = ['update', 'create', 'delete', 'list_all', 'upsert'];
+$adminOnlyActions = ['get', 'get_tooltips', 'update', 'create', 'delete', 'list_all', 'upsert'];
 
 if (in_array($action, $adminOnlyActions)) {
     AuthHelper::requireAdmin();

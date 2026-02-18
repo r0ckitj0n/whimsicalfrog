@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import type { IRoomMetadata, IRoomBackground } from '../../types/room.js';
+import { useAuthContext } from '../../context/AuthContext.js';
 
 const LoginModal = lazy(() => import('./LoginModal.js').then(m => ({ default: m.LoginModal })));
 const ProfileCompletionModal = lazy(() => import('./ProfileCompletionModal.js').then(m => ({ default: m.ProfileCompletionModal })));
@@ -75,6 +76,11 @@ export const GlobalModalWrapper: React.FC<GlobalModalWrapperProps> = ({
     receiptOrderId,
     setReceiptOrderId
 }) => {
+    const { isAdmin } = useAuthContext();
+    const pageAttr = typeof document !== 'undefined' ? document.body.getAttribute('data-page') : null;
+    const isAdminPage = Boolean(pageAttr?.startsWith('admin'));
+    const shouldRenderTooltips = Boolean(isAdmin && isAdminPage);
+
     return (
         <Suspense fallback={null}>
             <LoginModal
@@ -136,8 +142,8 @@ export const GlobalModalWrapper: React.FC<GlobalModalWrapperProps> = ({
                 onClose={() => setReceiptOrderId(null)}
             />
 
-            <TooltipManager />
-            <Tooltip />
+            {shouldRenderTooltips && <TooltipManager />}
+            {shouldRenderTooltips && <Tooltip />}
             <GlobalModal />
         </Suspense>
     );

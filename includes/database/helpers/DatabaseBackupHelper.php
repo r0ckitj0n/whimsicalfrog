@@ -324,10 +324,17 @@ class DatabaseBackupHelper
 
     private static function resolveTableWhitelist($input, $files): array
     {
-        $dataGroups = self::resolveJsonArrayInput($input['data_groups'] ?? null);
-        $normalizedGroups = self::normalizeDataGroups($dataGroups);
+        $rawDataGroups = $input['data_groups'] ?? null;
+        $dataGroups = self::resolveJsonArrayInput($rawDataGroups);
+        $normalizedGroups = self::normalizeDataGroups($dataGroups ?? []);
+        if ($rawDataGroups !== null && $dataGroups !== null && empty($normalizedGroups)) {
+            throw new Exception('No valid data groups were provided for scoped restore.');
+        }
         if (!empty($normalizedGroups)) {
             $tables = self::tablesForDataGroups($normalizedGroups);
+            if (empty($tables)) {
+                throw new Exception('Selected data groups did not map to any restorable tables.');
+            }
             $out = [];
             foreach ($tables as $table) {
                 $name = strtolower(trim((string)$table));
@@ -437,14 +444,7 @@ class DatabaseBackupHelper
                 }
             }
         }
-
-        $resolved = [];
-        foreach ($wanted as $table) {
-            if (isset($existing[$table])) {
-                $resolved[] = $existing[$table];
-            }
-        }
-        return $resolved;
+        return $wanted;
     }
 
     private static function assertValidBackupFile(string $filePath): void

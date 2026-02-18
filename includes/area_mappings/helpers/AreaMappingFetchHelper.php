@@ -259,12 +259,13 @@ GROUP BY item_sku",
 
         $coords = [];
         $coordsRow = null;
+        $roomMapsAvailable = AreaMappingSchemaHelper::hasColumn('room_maps', 'coordinates');
 
-        if ($overrideMapId) {
+        if ($overrideMapId && $roomMapsAvailable) {
             $coordsRow = Database::queryOne("SELECT coordinates FROM room_maps WHERE id = ?", [$overrideMapId]);
         }
 
-        if (!$coordsRow) {
+        if (!$coordsRow && $roomMapsAvailable) {
             $rmWhere = 'room_number = ?';
             if (AreaMappingSchemaHelper::hasColumn('room_maps', 'is_active'))
                 $rmWhere .= ' AND is_active = 1';

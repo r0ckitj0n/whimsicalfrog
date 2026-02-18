@@ -12,6 +12,15 @@ header('X-WF-Random-Token: ' . bin2hex(random_bytes(8)));
 $requestedUri = $_SERVER['REQUEST_URI'];
 $requestedPath = strtok($requestedUri, '?');
 
+// Keep legacy icon URLs working after moving icon files under /images/logos.
+if ($requestedPath === '/favicon.ico') {
+    $requestedPath = '/images/logos/favicon.ico';
+} elseif ($requestedPath === '/favicon.svg') {
+    $requestedPath = '/images/logos/favicon.svg';
+} elseif ($requestedPath === '/apple-touch-icon.png') {
+    $requestedPath = '/images/logos/apple-touch-icon.png';
+}
+
 // Auto-sync sitemap entries (pages/modals) on each request; fail-soft if unavailable
 try {
     require_once __DIR__ . '/includes/sitemap_autosync.php';

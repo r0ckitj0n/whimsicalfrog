@@ -210,7 +210,8 @@ function createDatabaseBackup($downloadToComputer = true, $keepOnServer = true, 
         $command = "mysqldump --host=" . escapeshellarg($dbHost) .
             " --user=" . escapeshellarg($username) .
             " --password=" . escapeshellarg($password) .
-            " --single-transaction --routines --triggers " . escapeshellarg($database) . $tableClause . " > " . escapeshellarg($backupPath);
+            " --single-transaction --routines --triggers --result-file=" . escapeshellarg($backupPath) .
+            " " . escapeshellarg($database) . $tableClause;
 
         exec("$command 2>&1", $output, $returnCode);
 

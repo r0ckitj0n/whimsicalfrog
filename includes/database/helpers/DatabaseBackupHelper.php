@@ -157,7 +157,12 @@ class DatabaseBackupHelper
                     break;
                 }
                 $trim = ltrim($line);
-                if ($trim === '' || str_starts_with($trim, '--') || str_starts_with($trim, '/*')) {
+                if (
+                    $trim === '' ||
+                    str_starts_with($trim, '--') ||
+                    str_starts_with($trim, '/*') ||
+                    preg_match('/^mysqldump:\s*\[warning\]/i', $trim)
+                ) {
                     continue;
                 }
                 $buffer .= $line;
@@ -508,7 +513,12 @@ class DatabaseBackupHelper
                 break;
             }
             $trim = ltrim($line);
-            if ($trim === '' || str_starts_with($trim, '--') || str_starts_with($trim, '/*')) {
+            if (
+                $trim === '' ||
+                str_starts_with($trim, '--') ||
+                str_starts_with($trim, '/*') ||
+                preg_match('/^mysqldump:\s*\[warning\]/i', $trim)
+            ) {
                 continue;
             }
             $buffer .= $line;
@@ -679,8 +689,8 @@ class DatabaseBackupHelper
         $command = "mysqldump --host=" . escapeshellarg((string)$host) .
             " --user=" . escapeshellarg((string)$user) .
             " --password=" . escapeshellarg((string)$pass) .
-            " --single-transaction --routines --triggers " . escapeshellarg((string)$db) .
-            $tableClause . " > " . escapeshellarg($filePath);
+            " --single-transaction --routines --triggers --result-file=" . escapeshellarg($filePath) .
+            " " . escapeshellarg((string)$db) . $tableClause;
 
         exec($command . ' 2>&1', $output, $code);
         if ($code !== 0 || !is_file($filePath)) {

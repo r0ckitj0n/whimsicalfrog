@@ -32,6 +32,60 @@ class RoomMapHelper {
                 INDEX idx_active (is_active)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
+
+        // Heal legacy/corrupted schemas in place so map APIs keep working.
+        self::ensureColumn('room_maps', 'id', "ALTER TABLE room_maps ADD COLUMN id INT NOT NULL");
+        self::ensureColumn('room_maps', 'room_number', "ALTER TABLE room_maps ADD COLUMN room_number VARCHAR(50) NOT NULL DEFAULT '0'");
+        self::ensureColumn('room_maps', 'map_name', "ALTER TABLE room_maps ADD COLUMN map_name VARCHAR(255) NOT NULL DEFAULT 'Original'");
+        self::ensureColumn('room_maps', 'coordinates', "ALTER TABLE room_maps ADD COLUMN coordinates TEXT NULL");
+        self::ensureColumn('room_maps', 'is_active', "ALTER TABLE room_maps ADD COLUMN is_active BOOLEAN DEFAULT FALSE");
+        self::ensureColumn('room_maps', 'created_at', "ALTER TABLE room_maps ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+        self::ensureColumn('room_maps', 'updated_at', "ALTER TABLE room_maps ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
+
+        $pk = Database::queryOne(
+            "SELECT COUNT(*) AS c
+             FROM information_schema.TABLE_CONSTRAINTS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'room_maps'
+               AND CONSTRAINT_TYPE = 'PRIMARY KEY'"
+        );
+        if ((int)($pk['c'] ?? 0) === 0) {
+            Database::execute("ALTER TABLE room_maps ADD PRIMARY KEY (id)");
+        }
+
+        Database::execute("ALTER TABLE room_maps MODIFY id INT NOT NULL AUTO_INCREMENT");
+
+        self::ensureIndex('room_maps', 'idx_room_number', "ALTER TABLE room_maps ADD INDEX idx_room_number (room_number)");
+        self::ensureIndex('room_maps', 'idx_active', "ALTER TABLE room_maps ADD INDEX idx_active (is_active)");
+        self::ensureIndex('room_maps', 'idx_room_maps_room_active_updated', "ALTER TABLE room_maps ADD INDEX idx_room_maps_room_active_updated (room_number, is_active, updated_at)");
+    }
+
+    private static function ensureColumn(string $table, string $column, string $ddl): void {
+        $row = Database::queryOne(
+            "SELECT COUNT(*) AS c
+             FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = ?
+               AND COLUMN_NAME = ?",
+            [$table, $column]
+        );
+        if ((int)($row['c'] ?? 0) === 0) {
+            Database::execute($ddl);
+        }
+    }
+
+    private static function ensureIndex(string $table, string $indexName, string $ddl): void {
+        $row = Database::queryOne(
+            "SELECT COUNT(*) AS c
+             FROM information_schema.STATISTICS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = ?
+               AND INDEX_NAME = ?",
+            [$table, $indexName]
+        );
+        if ((int)($row['c'] ?? 0) === 0) {
+            Database::execute($ddl);
+        }
     }
 
     public static function promoteToOriginal($room_number, $mapId = 0): int {

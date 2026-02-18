@@ -90,7 +90,12 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
             </div>
 
             {activeHelpTopic && (
-                <div className="fixed inset-0 z-[var(--wf-z-modal)] bg-black/60 backdrop-blur-sm p-4 flex items-center justify-center">
+                <div
+                    className="fixed inset-0 z-[var(--wf-z-modal)] bg-black/60 backdrop-blur-sm p-4 flex items-center justify-center"
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) setActiveHelpTopic(null);
+                    }}
+                >
                     <div className="w-full max-w-2xl rounded-2xl bg-[var(--brand-primary)] text-white shadow-2xl border border-white/20">
                         <div className="flex items-center justify-between px-5 py-4 border-b border-white/20">
                             <h2 className="font-merienda text-2xl">
@@ -98,7 +103,13 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
                                 {activeHelpTopic === 'shipping' && 'FAQ for orders and shipping'}
                                 {activeHelpTopic === 'custom' && 'Custom process'}
                             </h2>
-                            <button type="button" className="underline text-white" onClick={() => setActiveHelpTopic(null)}>Close</button>
+                            <button
+                                type="button"
+                                className="admin-action-btn btn-icon--close"
+                                aria-label="Close"
+                                data-help-id="modal-close"
+                                onClick={() => setActiveHelpTopic(null)}
+                            />
                         </div>
 
                         <div className="p-5 space-y-3 font-nunito text-white">

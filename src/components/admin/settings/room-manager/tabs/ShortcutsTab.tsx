@@ -43,9 +43,9 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
     const { confirm } = useModalContext();
 
     return (
-        <div className="p-8 lg:p-10 overflow-y-auto flex-1">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-1">
+        <div className="p-8 lg:p-10 flex-1 min-h-0 overflow-y-auto lg:overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full min-h-0">
+                <div className="lg:col-span-1 min-h-0 lg:overflow-y-auto lg:pr-1">
                     <MappingForm
                         mapping={newMapping}
                         setMapping={setNewMapping}
@@ -91,7 +91,7 @@ export const ShortcutsTab: React.FC<ShortcutsTabProps> = ({
                         isLoading={mappings.isLoading}
                     />
                 </div>
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-2 min-h-0 lg:overflow-y-auto lg:pr-1">
                     <UnifiedMappingsTable
                         explicitMappings={mappings.explicitMappings}
                         derivedMappings={mappings.derivedMappings}

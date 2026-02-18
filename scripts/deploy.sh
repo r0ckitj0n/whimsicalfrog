@@ -307,6 +307,8 @@ mirror $MIRROR_FLAGS \
   --exclude-glob ".env.*" \
   --exclude-glob "backups/**" \
   --exclude-glob "logs/**" \
+  --exclude-glob "reports/**" \
+  --exclude-glob reports/ \
   --exclude-glob "dist/**" \
   --exclude-glob "src/**"${DOC_HTACCESS_INCLUDE} \
   --exclude-glob "*.log" \

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { IAreaMapping } from '../../../../types/index.js';
 
 interface IRoomOption {
@@ -19,13 +19,20 @@ interface UnifiedMappingsTableProps {
     onPreviewImage: (mapping: IAreaMapping) => void;
 }
 
-type SlotStatus = 'explicit' | 'derived' | 'inactive' | 'blocked' | 'empty';
+type RowStatus = 'explicit' | 'derived' | 'inactive' | 'empty';
 
-interface UnifiedSlot {
+interface DisplayRow {
+    key: string;
     area: string;
-    status: SlotStatus;
-    explicit?: IAreaMapping;
-    live?: IAreaMapping;
+    areaLabel: string;
+    areaRowIndex: number;
+    areaCount: number;
+    status: RowStatus;
+    mapping?: IAreaMapping;
+    liveMapping?: IAreaMapping;
+    isExplicit: boolean;
+    isActive: boolean;
+    isItemDerived: boolean;
 }
 
 // Resolve a content_target (room number) to a room name
@@ -41,7 +48,6 @@ const getDestinationLabel = (m: IAreaMapping | undefined, roomOptions: IRoomOpti
 
     const type = m.mapping_type?.toLowerCase();
 
-    // Item mapping
     if (m.item_sku || m.sku) {
         const sku = m.item_sku || m.sku || '';
         return {
@@ -53,12 +59,10 @@ const getDestinationLabel = (m: IAreaMapping | undefined, roomOptions: IRoomOpti
         return { primary: '-' };
     }
 
-    // Category mapping
     if (type === 'category' && m.category_id) {
         return { primary: m.name || `Category #${m.category_id}` };
     }
 
-    // Content/Shortcut mapping (room navigation)
     if (type === 'content' || type === 'button') {
         const rawTarget = m.content_target || '';
         const target = rawTarget.toLowerCase().startsWith('room:') ? rawTarget.slice(5) : rawTarget;
@@ -69,7 +73,6 @@ const getDestinationLabel = (m: IAreaMapping | undefined, roomOptions: IRoomOpti
         };
     }
 
-    // Link mapping
     if (type === 'link' && m.link_url) {
         return {
             primary: m.link_label || 'External Link',
@@ -77,7 +80,6 @@ const getDestinationLabel = (m: IAreaMapping | undefined, roomOptions: IRoomOpti
         };
     }
 
-    // Page/Modal/Action mappings
     if (type === 'page' || type === 'modal' || type === 'action') {
         return { primary: m.content_target || 'Unknown' };
     }
@@ -89,41 +91,46 @@ const getDestinationLabel = (m: IAreaMapping | undefined, roomOptions: IRoomOpti
 const getTypeBadge = (mappingType: string | undefined): { label: string; className: string } => {
     const type = mappingType?.toLowerCase() || '';
     const badges: Record<string, { label: string; className: string }> = {
-        'item': { label: 'Item', className: 'bg-emerald-100 text-emerald-700' },
-        'category': { label: 'Category', className: 'bg-purple-100 text-purple-700' },
-        'content': { label: 'Shortcut', className: 'bg-blue-100 text-blue-700' },
-        'button': { label: 'Button', className: 'bg-blue-100 text-blue-700' },
-        'link': { label: 'Link', className: 'bg-amber-100 text-amber-700' },
-        'page': { label: 'Page', className: 'bg-slate-100 text-slate-700' },
-        'modal': { label: 'Modal', className: 'bg-slate-100 text-slate-700' },
-        'action': { label: 'Action', className: 'bg-rose-100 text-rose-700' }
+        item: { label: 'Item', className: 'bg-emerald-100 text-emerald-700' },
+        category: { label: 'Category', className: 'bg-purple-100 text-purple-700' },
+        content: { label: 'Shortcut', className: 'bg-blue-100 text-blue-700' },
+        button: { label: 'Button', className: 'bg-blue-100 text-blue-700' },
+        link: { label: 'Link', className: 'bg-amber-100 text-amber-700' },
+        page: { label: 'Page', className: 'bg-slate-100 text-slate-700' },
+        modal: { label: 'Modal', className: 'bg-slate-100 text-slate-700' },
+        action: { label: 'Action', className: 'bg-rose-100 text-rose-700' }
     };
     return badges[type] || { label: type || '-', className: 'bg-gray-100 text-gray-600' };
 };
 
-// Get status indicator
-const getStatusIndicator = (status: SlotStatus): { icon: string; label: string; className: string } => {
+const getStatusIndicator = (status: RowStatus): { icon: string; label: string; className: string } => {
     switch (status) {
         case 'explicit':
-            return { icon: '✓', label: 'Explicit', className: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
+            return { icon: '✓', label: 'Active', className: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
         case 'derived':
             return { icon: '↻', label: 'Derived', className: 'bg-blue-100 text-blue-700 border-blue-200' };
         case 'inactive':
-            return { icon: '●', label: 'Inactive', className: 'bg-slate-100 text-slate-500 border-slate-200' };
-        case 'blocked':
-            return { icon: '!', label: 'Blocked', className: 'bg-amber-100 text-amber-800 border-amber-200' };
+            return { icon: '●', label: 'Saved', className: 'bg-slate-100 text-slate-500 border-slate-200' };
         case 'empty':
             return { icon: '○', label: 'Empty', className: 'bg-gray-100 text-gray-500 border-gray-200' };
     }
 };
 
-// Get image source
 const getImageSource = (m: IAreaMapping | undefined): string => {
     if (!m) return '/images/items/placeholder.webp';
     if (m.content_image) return m.content_image;
     if (m.link_image) return m.link_image;
     if (m.image_url) return m.image_url;
     return '/images/items/placeholder.webp';
+};
+
+const sortAreaSelectors = (a: string, b: string): number => {
+    const mA = a.match(/\.area-(\d+)/i);
+    const mB = b.match(/\.area-(\d+)/i);
+    const numA = mA ? Number(mA[1]) : Number.POSITIVE_INFINITY;
+    const numB = mB ? Number(mB[1]) : Number.POSITIVE_INFINITY;
+    if (numA !== numB) return numA - numB;
+    return a.localeCompare(b);
 };
 
 export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
@@ -138,6 +145,8 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
     onConvert,
     onPreviewImage
 }) => {
+    const [showAlternates, setShowAlternates] = useState(false);
+
     const hasLiveDerivedContent = (mapping: IAreaMapping | undefined): boolean => {
         if (!mapping || !mapping.derived) return false;
         const type = String(mapping.mapping_type || '').toLowerCase();
@@ -156,139 +165,179 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
         return false;
     };
 
-    // Merge mappings into unified slots
-    const unifiedSlots = useMemo<UnifiedSlot[]>(() => {
-        const slotMap = new Map<string, UnifiedSlot>();
-
-        // Add explicit mappings first
-        for (const m of explicitMappings) {
-            const key = m.area_selector;
-            const existing = slotMap.get(key);
-            const curActive = m.is_active === true || Number(m.is_active) === 1;
-
-            if (!existing || !existing.explicit) {
-                slotMap.set(key, {
-                    area: key,
-                    status: 'explicit',
-                    explicit: m,
-                    live: undefined
-                });
-                continue;
-            }
-
-            // Prefer the active explicit mapping when there are multiple rows for the same area selector.
-            // list_room_raw can contain historical inactive rows; editing should default to the active row.
-            const prev = existing.explicit;
-            const prevActive = prev.is_active === true || Number(prev.is_active) === 1;
-
-            if (curActive && !prevActive) {
-                existing.explicit = m;
-                continue;
-            }
-            if (curActive === prevActive) {
-                const prevId = Number(prev.id || 0);
-                const curId = Number(m.id || 0);
-                if (curId > prevId) {
-                    existing.explicit = m;
-                }
-            }
+    const rows = useMemo<DisplayRow[]>(() => {
+        const explicitByArea = new Map<string, IAreaMapping[]>();
+        for (const mapping of explicitMappings) {
+            const key = String(mapping.area_selector || '').trim();
+            if (!key) continue;
+            const current = explicitByArea.get(key) || [];
+            current.push(mapping);
+            explicitByArea.set(key, current);
         }
 
-        // Add derived mappings (override live if explicit exists, or create new)
-        for (const m of derivedMappings) {
-            const existing = slotMap.get(m.area_selector);
-            if (existing) {
-                // Slot already has explicit, update live reference
-                existing.live = m;
-            } else if (m.derived) {
-                // Purely derived slot
-                slotMap.set(m.area_selector, {
-                    area: m.area_selector,
-                    status: 'derived',
-                    explicit: undefined,
-                    live: m
-                });
-            } else {
-                // Explicit mapping present in live view but not in list_room_raw
-                slotMap.set(m.area_selector, {
-                    area: m.area_selector,
-                    status: 'explicit',
-                    explicit: m,
-                    live: m
-                });
-            }
+        for (const [key, mappings] of explicitByArea.entries()) {
+            mappings.sort((a, b) => {
+                const aActive = a.is_active === true || Number(a.is_active) === 1;
+                const bActive = b.is_active === true || Number(b.is_active) === 1;
+                if (aActive !== bActive) return aActive ? -1 : 1;
+
+                const aOrder = Number(a.display_order || 0);
+                const bOrder = Number(b.display_order || 0);
+                if (aOrder !== bOrder) return aOrder - bOrder;
+
+                return Number(b.id || 0) - Number(a.id || 0);
+            });
+        }
+
+        const liveByArea = new Map<string, IAreaMapping>();
+        for (const mapping of derivedMappings) {
+            const key = String(mapping.area_selector || '').trim();
+            if (!key) continue;
+            liveByArea.set(key, mapping);
         }
 
         const hasCategoryDerivation = String(derivedCategory || '').trim() !== '';
+        const allAreas = new Set<string>();
+        for (const area of explicitByArea.keys()) allAreas.add(area);
+        for (const area of liveByArea.keys()) allAreas.add(area);
         if (hasCategoryDerivation) {
             for (const area of availableAreas) {
-                const selector = String(area?.val || '').trim();
-                if (!selector || slotMap.has(selector)) continue;
-                // Reserve every mapped area as a derived item slot so inventory growth
-                // naturally fills the next open position.
-                slotMap.set(selector, {
-                    area: selector,
-                    status: 'derived',
-                    explicit: undefined,
-                    live: {
-                        area_selector: selector,
-                        mapping_type: 'item',
-                        derived: true,
-                        image_url: '/images/items/placeholder.webp'
-                    } as IAreaMapping
+                const key = String(area?.val || '').trim();
+                if (key) allAreas.add(key);
+            }
+        }
+
+        const sortedAreas = Array.from(allAreas).sort(sortAreaSelectors);
+        const nextRows: DisplayRow[] = [];
+
+        for (const area of sortedAreas) {
+            const explicit = explicitByArea.get(area) || [];
+            const live = liveByArea.get(area);
+
+            if (explicit.length > 0) {
+                explicit.forEach((mapping, index) => {
+                    const isActive = mapping.is_active === true || Number(mapping.is_active) === 1;
+                    nextRows.push({
+                        key: `explicit-${String(mapping.id || `${area}-${index}`)}`,
+                        area,
+                        areaLabel: index === 0 ? area : `Alt ${index + 1}`,
+                        areaRowIndex: index,
+                        areaCount: explicit.length,
+                        status: isActive ? 'explicit' : 'inactive',
+                        mapping,
+                        liveMapping: mapping,
+                        isExplicit: true,
+                        isActive,
+                        isItemDerived: false
+                    });
+                });
+                continue;
+            }
+
+            if (live) {
+                const isDerived = !!live.derived;
+                const hasDerivedContent = hasLiveDerivedContent(live);
+                const isActive = isDerived ? hasDerivedContent : true;
+                nextRows.push({
+                    key: `live-${area}`,
+                    area,
+                    areaLabel: area,
+                    areaRowIndex: 0,
+                    areaCount: 1,
+                    status: isDerived ? (hasDerivedContent ? 'derived' : 'inactive') : 'explicit',
+                    mapping: live,
+                    liveMapping: live,
+                    isExplicit: !isDerived,
+                    isActive,
+                    isItemDerived: isDerived && !!(live.item_sku || live.sku)
+                });
+                continue;
+            }
+
+            if (hasCategoryDerivation) {
+                const placeholder = {
+                    area_selector: area,
+                    mapping_type: 'item',
+                    derived: true,
+                    image_url: '/images/items/placeholder.webp'
+                } as IAreaMapping;
+
+                nextRows.push({
+                    key: `placeholder-${area}`,
+                    area,
+                    areaLabel: area,
+                    areaRowIndex: 0,
+                    areaCount: 1,
+                    status: 'inactive',
+                    mapping: placeholder,
+                    liveMapping: placeholder,
+                    isExplicit: false,
+                    isActive: false,
+                    isItemDerived: false
                 });
             }
         }
 
-        // Sort by area number
-        return Array.from(slotMap.values()).sort((a, b) => {
-            const mA = a.area.match(/\.area-(\d+)/i);
-            const mB = b.area.match(/\.area-(\d+)/i);
-            const numA = mA ? Number(mA[1]) : Number.POSITIVE_INFINITY;
-            const numB = mB ? Number(mB[1]) : Number.POSITIVE_INFINITY;
-            if (numA !== numB) return numA - numB;
-            return a.area.localeCompare(b.area);
-        });
-    }, [explicitMappings, derivedMappings, availableAreas, derivedCategory]);
+        return nextRows;
+    }, [availableAreas, derivedCategory, derivedMappings, explicitMappings]);
+
+    const visibleRows = useMemo(() => {
+        if (showAlternates) return rows;
+        return rows.filter((row) => row.areaRowIndex === 0);
+    }, [rows, showAlternates]);
 
     return (
         <section>
-            <h4 className="font-bold text-gray-700 mb-4 uppercase text-xs tracking-widest">Content Slots</h4>
+            <div className="mb-4 flex items-center justify-between gap-4">
+                <h4 className="font-bold text-gray-700 uppercase text-xs tracking-widest">Content Slots</h4>
+                <label className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-600 cursor-pointer select-none">
+                    <input
+                        type="checkbox"
+                        checked={showAlternates}
+                        onChange={(e) => setShowAlternates(e.target.checked)}
+                        className="h-3.5 w-3.5 rounded border-slate-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
+                    />
+                    Show Alternates
+                </label>
+            </div>
             <div className="border rounded-xl overflow-hidden bg-white shadow-sm">
                 <table className="w-full table-fixed divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase" style={{ width: '10%' }}>Area</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase" style={{ width: '12%' }}>Area</th>
                             <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase" style={{ width: '12%' }}>Status</th>
                             <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase" style={{ width: '12%' }}>Type</th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase" style={{ width: '30%' }}>Destination</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase" style={{ width: '28%' }}>Destination</th>
                             <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase" style={{ width: '10%' }}>Preview</th>
                             <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase" style={{ width: '12%' }}>Active</th>
                             <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase" style={{ width: '14%' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                        {unifiedSlots.map(slot => {
-                            const hasExplicit = !!slot.explicit;
-                            const explicitIsLive = hasExplicit && !!slot.live && String(slot.live?.id ?? '') === String(slot.explicit?.id ?? '');
-                            const explicitRowActive = hasExplicit && (slot.explicit!.is_active === true || Number(slot.explicit!.is_active) === 1);
-                            const liveDerivedHasContent = hasLiveDerivedContent(slot.live);
-                            const effectiveStatus: SlotStatus = hasExplicit
-                                ? (!explicitRowActive ? 'inactive' : (explicitIsLive ? 'explicit' : 'blocked'))
-                                : (slot.live?.derived ? (liveDerivedHasContent ? 'derived' : 'inactive') : (slot.live ? 'explicit' : 'empty'));
-                            const statusInfo = getStatusIndicator(effectiveStatus);
-                            const mapping = slot.explicit || slot.live;
-                            const liveMapping = slot.live || slot.explicit;
+                        {visibleRows.map((row) => {
+                            const mapping = row.mapping;
+                            const liveMapping = row.liveMapping;
+                            const statusInfo = getStatusIndicator(row.status);
                             const typeBadge = getTypeBadge(mapping?.mapping_type);
                             const destination = getDestinationLabel(mapping, roomOptions);
-                            const isItemDerived = effectiveStatus === 'derived' && (slot.live?.item_sku || slot.live?.sku);
-                            const isExplicitSlot = hasExplicit;
-                            const isActive = hasExplicit ? explicitRowActive : liveDerivedHasContent;
+                            const mappingId = Number(mapping?.id || 0);
+                            const canSetActive = row.isExplicit && !!mapping && mappingId > 0 && !row.isActive;
 
                             return (
-                                <tr key={slot.area} className="hover:bg-[var(--brand-primary)]/5 group transition-colors">
+                                <tr key={row.key} className="hover:bg-[var(--brand-primary)]/5 group transition-colors">
                                     <td className="px-4 py-3">
-                                        <span className="text-sm font-bold text-gray-900">{slot.area}</span>
+                                        {row.areaRowIndex === 0 ? (
+                                            <div>
+                                                <span className="text-sm font-bold text-gray-900">{row.areaLabel}</span>
+                                                {row.areaCount > 1 && (
+                                                    <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                                                        {row.areaCount} saved
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <span className="text-xs font-black uppercase tracking-widest text-slate-400">{row.areaLabel}</span>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3">
                                         <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-black border ${statusInfo.className}`}>
@@ -325,7 +374,7 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                                             >
                                                 <img
                                                     src={getImageSource(liveMapping)}
-                                                    alt={`Preview for ${slot.area}`}
+                                                    alt={`Preview for ${row.area}`}
                                                     className="w-10 h-10 rounded border border-black/5 object-contain bg-white shadow-sm mx-auto group-hover:shadow-md transition-shadow"
                                                     loading="lazy"
                                                 />
@@ -333,51 +382,56 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                                         ) : (
                                             <img
                                                 src={getImageSource(liveMapping)}
-                                                alt={`Preview for ${slot.area}`}
+                                                alt={`Preview for ${row.area}`}
                                                 className="w-10 h-10 rounded border border-black/5 object-contain bg-white shadow-sm mx-auto"
                                                 loading="lazy"
                                             />
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        {isExplicitSlot && slot.explicit ? (
-                                            <label className="relative inline-flex items-center cursor-pointer" data-help-id="mapping-active-toggle">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isActive}
-                                                    onChange={() => onToggleActive(slot.explicit!.id, isActive)}
-                                                    className="sr-only peer"
-                                                />
-                                                <div className={`w-9 h-5 rounded-full peer-focus:ring-2 peer-focus:ring-blue-200 transition-colors ${isActive ? 'bg-emerald-500' : 'bg-slate-300'} peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-transform after:shadow-sm`}></div>
-                                            </label>
+                                        {row.isExplicit && mapping ? (
+                                            canSetActive ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onToggleActive(mappingId, 0)}
+                                                    className="btn btn-secondary px-2 py-1 text-[9px] font-black uppercase tracking-wide"
+                                                    data-help-id="mapping-active-toggle"
+                                                >
+                                                    Set Active
+                                                </button>
+                                            ) : (
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                                    Active
+                                                </span>
+                                            )
                                         ) : (
-                                            <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-emerald-600' : 'text-slate-300'}`}>
-                                                {isActive ? 'Auto' : 'Disabled'}
+                                            <span className={`text-[10px] font-black uppercase tracking-widest ${row.isActive ? 'text-emerald-600' : 'text-slate-300'}`}>
+                                                {row.isActive ? 'Auto' : 'Disabled'}
                                             </span>
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex justify-end gap-2">
-                                            {slot.status === 'explicit' && slot.explicit && (
+                                            {row.isExplicit && mapping && mappingId > 0 && (
                                                 <>
                                                     <button
                                                         type="button"
-                                                        onClick={() => onEdit(slot.explicit!)}
+                                                        onClick={() => onEdit(mapping)}
                                                         className="admin-action-btn btn-icon--edit"
                                                         data-help-id="mapping-edit-btn"
                                                     />
                                                     <button
                                                         type="button"
-                                                        onClick={() => onDelete(Number(slot.explicit!.id || 0), slot.area)}
+                                                        onClick={() => onDelete(mappingId, row.area)}
                                                         className="admin-action-btn btn-icon--delete"
                                                         data-help-id="mapping-delete-btn"
                                                     />
                                                 </>
                                             )}
-                                            {isItemDerived && slot.live && (
+                                            {row.isItemDerived && mapping && (
                                                 <button
                                                     type="button"
-                                                    onClick={() => onConvert(slot.area, (slot.live!.item_sku || slot.live!.sku)!)}
+                                                    onClick={() => onConvert(row.area, (mapping.item_sku || mapping.sku)!)}
                                                     className="btn btn-secondary px-2 py-1 text-[9px] font-black uppercase tracking-wide shadow-sm"
                                                     data-help-id="mapping-convert-btn"
                                                 >
@@ -389,7 +443,7 @@ export const UnifiedMappingsTable: React.FC<UnifiedMappingsTableProps> = ({
                                 </tr>
                             );
                         })}
-                        {unifiedSlots.length === 0 && (
+                        {visibleRows.length === 0 && (
                             <tr>
                                 <td colSpan={7} className="px-4 py-12 text-center text-gray-400 italic text-sm">
                                     No content mappings for this room

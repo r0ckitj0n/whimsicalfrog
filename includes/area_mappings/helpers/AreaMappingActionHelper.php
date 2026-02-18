@@ -63,43 +63,29 @@ class AreaMappingActionHelper
         $areaSelector = self::resolveAutoAreaSelector($room_number, $areaSelector);
         $areaSelector = self::normalizeAreaSelector($areaSelector);
 
-        // Check if exists
-        $existing = null;
-        if ($areaSelector !== 'N/A') {
-            $existing = Database::queryOne(
-                "SELECT id, display_order FROM area_mappings WHERE room_number = ? AND area_selector = ? AND is_active = 1",
+        $isActiveRequested = array_key_exists('is_active', $input) ? (!empty($input['is_active']) ? 1 : 0) : 1;
+
+        if (!$hasDisplayOrder || $displayOrder <= 0) {
+            $row = Database::queryOne("SELECT COALESCE(MAX(display_order),0) AS max_order FROM area_mappings WHERE room_number = ?", [$room_number]);
+            $displayOrder = isset($row['max_order']) ? ((int) $row['max_order']) + 1 : 1;
+        }
+
+        // Preserve only one active mapping per area while allowing multiple saved mappings.
+        if ($isActiveRequested === 1 && $areaSelector !== 'N/A') {
+            Database::execute(
+                "UPDATE area_mappings SET is_active = 0 WHERE room_number = ? AND area_selector = ? AND is_active = 1",
                 [$room_number, $areaSelector]
             );
         }
 
-        if ($existing) {
-            $effectiveOrder = $hasDisplayOrder ? $displayOrder : ($existing['display_order'] ?? 0);
-            if ($effectiveOrder <= 0) {
-                $row = Database::queryOne("SELECT COALESCE(MAX(display_order),0) AS max_order FROM area_mappings WHERE room_number = ?", [$room_number]);
-                $effectiveOrder = isset($row['max_order']) ? ((int) $row['max_order']) + 1 : 1;
-            }
-            Database::execute(
-                "UPDATE area_mappings 
-                 SET mapping_type = ?, item_sku = ?, category_id = ?, link_url = ?, link_label = ?, link_icon = ?, link_image = ?, content_target = ?, content_image = ?, display_order = ?, is_active = 1
-                 WHERE id = ?",
-                [$mappingType, $item_sku, $category_id, $linkUrl, $linkLabel, $linkIcon, $linkImage, $contentTarget, $contentImage, $effectiveOrder, $existing['id']]
-            );
-            self::maybeRecordSignAsset((int) $existing['id'], $room_number, $contentImage, $linkImage, 'mapping_update');
-            return ['updated' => true, 'message' => 'Area mapping updated successfully', 'id' => $existing['id']];
-        } else {
-            if (!$hasDisplayOrder || $displayOrder <= 0) {
-                $row = Database::queryOne("SELECT COALESCE(MAX(display_order),0) AS max_order FROM area_mappings WHERE room_number = ?", [$room_number]);
-                $displayOrder = isset($row['max_order']) ? ((int) $row['max_order']) + 1 : 1;
-            }
-            Database::execute(
-                "INSERT INTO area_mappings (room_number, area_selector, mapping_type, item_sku, category_id, link_url, link_label, link_icon, link_image, content_target, content_image, display_order, is_active) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
-                [$room_number, $areaSelector, $mappingType, $item_sku, $category_id, $linkUrl, $linkLabel, $linkIcon, $linkImage, $contentTarget, $contentImage, $displayOrder]
-            );
-            $newId = (int) Database::lastInsertId();
-            self::maybeRecordSignAsset($newId, $room_number, $contentImage, $linkImage, 'mapping_create');
-            return ['updated' => true, 'message' => 'Area mapping added successfully', 'id' => $newId];
-        }
+        Database::execute(
+            "INSERT INTO area_mappings (room_number, area_selector, mapping_type, item_sku, category_id, link_url, link_label, link_icon, link_image, content_target, content_image, display_order, is_active) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [$room_number, $areaSelector, $mappingType, $item_sku, $category_id, $linkUrl, $linkLabel, $linkIcon, $linkImage, $contentTarget, $contentImage, $displayOrder, $isActiveRequested]
+        );
+        $newId = (int) Database::lastInsertId();
+        self::maybeRecordSignAsset($newId, $room_number, $contentImage, $linkImage, 'mapping_create');
+        return ['updated' => true, 'message' => 'Area mapping added successfully', 'id' => $newId];
     }
 
     /**

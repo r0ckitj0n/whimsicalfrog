@@ -116,25 +116,58 @@ export const useAreaMappings = (): IAreaMappingsHook => {
                 room
             });
             if (res?.success) {
-                let coords: Array<{ selector?: string | null }> = [];
                 const rawCoords = res.data?.coordinates || res.coordinates || [];
 
-                // Handle nested JSON structure: coordinates may be ["{\"rectangles\":[...]}"]
-                if (Array.isArray(rawCoords) && rawCoords.length > 0) {
-                    const first = rawCoords[0];
-                    if (typeof first === 'string') {
-                        // Parse JSON string and extract rectangles
+                const unwrap = (value: unknown): unknown => {
+                    let current = value;
+                    for (let i = 0; i < 4; i += 1) {
+                        if (typeof current !== 'string') break;
                         try {
-                            const parsed = JSON.parse(first);
-                            coords = parsed.rectangles || parsed.coordinates || [];
+                            const parsed = JSON.parse(current);
+                            current = parsed;
                         } catch {
-                            coords = [];
+                            break;
                         }
-                    } else if (typeof first === 'object' && first !== null) {
-                        // Already an array of coordinate objects
-                        coords = rawCoords;
                     }
-                }
+                    return current;
+                };
+
+                const extractRows = (value: unknown): Array<{ selector?: string | null }> => {
+                    const normalized = unwrap(value);
+
+                    if (Array.isArray(normalized)) {
+                        // Legacy payloads can wrap the actual coordinate object in a single-item array.
+                        if (
+                            normalized.length === 1
+                            && normalized[0]
+                            && typeof normalized[0] === 'object'
+                            && !Array.isArray(normalized[0])
+                        ) {
+                            const innerRows = extractRows(normalized[0]);
+                            if (innerRows.length > 0) return innerRows;
+                        }
+
+                        return normalized.filter((row): row is { selector?: string | null } => {
+                            return !!row && typeof row === 'object' && !Array.isArray(row);
+                        });
+                    }
+
+                    if (normalized && typeof normalized === 'object') {
+                        const obj = normalized as Record<string, unknown>;
+                        const merged = ['rectangles', 'polygons', 'coordinates'].flatMap((key) => {
+                            const bucket = obj[key];
+                            return Array.isArray(bucket) ? bucket : [];
+                        });
+
+                        return merged.filter((row): row is { selector?: string | null } => {
+                            return !!row && typeof row === 'object' && !Array.isArray(row);
+                        });
+                    }
+
+                    return [];
+                };
+
+                const coords = extractRows(rawCoords);
 
                 const normalize = (sel: string): string => {
                     const s = sel.trim();

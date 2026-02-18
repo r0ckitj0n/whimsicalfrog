@@ -124,13 +124,17 @@ try {
 
                     $list = [];
                     if (is_array($coords)) {
-                        if (isset($coords['rectangles']) && is_array($coords['rectangles'])) {
-                            $list = $coords['rectangles'];
-                        } elseif (isset($coords['polygons']) && is_array($coords['polygons'])) {
-                            $list = $coords['polygons'];
-                        } elseif (isset($coords['coordinates']) && is_array($coords['coordinates'])) {
-                            $list = $coords['coordinates'];
-                        } elseif (array_values($coords) === $coords) {
+                        $hasNamedBuckets = false;
+                        foreach (['rectangles', 'polygons', 'coordinates'] as $bucketKey) {
+                            if (isset($coords[$bucketKey]) && is_array($coords[$bucketKey])) {
+                                $hasNamedBuckets = true;
+                                foreach ($coords[$bucketKey] as $row) {
+                                    $list[] = $row;
+                                }
+                            }
+                        }
+
+                        if (!$hasNamedBuckets && array_values($coords) === $coords) {
                             $list = $coords;
                         }
                     }

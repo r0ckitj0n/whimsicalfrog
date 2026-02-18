@@ -9,6 +9,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS
 // Ensure absolute include and clean JSON output
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/area_mappings/helpers/AreaMappingSchemaHelper.php';
 
 try {
     try {
@@ -39,14 +40,19 @@ try {
 
     // room_number-only lookup (supports '0' for main room)
     $roomNumberStr = (string)$roomKey;
-    $map = Database::queryOne("SELECT * FROM room_maps WHERE room_number = ? AND is_active = TRUE ORDER BY updated_at DESC LIMIT 1", [$roomNumberStr]);
+    $where = 'room_number = ?';
+    if (AreaMappingSchemaHelper::hasColumn('room_maps', 'is_active')) {
+        $where .= ' AND is_active = TRUE';
+    }
+    $orderExpr = AreaMappingSchemaHelper::roomMapsRecencyOrderExpr();
+    $map = Database::queryOne("SELECT * FROM room_maps WHERE {$where} ORDER BY {$orderExpr} LIMIT 1", [$roomNumberStr]);
 
     if ($map) {
         $coordinates = json_decode($map['coordinates'], true);
         Response::success([
             'coordinates' => is_array($coordinates) ? $coordinates : [],
             'map_name' => $map['map_name'],
-            'updated_at' => $map['updated_at']
+            'updated_at' => $map['updated_at'] ?? null
         ]);
     } else {
         // Return empty coordinates if no active map found

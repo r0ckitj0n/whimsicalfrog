@@ -132,4 +132,22 @@ class AreaMappingSchemaHelper
             return false;
         }
     }
+
+    /**
+     * Return a safe ORDER BY expression for room_maps recency.
+     * Supports legacy schemas that might miss updated_at/created_at.
+     */
+    public static function roomMapsRecencyOrderExpr(): string
+    {
+        if (self::hasColumn('room_maps', 'updated_at')) {
+            return 'updated_at DESC';
+        }
+        if (self::hasColumn('room_maps', 'created_at')) {
+            return 'created_at DESC';
+        }
+        if (self::hasColumn('room_maps', 'id')) {
+            return 'id DESC';
+        }
+        return 'room_number ASC';
+    }
 }

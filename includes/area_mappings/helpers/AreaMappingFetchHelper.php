@@ -269,8 +269,9 @@ GROUP BY item_sku",
             $rmWhere = 'room_number = ?';
             if (AreaMappingSchemaHelper::hasColumn('room_maps', 'is_active'))
                 $rmWhere .= ' AND is_active = 1';
+            $orderExpr = AreaMappingSchemaHelper::roomMapsRecencyOrderExpr();
             $coordsRow = Database::queryOne(
-                "SELECT coordinates FROM room_maps WHERE $rmWhere ORDER BY updated_at DESC LIMIT 1",
+                "SELECT coordinates FROM room_maps WHERE $rmWhere ORDER BY {$orderExpr} LIMIT 1",
                 [$canonical]
             );
         }

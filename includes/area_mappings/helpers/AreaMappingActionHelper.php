@@ -375,7 +375,8 @@ class AreaMappingActionHelper
             return self::normalizeAreaSelector($selectorRaw);
         }
 
-        $coordsRow = Database::queryOne("SELECT coordinates FROM room_maps WHERE room_number = ? ORDER BY updated_at DESC LIMIT 1", [$room_number]);
+        $orderExpr = AreaMappingSchemaHelper::roomMapsRecencyOrderExpr();
+        $coordsRow = Database::queryOne("SELECT coordinates FROM room_maps WHERE room_number = ? ORDER BY {$orderExpr} LIMIT 1", [$room_number]);
         $coords = $coordsRow ? ($coordsRow['coordinates'] ?? '[]') : '[]';
 
         // Decode nested legacy payloads (double/triple encoded JSON).

@@ -105,8 +105,29 @@ function loadRoomCoordinates($roomType, $pdo)
         } else {
             $room_number = $raw;
         }
+        $hasIsActive = false;
+        $hasUpdatedAt = false;
+        $hasCreatedAt = false;
+        $hasId = false;
+        try {
+            $cols = Database::queryAll("SHOW COLUMNS FROM room_maps");
+            foreach ($cols as $col) {
+                $name = strtolower((string)($col['Field'] ?? ''));
+                if ($name === 'is_active') $hasIsActive = true;
+                if ($name === 'updated_at') $hasUpdatedAt = true;
+                if ($name === 'created_at') $hasCreatedAt = true;
+                if ($name === 'id') $hasId = true;
+            }
+        } catch (Exception $_) {
+        }
+
+        $where = 'room_number = ?';
+        if ($hasIsActive) {
+            $where .= ' AND is_active = 1';
+        }
+        $orderExpr = $hasUpdatedAt ? 'updated_at DESC' : ($hasCreatedAt ? 'created_at DESC' : ($hasId ? 'id DESC' : 'room_number ASC'));
         $row = Database::queryOne(
-            "SELECT coordinates FROM room_maps WHERE room_number = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1",
+            "SELECT coordinates FROM room_maps WHERE {$where} ORDER BY {$orderExpr} LIMIT 1",
             [$room_number]
         );
         if ($row) {

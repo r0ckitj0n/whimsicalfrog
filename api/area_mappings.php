@@ -94,7 +94,8 @@ try {
                         $where = 'room_number = ?';
                         if (AreaMappingSchemaHelper::hasColumn('room_maps', 'is_active'))
                             $where .= ' AND is_active = 1';
-                        $map = Database::queryOne("SELECT coordinates FROM room_maps WHERE $where ORDER BY updated_at DESC LIMIT 1", [$room]);
+                        $orderExpr = AreaMappingSchemaHelper::roomMapsRecencyOrderExpr();
+                        $map = Database::queryOne("SELECT coordinates FROM room_maps WHERE $where ORDER BY {$orderExpr} LIMIT 1", [$room]);
                     }
                     $rawCoords = $map['coordinates'] ?? '[]';
                     $coords = $rawCoords;

@@ -29,6 +29,9 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
         else if (window.showDetailedModal) window.showDetailedModal(item.sku);
     };
 
+    type HelpTopicKey = 'categories' | 'shipping' | 'custom';
+    const [activeHelpTopic, setActiveHelpTopic] = React.useState<HelpTopicKey | null>(null);
+
     if (!isVisible) return null;
 
     const visibleCategories = categoryList.filter(cat => cat.slug !== 'uncategorized' && (cat.items?.length ?? 0) > 0);
@@ -75,34 +78,53 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
             />
 
             <div className="shop-footer-help w-full px-6 pb-24 max-w-6xl mx-auto relative z-20 text-white">
-                <section className="rounded-2xl bg-[var(--brand-primary)]/45 p-4 text-white">
-                    <details className="group">
-                        <summary className="cursor-pointer list-none font-merienda text-xl sm:text-2xl select-none flex items-center justify-between gap-3 text-white">
-                            Shop Help & FAQ
-                            <span className="text-sm font-nunito text-white/80 group-open:hidden">Expand</span>
-                            <span className="text-sm font-nunito text-white/80 hidden group-open:inline">Collapse</span>
-                        </summary>
-
-                        <div className="mt-4 space-y-4">
-                            <section className="rounded-xl bg-[var(--brand-primary)]/25 p-4 text-white">
-                                <h2 className="font-merienda text-xl mb-3">Popular custom order categories</h2>
-                                <p className="font-nunito text-white mb-2"><a href="/shop/category/tumblers" className="underline text-white">Custom tumblers</a> for birthdays, weddings, and team gifts with names or event themes.</p>
-                                <p className="font-nunito text-white mb-2"><a href="/shop/category/t-shirts" className="underline text-white">Personalized t-shirts</a> for reunions, school groups, and branded small-batch apparel.</p>
-                                <p className="font-nunito text-white mb-2"><a href="/shop/category/resin" className="underline text-white">Handmade resin gifts</a> including keepsakes and decorative gift-ready pieces.</p>
-                                <p className="font-nunito text-white"><a href="/contact" className="underline text-white">Custom gift requests</a> are available when you need an idea turned into a made-to-order product.</p>
-                            </section>
-
-                            <section className="rounded-xl bg-[var(--brand-primary)]/25 p-4 text-white">
-                                <h2 className="font-merienda text-xl mb-3">FAQ for orders and shipping</h2>
-                                <p className="font-nunito text-white mb-2"><strong>Turnaround time:</strong> Most items are prepared within a few business days, and complex custom orders may take longer.</p>
-                                <p className="font-nunito text-white mb-2"><strong>Shipping:</strong> Delivery and shipping details are listed in our <a href="/policy" className="underline text-white">store policy</a>.</p>
-                                <p className="font-nunito text-white mb-2"><strong>Returns:</strong> Review return and support terms in <a href="/policy" className="underline text-white">store policy</a>, <a href="/privacy" className="underline text-white">privacy</a>, and <a href="/terms" className="underline text-white">terms</a>.</p>
-                                <p className="font-nunito text-white"><strong>Custom process:</strong> Submit details through <a href="/contact" className="underline text-white">contact</a> and we confirm pricing, timeline, and production steps.</p>
-                            </section>
-                        </div>
-                    </details>
+                <section className="rounded-2xl bg-[var(--brand-primary)]/45 p-3 text-white">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-nunito">
+                        <span className="font-merienda text-base">Shop Help</span>
+                        <button type="button" className="underline text-white" onClick={() => setActiveHelpTopic('categories')}>Custom order categories</button>
+                        <button type="button" className="underline text-white" onClick={() => setActiveHelpTopic('shipping')}>Orders & shipping FAQ</button>
+                        <button type="button" className="underline text-white" onClick={() => setActiveHelpTopic('custom')}>Custom process</button>
+                    </div>
                 </section>
             </div>
+
+            {activeHelpTopic && (
+                <div className="fixed inset-0 z-[var(--wf-z-modal)] bg-black/60 backdrop-blur-sm p-4 flex items-center justify-center">
+                    <div className="w-full max-w-2xl rounded-2xl bg-[var(--brand-primary)] text-white shadow-2xl border border-white/20">
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-white/20">
+                            <h2 className="font-merienda text-2xl">
+                                {activeHelpTopic === 'categories' && 'Popular custom order categories'}
+                                {activeHelpTopic === 'shipping' && 'FAQ for orders and shipping'}
+                                {activeHelpTopic === 'custom' && 'Custom process'}
+                            </h2>
+                            <button type="button" className="underline text-white" onClick={() => setActiveHelpTopic(null)}>Close</button>
+                        </div>
+
+                        <div className="p-5 space-y-3 font-nunito text-white">
+                            {activeHelpTopic === 'categories' && (
+                                <>
+                                    <p><a href="/shop/category/tumblers" className="underline text-white">Custom tumblers</a> for birthdays, weddings, and team gifts with names or event themes.</p>
+                                    <p><a href="/shop/category/t-shirts" className="underline text-white">Personalized t-shirts</a> for reunions, school groups, and branded small-batch apparel.</p>
+                                    <p><a href="/shop/category/resin" className="underline text-white">Handmade resin gifts</a> including keepsakes and decorative gift-ready pieces.</p>
+                                    <p><a href="/contact" className="underline text-white">Custom gift requests</a> are available when you need an idea turned into a made-to-order product.</p>
+                                </>
+                            )}
+
+                            {activeHelpTopic === 'shipping' && (
+                                <>
+                                    <p><strong>Turnaround time:</strong> Most items are prepared within a few business days, and complex custom orders may take longer.</p>
+                                    <p><strong>Shipping:</strong> Delivery and shipping details are listed in our <a href="/policy" className="underline text-white">store policy</a>.</p>
+                                    <p><strong>Returns:</strong> Review return and support terms in <a href="/policy" className="underline text-white">store policy</a>, <a href="/privacy" className="underline text-white">privacy</a>, and <a href="/terms" className="underline text-white">terms</a>.</p>
+                                </>
+                            )}
+
+                            {activeHelpTopic === 'custom' && (
+                                <p><strong>Custom process:</strong> Submit details through <a href="/contact" className="underline text-white">contact</a> and we confirm pricing, timeline, and production steps.</p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </section>
     );
 };

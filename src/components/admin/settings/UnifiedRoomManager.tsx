@@ -278,6 +278,18 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
         }
     };
 
+    const handleDownloadPreviewImage = () => {
+        if (!preview_image?.url) return;
+        const rawName = String(preview_image.name || `${preview_image.target_type || 'image'}-${Date.now()}`).trim();
+        const safeName = `${rawName.replace(/[^a-z0-9-_]+/gi, '_')}.png`;
+        const link = document.createElement('a');
+        link.href = preview_image.url;
+        link.download = safeName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    };
+
     const modalContent = (
         <div className="admin-modal-overlay over-header show topmost" onClick={(e) => e.target === e.currentTarget && void attemptClose()}>
             <div
@@ -508,6 +520,13 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="px-4 py-3 border-b border-slate-200 flex items-center gap-3">
+                            <button
+                                type="button"
+                                className="admin-action-btn btn-icon--download shrink-0"
+                                onClick={handleDownloadPreviewImage}
+                                aria-label="Download preview image"
+                                title="Download image"
+                            />
                             <h3 className="text-xs font-black uppercase tracking-widest text-slate-700 truncate shrink-0 max-w-[220px]">
                                 {preview_image.name || 'Image Preview'}
                             </h3>

@@ -51,6 +51,17 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
         setImageTweakPrompt('');
     };
 
+    const handleDownloadSelectedImage = () => {
+        if (!selectedImage?.image_path) return;
+        const fileName = String(selectedImage.image_path.split('/').pop() || `${sku}-image.png`).trim();
+        const link = document.createElement('a');
+        link.href = `/${selectedImage.image_path}`;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    };
+
     const handleSubmitImageTweak = async () => {
         if (!selectedImage) return;
         const instructions = imageTweakPrompt.trim();
@@ -321,6 +332,13 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
                         role="presentation"
                     >
                         <div className="flex items-center gap-3 p-3 border-b">
+                            <button
+                                type="button"
+                                onClick={handleDownloadSelectedImage}
+                                className="admin-action-btn btn-icon--download shrink-0"
+                                aria-label="Download item image"
+                                title="Download image"
+                            />
                             <h3 className="text-sm font-medium text-white truncate shrink-0 max-w-[180px]">{selectedImage.image_path.split('/').pop()}</h3>
                             <input
                                 type="text"

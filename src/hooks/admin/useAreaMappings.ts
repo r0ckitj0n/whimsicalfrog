@@ -111,12 +111,25 @@ export const useAreaMappings = (): IAreaMappingsHook => {
     const fetchAvailableAreas = useCallback(async (room: string) => {
         if (!room) return;
         try {
-            const res = await ApiClient.get<{ success: boolean; data?: { coordinates: unknown }; coordinates?: unknown }>('/api/area_mappings.php', {
-                action: API_ACTION.GET_ROOM_COORDINATES,
-                room
-            });
-            if (res?.success) {
-                const rawCoords = res.data?.coordinates || res.coordinates || [];
+            const [coordsRes, explicitRes, liveRes] = await Promise.all([
+                ApiClient.get<{ success: boolean; data?: { coordinates: unknown }; coordinates?: unknown }>('/api/area_mappings.php', {
+                    action: API_ACTION.GET_ROOM_COORDINATES,
+                    room
+                }),
+                ApiClient.get<IMappingsResponse>('/api/area_mappings.php', {
+                    action: 'list_room_raw',
+                    room,
+                    room_number: room
+                }),
+                ApiClient.get<IMappingsResponse>('/api/area_mappings.php', {
+                    action: API_ACTION.GET_LIVE_VIEW,
+                    room,
+                    room_number: room
+                })
+            ]);
+
+            if (coordsRes?.success) {
+                const rawCoords = coordsRes.data?.coordinates || coordsRes.coordinates || [];
 
                 const unwrap = (value: unknown): unknown => {
                     let current = value;
@@ -168,6 +181,12 @@ export const useAreaMappings = (): IAreaMappingsHook => {
                 };
 
                 const coords = extractRows(rawCoords);
+                const mappingSelectors = [
+                    ...(explicitRes?.data?.mappings || explicitRes?.mappings || []),
+                    ...(liveRes?.data?.mappings || liveRes?.mappings || [])
+                ]
+                    .map((m) => String(m?.area_selector || '').trim())
+                    .filter((s) => s !== '');
 
                 const normalize = (sel: string): string => {
                     const s = sel.trim();
@@ -183,6 +202,16 @@ export const useAreaMappings = (): IAreaMappingsHook => {
                     const raw = String(c?.selector || '').trim();
                     if (!raw) continue;
                     const s = normalize(raw);
+                    const m = s.match(/^\.(?:area|AREA)-(\d+)$/);
+                    if (m) maxAreaIndex = Math.max(maxAreaIndex, Number(m[1]) || 0);
+                    if (!seen.has(s)) {
+                        seen.add(s);
+                        extras.push(s);
+                    }
+                }
+
+                for (const sel of mappingSelectors) {
+                    const s = normalize(sel);
                     const m = s.match(/^\.(?:area|AREA)-(\d+)$/);
                     if (m) maxAreaIndex = Math.max(maxAreaIndex, Number(m[1]) || 0);
                     if (!seen.has(s)) {
@@ -211,9 +240,24 @@ export const useAreaMappings = (): IAreaMappingsHook => {
         try {
             const isEdit = !!mapping.id;
             const action = isEdit ? API_ACTION.UPDATE_MAPPING : API_ACTION.ADD_MAPPING;
+            const payload: Record<string, unknown> = {
+                ...mapping,
+                mapping_type: mapping.mapping_type ?? 'item',
+                area_selector: mapping.area_selector ?? '',
+                item_sku: mapping.item_sku ?? null,
+                category_id: mapping.category_id ?? null,
+                link_url: mapping.link_url ?? null,
+                link_label: mapping.link_label ?? null,
+                link_icon: mapping.link_icon ?? null,
+                link_image: mapping.link_image ?? null,
+                content_target: mapping.content_target ?? null,
+                content_image: mapping.content_image ?? null,
+                display_order: mapping.display_order ?? null,
+                is_active: mapping.is_active ?? 1
+            };
             const res = await ApiClient.post<IAreaMappingUpsertResponse>('/api/area_mappings.php', {
                 action,
-                ...mapping
+                ...payload
             });
 
             if (res?.success) {

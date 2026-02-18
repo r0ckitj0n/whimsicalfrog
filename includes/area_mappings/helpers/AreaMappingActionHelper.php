@@ -159,37 +159,55 @@ class AreaMappingActionHelper
             );
         }
 
-        $fields = [
+        $fieldPresence = [
             // Only update room_number if the caller provided it.
-            'room_number' => $roomProvided ? $effectiveRoom : null,
+            'room_number' => $roomProvided,
+            'mapping_type' => array_key_exists('mapping_type', $input),
+            'area_selector' => $areaSelectorProvided,
+            'item_sku' => array_key_exists('item_sku', $input),
+            'category_id' => array_key_exists('category_id', $input),
+            'link_url' => array_key_exists('link_url', $input),
+            'link_label' => array_key_exists('link_label', $input),
+            'link_icon' => array_key_exists('link_icon', $input),
+            'link_image' => array_key_exists('link_image', $input),
+            'content_target' => array_key_exists('content_target', $input),
+            'content_image' => array_key_exists('content_image', $input),
+            'display_order' => array_key_exists('display_order', $input),
+            'is_active' => $isActiveProvided,
+        ];
+
+        $fields = [
+            'room_number' => $effectiveRoom,
             'mapping_type' => $input['mapping_type'] ?? null,
-            'area_selector' => $areaSelectorProvided ? $nextSelector : null,
+            'area_selector' => $nextSelector,
             'item_sku' => $input['item_sku'] ?? null,
             'category_id' => $input['category_id'] ?? null,
             'link_url' => $input['link_url'] ?? null,
             'link_label' => $input['link_label'] ?? null,
             'link_icon' => $input['link_icon'] ?? null,
-            'link_image' => isset($input['link_image']) && is_string($input['link_image']) ? AreaMappingSignHelper::normalizeImageUrl((string) $input['link_image']) : ($input['link_image'] ?? null),
+            'link_image' => isset($input['link_image']) && is_string($input['link_image'])
+                ? AreaMappingSignHelper::normalizeImageUrl((string) $input['link_image'])
+                : ($input['link_image'] ?? null),
             'content_target' => $input['content_target'] ?? null,
-            'content_image' => isset($input['content_image']) && is_string($input['content_image']) ? AreaMappingSignHelper::normalizeImageUrl((string) $input['content_image']) : ($input['content_image'] ?? null),
-            'display_order' => $input['display_order'] ?? null
+            'content_image' => isset($input['content_image']) && is_string($input['content_image'])
+                ? AreaMappingSignHelper::normalizeImageUrl((string) $input['content_image'])
+                : ($input['content_image'] ?? null),
+            'display_order' => $input['display_order'] ?? null,
+            'is_active' => $isActiveProvided ? (!empty($input['is_active']) ? 1 : 0) : null,
         ];
-
-        if ($isActiveProvided) {
-            $fields['is_active'] = !empty($input['is_active']) ? 1 : 0;
-        }
 
         $updateFields = [];
         $values = [];
         foreach ($fields as $col => $val) {
-            if ($val !== null) {
-                if ($col === 'area_selector') {
-                    // Ensure storage is consistently ".area-N" when applicable.
-                    $val = self::normalizeAreaSelector($val);
-                }
-                $updateFields[] = "`$col` = ?";
-                $values[] = $val;
+            if (empty($fieldPresence[$col])) {
+                continue;
             }
+            if ($col === 'area_selector') {
+                // Ensure storage is consistently ".area-N" when applicable.
+                $val = self::normalizeAreaSelector($val);
+            }
+            $updateFields[] = "`$col` = ?";
+            $values[] = $val;
         }
 
         if (empty($updateFields))

@@ -930,7 +930,7 @@ class SpaSeoHelper
         return match ($canonicalPath) {
             '/' => [
                 'title' => 'Whimsical Frog | Custom Gifts & Handmade Decor',
-                'description' => 'Shop custom tumblers, personalized t-shirts, handmade resin gifts, and custom gift requests at WhimsicalFrog.',
+                'description' => 'Whimsical Frog creates custom tumblers, personalized shirts, handmade resin decor, and one-of-a-kind gifts, with easy custom order requests for every occasion.',
                 'image_path' => '/images/backgrounds/background-roomA.webp',
             ],
             '/shop' => [

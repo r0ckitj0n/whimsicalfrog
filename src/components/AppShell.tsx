@@ -191,6 +191,7 @@ export const AppShell: React.FC = () => {
         currentPath.includes('/shop') || roomIdParam === 'S'
     ));
     const isProductVisible = Boolean(!isPOS && !isAdmin && currentPath.includes('/product/'));
+    const shouldHideVisualFooter = Boolean((pageAttr === 'landing' || window.location.pathname === '/') && !isLoggedIn && authMode === 'none');
 
     return (
         <div className={containerClasses}>
@@ -247,11 +248,20 @@ export const AppShell: React.FC = () => {
                     setReceiptOrderId={handleCloseReceipt}
                 />
 
-                {!pageAttr?.startsWith('admin') && !is_bare && !((pageAttr === 'landing' || window.location.pathname === '/') && !isLoggedIn && authMode === 'none') && (
+                {!pageAttr?.startsWith('admin') && !is_bare && !shouldHideVisualFooter && (
                     <Footer
                         settings={site_settings}
                         isSlim={pageAttr === 'contact' || pageAttr === 'about'}
                     />
+                )}
+                {!pageAttr?.startsWith('admin') && !is_bare && shouldHideVisualFooter && (
+                    <footer className="sr-only">
+                        <nav aria-label="Support">
+                            <a href="/policy">Policy</a>
+                            <a href="/privacy">Privacy</a>
+                            <a href="/contact">Contact</a>
+                        </nav>
+                    </footer>
                 )}
             </Suspense>
 

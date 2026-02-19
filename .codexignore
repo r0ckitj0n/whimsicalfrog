@@ -1,19 +1,28 @@
+# Dependencies and build outputs
 node_modules/
 vendor/
 dist/
+
+# Archives, logs, and VCS
 backups/
 logs/
 .git/
 *.log
+
+# Databases and local artifacts
 *.sqlite
 src_files.txt
 tsc_output.txt
 backup_css_counts.txt
 current_css_counts.txt
+
+# OS/editor noise
 .DS_Store
 .idea/
 .vscode/
 *.swp
+
+# Project reports (except access control)
 /reports/
 !reports/.htaccess
 

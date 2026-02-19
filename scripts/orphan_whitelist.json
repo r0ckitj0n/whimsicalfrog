@@ -62,5 +62,49 @@
     {
         "file": "src/components/admin/settings/area-mapper/CoordinatesView.tsx",
         "reason": "Dormant room-map visual component retained for admin tooling fallback."
+    },
+    {
+        "file": "src/types/pos.ts",
+        "reason": "Shared POS type contract imported by usePOS; keep even if static orphan scan misses .ts/.js mapping."
+    },
+    {
+        "file": "src/types/seo.ts",
+        "reason": "Re-exported by src/types/index.ts as part of shared type surface."
+    },
+    {
+        "file": ".local/state/codex/2026-02-09-implementation-log.md",
+        "reason": "Runtime state artifact retained under .local/state per project convention."
+    },
+    {
+        "file": ".local/state/codex/merge_live_backup_into_dev.php",
+        "reason": "Runtime state artifact retained under .local/state per project convention."
+    },
+    {
+        "file": ".local/state/sanmar/coveoEngine.js",
+        "reason": "Runtime state artifact retained under .local/state per project convention."
+    },
+    {
+        "file": ".local/state/sanmar/generatedVariables.js",
+        "reason": "Runtime state artifact retained under .local/state per project convention."
+    },
+    {
+        "file": ".local/state/sanmar/search-v-app.js",
+        "reason": "Runtime state artifact retained under .local/state per project convention."
+    },
+    {
+        "file": ".local/state/security_discrepancy_audit_plan.md",
+        "reason": "Runtime state artifact retained under .local/state per project convention."
+    },
+    {
+        "file": ".local/state/security_hardening_tracker_phase3.md",
+        "reason": "Runtime state artifact retained under .local/state per project convention."
+    },
+    {
+        "file": ".local/state/sync_item_prices_from_factors_report_20260213_200808.json",
+        "reason": "Runtime state artifact retained under .local/state per project convention."
+    },
+    {
+        "file": ".local/state/sync_item_prices_from_factors_report_20260213_200814.json",
+        "reason": "Runtime state artifact retained under .local/state per project convention."
     }
 ]

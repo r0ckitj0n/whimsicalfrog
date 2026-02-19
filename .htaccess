@@ -49,6 +49,11 @@
     Header set Referrer-Policy "strict-origin-when-cross-origin"
     # Only set HSTS on HTTPS responses
     Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" "expr=%{HTTPS} == 'on'"
+
+    # Prevent stale shell/manifest caching causing hashed-asset mismatches.
+    Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0" "expr=%{REQUEST_URI} =~ m#^/$|^/index\.html$|^/dist/index\.html$|^/dist/\.vite/manifest\.json$|^/dist/manifest\.json$|^/\.vite/manifest\.json$|^/manifest\.json$#"
+    Header always set Pragma "no-cache" "expr=%{REQUEST_URI} =~ m#^/$|^/index\.html$|^/dist/index\.html$|^/dist/\.vite/manifest\.json$|^/dist/manifest\.json$|^/\.vite/manifest\.json$|^/manifest\.json$#"
+    Header always set Expires "0" "expr=%{REQUEST_URI} =~ m#^/$|^/index\.html$|^/dist/index\.html$|^/dist/\.vite/manifest\.json$|^/dist/manifest\.json$|^/\.vite/manifest\.json$|^/manifest\.json$#"
 </IfModule>
 
 # Performance: Gzip Compression

@@ -156,11 +156,12 @@
     </style>
     <script>
         (async function loadViteBuiltAssets() {
+            const cacheBust = `v=${Date.now().toString(36)}`;
             const candidates = [
-                { manifestUrl: '/dist/.vite/manifest.json', assetPrefix: '/dist/' },
-                { manifestUrl: '/dist/manifest.json', assetPrefix: '/dist/' },
-                { manifestUrl: '/.vite/manifest.json', assetPrefix: '/' },
-                { manifestUrl: '/manifest.json', assetPrefix: '/' }
+                { manifestUrl: `/dist/.vite/manifest.json?${cacheBust}`, assetPrefix: '/dist/' },
+                { manifestUrl: `/dist/manifest.json?${cacheBust}`, assetPrefix: '/dist/' },
+                { manifestUrl: `/.vite/manifest.json?${cacheBust}`, assetPrefix: '/' },
+                { manifestUrl: `/manifest.json?${cacheBust}`, assetPrefix: '/' }
             ];
 
             const tryLoadManifest = async (url) => {

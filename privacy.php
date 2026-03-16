@@ -21,6 +21,8 @@ if (!is_string($content) || trim(strip_tags($content)) === '') {
     $content = '<p>Your privacy is important to us. This Privacy Policy explains how ' . htmlspecialchars($business_name) . ' collects, uses, and safeguards your information when you visit our website and make purchases.</p><h3>Information We Collect</h3><p>We collect information you provide directly, such as contact details and order information, and limited technical data to improve site performance.</p><h3>How We Use Information</h3><p>To process orders, provide support, improve our services, and comply with legal obligations.</p><h3>Contact</h3><p>If you have questions about this policy, please contact us at ' . htmlspecialchars(BusinessSettings::getBusinessEmail()) . '.</p>';
 }
 ?>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5S4XYYR4N1"></script>
+<script src="/google-analytics-init.js"></script>
 <div class="page-content container mx-auto px-4 pt-8 pb-0">
   <div class="prose max-w-none">
     <div class="wf-cloud-card">

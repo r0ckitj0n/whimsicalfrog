@@ -21,6 +21,8 @@ if (!is_string($content) || trim(strip_tags($content)) === '') {
     $content = '<p>Welcome to ' . htmlspecialchars($business_name) . '. By accessing or using our website, you agree to these Terms of Service.</p><h3>Purchases</h3><p>All orders are subject to availability and confirmation of the order price. Custom items may have additional lead time.</p><h3>Returns</h3><p>See our store policy for details regarding returns, exchanges, and warranties.</p><h3>Contact</h3><p>For questions regarding these terms, contact us at ' . htmlspecialchars(BusinessSettings::getBusinessEmail()) . '.</p>';
 }
 ?>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5S4XYYR4N1"></script>
+<script src="/google-analytics-init.js"></script>
 <div class="page-content container mx-auto px-4 pt-8 pb-0">
   <div class="prose max-w-none">
     <div class="wf-cloud-card">

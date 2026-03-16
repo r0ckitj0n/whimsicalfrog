@@ -49,6 +49,8 @@ if (
              . '<h3>Warranty</h3><p>We stand by our craftsmanship. If your item arrives damaged or defective, contact us within 7 days for support.</p>';
 }
 ?>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5S4XYYR4N1"></script>
+<script src="/google-analytics-init.js"></script>
 <div class="page-content container mx-auto px-4 pt-8 pb-0">
   <div class="prose max-w-none">
     <div class="wf-cloud-card">

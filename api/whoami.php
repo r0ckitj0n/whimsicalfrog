@@ -44,46 +44,14 @@ register_shutdown_function(static function (): void {
     }
 });
 try {
-    if (session_status() !== PHP_SESSION_ACTIVE) {
-        $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
-        if (strpos($host, ':') !== false) {
-            $host = explode(':', $host)[0];
-        }
-
-        $cookieDomain = '';
-        if ($host !== 'localhost' && !filter_var($host, FILTER_VALIDATE_IP)) {
-            $parts = explode('.', $host);
-            $baseDomain = $host;
-            if (count($parts) >= 2) {
-                $baseDomain = $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1];
-            }
-            $cookieDomain = '.' . $baseDomain;
-        }
-        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
-        session_init([
-            'name' => 'PHPSESSID',
-            'lifetime' => 0,
-            'path' => '/',
-            'domain' => $cookieDomain,
-            'secure' => $isHttps,
-            'httponly' => true,
-            'samesite' => 'None',
-        ]);
-    }
+    ensureSessionStarted();
 } catch (\Throwable $e) {
-    error_log('[whoami] session_init failed: ' . $e->getMessage());
+    error_log('[whoami] ensureSessionStarted failed: ' . $e->getMessage());
     wf_whoami_emit([
         'success' => true,
         'user_id' => null,
         'error' => 'whoami_fallback_session_init'
     ], 200);
-}
-
-// Important: reconstruct session from WF_AUTH if needed
-try {
-    ensureSessionStarted();
-} catch (\Throwable $e) {
-    error_log('[whoami] ensureSessionStarted failed: ' . $e->getMessage());
 }
 
 // CORS: reflect origin and allow credentials so cookies are included cross-origin in dev

@@ -29,8 +29,14 @@ function ensureSessionStarted()
             'samesite' => 'None',
         ]);
     }
-    // Auto-login disabled - users must explicitly log in
-    // AuthSessionHelper::reconstructSessionFromCookie();
+
+    // Recover the PHP session from the signed auth cookie when the session file
+    // has gone missing or a cookie-domain mismatch left us without $_SESSION.
+    // Logout remains authoritative because reconstructSessionFromCookie()
+    // honors WF_LOGOUT_IN_PROGRESS and clears stale auth cookies when present.
+    if (empty($_SESSION['user'])) {
+        AuthSessionHelper::reconstructSessionFromCookie();
+    }
 }
 
 
@@ -253,10 +259,7 @@ function checkApiAuth($requireAdmin = false, $adminToken = 'whimsical_admin_2024
  */
 function loginUser($userData)
 {
-    // Ensure session is active before using it
-    if (session_status() !== PHP_SESSION_ACTIVE) {
-        session_start();
-    }
+    ensureSessionStarted();
     $userId = (string) ($userData['id'] ?? $userData['user_id'] ?? '');
     $profile = CustomerAddressSyncHelper::mergeUserWithPrimaryAddress($userId, is_array($userData) ? $userData : []);
     $_SESSION['user'] = [

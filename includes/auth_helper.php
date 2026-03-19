@@ -90,29 +90,7 @@ class AuthHelper
      */
     public static function getCurrentUser(): ?array
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            require_once __DIR__ . '/session.php';
-            $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
-            if (strpos($host, ':') !== false) {
-                $host = explode(':', $host)[0];
-            }
-            $parts = explode('.', $host);
-            $baseDomain = $host;
-            if (count($parts) >= 2) {
-                $baseDomain = $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1];
-            }
-            $cookieDomain = '.' . $baseDomain;
-            $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
-            session_init([
-                'name' => 'PHPSESSID',
-                'lifetime' => 0,
-                'path' => '/',
-                'domain' => $cookieDomain,
-                'secure' => $isHttps,
-                'httponly' => true,
-                'samesite' => 'None',
-            ]);
-        }
+        ensureSessionStarted();
 
         if (!isset($_SESSION['user'])) {
             return null;

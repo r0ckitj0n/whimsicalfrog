@@ -222,16 +222,26 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
     const storedCostValue = Number(breakdown.totals?.stored ?? 0);
     const breakdownTotalValue = Number(breakdown.totals?.total ?? 0);
     const hasMismatch = Math.abs(storedCostValue - breakdownTotalValue) > 0.001;
+    const displayCurrentCostValue = (!hasStoredBreakdown && !isPendingOnly)
+        ? Number(currentPrice ?? storedCostValue)
+        : storedCostValue;
 
     const startEditCurrent = () => {
         if (isReadOnly) return;
         setIsEditingCurrent(true);
-        setCurrentEditValue(storedCostValue.toFixed(2));
+        setCurrentEditValue(displayCurrentCostValue.toFixed(2));
     };
 
     const commitEditCurrent = async () => {
         const value = parseFloat(currentEditValue);
         if (Number.isNaN(value) || value < 0) {
+            setIsEditingCurrent(false);
+            setCurrentEditValue('');
+            return;
+        }
+
+        if (!hasStoredBreakdown && !isPendingOnly) {
+            onCurrentPriceChange?.(Number(value.toFixed(2)));
             setIsEditingCurrent(false);
             setCurrentEditValue('');
             return;
@@ -298,7 +308,7 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
                             onClick={startEditCurrent}
                             title={!isReadOnly && onCurrentPriceChange ? 'Click to edit current cost' : undefined}
                         >
-                            ${storedCostValue.toFixed(2)}
+                            ${displayCurrentCostValue.toFixed(2)}
                         </span>
                     )}
                 </div>

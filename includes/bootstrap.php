@@ -24,19 +24,9 @@ function wf_bootstrap() {
     if (strpos($host, ':') !== false) {
         $host = explode(':', $host)[0];
     }
-    $parts = explode('.', $host);
-    $baseDomain = $host;
-    if (count($parts) >= 2) {
-        $baseDomain = $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1];
-    }
-    $cookieDomain = '.' . $baseDomain;
-
-    $isHttps = (
-        (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
-        (($_SERVER['SERVER_PORT'] ?? '') == 443) ||
-        (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ||
-        (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
-    );
+    require_once __DIR__ . '/helpers/AuthSessionHelper.php';
+    $cookieDomain = AuthSessionHelper::getCookieDomain();
+    $isHttps = AuthSessionHelper::isHttps();
 
     // 3. Initialize Session
     require_once __DIR__ . '/session.php';

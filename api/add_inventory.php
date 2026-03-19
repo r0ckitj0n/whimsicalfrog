@@ -5,6 +5,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/item_price_sync.php';
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -387,6 +388,53 @@ function wf_migrate_temp_sku_records(string $sourceSku, string $targetSku): void
     }
 }
 
+function wf_seed_default_breakdowns(string $sku): void
+{
+    if (!preg_match('/^[A-Za-z0-9-]{3,64}$/', $sku)) {
+        return;
+    }
+
+    if (wf_table_exists('cost_factors')) {
+        $existingCostFactors = Database::queryOne(
+            "SELECT COUNT(*) AS c FROM cost_factors WHERE sku = ?",
+            [$sku]
+        );
+        if (((int) ($existingCostFactors['c'] ?? 0)) === 0) {
+            $defaultCostFactors = [
+                ['category' => 'materials', 'label' => 'Manual Materials'],
+                ['category' => 'labor', 'label' => 'Manual Labor'],
+                ['category' => 'energy', 'label' => 'Manual Energy'],
+                ['category' => 'equipment', 'label' => 'Manual Equipment']
+            ];
+
+            foreach ($defaultCostFactors as $factor) {
+                Database::execute(
+                    "INSERT INTO cost_factors (sku, category, label, cost, source, created_at, updated_at)
+                     VALUES (?, ?, ?, 0, 'manual', NOW(), NOW())",
+                    [$sku, $factor['category'], $factor['label']]
+                );
+            }
+        }
+    }
+
+    if (wf_table_exists('price_factors')) {
+        $existingPriceFactors = Database::queryOne(
+            "SELECT COUNT(*) AS c FROM price_factors WHERE sku = ?",
+            [$sku]
+        );
+        if (((int) ($existingPriceFactors['c'] ?? 0)) === 0) {
+            Database::execute(
+                "INSERT INTO price_factors (sku, label, amount, type, explanation, source, created_at)
+                 VALUES (?, 'Manual Retail', 0, 'final', '', 'manual', NOW())",
+                [$sku]
+            );
+        }
+    }
+
+    wf_sync_item_cost_price_from_factors($sku);
+    wf_sync_item_retail_price_from_factors($sku);
+}
+
 try {
     // Get POST data
     $raw = file_get_contents('php://input');
@@ -514,6 +562,7 @@ try {
             ) {
                 wf_migrate_temp_sku_records($sourceTempSku, $sku);
             }
+            wf_seed_default_breakdowns($sku);
             Response::success([
                 'message' => $alreadyExists ? 'Item updated successfully' : 'Item added successfully',
                 'id' => $sku,

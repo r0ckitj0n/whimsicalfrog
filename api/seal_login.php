@@ -10,31 +10,7 @@ require_once __DIR__ . '/../includes/auth_cookie.php';
 
 // Initialize session (proxy-aware secure)
 if (session_status() !== PHP_SESSION_ACTIVE) {
-    $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
-    if (strpos($host, ':') !== false) {
-        $host = explode(':', $host)[0];
-    }
-    $parts = explode('.', $host);
-    $baseDomain = $host;
-    if (count($parts) >= 2) {
-        $baseDomain = $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1];
-    }
-    $dom = '.' . $baseDomain;
-    $sec = (
-        (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
-        (($_SERVER['SERVER_PORT'] ?? '') == 443) ||
-        (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ||
-        (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
-    );
-    session_init([
-        'name' => 'PHPSESSID',
-        'lifetime' => 0,
-        'path' => '/',
-        'domain' => $dom,
-        'secure' => $sec,
-        'httponly' => true,
-        'samesite' => 'None',
-    ]);
+    ensureSessionStarted();
 }
 
 $target = $_GET['to'] ?? '/';
@@ -45,22 +21,8 @@ if (strpos($target, '://') !== false) {
 }
 
 try {
-    $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
-    if (strpos($host, ':') !== false) {
-        $host = explode(':', $host)[0];
-    }
-    $p = explode('.', $host);
-    $bd = $host;
-    if (count($p) >= 2) {
-        $bd = $p[count($p) - 2] . '.' . $p[count($p) - 1];
-    }
-    $dom = '.' . $bd;
-    $sec = (
-        (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
-        (($_SERVER['SERVER_PORT'] ?? '') == 443) ||
-        (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ||
-        (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
-    );
+    $dom = AuthSessionHelper::getCookieDomain();
+    $sec = AuthSessionHelper::isHttps();
 
     // Determine current user from session - manual cookie reconstruction removed
     // to prevent auto-login after logout and ensure session path parity.

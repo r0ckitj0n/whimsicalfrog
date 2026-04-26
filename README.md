@@ -14,3 +14,12 @@ Documentation and legacy code were archived to `backups/cleanup_2025_11_26` on W
 - Keep "Require branches to be up to date before merging" enabled.
 - Do not allow force pushes or branch deletions on `main`.
 
+## PR-Only Main Workflow
+
+- Do not push directly to `main`.
+- Open a pull request from a feature branch and merge only after required checks pass.
+- Keep branch protection configured with:
+  - required pull request reviews
+  - required status check `Secret Scan / gitleaks`
+  - no force-push and no delete on `main`
+

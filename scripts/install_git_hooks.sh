@@ -42,6 +42,10 @@ if [ -z "$REPO_ROOT" ]; then
   exit 1
 fi
 
+echo "[pre-commit] Running gitleaks (staged changes)..."
+"$REPO_ROOT/scripts/security/run_gitleaks.sh" staged
+
+echo "[pre-commit] Running commit mode sync..."
 exec "$REPO_ROOT/scripts/commit_mode_sync.sh"
 EOF
 
@@ -79,7 +83,7 @@ chmod +x "$PRE_PUSH_HOOK_PATH"
 git config push.followTags true
 
 echo "[hooks] Installed pre-commit hook at .git/hooks/pre-commit"
-echo "[hooks] Hook will run scripts/commit_mode_sync.sh on every commit."
+echo "[hooks] Hook runs gitleaks and commit mode sync on every commit."
 echo "[hooks] Installed pre-push hook at .git/hooks/pre-push"
 echo "[hooks] Hook runs repo_hygiene.mjs, release tracking, and auto-deploy on pushes."
 echo "[hooks] Set git config push.followTags=true for this repository."

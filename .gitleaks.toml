@@ -1,0 +1,10 @@
+title = "WhimsicalFrog gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow clearly non-secret example placeholders only"
+regexes = [
+  '''(?i)example(_|-)?(token|secret|key|password)''',
+]

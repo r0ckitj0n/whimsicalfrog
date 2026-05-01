@@ -388,11 +388,14 @@ function wf_migrate_temp_sku_records(string $sourceSku, string $targetSku): void
     }
 }
 
-function wf_seed_default_breakdowns(string $sku): void
+function wf_seed_default_breakdowns(string $sku, float $costPrice, float $retailPrice): void
 {
     if (!preg_match('/^[A-Za-z0-9-]{3,64}$/', $sku)) {
         return;
     }
+
+    $seededCostFactors = false;
+    $seededPriceFactors = false;
 
     if (wf_table_exists('cost_factors')) {
         $existingCostFactors = Database::queryOne(
@@ -401,19 +404,20 @@ function wf_seed_default_breakdowns(string $sku): void
         );
         if (((int) ($existingCostFactors['c'] ?? 0)) === 0) {
             $defaultCostFactors = [
-                ['category' => 'materials', 'label' => 'Manual Materials'],
-                ['category' => 'labor', 'label' => 'Manual Labor'],
-                ['category' => 'energy', 'label' => 'Manual Energy'],
-                ['category' => 'equipment', 'label' => 'Manual Equipment']
+                ['category' => 'materials', 'label' => 'Manual Materials', 'cost' => $costPrice],
+                ['category' => 'labor', 'label' => 'Manual Labor', 'cost' => 0.0],
+                ['category' => 'energy', 'label' => 'Manual Energy', 'cost' => 0.0],
+                ['category' => 'equipment', 'label' => 'Manual Equipment', 'cost' => 0.0]
             ];
 
             foreach ($defaultCostFactors as $factor) {
                 Database::execute(
                     "INSERT INTO cost_factors (sku, category, label, cost, source, created_at, updated_at)
-                     VALUES (?, ?, ?, 0, 'manual', NOW(), NOW())",
-                    [$sku, $factor['category'], $factor['label']]
+                     VALUES (?, ?, ?, ?, 'manual', NOW(), NOW())",
+                    [$sku, $factor['category'], $factor['label'], $factor['cost']]
                 );
             }
+            $seededCostFactors = true;
         }
     }
 
@@ -425,14 +429,19 @@ function wf_seed_default_breakdowns(string $sku): void
         if (((int) ($existingPriceFactors['c'] ?? 0)) === 0) {
             Database::execute(
                 "INSERT INTO price_factors (sku, label, amount, type, explanation, source, created_at)
-                 VALUES (?, 'Manual Retail', 0, 'final', '', 'manual', NOW())",
-                [$sku]
+                 VALUES (?, 'Manual Retail', ?, 'final', '', 'manual', NOW())",
+                [$sku, $retailPrice]
             );
+            $seededPriceFactors = true;
         }
     }
 
-    wf_sync_item_cost_price_from_factors($sku);
-    wf_sync_item_retail_price_from_factors($sku);
+    if ($seededCostFactors) {
+        wf_sync_item_cost_price_from_factors($sku);
+    }
+    if ($seededPriceFactors) {
+        wf_sync_item_retail_price_from_factors($sku);
+    }
 }
 
 try {
@@ -562,7 +571,7 @@ try {
             ) {
                 wf_migrate_temp_sku_records($sourceTempSku, $sku);
             }
-            wf_seed_default_breakdowns($sku);
+            wf_seed_default_breakdowns($sku, $cost_price, $retail_price);
             Response::success([
                 'message' => $alreadyExists ? 'Item updated successfully' : 'Item added successfully',
                 'id' => $sku,

@@ -81,6 +81,7 @@
     "release": "bash scripts/release.sh",
     "release:no-deploy": "bash scripts/release.sh --no-deploy",
     "release:tag": "bash scripts/release.sh --no-deploy --no-build --no-push",
+    "security:test:auth-cookie": "node scripts/security/test_auth_cookie_policy.mjs",
     "secrets:scan": "bash scripts/security/run_gitleaks.sh repo",
     "secrets:staged": "bash scripts/security/run_gitleaks.sh staged",
     "precommit": "npm run secrets:staged",

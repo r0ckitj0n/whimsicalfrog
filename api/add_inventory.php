@@ -388,13 +388,18 @@ function wf_migrate_temp_sku_records(string $sourceSku, string $targetSku): void
     }
 }
 
-function wf_seed_default_breakdowns(string $sku): void
+function wf_seed_default_breakdowns(string $sku, float $costPrice, float $retailPrice): void
 {
     if (!preg_match('/^[A-Za-z0-9-]{3,64}$/', $sku)) {
         return;
     }
 
-    if (wf_table_exists('cost_factors')) {
+    $costPrice = round(max(0.0, $costPrice), 2);
+    $retailPrice = round(max(0.0, $retailPrice), 2);
+    $hasCostFactorsTable = wf_table_exists('cost_factors');
+    $hasPriceFactorsTable = wf_table_exists('price_factors');
+
+    if ($hasCostFactorsTable) {
         $existingCostFactors = Database::queryOne(
             "SELECT COUNT(*) AS c FROM cost_factors WHERE sku = ?",
             [$sku]
@@ -408,16 +413,17 @@ function wf_seed_default_breakdowns(string $sku): void
             ];
 
             foreach ($defaultCostFactors as $factor) {
+                $factorCost = $factor['category'] === 'materials' ? $costPrice : 0.0;
                 Database::execute(
                     "INSERT INTO cost_factors (sku, category, label, cost, source, created_at, updated_at)
-                     VALUES (?, ?, ?, 0, 'manual', NOW(), NOW())",
-                    [$sku, $factor['category'], $factor['label']]
+                     VALUES (?, ?, ?, ?, 'manual', NOW(), NOW())",
+                    [$sku, $factor['category'], $factor['label'], $factorCost]
                 );
             }
         }
     }
 
-    if (wf_table_exists('price_factors')) {
+    if ($hasPriceFactorsTable) {
         $existingPriceFactors = Database::queryOne(
             "SELECT COUNT(*) AS c FROM price_factors WHERE sku = ?",
             [$sku]
@@ -425,14 +431,18 @@ function wf_seed_default_breakdowns(string $sku): void
         if (((int) ($existingPriceFactors['c'] ?? 0)) === 0) {
             Database::execute(
                 "INSERT INTO price_factors (sku, label, amount, type, explanation, source, created_at)
-                 VALUES (?, 'Manual Retail', 0, 'final', '', 'manual', NOW())",
-                [$sku]
+                 VALUES (?, 'Manual Retail', ?, 'final', '', 'manual', NOW())",
+                [$sku, $retailPrice]
             );
         }
     }
 
-    wf_sync_item_cost_price_from_factors($sku);
-    wf_sync_item_retail_price_from_factors($sku);
+    if ($hasCostFactorsTable) {
+        wf_sync_item_cost_price_from_factors($sku);
+    }
+    if ($hasPriceFactorsTable) {
+        wf_sync_item_retail_price_from_factors($sku);
+    }
 }
 
 try {
@@ -562,7 +572,7 @@ try {
             ) {
                 wf_migrate_temp_sku_records($sourceTempSku, $sku);
             }
-            wf_seed_default_breakdowns($sku);
+            wf_seed_default_breakdowns($sku, $cost_price, $retail_price);
             Response::success([
                 'message' => $alreadyExists ? 'Item updated successfully' : 'Item added successfully',
                 'id' => $sku,

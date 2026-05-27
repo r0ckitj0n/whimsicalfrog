@@ -51,6 +51,25 @@ class AuthSessionHelper
         );
     }
 
+    private static function clearAuthCookiesForRequest(): void
+    {
+        $dom = self::getCookieDomain();
+        $sec = self::isHttps();
+        $domains = ['', $dom];
+        if ($dom && !str_starts_with($dom, '.')) {
+            $domains[] = '.' . $dom;
+        }
+
+        foreach (array_unique($domains) as $domain) {
+            wf_auth_clear_cookie($domain, $sec);
+            wf_auth_clear_client_hint($domain, $sec);
+            self::debugLog("clearAuthCookiesForRequest: Cleared auth cookies for domain: " . ($domain ?: 'empty'));
+        }
+
+        unset($_COOKIE[wf_auth_cookie_name()]);
+        unset($_COOKIE[wf_auth_client_cookie_name()]);
+    }
+
     public static function reconstructSessionFromCookie(): void
     {
         self::debugLog("reconstructSessionFromCookie: Called. Cookies present: " . json_encode(array_keys($_COOKIE)));
@@ -59,26 +78,7 @@ class AuthSessionHelper
         if (isset($_COOKIE['WF_LOGOUT_IN_PROGRESS'])) {
             self::debugLog("reconstructSessionFromCookie: WF_LOGOUT_IN_PROGRESS detected - aborting reconstruction");
 
-            // Immediately clear the logout marker cookie for all domain variations
-            $dom = self::getCookieDomain();
-            $domains = ['', $dom];
-            if ($dom && !str_starts_with($dom, '.')) {
-                $domains[] = '.' . $dom;
-            }
-            foreach ($domains as $domain) {
-                $opts = ['expires' => time() - 3600, 'path' => '/'];
-                if (!empty($domain)) {
-                    $opts['domain'] = $domain;
-                }
-                @setcookie('WF_LOGOUT_IN_PROGRESS', '', $opts);
-                self::debugLog("reconstructSessionFromCookie: Cleared WF_LOGOUT_IN_PROGRESS for domain: " . ($domain ?: 'empty'));
-            }
-            unset($_COOKIE['WF_LOGOUT_IN_PROGRESS']);
-
-            // Also clear any auth cookies from $_COOKIE to prevent reconstruction
-            unset($_COOKIE[wf_auth_cookie_name()]);
-            unset($_COOKIE[wf_auth_client_cookie_name()]);
-            self::debugLog("reconstructSessionFromCookie: Cleared auth cookies from \$_COOKIE");
+            self::clearAuthCookiesForRequest();
             return;
         }
 
@@ -94,6 +94,7 @@ class AuthSessionHelper
                     $uid = $parsed['user_id'];
                     self::debugLog("reconstructSessionFromCookie: Parsed cookie for user_id: {$uid}");
                     $row = null;
+                    $lookupCompleted = false;
                     try {
                         $dbOk = true;
                         if (class_exists('Database') && method_exists('Database', 'isAvailableQuick')) {
@@ -101,6 +102,7 @@ class AuthSessionHelper
                         }
                         if ($dbOk) {
                             $row = Database::queryOne('SELECT id, username, email, role, first_name, last_name, phone_number FROM users WHERE id = ?', [$uid]);
+                            $lookupCompleted = true;
                         }
                         // @reason: Session reconstruction is optional - user proceeds unauthenticated if DB unavailable
                     } catch (\Throwable $e) {
@@ -121,8 +123,13 @@ class AuthSessionHelper
                         wf_auth_set_cookie($row['id'], self::getCookieDomain(), self::isHttps());
                         self::debugLog("reconstructSessionFromCookie: Session reconstructed for user: {$row['username']}");
                     } else {
-                        $_SESSION['user'] = ['user_id' => $uid];
-                        self::debugLog("reconstructSessionFromCookie: Session reconstructed with minimal data for uid: {$uid}");
+                        unset($_SESSION['user']);
+                        if ($lookupCompleted) {
+                            self::clearAuthCookiesForRequest();
+                            self::debugLog("reconstructSessionFromCookie: Valid auth cookie references missing user; cleared auth cookies for uid: {$uid}");
+                        } else {
+                            self::debugLog("reconstructSessionFromCookie: User lookup unavailable; proceeding unauthenticated for uid: {$uid}");
+                        }
                     }
                 } else {
                     self::debugLog("reconstructSessionFromCookie: No valid auth cookie found");

@@ -38,6 +38,7 @@
     "guard:no-iframes": "node scripts/guards/guard-no-iframes.mjs",
     "guard:no-alerts": "node scripts/guards/guard-no-alerts.mjs",
     "guard:fetch": "npm run guard:no-raw-fetch",
+    "guard:critical-regressions": "node scripts/guards/critical_bug_regression_checks.mjs",
     "smoke:api-client": "node scripts/guards/smoke-api-client-usage.mjs",
     "guard:brand-colors": "rg -n \"#6b8e23|#789a34\" --glob '!**/backups/**' --glob '!**/*.backup*' --glob '!**/site-base.css.backup'",
     "guard:fonts": "rg -n \"font-family\\s*:\\s*[^;]+;\" src/ | grep -vF 'var(--font-' | grep -v email-styles.css | grep -v core/utilities.css | grep -v site-base.css.backup",

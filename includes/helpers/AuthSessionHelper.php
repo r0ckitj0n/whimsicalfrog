@@ -59,23 +59,8 @@ class AuthSessionHelper
         if (isset($_COOKIE['WF_LOGOUT_IN_PROGRESS'])) {
             self::debugLog("reconstructSessionFromCookie: WF_LOGOUT_IN_PROGRESS detected - aborting reconstruction");
 
-            // Immediately clear the logout marker cookie for all domain variations
-            $dom = self::getCookieDomain();
-            $domains = ['', $dom];
-            if ($dom && !str_starts_with($dom, '.')) {
-                $domains[] = '.' . $dom;
-            }
-            foreach ($domains as $domain) {
-                $opts = ['expires' => time() - 3600, 'path' => '/'];
-                if (!empty($domain)) {
-                    $opts['domain'] = $domain;
-                }
-                @setcookie('WF_LOGOUT_IN_PROGRESS', '', $opts);
-                self::debugLog("reconstructSessionFromCookie: Cleared WF_LOGOUT_IN_PROGRESS for domain: " . ($domain ?: 'empty'));
-            }
-            unset($_COOKIE['WF_LOGOUT_IN_PROGRESS']);
-
-            // Also clear any auth cookies from $_COOKIE to prevent reconstruction
+            // Keep the marker in place for its full TTL so repeated requests
+            // cannot rehydrate a session from a stale HttpOnly auth cookie.
             unset($_COOKIE[wf_auth_cookie_name()]);
             unset($_COOKIE[wf_auth_client_cookie_name()]);
             self::debugLog("reconstructSessionFromCookie: Cleared auth cookies from \$_COOKIE");

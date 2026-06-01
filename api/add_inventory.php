@@ -388,11 +388,14 @@ function wf_migrate_temp_sku_records(string $sourceSku, string $targetSku): void
     }
 }
 
-function wf_seed_default_breakdowns(string $sku): void
+function wf_seed_default_breakdowns(string $sku, float $costPrice, float $retailPrice): void
 {
     if (!preg_match('/^[A-Za-z0-9-]{3,64}$/', $sku)) {
         return;
     }
+
+    $costPrice = round(max(0, $costPrice), 2);
+    $retailPrice = round(max(0, $retailPrice), 2);
 
     if (wf_table_exists('cost_factors')) {
         $existingCostFactors = Database::queryOne(
@@ -408,10 +411,11 @@ function wf_seed_default_breakdowns(string $sku): void
             ];
 
             foreach ($defaultCostFactors as $factor) {
+                $seedCost = $factor['category'] === 'materials' ? $costPrice : 0;
                 Database::execute(
                     "INSERT INTO cost_factors (sku, category, label, cost, source, created_at, updated_at)
-                     VALUES (?, ?, ?, 0, 'manual', NOW(), NOW())",
-                    [$sku, $factor['category'], $factor['label']]
+                     VALUES (?, ?, ?, ?, 'manual', NOW(), NOW())",
+                    [$sku, $factor['category'], $factor['label'], $seedCost]
                 );
             }
         }
@@ -425,8 +429,8 @@ function wf_seed_default_breakdowns(string $sku): void
         if (((int) ($existingPriceFactors['c'] ?? 0)) === 0) {
             Database::execute(
                 "INSERT INTO price_factors (sku, label, amount, type, explanation, source, created_at)
-                 VALUES (?, 'Manual Retail', 0, 'final', '', 'manual', NOW())",
-                [$sku]
+                 VALUES (?, 'Manual Retail', ?, 'final', '', 'manual', NOW())",
+                [$sku, $retailPrice]
             );
         }
     }
@@ -562,7 +566,7 @@ try {
             ) {
                 wf_migrate_temp_sku_records($sourceTempSku, $sku);
             }
-            wf_seed_default_breakdowns($sku);
+            wf_seed_default_breakdowns($sku, $cost_price, $retail_price);
             Response::success([
                 'message' => $alreadyExists ? 'Item updated successfully' : 'Item added successfully',
                 'id' => $sku,

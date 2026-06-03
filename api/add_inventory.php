@@ -403,7 +403,17 @@ function wf_seed_default_breakdowns(string $sku): void
 
     if (wf_table_exists('cost_factors')) {
         $existingCostFactors = Database::queryOne(
-            "SELECT COUNT(*) AS c FROM cost_factors WHERE sku = ?",
+            "SELECT
+                COUNT(*) AS c,
+                COALESCE(SUM(cost), 0) AS total,
+                SUM(CASE
+                    WHEN source = 'manual'
+                     AND category IN ('materials', 'labor', 'energy', 'equipment')
+                     AND label IN ('Manual Materials', 'Manual Labor', 'Manual Energy', 'Manual Equipment')
+                    THEN 1 ELSE 0
+                END) AS default_rows
+             FROM cost_factors
+             WHERE sku = ?",
             [$sku]
         );
         if (((int) ($existingCostFactors['c'] ?? 0)) === 0) {
@@ -422,12 +432,38 @@ function wf_seed_default_breakdowns(string $sku): void
                     [$sku, $factor['category'], $factor['label'], $factorCost]
                 );
             }
+        } elseif (
+            $currentCostPrice > 0
+            && ((int) ($existingCostFactors['c'] ?? 0)) === 4
+            && ((int) ($existingCostFactors['default_rows'] ?? 0)) === 4
+            && abs((float) ($existingCostFactors['total'] ?? 0)) < 0.001
+        ) {
+            Database::execute(
+                "UPDATE cost_factors
+                 SET cost = CASE WHEN category = 'materials' THEN ? ELSE 0 END,
+                     updated_at = NOW()
+                 WHERE sku = ?
+                   AND source = 'manual'
+                   AND category IN ('materials', 'labor', 'energy', 'equipment')
+                   AND label IN ('Manual Materials', 'Manual Labor', 'Manual Energy', 'Manual Equipment')",
+                [$currentCostPrice, $sku]
+            );
         }
     }
 
     if (wf_table_exists('price_factors')) {
         $existingPriceFactors = Database::queryOne(
-            "SELECT COUNT(*) AS c FROM price_factors WHERE sku = ?",
+            "SELECT
+                COUNT(*) AS c,
+                COALESCE(SUM(amount), 0) AS total,
+                SUM(CASE
+                    WHEN source = 'manual'
+                     AND type = 'final'
+                     AND label = 'Manual Retail'
+                    THEN 1 ELSE 0
+                END) AS default_rows
+             FROM price_factors
+             WHERE sku = ?",
             [$sku]
         );
         if (((int) ($existingPriceFactors['c'] ?? 0)) === 0) {
@@ -435,6 +471,21 @@ function wf_seed_default_breakdowns(string $sku): void
                 "INSERT INTO price_factors (sku, label, amount, type, explanation, source, created_at)
                  VALUES (?, 'Manual Retail', ?, 'final', '', 'manual', NOW())",
                 [$sku, $currentRetailPrice]
+            );
+        } elseif (
+            $currentRetailPrice > 0
+            && ((int) ($existingPriceFactors['c'] ?? 0)) === 1
+            && ((int) ($existingPriceFactors['default_rows'] ?? 0)) === 1
+            && abs((float) ($existingPriceFactors['total'] ?? 0)) < 0.001
+        ) {
+            Database::execute(
+                "UPDATE price_factors
+                 SET amount = ?
+                 WHERE sku = ?
+                   AND source = 'manual'
+                   AND type = 'final'
+                   AND label = 'Manual Retail'",
+                [$currentRetailPrice, $sku]
             );
         }
     }

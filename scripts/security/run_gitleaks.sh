@@ -11,7 +11,10 @@ run_native() {
   if [ "$MODE" = "staged" ]; then
     exec gitleaks git --staged --redact --no-banner --config "$CONFIG_PATH"
   fi
-  exec gitleaks git "$ROOT_DIR" --redact --no-banner --config "$CONFIG_PATH"
+  if [ "$MODE" = "history" ]; then
+    exec gitleaks git "$ROOT_DIR" --redact --no-banner --config "$CONFIG_PATH"
+  fi
+  exec gitleaks dir "$ROOT_DIR" --redact --no-banner --config "$CONFIG_PATH"
 }
 
 run_docker() {
@@ -19,8 +22,12 @@ run_docker() {
     exec docker run --rm -v "$ROOT_DIR:/repo" -w /repo zricethezav/gitleaks:latest \
       git --staged --redact --no-banner --config .gitleaks.toml
   fi
+  if [ "$MODE" = "history" ]; then
+    exec docker run --rm -v "$ROOT_DIR:/repo" -w /repo zricethezav/gitleaks:latest \
+      git . --redact --no-banner --config .gitleaks.toml
+  fi
   exec docker run --rm -v "$ROOT_DIR:/repo" -w /repo zricethezav/gitleaks:latest \
-    git . --redact --no-banner --config .gitleaks.toml
+    dir . --redact --no-banner --config .gitleaks.toml
 }
 
 if command -v gitleaks >/dev/null 2>&1; then

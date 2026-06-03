@@ -5,11 +5,38 @@
 
 function wf_auth_secret(): string
 {
-    $secret = getenv('WF_AUTH_SECRET');
-    if (!$secret) {
-        $secret = 'wf_auth_fallback_secret_2025_09';
+    $secret = trim((string) getenv('WF_AUTH_SECRET'));
+    if ($secret !== '') {
+        return $secret;
     }
-    return $secret;
+
+    if (wf_auth_is_local_context()) {
+        return 'wf_auth_local_dev_only_2025_09';
+    }
+
+    error_log('WF_AUTH_SECRET is not configured; refusing stateless auth cookie operations outside local development.');
+    throw new RuntimeException('WF_AUTH_SECRET is required outside local development');
+}
+
+function wf_auth_is_local_context(): bool
+{
+    if (PHP_SAPI === 'cli') {
+        return true;
+    }
+
+    $host = strtolower(trim((string) ($_SERVER['HTTP_HOST'] ?? '')));
+    if ($host === '') {
+        return false;
+    }
+
+    if ($host[0] === '[') {
+        $end = strpos($host, ']');
+        $host = $end === false ? $host : substr($host, 1, $end - 1);
+    } elseif (strpos($host, ':') !== false) {
+        $host = explode(':', $host)[0];
+    }
+
+    return in_array($host, ['localhost', '127.0.0.1', '::1'], true);
 }
 
 function wf_auth_cookie_name(): string

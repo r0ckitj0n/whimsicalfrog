@@ -8,6 +8,31 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/auth_cookie.php';
 
 header('Cache-Control: no-store');
+
+function wf_auth_probe_is_local_request(): bool
+{
+    $host = strtolower(trim((string) ($_SERVER['HTTP_HOST'] ?? '')));
+    if ($host === '') {
+        return false;
+    }
+
+    if ($host[0] === '[') {
+        $end = strpos($host, ']');
+        $host = $end === false ? $host : substr($host, 1, $end - 1);
+    } elseif (strpos($host, ':') !== false) {
+        $host = explode(':', $host)[0];
+    }
+
+    return in_array($host, ['localhost', '127.0.0.1', '::1'], true);
+}
+
+if (!wf_auth_probe_is_local_request()) {
+    http_response_code(404);
+    header('Content-Type: application/json');
+    echo json_encode(['ok' => false, 'error' => 'not_found']);
+    exit;
+}
+
 $token = $_GET['token'] ?? '';
 $expected = getenv('WF_AUTH_PROBE_TOKEN') ?: 'wf_probe_2025_09';
 if (!hash_equals($expected, (string)$token)) {

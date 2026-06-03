@@ -20,13 +20,9 @@ function wf_auth_secret(): string
 
 function wf_auth_is_local_context(): bool
 {
-    if (PHP_SAPI === 'cli') {
-        return true;
-    }
-
     $host = strtolower(trim((string) ($_SERVER['HTTP_HOST'] ?? '')));
     if ($host === '') {
-        return false;
+        return PHP_SAPI === 'cli';
     }
 
     if ($host[0] === '[') {

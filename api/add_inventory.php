@@ -394,6 +394,13 @@ function wf_seed_default_breakdowns(string $sku): void
         return;
     }
 
+    $itemPrices = Database::queryOne(
+        "SELECT cost_price, retail_price FROM items WHERE sku = ? LIMIT 1",
+        [$sku]
+    ) ?: [];
+    $seedCostPrice = round(max(0.0, (float) ($itemPrices['cost_price'] ?? 0)), 2);
+    $seedRetailPrice = round(max(0.0, (float) ($itemPrices['retail_price'] ?? 0)), 2);
+
     if (wf_table_exists('cost_factors')) {
         $existingCostFactors = Database::queryOne(
             "SELECT COUNT(*) AS c FROM cost_factors WHERE sku = ?",
@@ -401,17 +408,17 @@ function wf_seed_default_breakdowns(string $sku): void
         );
         if (((int) ($existingCostFactors['c'] ?? 0)) === 0) {
             $defaultCostFactors = [
-                ['category' => 'materials', 'label' => 'Manual Materials'],
-                ['category' => 'labor', 'label' => 'Manual Labor'],
-                ['category' => 'energy', 'label' => 'Manual Energy'],
-                ['category' => 'equipment', 'label' => 'Manual Equipment']
+                ['category' => 'materials', 'label' => 'Manual Materials', 'cost' => $seedCostPrice],
+                ['category' => 'labor', 'label' => 'Manual Labor', 'cost' => 0.0],
+                ['category' => 'energy', 'label' => 'Manual Energy', 'cost' => 0.0],
+                ['category' => 'equipment', 'label' => 'Manual Equipment', 'cost' => 0.0]
             ];
 
             foreach ($defaultCostFactors as $factor) {
                 Database::execute(
                     "INSERT INTO cost_factors (sku, category, label, cost, source, created_at, updated_at)
-                     VALUES (?, ?, ?, 0, 'manual', NOW(), NOW())",
-                    [$sku, $factor['category'], $factor['label']]
+                     VALUES (?, ?, ?, ?, 'manual', NOW(), NOW())",
+                    [$sku, $factor['category'], $factor['label'], $factor['cost']]
                 );
             }
         }
@@ -425,8 +432,8 @@ function wf_seed_default_breakdowns(string $sku): void
         if (((int) ($existingPriceFactors['c'] ?? 0)) === 0) {
             Database::execute(
                 "INSERT INTO price_factors (sku, label, amount, type, explanation, source, created_at)
-                 VALUES (?, 'Manual Retail', 0, 'final', '', 'manual', NOW())",
-                [$sku]
+                 VALUES (?, 'Manual Retail', ?, 'final', '', 'manual', NOW())",
+                [$sku, $seedRetailPrice]
             );
         }
     }

@@ -430,9 +430,6 @@ function wf_seed_default_breakdowns(string $sku): void
             );
         }
     }
-
-    wf_sync_item_cost_price_from_factors($sku);
-    wf_sync_item_retail_price_from_factors($sku);
 }
 
 try {

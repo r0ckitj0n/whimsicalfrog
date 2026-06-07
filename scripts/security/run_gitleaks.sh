@@ -9,9 +9,15 @@ MODE="${1:-repo}"
 
 run_native() {
   if [ "$MODE" = "staged" ]; then
-    exec gitleaks git --staged --redact --no-banner --config "$CONFIG_PATH"
+    if gitleaks git --help >/dev/null 2>&1; then
+      exec gitleaks git --staged --redact --no-banner --config "$CONFIG_PATH"
+    fi
+    exec gitleaks protect --staged --redact --no-banner --config "$CONFIG_PATH"
   fi
-  exec gitleaks dir "$ROOT_DIR" --redact --no-banner --config "$CONFIG_PATH"
+  if gitleaks dir --help >/dev/null 2>&1; then
+    exec gitleaks dir "$ROOT_DIR" --redact --no-banner --config "$CONFIG_PATH"
+  fi
+  exec gitleaks detect --source "$ROOT_DIR" --redact --no-banner --config "$CONFIG_PATH"
 }
 
 run_docker() {

@@ -71,6 +71,7 @@
     "smoke:store:crawl": "node scripts/dev/frontend-tests/store-crawl-smoke.mjs",
     "test:overlays": "node scripts/dev/frontend-tests/overlay-suite.mjs",
     "test:attributes-inline": "node scripts/dev/frontend-tests/attributes-inline.mjs",
+    "test:critical-regressions": "php scripts/tests/critical_regressions.php",
     "db:dump": "bash scripts/db/dump_local_db.sh",
     "db:dump:gzip": "bash scripts/db/dump_local_db.sh --gzip",
     "logs:rotate": "bash scripts/maintenance/rotate_logs.sh",

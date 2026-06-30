@@ -9,9 +9,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT_DIR"
 
-if [ ! -d ".git" ]; then
-  echo "[hooks] Error: .git directory not found. Run this from the repository."
-  exit 1
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "[hooks] Git repository not found; skipping local hook installation."
+  exit 0
 fi
 
 if [ ! -x "$ROOT_DIR/scripts/commit_mode_sync.sh" ]; then
@@ -29,8 +29,14 @@ if [ ! -x "$ROOT_DIR/scripts/auto_deploy_on_push.sh" ]; then
   chmod +x "$ROOT_DIR/scripts/auto_deploy_on_push.sh"
 fi
 
-PRE_COMMIT_HOOK_PATH="$ROOT_DIR/.git/hooks/pre-commit"
-PRE_PUSH_HOOK_PATH="$ROOT_DIR/.git/hooks/pre-push"
+HOOKS_DIR="$(git rev-parse --git-path hooks)"
+if [ -f "$HOOKS_DIR/.cursor-original-hooks-path" ]; then
+  HOOKS_DIR="$(cat "$HOOKS_DIR/.cursor-original-hooks-path")"
+fi
+mkdir -p "$HOOKS_DIR"
+
+PRE_COMMIT_HOOK_PATH="$HOOKS_DIR/pre-commit"
+PRE_PUSH_HOOK_PATH="$HOOKS_DIR/pre-push"
 
 cat > "$PRE_COMMIT_HOOK_PATH" <<'EOF'
 #!/bin/sh
@@ -82,8 +88,8 @@ EOF
 chmod +x "$PRE_PUSH_HOOK_PATH"
 git config push.followTags true
 
-echo "[hooks] Installed pre-commit hook at .git/hooks/pre-commit"
+echo "[hooks] Installed pre-commit hook at $PRE_COMMIT_HOOK_PATH"
 echo "[hooks] Hook runs gitleaks and commit mode sync on every commit."
-echo "[hooks] Installed pre-push hook at .git/hooks/pre-push"
+echo "[hooks] Installed pre-push hook at $PRE_PUSH_HOOK_PATH"
 echo "[hooks] Hook runs repo_hygiene.mjs, release tracking, and auto-deploy on pushes."
 echo "[hooks] Set git config push.followTags=true for this repository."

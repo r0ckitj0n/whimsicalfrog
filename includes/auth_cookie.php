@@ -3,11 +3,11 @@
 // Stateless auth cookie helper. Allows reconstructing session when PHP sessions are flaky.
 // Cookie: WF_AUTH contains base64(user_id)|base64(ts)|base64(sig) where sig = HMAC_SHA256(user_id|ts, secret)
 
-function wf_auth_secret(): string
+function wf_auth_secret(): ?string
 {
     $secret = getenv('WF_AUTH_SECRET');
-    if (!$secret) {
-        $secret = 'wf_auth_fallback_secret_2025_09';
+    if (!is_string($secret) || trim($secret) === '') {
+        return null;
     }
     return $secret;
 }
@@ -19,10 +19,15 @@ function wf_auth_cookie_name(): string
 
 function wf_auth_make_cookie($user_id, int $ttlSeconds = 60 * 60 * 24 * 7): array
 {
+    $secret = wf_auth_secret();
+    if ($secret === null) {
+        throw new RuntimeException('WF_AUTH_SECRET is not configured');
+    }
+
     $uid = (string) $user_id;
     $ts = (string) time();
     $data = $uid . '|' . $ts;
-    $sig = hash_hmac('sha256', $data, wf_auth_secret());
+    $sig = hash_hmac('sha256', $data, $secret);
     // Use URL-safe base64 payload to avoid runtime-specific cookie value filtering.
     $val = base64_encode(json_encode([
         'u' => $uid,
@@ -39,6 +44,12 @@ function wf_auth_parse_cookie(?string $cookieVal): ?array
     if (!$cookieVal) {
         return null;
     }
+
+    $secret = wf_auth_secret();
+    if ($secret === null) {
+        return null;
+    }
+
     // v2 payload format (base64-encoded JSON object)
     $decodedJson = base64_decode($cookieVal, true);
     if ($decodedJson !== false) {
@@ -48,7 +59,7 @@ function wf_auth_parse_cookie(?string $cookieVal): ?array
             $ts = (string) $obj['t'];
             $sig = (string) $obj['s'];
             $data = $uid . '|' . $ts;
-            $calc = hash_hmac('sha256', $data, wf_auth_secret());
+            $calc = hash_hmac('sha256', $data, $secret);
             if (!hash_equals($calc, $sig)) {
                 return null;
             }
@@ -71,7 +82,7 @@ function wf_auth_parse_cookie(?string $cookieVal): ?array
         return null;
     }
     $data = $uid . '|' . $ts;
-    $calc = hash_hmac('sha256', $data, wf_auth_secret());
+    $calc = hash_hmac('sha256', $data, $secret);
     if (!hash_equals($calc, $sig)) {
         return null;
     }

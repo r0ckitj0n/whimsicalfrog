@@ -6,18 +6,36 @@ ROOT_DIR="$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)"
 CONFIG_PATH="$ROOT_DIR/.gitleaks.toml"
 
 MODE="${1:-repo}"
+LOG_OPTS="${2:---all}"
 
 run_native() {
-  if [ "$MODE" = "staged" ]; then
-    exec gitleaks git --staged --redact --no-banner --config "$CONFIG_PATH"
+  if gitleaks git --help >/dev/null 2>&1; then
+    if [ "$MODE" = "staged" ]; then
+      exec gitleaks git --staged --redact --no-banner --config "$CONFIG_PATH"
+    fi
+    if [ "$MODE" = "history" ]; then
+      exec gitleaks git --log-opts="$LOG_OPTS" --redact --no-banner --config "$CONFIG_PATH"
+    fi
+    exec gitleaks dir "$ROOT_DIR" --redact --no-banner --config "$CONFIG_PATH"
   fi
-  exec gitleaks dir "$ROOT_DIR" --redact --no-banner --config "$CONFIG_PATH"
+
+  if [ "$MODE" = "staged" ]; then
+    exec gitleaks protect --staged --redact --no-banner --config "$CONFIG_PATH"
+  fi
+  if [ "$MODE" = "history" ]; then
+    exec gitleaks detect --source "$ROOT_DIR" --log-opts "$LOG_OPTS" --redact --no-banner --config "$CONFIG_PATH"
+  fi
+  exec gitleaks detect --source "$ROOT_DIR" --redact --no-banner --config "$CONFIG_PATH"
 }
 
 run_docker() {
   if [ "$MODE" = "staged" ]; then
     exec docker run --rm -v "$ROOT_DIR:/repo" -w /repo zricethezav/gitleaks:latest \
       git --staged --redact --no-banner --config .gitleaks.toml
+  fi
+  if [ "$MODE" = "history" ]; then
+    exec docker run --rm -v "$ROOT_DIR:/repo" -w /repo zricethezav/gitleaks:latest \
+      git --log-opts="$LOG_OPTS" --redact --no-banner --config .gitleaks.toml
   fi
   exec docker run --rm -v "$ROOT_DIR:/repo" -w /repo zricethezav/gitleaks:latest \
     dir . --redact --no-banner --config .gitleaks.toml

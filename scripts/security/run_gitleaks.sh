@@ -21,16 +21,33 @@ history_log_opts() {
   printf '%s\n' 'HEAD'
 }
 
+has_modern_native_git_command() {
+  gitleaks git --help >/dev/null 2>&1
+}
+
+has_modern_native_dir_command() {
+  gitleaks dir --help >/dev/null 2>&1
+}
+
 run_native() {
   case "$MODE" in
     staged)
-      exec gitleaks git --staged --redact --no-banner --config "$CONFIG_PATH"
+      if has_modern_native_git_command; then
+        exec gitleaks git --staged --redact --no-banner --config "$CONFIG_PATH"
+      fi
+      exec gitleaks protect --staged --redact --no-banner --config "$CONFIG_PATH"
       ;;
     history)
-      exec gitleaks git --log-opts="$(history_log_opts)" --redact --no-banner --config "$CONFIG_PATH"
+      if has_modern_native_git_command; then
+        exec gitleaks git --log-opts="$(history_log_opts)" --redact --no-banner --config "$CONFIG_PATH"
+      fi
+      exec gitleaks detect --source "$ROOT_DIR" --log-opts="$(history_log_opts)" --redact --no-banner --config "$CONFIG_PATH"
       ;;
     repo)
-      exec gitleaks dir "$ROOT_DIR" --redact --no-banner --config "$CONFIG_PATH"
+      if has_modern_native_dir_command; then
+        exec gitleaks dir "$ROOT_DIR" --redact --no-banner --config "$CONFIG_PATH"
+      fi
+      exec gitleaks detect --no-git --source "$ROOT_DIR" --redact --no-banner --config "$CONFIG_PATH"
       ;;
     *)
       echo "[gitleaks] ERROR: unknown mode '$MODE'. Use repo, staged, or history."

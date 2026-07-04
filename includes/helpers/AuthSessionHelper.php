@@ -121,8 +121,11 @@ class AuthSessionHelper
                         wf_auth_set_cookie($row['id'], self::getCookieDomain(), self::isHttps());
                         self::debugLog("reconstructSessionFromCookie: Session reconstructed for user: {$row['username']}");
                     } else {
-                        $_SESSION['user'] = ['user_id' => $uid];
-                        self::debugLog("reconstructSessionFromCookie: Session reconstructed with minimal data for uid: {$uid}");
+                        unset($_COOKIE[wf_auth_cookie_name()]);
+                        unset($_COOKIE[wf_auth_client_cookie_name()]);
+                        wf_auth_clear_cookie(self::getCookieDomain(), self::isHttps());
+                        wf_auth_clear_client_hint(self::getCookieDomain(), self::isHttps());
+                        self::debugLog("reconstructSessionFromCookie: Refused reconstruction without verified user row for uid: {$uid}");
                     }
                 } else {
                     self::debugLog("reconstructSessionFromCookie: No valid auth cookie found");

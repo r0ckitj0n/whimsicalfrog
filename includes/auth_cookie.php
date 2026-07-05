@@ -6,10 +6,7 @@
 function wf_auth_secret(): string
 {
     $secret = getenv('WF_AUTH_SECRET');
-    if (!$secret) {
-        $secret = 'wf_auth_fallback_secret_2025_09';
-    }
-    return $secret;
+    return is_string($secret) ? trim($secret) : '';
 }
 
 function wf_auth_cookie_name(): string
@@ -19,10 +16,15 @@ function wf_auth_cookie_name(): string
 
 function wf_auth_make_cookie($user_id, int $ttlSeconds = 60 * 60 * 24 * 7): array
 {
+    $secret = wf_auth_secret();
+    if ($secret === '') {
+        throw new RuntimeException('WF_AUTH_SECRET is required to issue persistent auth cookies');
+    }
+
     $uid = (string) $user_id;
     $ts = (string) time();
     $data = $uid . '|' . $ts;
-    $sig = hash_hmac('sha256', $data, wf_auth_secret());
+    $sig = hash_hmac('sha256', $data, $secret);
     // Use URL-safe base64 payload to avoid runtime-specific cookie value filtering.
     $val = base64_encode(json_encode([
         'u' => $uid,
@@ -39,6 +41,11 @@ function wf_auth_parse_cookie(?string $cookieVal): ?array
     if (!$cookieVal) {
         return null;
     }
+    $secret = wf_auth_secret();
+    if ($secret === '') {
+        return null;
+    }
+
     // v2 payload format (base64-encoded JSON object)
     $decodedJson = base64_decode($cookieVal, true);
     if ($decodedJson !== false) {
@@ -48,7 +55,7 @@ function wf_auth_parse_cookie(?string $cookieVal): ?array
             $ts = (string) $obj['t'];
             $sig = (string) $obj['s'];
             $data = $uid . '|' . $ts;
-            $calc = hash_hmac('sha256', $data, wf_auth_secret());
+            $calc = hash_hmac('sha256', $data, $secret);
             if (!hash_equals($calc, $sig)) {
                 return null;
             }
@@ -71,7 +78,7 @@ function wf_auth_parse_cookie(?string $cookieVal): ?array
         return null;
     }
     $data = $uid . '|' . $ts;
-    $calc = hash_hmac('sha256', $data, wf_auth_secret());
+    $calc = hash_hmac('sha256', $data, $secret);
     if (!hash_equals($calc, $sig)) {
         return null;
     }
@@ -83,6 +90,10 @@ function wf_auth_parse_cookie(?string $cookieVal): ?array
 
 function wf_auth_set_cookie($user_id, string $domain, bool $secure): void
 {
+    if (wf_auth_secret() === '') {
+        return;
+    }
+
     [$val, $exp] = wf_auth_make_cookie($user_id);
     $sameSite = $secure ? 'None' : 'Lax';
     $opts = [

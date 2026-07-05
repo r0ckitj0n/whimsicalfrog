@@ -108,22 +108,23 @@ class AuthSessionHelper
                         $row = null;
                     }
 
-                    if ($row && !empty($row['id'])) {
-                        $_SESSION['user'] = [
-                            'user_id' => $row['id'],
-                            'username' => $row['username'] ?? null,
-                            'email' => $row['email'] ?? null,
-                            'role' => $row['role'] ?? 'user',
-                            'first_name' => $row['first_name'] ?? null,
-                            'last_name' => $row['last_name'] ?? null,
-                            'phone_number' => $row['phone_number'] ?? null,
-                        ];
-                        wf_auth_set_cookie($row['id'], self::getCookieDomain(), self::isHttps());
-                        self::debugLog("reconstructSessionFromCookie: Session reconstructed for user: {$row['username']}");
-                    } else {
-                        $_SESSION['user'] = ['user_id' => $uid];
-                        self::debugLog("reconstructSessionFromCookie: Session reconstructed with minimal data for uid: {$uid}");
+                    if (!$row || empty($row['id'])) {
+                        self::debugLog("reconstructSessionFromCookie: No verified user row for uid: {$uid}; leaving unauthenticated");
+                        unset($_SESSION['user']);
+                        return;
                     }
+
+                    $_SESSION['user'] = [
+                        'user_id' => $row['id'],
+                        'username' => $row['username'] ?? null,
+                        'email' => $row['email'] ?? null,
+                        'role' => $row['role'] ?? 'user',
+                        'first_name' => $row['first_name'] ?? null,
+                        'last_name' => $row['last_name'] ?? null,
+                        'phone_number' => $row['phone_number'] ?? null,
+                    ];
+                    wf_auth_set_cookie($row['id'], self::getCookieDomain(), self::isHttps());
+                    self::debugLog("reconstructSessionFromCookie: Session reconstructed for user: {$row['username']}");
                 } else {
                     self::debugLog("reconstructSessionFromCookie: No valid auth cookie found");
                 }

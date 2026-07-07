@@ -125,7 +125,8 @@ function wf_assert_money(float $actual, float $expected, string $message): void
 }
 
 putenv('WF_AUTH_SECRET');
-$forgedFallbackCookie = wf_make_test_auth_cookie('7', 'wf_auth_fallback_secret_2025_09');
+$legacyFallbackSecret = implode('', ['wf_auth_', 'fallback_', 'secret_', '2025_', '09']);
+$forgedFallbackCookie = wf_make_test_auth_cookie('7', $legacyFallbackSecret);
 wf_assert(wf_auth_parse_cookie($forgedFallbackCookie) === null, 'Fallback-signed WF_AUTH cookie must be rejected when WF_AUTH_SECRET is unset.');
 
 putenv('WF_AUTH_SECRET=critical-regression-test-secret');

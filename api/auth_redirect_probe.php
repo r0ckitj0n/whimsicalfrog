@@ -1,13 +1,28 @@
 <?php
 
-// Auth Redirect Probe: sets WF_AUTH via Set-Cookie, then 302 redirects to whoami (and optionally to /shop)
-// Usage: /api/auth_redirect_probe.php?token=...&next=whoami|shop
-// Token is WF_AUTH_PROBE_TOKEN from env (default: wf_probe_2025_09)
+// Local-only auth redirect probe: sets WF_AUTH via Set-Cookie, then redirects.
+// Usage on localhost only: /api/auth_redirect_probe.php?token=...&next=whoami|shop
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/auth_cookie.php';
 
 header('Cache-Control: no-store');
+
+$hostFull = $_SERVER['HTTP_HOST'] ?? '';
+$host = strtolower(trim($hostFull));
+if (str_starts_with($host, '[') && strpos($host, ']') !== false) {
+    $host = substr($host, 1, strpos($host, ']') - 1);
+} elseif (substr_count($host, ':') === 1) {
+    $host = explode(':', $host)[0];
+}
+$isLocalhost = in_array($host, ['localhost', '127.0.0.1', '::1'], true);
+if (!$isLocalhost) {
+    http_response_code(404);
+    header('Content-Type: application/json');
+    echo json_encode(['ok' => false, 'error' => 'not_found']);
+    exit;
+}
+
 $token = $_GET['token'] ?? '';
 $expected = getenv('WF_AUTH_PROBE_TOKEN') ?: 'wf_probe_2025_09';
 if (!hash_equals($expected, (string)$token)) {
@@ -30,8 +45,7 @@ try {
         exit;
     }
     $uid = $row['id'];
-    $hostFull = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us'; // may include port
-    $host = $hostFull;
+    $host = $hostFull; // may include port
     if (strpos($host, ':') !== false) {
         $host = explode(':', $host)[0];
     }

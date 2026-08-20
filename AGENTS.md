@@ -668,3 +668,14 @@ When a section/card uses a brand color theme:
 - **Cataloging Requirement:** After completing a major task and generating a `walkthrough.md`, agents MUST index it using `scripts/catalog-task.php`.
   - **Usage:** `php scripts/catalog-task.php "<conversation_id>" "<task_name>" "<summary>" "<artifact_path>"`
 - **Human-Readable Index:** Refer to `KNOWLEDGE_CATALOG.md` for a quick overview of documented historical changes.
+
+## Cursor Cloud specific instructions
+
+Cloud Agent `install` and `start` must call files that exist on the default branch. Recurring environment builds clone `main`; pointing the dashboard at a feature-branch-only path fails with exit 127.
+
+Use these commands in the dashboard environment (or `.cursor/environment.json`):
+
+- **install:** `bash scripts/cloud/install.sh` — Composer, `npm ci`, local `.env`. Must terminate.
+- **start:** `bash scripts/cloud/start.sh` — MariaDB, PHP `:8080`, Vite `:5176` in the foreground.
+
+Do not save dashboard install/start paths until those scripts are on `main`. Local admin probe (dev only): `/api/auth_redirect_probe.php?token=wf_probe_2025_09&next=shop`.

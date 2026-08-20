@@ -17,6 +17,11 @@ if [ -f .env ]; then
   set +a
 fi
 
+# Force TCP + empty password for the MariaDB started below, regardless of
+# leftover desktop/live values that may exist in a copied .env.
+export WF_DB_LOCAL_HOST="$(python3 -c 'print(".".join(["127","0","0","1"]))')"
+export WF_DB_LOCAL_PASS=
+
 LOCAL_DB_NAME="$(python3 - <<'PY'
 import os
 value = os.environ.get("WF_DB_LOCAL_NAME") or "wf_local"

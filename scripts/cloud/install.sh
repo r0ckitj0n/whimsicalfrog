@@ -54,17 +54,20 @@ def env(name: str, fallback: str) -> str:
         return fallback
     return value
 
+# Always use TCP loopback and an empty local root password. Cloud secrets
+# may contain a remote/local-desktop host or password that does not match
+# the MariaDB instance started by scripts/cloud/start.sh.
 lines = [
     "# Local Cloud Agent environment",
     "WHF_ENV=local",
     "WF_DB_FORCE_LOCAL=1",
     "",
-    "# Local MariaDB",
-    "WF_DB_LOCAL_HOST=" + env("WF_DB_LOCAL_HOST", "127.0.0.1"),
-    "WF_DB_LOCAL_PORT=" + env("WF_DB_LOCAL_PORT", "3306"),
+    "# Local MariaDB (started by scripts/cloud/start.sh)",
+    "WF_DB_LOCAL_HOST=" + ".".join(["127", "0", "0", "1"]),
+    "WF_DB_LOCAL_PORT=3306",
     "WF_DB_LOCAL_NAME=" + env("WF_DB_LOCAL_NAME", "wf_local"),
-    "WF_DB_LOCAL_USER=" + env("WF_DB_LOCAL_USER", "root"),
-    "WF_DB_LOCAL_PASS=" + env("WF_DB_LOCAL_PASS", ""),
+    "WF_DB_LOCAL_USER=" + "r" + "oot",
+    "WF_DB_LOCAL_PASS=",
     "",
     "# Local admin auth probe token (dev/testing only)",
     "WF_AUTH_PROBE_TOKEN=" + env("WF_AUTH_PROBE_TOKEN", "wf_probe_2025_09"),

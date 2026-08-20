@@ -39,8 +39,16 @@ GRANT ALL PRIVILEGES ON *.* TO 'root'@'127.0.0.1' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 SQL
 
-log "Bootstrapping dev database schema"
-php scripts/db/bootstrap_dev_db.php || log "DB bootstrap reported a warning (continuing)"
+# Only seed the minimal fallback schema when the database is empty. If a full
+# live backup has been restored (see scripts/cloud/pull_live_backup.sh), leave
+# it untouched.
+TABLE_COUNT=$(sudo mariadb -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='whimsicalfrog';" 2>/dev/null || echo 0)
+if [ "${TABLE_COUNT:-0}" -lt 1 ]; then
+  log "Empty database detected; seeding minimal fallback schema"
+  php scripts/db/bootstrap_dev_db.php || log "DB bootstrap reported a warning (continuing)"
+else
+  log "Database already has ${TABLE_COUNT} tables; skipping fallback bootstrap"
+fi
 
 # --- Enable Vite dev mode for the PHP backend -------------------------------
 # `.disable-vite-dev` is committed in the repo and forces the PHP router into

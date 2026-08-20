@@ -106,5 +106,17 @@
     {
         "file": ".local/state/sync_item_prices_from_factors_report_20260213_200814.json",
         "reason": "Runtime state artifact retained under .local/state per project convention."
+    },
+    {
+        "file": "scripts/cloud/install.sh",
+        "reason": "Cloud Agent install entry point invoked by dashboard environment.json, not imported by app code."
+    },
+    {
+        "file": "scripts/cloud/start.sh",
+        "reason": "Cloud Agent start entry point invoked by dashboard environment.json, not imported by app code."
+    },
+    {
+        "file": "scripts/db/bootstrap_dev_db.php",
+        "reason": "Cloud Agent / local CLI database bootstrap invoked by scripts/cloud/start.sh, not imported by app code."
     }
 ]

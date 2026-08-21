@@ -1,11 +1,9 @@
 <?php
 
 // scripts/db/bootstrap_dev_db.php
-// Idempotent local development database bootstrap.
-// Creates the core schema (items, users, orders, categories, ...) and seeds a
-// default admin user by delegating to the existing DatabaseSchemaHelper.
-//
-// Safe to run repeatedly: existing tables/records are skipped.
+// Idempotent local database bootstrap.
+// Creates the core schema and seeds a default admin user by delegating to
+// DatabaseSchemaHelper. Safe to run repeatedly: existing tables/records are skipped.
 //
 // Usage: php scripts/db/bootstrap_dev_db.php
 

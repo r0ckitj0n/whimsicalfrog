@@ -171,7 +171,7 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
 
         const updates = currentFactors
             .map((f, idx) => ({ id: f.id, amount: fromCents(nextCents[idx] ?? 0) }))
-            .filter((u, idx) => Math.abs((breakdown.factors[idx]?.amount ?? 0) - u.amount) > 0.001);
+            .filter((u, idx) => Math.abs((currentFactors[idx]?.amount ?? 0) - u.amount) > 0.001);
 
         if (updates.length > 0) {
             const ok = await updateFactorsBulk(updates);

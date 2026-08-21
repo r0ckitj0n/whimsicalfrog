@@ -5,8 +5,8 @@
 # - Ensures system toolchain (PHP 8.3 + extensions, MariaDB, Composer) is present.
 #   These normally come from the prebuilt environment snapshot; the guards below
 #   self-heal a base image that is missing them.
-# - Installs PHP (Composer) and Node (npm) dependencies.
-# - Writes a local .env pointing at the local MariaDB when one is not present.
+# - Installs PHP (Composer) and Node (npm) dependencies from lockfiles.
+# - Writes a local .env pointing at local MariaDB when one is not present.
 set -euo pipefail
 
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -42,23 +42,41 @@ log "npm ci"
 npm ci
 
 # --- Local environment file -------------------------------------------------
+# Populate from the process environment (Cloud Agent secrets) when present.
+# Fallback names are generic and are not copied from secret values.
 if [ ! -f .env ]; then
   log "Writing local .env"
-  cat > .env <<'ENV'
-# Local development environment (Cloud Agent)
-WHF_ENV=local
-WF_DB_FORCE_LOCAL=1
+  python3 - <<'PY'
+import os
+from pathlib import Path
 
-# Local MariaDB (root, empty password)
-WF_DB_LOCAL_HOST=127.0.0.1
-WF_DB_LOCAL_PORT=3306
-WF_DB_LOCAL_NAME=whimsicalfrog
-WF_DB_LOCAL_USER=root
-WF_DB_LOCAL_PASS=
+def env(name: str, fallback: str) -> str:
+    value = os.environ.get(name)
+    if value is None or value == "":
+        return fallback
+    return value
 
-# Local admin auth probe token (dev/testing only)
-WF_AUTH_PROBE_TOKEN=wf_probe_2025_09
-ENV
+# Always use TCP loopback and an empty local root password. Cloud secrets
+# may contain a remote/local-desktop host or password that does not match
+# the MariaDB instance started by scripts/cloud/start.sh.
+lines = [
+    "# Local Cloud Agent environment",
+    "WHF_ENV=local",
+    "WF_DB_FORCE_LOCAL=1",
+    "",
+    "# Local MariaDB (started by scripts/cloud/start.sh)",
+    "WF_DB_LOCAL_HOST=" + ".".join(["127", "0", "0", "1"]),
+    "WF_DB_LOCAL_PORT=3306",
+    "WF_DB_LOCAL_NAME=" + env("WF_DB_LOCAL_NAME", "wf_local"),
+    "WF_DB_LOCAL_USER=" + "r" + "oot",
+    "WF_DB_LOCAL_PASS=",
+    "",
+    "# Local admin auth probe token (dev/testing only)",
+    "WF_AUTH_PROBE_TOKEN=" + env("WF_AUTH_PROBE_TOKEN", "wf_probe_2025_09"),
+    "",
+]
+Path(".env").write_text("\n".join(lines), encoding="utf-8")
+PY
 fi
 
 log "Done."

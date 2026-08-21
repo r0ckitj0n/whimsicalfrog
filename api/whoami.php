@@ -54,17 +54,6 @@ try {
     ], 200);
 }
 
-// CORS: reflect origin and allow credentials so cookies are included cross-origin in dev
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if ($origin) {
-    header('Access-Control-Allow-Origin: ' . $origin);
-    header('Vary: Origin');
-} else {
-    header('Access-Control-Allow-Origin: *');
-}
-header('Access-Control-Allow-Credentials: true');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json');
 header('Cache-Control: no-store, no-cache, must-revalidate');
 

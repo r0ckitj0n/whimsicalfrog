@@ -15,7 +15,7 @@
 #   WF_DEPLOY_HOST/USER/PASS          - SFTP credentials for the live server
 # Optional overrides:
 #   WF_DEPLOY_BASE_URL                - live base URL (default https://whimsicalfrog.us)
-#   WF_DB_LOCAL_*                     - local DB target (defaults 127.0.0.1/whimsicalfrog/root)
+#   WF_DB_LOCAL_*                     - local DB target (defaults 127.0.0.1/wf_local/root)
 #
 # Usage:
 #   scripts/cloud/pull_live_backup.sh              # DB backup + local restore over HTTPS
@@ -48,7 +48,7 @@ BASE_URL="${WF_DEPLOY_BASE_URL:-https://whimsicalfrog.us}"
 API="${BASE_URL%/}/api/database_maintenance.php"
 LOCAL_DB_HOST="${WF_DB_LOCAL_HOST:-127.0.0.1}"
 LOCAL_DB_PORT="${WF_DB_LOCAL_PORT:-3306}"
-LOCAL_DB_NAME="${WF_DB_LOCAL_NAME:-whimsicalfrog}"
+LOCAL_DB_NAME="${WF_DB_LOCAL_NAME:-wf_local}"
 LOCAL_DB_USER="${WF_DB_LOCAL_USER:-root}"
 LOCAL_DB_PASS="${WF_DB_LOCAL_PASS:-}"
 BATCH_SIZE=40

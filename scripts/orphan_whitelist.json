@@ -116,6 +116,10 @@
         "reason": "Cloud Agent start entry point invoked by dashboard environment.json, not imported by app code."
     },
     {
+        "file": "scripts/cloud/pull_live_backup.sh",
+        "reason": "Cloud Agent / local CLI helper that restores the live database over HTTPS; invoked manually, not imported by app code."
+    },
+    {
         "file": "scripts/db/bootstrap_dev_db.php",
         "reason": "Cloud Agent / local CLI database bootstrap invoked by scripts/cloud/start.sh, not imported by app code."
     }

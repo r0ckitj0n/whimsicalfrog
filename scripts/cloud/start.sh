@@ -37,6 +37,7 @@ fi
 sudo mkdir -p /var/run/mysqld /var/lib/mysql
 sudo chown -R mysql:mysql /var/run/mysqld /var/lib/mysql
 
+# Initialize the data directory on first boot from a bare base image.
 if [ ! -d /var/lib/mysql/mysql ]; then
   log "Initializing MariaDB data directory"
   sudo mariadb-install-db --user=mysql --datadir=/var/lib/mysql >/dev/null 2>&1 || true
@@ -66,7 +67,9 @@ GRANT ALL PRIVILEGES ON *.* TO 'root'@'127.0.0.1' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 SQL
 
-# Only seed the minimal fallback schema when the database is empty.
+# Only seed the minimal fallback schema when the database is empty. If a full
+# live backup has been restored (see scripts/cloud/pull_live_backup.sh), leave
+# it untouched.
 TABLE_COUNT=$(sudo mariadb -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${LOCAL_DB_NAME}';" 2>/dev/null || echo 0)
 if [ "${TABLE_COUNT:-0}" -lt 1 ]; then
   log "Empty database detected; seeding minimal fallback schema"

@@ -3,6 +3,8 @@
 # Idempotent, non-interactive repository bootstrap. Must terminate.
 #
 # - Ensures system toolchain (PHP 8.3 + extensions, MariaDB, Composer) is present.
+#   These normally come from the prebuilt environment snapshot; the guards below
+#   self-heal a base image that is missing them.
 # - Installs PHP (Composer) and Node (npm) dependencies from lockfiles.
 # - Writes a local .env pointing at local MariaDB when one is not present.
 set -euo pipefail

@@ -6,10 +6,22 @@
 function wf_auth_secret(): string
 {
     $secret = getenv('WF_AUTH_SECRET');
-    if (!$secret) {
-        $secret = 'wf_auth_fallback_secret_2025_09';
+    if (!is_string($secret) || trim($secret) === '') {
+        throw new RuntimeException('WF_AUTH_SECRET must be configured before auth cookies can be used.');
     }
-    return $secret;
+    return trim($secret);
+}
+
+function wf_auth_signature_matches(string $data, string $sig): bool
+{
+    try {
+        $calc = hash_hmac('sha256', $data, wf_auth_secret());
+    } catch (Throwable $e) {
+        error_log('[auth_cookie] Missing auth secret; rejecting WF_AUTH cookie.');
+        return false;
+    }
+
+    return hash_equals($calc, $sig);
 }
 
 function wf_auth_cookie_name(): string
@@ -48,8 +60,7 @@ function wf_auth_parse_cookie(?string $cookieVal): ?array
             $ts = (string) $obj['t'];
             $sig = (string) $obj['s'];
             $data = $uid . '|' . $ts;
-            $calc = hash_hmac('sha256', $data, wf_auth_secret());
-            if (!hash_equals($calc, $sig)) {
+            if (!wf_auth_signature_matches($data, $sig)) {
                 return null;
             }
             if (!ctype_digit($ts) || (time() - (int) $ts) > 60 * 60 * 24 * 7) {
@@ -71,8 +82,7 @@ function wf_auth_parse_cookie(?string $cookieVal): ?array
         return null;
     }
     $data = $uid . '|' . $ts;
-    $calc = hash_hmac('sha256', $data, wf_auth_secret());
-    if (!hash_equals($calc, $sig)) {
+    if (!wf_auth_signature_matches($data, $sig)) {
         return null;
     }
     if (!ctype_digit($ts) || (time() - (int) $ts) > 60 * 60 * 24 * 7) {

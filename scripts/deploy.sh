@@ -41,6 +41,7 @@ UPLOAD_VENDOR="${WF_UPLOAD_VENDOR:-0}"
 PRESERVE_IMAGES=1
 PURGE_IMAGES=0
 CODE_ONLY=0
+SECURITY_ONLY=0
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -69,6 +70,12 @@ while [[ $# -gt 0 ]]; do
       MODE="lite"
       shift
       ;;
+    --security-only|--live-safe)
+      # Live has precedence: upload only the auth/session allowlist.
+      SECURITY_ONLY=1
+      MODE="security-only"
+      shift
+      ;;
     --dist-only)
       MODE="dist-only"
       shift
@@ -81,11 +88,29 @@ while [[ $# -gt 0 ]]; do
       SKIP_BUILD=1
       shift
       ;;
+    --dry-run)
+      export WF_DRY_RUN=1
+      shift
+      ;;
     *)
       shift
       ;;
   esac
 done
+
+# Security-only mode never mirrors/deletes the general tree. Delegate early so
+# the rest of this script cannot touch live content by accident.
+if [[ "$SECURITY_ONLY" == "1" || "$MODE" == "security-only" ]]; then
+  if [[ "$PURGE" == "1" || "$PURGE_IMAGES" == "1" || "$MODE" == "full" ]]; then
+    echo "Error: --security-only cannot be combined with --full/--purge/--purge-images." >&2
+    exit 2
+  fi
+  EXTRA_ARGS=()
+  if [[ "${WF_DRY_RUN:-0}" == "1" ]]; then
+    EXTRA_ARGS+=(--dry-run)
+  fi
+  exec bash "$(cd "$(dirname "$0")" && pwd)/deploy_security_only.sh" "${EXTRA_ARGS[@]}"
+fi
 
 require_var WF_DEPLOY_HOST
 require_var WF_DEPLOY_USER
@@ -531,21 +556,21 @@ EOL
       fi
       rm -f deploy_backgrounds.txt
 
-      # 2) signs (force overwrite, no delete)
-      echo -e "${GREEN}🪧 Ensuring sign images are updated (force overwrite; no deletes)...${NC}"
+      # 2) signs (mtime-based, no delete). Live-edited signs keep precedence.
+      echo -e "${GREEN}🪧 Ensuring sign images are updated (mtime-based; no deletes)...${NC}"
       cat > deploy_signs.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
 set cmd:fail-exit yes
 open sftp://$USER:$PASS@$HOST
-mirror --reverse --verbose --overwrite --no-perms \
+mirror --reverse --verbose --only-newer --no-perms \
   images/signs images/signs
 bye
 EOL
       if [ "${WF_DRY_RUN:-0}" = "1" ]; then
-        echo -e "${YELLOW}DRY-RUN: Skipping sign sync (force overwrite)${NC}"
+        echo -e "${YELLOW}DRY-RUN: Skipping sign sync (mtime-based)${NC}"
       elif lftp -f deploy_signs.txt; then
-        echo -e "${GREEN}✅ Sign images synced (force overwrite)${NC}"
+        echo -e "${GREEN}✅ Sign images synced (mtime-based)${NC}"
       else
         echo -e "${YELLOW}⚠️  Sign image sync failed; continuing${NC}"
       fi

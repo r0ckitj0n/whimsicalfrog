@@ -122,5 +122,13 @@
     {
         "file": "scripts/db/bootstrap_dev_db.php",
         "reason": "Cloud Agent / local CLI database bootstrap invoked by scripts/cloud/start.sh, not imported by app code."
+    },
+    {
+        "file": "scripts/deploy_security_only.sh",
+        "reason": "CLI deploy entry point for security-only live uploads; invoked by CI and scripts/deploy.sh --security-only."
+    },
+    {
+        "file": "scripts/deploy/security_allowlist.txt",
+        "reason": "Allowlist config consumed by scripts/deploy_security_only.sh, not imported by app code."
     }
 ]

@@ -1,0 +1,19 @@
+# Security-critical live paths.
+# Used by: scripts/deploy_security_only.sh and scripts/deploy.sh --security-only
+#
+# These files are force-uploaded to live even when the default policy is
+# "live has precedence". Everything else is left untouched on the server.
+#
+# Keep this list short and intentional. Prefer auth / session / probe endpoints.
+
+api/whoami.php
+api/logout.php
+api/seal_login.php
+api/auth_redirect_probe.php
+includes/auth.php
+includes/auth_cookie.php
+includes/auth_helper.php
+includes/session.php
+includes/session_bootstrap.php
+includes/helpers/AuthSessionHelper.php
+includes/helpers/SessionHelper.php

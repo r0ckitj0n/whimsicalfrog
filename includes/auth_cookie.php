@@ -93,7 +93,14 @@ function wf_auth_parse_cookie(?string $cookieVal): ?array
 
 function wf_auth_set_cookie($user_id, string $domain, bool $secure): void
 {
-    [$val, $exp] = wf_auth_make_cookie($user_id);
+    // Cookie sealing is optional. Login/session creation must still succeed
+    // when WF_AUTH_SECRET is unset; reconstruction is no longer automatic.
+    try {
+        [$val, $exp] = wf_auth_make_cookie($user_id);
+    } catch (Throwable $e) {
+        error_log('[auth_cookie] Skipping WF_AUTH Set-Cookie: ' . $e->getMessage());
+        return;
+    }
     $sameSite = $secure ? 'None' : 'Lax';
     $opts = [
         'expires' => $exp,

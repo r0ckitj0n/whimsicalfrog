@@ -30,13 +30,9 @@ function ensureSessionStarted()
         ]);
     }
 
-    // Recover the PHP session from the signed auth cookie when the session file
-    // has gone missing or a cookie-domain mismatch left us without $_SESSION.
-    // Logout remains authoritative because reconstructSessionFromCookie()
-    // honors WF_LOGOUT_IN_PROGRESS and clears stale auth cookies when present.
-    if (empty($_SESSION['user'])) {
-        AuthSessionHelper::reconstructSessionFromCookie();
-    }
+    // Do not auto-login from WF_AUTH here. That cookie is only a session
+    // sealing aid; rebuilding every empty session from it makes logout
+    // non-authoritative if a stale HttpOnly cookie survives client cleanup.
 }
 
 

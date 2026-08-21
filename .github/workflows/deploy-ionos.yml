@@ -5,6 +5,17 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "Deploy mode (security-only keeps live precedence)"
+        type: choice
+        required: true
+        default: security-only
+        options:
+          - security-only
+          - lite
+          - dist-only
+          - env-only
 
 concurrency:
   group: deploy-ionos-main
@@ -13,11 +24,25 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ secrets.WF_DEPLOY_BASE_URL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Resolve deploy mode
+        id: mode
+        run: |
+          MODE="${{ github.event.inputs.mode }}"
+          if [ -z "$MODE" ]; then
+            MODE="security-only"
+          fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "Using deploy mode: $MODE"
+
       - name: Setup Node
+        if: steps.mode.outputs.mode != 'security-only' && steps.mode.outputs.mode != 'env-only'
         uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -27,6 +52,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y lftp
 
       - name: Install dependencies
+        if: steps.mode.outputs.mode != 'security-only' && steps.mode.outputs.mode != 'env-only'
         run: npm ci
 
       - name: Deploy to IONOS
@@ -41,16 +67,29 @@ jobs:
           WF_DRY_RUN: "0"
           WF_STRICT_VERIFY: "1"
           WF_UPLOAD_VENDOR: "0"
-        run: bash scripts/deploy.sh --lite
+        run: |
+          MODE="${{ steps.mode.outputs.mode }}"
+          case "$MODE" in
+            security-only) bash scripts/deploy.sh --security-only ;;
+            lite) bash scripts/deploy.sh --lite ;;
+            dist-only) bash scripts/deploy.sh --dist-only ;;
+            env-only) bash scripts/deploy.sh --env-only ;;
+            *)
+              echo "Unknown mode: $MODE" >&2
+              exit 2
+              ;;
+          esac
 
       - name: Kill Switch Verify Live Build
+        if: steps.mode.outputs.mode != 'security-only' && steps.mode.outputs.mode != 'env-only'
         env:
           BASE_URL: ${{ secrets.WF_DEPLOY_BASE_URL }}
         run: |
           set -euo pipefail
 
           if [ -z "${BASE_URL:-}" ]; then
-            BASE_URL="https://whimsicalfrog.us"
+            echo "[kill-switch] ERROR: WF_DEPLOY_BASE_URL secret is required"
+            exit 1
           fi
 
           echo "[kill-switch] Checking homepage and manifest at $BASE_URL"
@@ -67,3 +106,20 @@ jobs:
           fi
 
           echo "[kill-switch] OK: manifest is 200 and homepage has no /src/ references."
+
+      - name: Verify security endpoints
+        if: steps.mode.outputs.mode == 'security-only'
+        env:
+          BASE_URL: ${{ secrets.WF_DEPLOY_BASE_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BASE_URL:-}" ]; then
+            echo "[security-check] ERROR: WF_DEPLOY_BASE_URL secret is required"
+            exit 1
+          fi
+          CODE="$(curl -sS -o /dev/null -w "%{http_code}" "$BASE_URL/api/whoami.php")"
+          echo "[security-check] /api/whoami.php -> HTTP $CODE"
+          case "$CODE" in
+            200|401|403) echo "[security-check] OK" ;;
+            *) echo "[security-check] Unexpected status $CODE"; exit 1 ;;
+          esac

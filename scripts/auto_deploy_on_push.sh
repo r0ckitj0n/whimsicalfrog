@@ -16,7 +16,8 @@ REMOTE_NAME="${1:-origin}"
 REMOTE_URL="${2:-}"
 DEPLOY_ENABLED="${WF_AUTO_DEPLOY_ON_PUSH:-1}"
 DEPLOY_BRANCHES="${WF_AUTO_DEPLOY_BRANCHES:-main}"
-DEPLOY_MODE="${WF_AUTO_DEPLOY_MODE:-lite}"
+# Default to security-only so live content keeps precedence on routine pushes.
+DEPLOY_MODE="${WF_AUTO_DEPLOY_MODE:-security-only}"
 DRY_RUN="${WF_AUTO_DEPLOY_DRY_RUN:-0}"
 SKIP_BUILD="${WF_AUTO_DEPLOY_SKIP_BUILD:-0}"
 
@@ -78,17 +79,18 @@ fi
 
 DEPLOY_ARGS=()
 case "$DEPLOY_MODE" in
+  security-only|live-safe) DEPLOY_ARGS+=(--security-only) ;;
   lite) DEPLOY_ARGS+=(--lite) ;;
   full) DEPLOY_ARGS+=(--full) ;;
   dist-only) DEPLOY_ARGS+=(--dist-only) ;;
   env-only) DEPLOY_ARGS+=(--env-only) ;;
   *)
-    log "Unknown WF_AUTO_DEPLOY_MODE='$DEPLOY_MODE'. Use lite|full|dist-only|env-only."
+    log "Unknown WF_AUTO_DEPLOY_MODE='$DEPLOY_MODE'. Use security-only|lite|full|dist-only|env-only."
     exit 1
     ;;
 esac
 
-if [ "$SKIP_BUILD" = "1" ]; then
+if [ "$SKIP_BUILD" = "1" ] && [ "$DEPLOY_MODE" != "security-only" ] && [ "$DEPLOY_MODE" != "live-safe" ]; then
   DEPLOY_ARGS+=(--skip-build)
 fi
 

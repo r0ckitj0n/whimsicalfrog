@@ -16,7 +16,7 @@ set -euo pipefail
 
 REMOTE="origin"
 BRANCH=""
-DEPLOY_MODE="lite"
+DEPLOY_MODE="security-only"
 SKIP_BUILD=0
 DRY_RUN=0
 
@@ -63,18 +63,19 @@ fi
 
 DEPLOY_ARGS=()
 case "$DEPLOY_MODE" in
+  security-only|live-safe) DEPLOY_ARGS+=(--security-only) ;;
   lite) DEPLOY_ARGS+=(--lite) ;;
   code-only) DEPLOY_ARGS+=(--lite --code-only) ;;
   full) DEPLOY_ARGS+=(--full) ;;
   dist-only) DEPLOY_ARGS+=(--dist-only) ;;
   env-only) DEPLOY_ARGS+=(--env-only) ;;
   *)
-    echo "[push+deploy] Invalid --mode '$DEPLOY_MODE'. Use lite|code-only|full|dist-only|env-only." >&2
+    echo "[push+deploy] Invalid --mode '$DEPLOY_MODE'. Use security-only|lite|code-only|full|dist-only|env-only." >&2
     exit 2
     ;;
 esac
 
-if [[ "$SKIP_BUILD" = "1" ]]; then
+if [[ "$SKIP_BUILD" = "1" && "$DEPLOY_MODE" != "security-only" && "$DEPLOY_MODE" != "live-safe" ]]; then
   DEPLOY_ARGS+=(--skip-build)
 fi
 

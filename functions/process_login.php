@@ -104,8 +104,12 @@ try {
 
         $dom = AuthSessionHelper::getCookieDomain();
         $sec = AuthSessionHelper::isHttps();
-        wf_auth_set_cookie($user['id'], $dom, $sec);
-        wf_auth_set_client_hint($user['id'], $user['role'] ?? null, $dom, $sec);
+        try {
+            wf_auth_set_cookie($user['id'], $dom, $sec);
+            wf_auth_set_client_hint($user['id'], $user['role'] ?? null, $dom, $sec);
+        } catch (Throwable $e) {
+            error_log('[process_login] Optional auth cookie sealing failed: ' . $e->getMessage());
+        }
 
         @setcookie(session_name(), session_id(), ['expires' => 0, 'path' => '/', 'secure' => $sec, 'httponly' => true, 'samesite' => $sec ? 'None' : 'Lax', 'domain' => $dom ?: null]);
         @session_write_close();

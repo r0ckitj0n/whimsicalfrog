@@ -3,6 +3,12 @@
 // Stateless auth cookie helper. Allows reconstructing session when PHP sessions are flaky.
 // Cookie: WF_AUTH contains base64(user_id)|base64(ts)|base64(sig) where sig = HMAC_SHA256(user_id|ts, secret)
 
+function wf_auth_secret_configured(): bool
+{
+    $secret = getenv('WF_AUTH_SECRET');
+    return is_string($secret) && trim($secret) !== '';
+}
+
 function wf_auth_secret(): string
 {
     $secret = getenv('WF_AUTH_SECRET');
@@ -93,6 +99,12 @@ function wf_auth_parse_cookie(?string $cookieVal): ?array
 
 function wf_auth_set_cookie($user_id, string $domain, bool $secure): void
 {
+    // Cookie sealing is optional. Login/session creation must still succeed
+    // when WF_AUTH_SECRET is unset; reconstruction is no longer automatic.
+    if (!wf_auth_secret_configured()) {
+        error_log('[auth_cookie] Skipping WF_AUTH Set-Cookie: WF_AUTH_SECRET is not configured.');
+        return;
+    }
     [$val, $exp] = wf_auth_make_cookie($user_id);
     $sameSite = $secure ? 'None' : 'Lax';
     $opts = [

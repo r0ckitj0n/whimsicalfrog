@@ -80,4 +80,28 @@ class SessionHelper
         
         return $host;
     }
+
+    /**
+     * Public/non-admin session diagnostics must never include other users'
+     * PHP session IDs, file paths, cookies, or server internals.
+     *
+     * @param array<string, mixed> $safeSession
+     * @return array<string, mixed>
+     */
+    public static function unprivilegedDiagnosticsData(string $currentSessionId, array $safeSession): array
+    {
+        return [
+            'session' => $safeSession,
+            'cookies' => [],
+            'server' => [],
+            'session_id' => $currentSessionId,
+            'session_status' => session_status(),
+            'php_version' => PHP_VERSION,
+            'recent_sessions' => [],
+            'php_sessions' => [],
+            'php_session_save_path' => '',
+            'php_session_scan_error' => 'Admin access required for PHP session list',
+            'analytics_query_error' => 'Admin access required for analytics session list',
+        ];
+    }
 }

@@ -99,6 +99,7 @@ final class Database
 
 require_once __DIR__ . '/../../includes/auth_cookie.php';
 require_once __DIR__ . '/../../includes/helpers/AuthSessionHelper.php';
+require_once __DIR__ . '/../../includes/helpers/SessionHelper.php';
 require_once __DIR__ . '/../../includes/inventory_default_breakdowns.php';
 
 function wf_assert(bool $condition, string $message): void
@@ -176,6 +177,26 @@ wf_assert(count(Database::$costFactors) === 4, 'Existing cost factors should not
 wf_assert(count(Database::$priceFactors) === 1, 'Existing price factors should not be duplicated during item save.');
 wf_assert_money((float) Database::$items['WF-TEST-001']['cost_price'], 15.00, 'Existing factors must not resync over a submitted cost price during item save.');
 wf_assert_money((float) Database::$items['WF-TEST-001']['retail_price'], 30.00, 'Existing factors must not resync over a submitted retail price during item save.');
+
+$publicDiagnostics = SessionHelper::unprivilegedDiagnosticsData('own-session', [
+    'user' => ['user_id' => 1, 'role' => 'customer', 'username' => 'pat'],
+]);
+wf_assert($publicDiagnostics['php_sessions'] === [], 'Non-admin session diagnostics must not list PHP session files.');
+wf_assert($publicDiagnostics['php_session_save_path'] === '', 'Non-admin session diagnostics must not disclose session.save_path.');
+wf_assert($publicDiagnostics['recent_sessions'] === [], 'Non-admin session diagnostics must not list analytics sessions.');
+wf_assert($publicDiagnostics['cookies'] === [], 'Non-admin session diagnostics must not echo cookies.');
+wf_assert($publicDiagnostics['server'] === [], 'Non-admin session diagnostics must not echo $_SERVER.');
+wf_assert($publicDiagnostics['session_id'] === 'own-session', 'Non-admin session diagnostics may include only the caller session id.');
+
+$sessionDiagnosticsSrc = (string) file_get_contents(__DIR__ . '/../../api/session_diagnostics.php');
+wf_assert(
+    str_contains($sessionDiagnosticsSrc, 'SessionHelper::unprivilegedDiagnosticsData'),
+    'session_diagnostics.php must use the unprivileged payload helper for non-admins.'
+);
+wf_assert(
+    str_contains($sessionDiagnosticsSrc, 'if (!$isAdminUser)'),
+    'session_diagnostics.php must keep an explicit non-admin branch.'
+);
 
 $authDebugLog = __DIR__ . '/../../logs/auth_debug.log';
 if (is_file($authDebugLog)) {

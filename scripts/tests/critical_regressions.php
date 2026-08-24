@@ -99,6 +99,7 @@ final class Database
 
 require_once __DIR__ . '/../../includes/auth_cookie.php';
 require_once __DIR__ . '/../../includes/helpers/AuthSessionHelper.php';
+require_once __DIR__ . '/../../includes/helpers/AutomationAdminTokenHelper.php';
 require_once __DIR__ . '/../../includes/inventory_default_breakdowns.php';
 
 function wf_assert(bool $condition, string $message): void
@@ -176,6 +177,33 @@ wf_assert(count(Database::$costFactors) === 4, 'Existing cost factors should not
 wf_assert(count(Database::$priceFactors) === 1, 'Existing price factors should not be duplicated during item save.');
 wf_assert_money((float) Database::$items['WF-TEST-001']['cost_price'], 15.00, 'Existing factors must not resync over a submitted cost price during item save.');
 wf_assert_money((float) Database::$items['WF-TEST-001']['retail_price'], 30.00, 'Existing factors must not resync over a submitted retail price during item save.');
+
+putenv('WF_ADMIN_TOKEN');
+$publicAdminToken = 'whimsical_admin_2024';
+wf_assert(
+    wf_automation_admin_token_valid($publicAdminToken) === false,
+    'Public AuthHelper::ADMIN_TOKEN must not authorize restore/backup when WF_ADMIN_TOKEN is unset.'
+);
+wf_assert(
+    wf_automation_admin_token_valid('') === false,
+    'Empty automation admin token must be rejected.'
+);
+
+putenv('WF_ADMIN_TOKEN=wf-automation-regression-token');
+wf_assert(
+    wf_automation_admin_token_valid('wf-automation-regression-token') === true,
+    'Matching WF_ADMIN_TOKEN must authorize automation restore/backup.'
+);
+wf_assert(
+    wf_automation_admin_token_valid($publicAdminToken) === false,
+    'Public AuthHelper::ADMIN_TOKEN must not authorize restore/backup when WF_ADMIN_TOKEN is set.'
+);
+putenv('WF_ADMIN_TOKEN=whimsical_admin_2024');
+wf_assert(
+    wf_automation_admin_token_valid($publicAdminToken) === false,
+    'Public AuthHelper::ADMIN_TOKEN must not authorize restore/backup even if copied into WF_ADMIN_TOKEN.'
+);
+putenv('WF_ADMIN_TOKEN');
 
 $authDebugLog = __DIR__ . '/../../logs/auth_debug.log';
 if (is_file($authDebugLog)) {

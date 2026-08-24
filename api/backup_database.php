@@ -2,6 +2,7 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
+require_once __DIR__ . '/../includes/helpers/AutomationAdminTokenHelper.php';
 
 // Enable CORS for development
 header('Access-Control-Allow-Origin: *');
@@ -29,19 +30,7 @@ function wf_db_backup_has_valid_token(): bool
             $provided = $jsonInput['admin_token'] ?? '';
         }
     }
-    if ($provided === '') {
-        return false;
-    }
-
-    $expected = getenv('WF_ADMIN_TOKEN') ?: '';
-    if ($expected === '' && defined('WF_ADMIN_TOKEN') && WF_ADMIN_TOKEN) {
-        $expected = WF_ADMIN_TOKEN;
-    }
-    if ($expected === '' && defined('AuthHelper::ADMIN_TOKEN')) {
-        $expected = AuthHelper::ADMIN_TOKEN;
-    }
-
-    return $expected !== '' && hash_equals($expected, $provided);
+    return wf_automation_admin_token_valid((string) $provided);
 }
 
 function wf_db_normalize_data_groups($raw): array

@@ -10,6 +10,11 @@ api/whoami.php
 api/logout.php
 api/seal_login.php
 api/auth_redirect_probe.php
+api/color_templates.php
+api/size_templates.php
+api/gender_templates.php
+api/sanmar_import.php
+api/maintenance.php
 includes/auth.php
 includes/auth_cookie.php
 includes/auth_helper.php

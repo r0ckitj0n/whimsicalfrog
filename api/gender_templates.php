@@ -6,22 +6,17 @@ require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
 
-// Decode JSON body once so it can be reused by auth and action handlers
+// Decode JSON body once so it can be reused by action handlers
 $json = [];
-
-// Enforce admin auth with dev admin_token fallback for iframe usage
-try {
-    $rawBody = file_get_contents('php://input');
-    if ($rawBody !== false && $rawBody !== '') {
-        $json = json_decode($rawBody, true) ?: [];
+$rawBody = file_get_contents('php://input');
+if ($rawBody !== false && $rawBody !== '') {
+    $decoded = json_decode($rawBody, true);
+    if (is_array($decoded)) {
+        $json = $decoded;
     }
-    $token = $_GET['admin_token'] ?? $_POST['admin_token'] ?? ($json['admin_token'] ?? null);
-    if (!$token || $token !== (AuthHelper::ADMIN_TOKEN ?? 'whimsical_admin_2024')) {
-        AuthHelper::requireAdmin();
-    }
-} catch (Throwable $____) {
-    AuthHelper::requireAdmin();
 }
+
+AuthHelper::requireAdmin();
 
 function ensure_gender_templates_tables(PDO $db): void
 {

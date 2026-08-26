@@ -3,6 +3,7 @@
 
 require_once __DIR__ . '/../../Constants.php';
 require_once __DIR__ . '/../../helpers/BusinessDateTimeHelper.php';
+require_once __DIR__ . '/OrderPaymentStatusHelper.php';
 
 class OrderActionHelper
 {
@@ -69,7 +70,7 @@ class OrderActionHelper
         }
         if ($schemaInfo['orders.payment_status']) {
             $cols[] = 'payment_status';
-            $status = $input['payment_status'] ?? ($input['payment_method'] === WF_Constants::PAYMENT_METHOD_SQUARE ? WF_Constants::PAYMENT_STATUS_PAID : WF_Constants::PAYMENT_STATUS_PENDING);
+            $status = OrderPaymentStatusHelper::resolve($input);
             $vals[] = $status;
 
             if ($status === WF_Constants::PAYMENT_STATUS_PAID) {

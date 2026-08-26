@@ -182,4 +182,46 @@ if (is_file($authDebugLog)) {
     @unlink($authDebugLog);
 }
 
+$usersSrc = (string) file_get_contents(__DIR__ . '/../../api/users.php');
+$getOrderSrc = (string) file_get_contents(__DIR__ . '/../../api/get_order.php');
+$receiptSrc = (string) file_get_contents(__DIR__ . '/../../api/pos_receipt.php');
+wf_assert(str_contains($usersSrc, 'requireAdmin(true)'), 'users.php must require an admin session before listing customers.');
+wf_assert(str_contains($getOrderSrc, 'requireAdmin(true)'), 'get_order.php must require an admin session before returning order PII.');
+wf_assert(str_contains($receiptSrc, 'isLoggedIn()'), 'pos_receipt.php must require a logged-in session.');
+wf_assert(str_contains($receiptSrc, 'wf_can_view_receipt'), 'pos_receipt.php must restrict receipts to the owner or an admin.');
+
+require_once __DIR__ . '/../../includes/orders/helpers/OrderPaymentStatusHelper.php';
+
+if (!function_exists('isAdmin')) {
+    function isAdmin(): bool
+    {
+        return !empty($GLOBALS['wf_test_is_admin']);
+    }
+}
+
+$GLOBALS['wf_test_is_admin'] = false;
+wf_assert(
+    OrderPaymentStatusHelper::resolve([
+        'payment_method' => WF_Constants::PAYMENT_METHOD_PAYPAL,
+        'payment_status' => WF_Constants::PAYMENT_STATUS_PAID,
+    ]) === WF_Constants::PAYMENT_STATUS_PENDING,
+    'Non-admin checkout must ignore client payment_status=Paid.'
+);
+wf_assert(
+    OrderPaymentStatusHelper::resolve([
+        'payment_method' => WF_Constants::PAYMENT_METHOD_SQUARE,
+        'payment_status' => WF_Constants::PAYMENT_STATUS_PAID,
+    ]) === WF_Constants::PAYMENT_STATUS_PAID,
+    'Non-admin Square checkout should still mark paid after server-side charge.'
+);
+
+$GLOBALS['wf_test_is_admin'] = true;
+wf_assert(
+    OrderPaymentStatusHelper::resolve([
+        'payment_method' => WF_Constants::PAYMENT_METHOD_CASH,
+        'payment_status' => WF_Constants::PAYMENT_STATUS_PAID,
+    ]) === WF_Constants::PAYMENT_STATUS_PAID,
+    'Admin POS checkout may set payment_status=Paid.'
+);
+
 echo "critical regressions passed\n";

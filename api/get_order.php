@@ -3,11 +3,14 @@
 // Include the configuration file
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 // Only allow GET requests
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     Response::methodNotAllowed('Method not allowed');
 }
+
+requireAdmin(true);
 
 try {
     // Create database connection

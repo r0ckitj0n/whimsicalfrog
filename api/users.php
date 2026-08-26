@@ -2,6 +2,7 @@
 
 // Include the configuration file
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
@@ -21,6 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     echo json_encode(['error' => 'Method not allowed']);
     exit;
 }
+
+requireAdmin(true);
 
 try {
     // Create database connection using config

@@ -4,15 +4,46 @@
  * Returns structured JSON for the ReceiptModal/ReceiptView components.
  */
 
+function wf_can_view_receipt(array $order): bool
+{
+    if (function_exists('isAdmin') && isAdmin()) {
+        return true;
+    }
+
+    $user = function_exists('getCurrentUser') ? getCurrentUser() : null;
+    if (!is_array($user)) {
+        return false;
+    }
+
+    $owner = trim((string) ($order['user_id'] ?? ''));
+    if ($owner === '') {
+        return false;
+    }
+
+    $candidates = array_values(array_filter([
+        (string) ($user['user_id'] ?? ''),
+        (string) ($user['id'] ?? ''),
+        (string) ($user['email'] ?? ''),
+        (string) ($user['username'] ?? ''),
+    ], static fn(string $value): bool => $value !== ''));
+
+    return in_array($owner, $candidates, true);
+}
+
 try {
     // 1. Core Includes
     require_once __DIR__ . '/config.php';
     require_once __DIR__ . '/../includes/response.php';
     require_once __DIR__ . '/../includes/database.php';
+    require_once __DIR__ . '/../includes/auth.php';
     require_once __DIR__ . '/../includes/business_settings_helper.php';
     require_once __DIR__ . '/../includes/receipt_helper.php';
 
     Response::validateMethod('GET');
+
+    if (!isLoggedIn()) {
+        Response::error('Authentication required', null, 401);
+    }
 
     // 2. Database Initialization
     Database::getInstance();
@@ -25,7 +56,7 @@ try {
 
     // 4. Fetch Order
     $order = Database::queryOne('SELECT * FROM orders WHERE id = ?', [$order_id]);
-    if (!$order) {
+    if (!$order || !wf_can_view_receipt($order)) {
         Response::notFound("Order #{$order_id} not found.");
     }
 

@@ -10,7 +10,12 @@ api/whoami.php
 api/logout.php
 api/seal_login.php
 api/auth_redirect_probe.php
+api/users.php
+api/get_order.php
+api/pos_receipt.php
 includes/auth.php
+includes/orders/helpers/OrderActionHelper.php
+includes/orders/helpers/OrderPaymentStatusHelper.php
 includes/auth_cookie.php
 includes/auth_helper.php
 includes/session.php

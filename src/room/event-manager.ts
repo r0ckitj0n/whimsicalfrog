@@ -169,6 +169,19 @@ export function attachDelegatedItemEvents(): void {
         window.openLoginModal();
       } else if (action === 'open-account-settings' && typeof window.openAccountSettings === 'function') {
         window.openAccountSettings();
+      } else if (
+        action === 'open-wishbook-overlay' ||
+        action === 'open-christmas-wishbook' ||
+        action === 'open-christmas-catalog'
+      ) {
+        const wishBookRoom = '18';
+        if (window.roomModalManager?.show) {
+          window.roomModalManager.show(wishBookRoom);
+        } else if (typeof window.openRoom === 'function') {
+          window.openRoom(wishBookRoom);
+        } else {
+          window.location.href = `/room_main?room=${wishBookRoom}`;
+        }
       } else if (action === 'go-back') {
         window.history.back();
       } else if (action === 'go-forward') {

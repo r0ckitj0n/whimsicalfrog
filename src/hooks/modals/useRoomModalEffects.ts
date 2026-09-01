@@ -165,6 +165,21 @@ export const useRoomModalEffects = ({
                 case 'open-account-settings':
                     if (typeof window.openAccountSettings === 'function') window.openAccountSettings?.();
                     break;
+                case 'open-wishbook-overlay':
+                case 'open-christmas-wishbook':
+                case 'open-christmas-catalog': {
+                    const wishBookRoom = '18';
+                    onClose();
+                    if (window.roomModalManager?.show) {
+                        setTimeout(() => window.roomModalManager?.show(wishBookRoom), 100);
+                    } else if (window.openRoom) {
+                        const openRoom = window.openRoom;
+                        setTimeout(() => openRoom?.(wishBookRoom), 100);
+                    } else {
+                        window.location.href = `/room_main?room=${wishBookRoom}`;
+                    }
+                    break;
+                }
                 case 'go-back':
                 case 'action-go-back':
                     window.history.back();

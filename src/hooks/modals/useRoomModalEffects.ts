@@ -93,7 +93,6 @@ export const useRoomModalEffects = ({
             e.stopPropagation();
             const targetRoom = roomTarget || itemEl?.dataset.room || '';
             if (targetRoom) {
-                onClose();
                 const fullPageRoomUrls: Record<string, string> = {
                     'A': '/',
                     '0': '/room_main',
@@ -102,16 +101,15 @@ export const useRoomModalEffects = ({
                 };
 
                 if (fullPageRoomUrls[targetRoom]) {
+                    onClose();
                     window.location.href = fullPageRoomUrls[targetRoom];
+                } else if (window.roomModalManager?.show) {
+                    window.roomModalManager.show(targetRoom);
+                } else if (window.openRoom) {
+                    window.openRoom(targetRoom);
                 } else {
-                    if (window.roomModalManager?.show) {
-                        setTimeout(() => window.roomModalManager?.show(targetRoom), 100);
-                    } else if (window.openRoom) {
-                        const openRoom = window.openRoom;
-                        setTimeout(() => openRoom?.(targetRoom), 100);
-                    } else {
-                        window.location.href = `/room_main?room=${targetRoom}`;
-                    }
+                    onClose();
+                    window.location.href = `/room_main?room=${targetRoom}`;
                 }
             }
             return;
@@ -169,13 +167,12 @@ export const useRoomModalEffects = ({
                 case 'open-christmas-wishbook':
                 case 'open-christmas-catalog': {
                     const wishBookRoom = '18';
-                    onClose();
                     if (window.roomModalManager?.show) {
-                        setTimeout(() => window.roomModalManager?.show(wishBookRoom), 100);
+                        window.roomModalManager.show(wishBookRoom);
                     } else if (window.openRoom) {
-                        const openRoom = window.openRoom;
-                        setTimeout(() => openRoom?.(wishBookRoom), 100);
+                        window.openRoom(wishBookRoom);
                     } else {
+                        onClose();
                         window.location.href = `/room_main?room=${wishBookRoom}`;
                     }
                     break;

@@ -4,6 +4,7 @@ import { useAuthModal } from './useAuthModal.js';
 import { useApp } from '../context/AppContext.js';
 import { IShopData, IReceiptData, IAboutData, IContactData, ISiteSettings } from '../types/index.js';
 import { ApiClient } from '../core/ApiClient.js';
+import { prefetchFeaturedProducts } from '../utils/featuredProductsPrefetch.js';
 
 /**
  * useSiteHydration Hook
@@ -132,6 +133,9 @@ export const useSiteHydration = () => {
 
         // Initial DOM load for specialized views (receipts, etc.)
         loadFromDOM();
+
+        // Warm the loading-splash featured product cache in parallel with bootstrap.
+        prefetchFeaturedProducts();
 
         // Detect order_id from URL (for redirects from checkout or direct links)
         const orderIdFromUrl = searchParams.get('order_id');

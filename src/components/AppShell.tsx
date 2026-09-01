@@ -22,6 +22,7 @@ import { GlobalProcessingOverlay } from './GlobalProcessingOverlay.js';
 import { useSearchParams } from 'react-router-dom';
 import { SETTINGS_MODAL_SECTIONS } from '../core/constants.js';
 import { AdminLoading } from './admin/AdminLoading.js';
+import { SiteLoadingSplash } from './SiteLoadingSplash.js';
 import { useAppEffects } from '../hooks/useAppEffects.js';
 import { GlobalModalWrapper } from './modals/GlobalModalWrapper.js';
 import { MainPageRenderer } from './MainPageRenderer.js';
@@ -168,7 +169,9 @@ export const AppShell: React.FC = () => {
     const pageAttr = document.body.getAttribute('data-page');
 
     if (!site_settings) {
-        return <AdminLoading />;
+        // Storefront hydration gate — whimsical splash (falls back if no featured items).
+        // Admin Suspense fallbacks below still use AdminLoading.
+        return <SiteLoadingSplash />;
     }
 
     const isLoginPath = window.location.pathname.includes('/login');

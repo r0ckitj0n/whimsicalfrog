@@ -62,7 +62,19 @@ export class ApiClient {
         if (response.status === 204 || !contentType) return null as unknown as T;
         if (contentType.includes('application/json')) return await JsonResponseParser.parse<T>(response);
 
-        return (await response.text()) as unknown as T;
+        // Some local PHP SAPIs (CLI without php-cgi) emit text/html even for JSON
+        // endpoints. Parse object/array payloads so callers still receive objects.
+        const text = await response.text();
+        const trimmed = (text || '').trim();
+        if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+            const synthetic = new Response(trimmed, {
+                status: response.status,
+                headers: { 'Content-Type': 'application/json' }
+            });
+            return await JsonResponseParser.parse<T>(synthetic);
+        }
+
+        return text as unknown as T;
     }
 
     private static isAdminContext(): boolean {

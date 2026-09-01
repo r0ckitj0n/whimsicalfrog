@@ -142,6 +142,9 @@ export const SiteLoadingSplash: React.FC = () => {
                             alt={product.item_name}
                             className="max-h-full max-w-full object-contain p-2"
                             loading="eager"
+                            onError={(event) => {
+                                event.currentTarget.style.display = 'none';
+                            }}
                         />
                     ) : (
                         <span className="text-4xl" aria-hidden="true">

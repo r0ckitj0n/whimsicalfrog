@@ -7,6 +7,14 @@
 require_once __DIR__ . '/../includes/bootstrap.php';
 wf_bootstrap();
 
+// PHP CLI (used by local concurrent server without php-cgi) does not auto-fill $_GET.
+if ((empty($_GET) || !isset($_GET['path'])) && !empty($_SERVER['QUERY_STRING'])) {
+    parse_str($_SERVER['QUERY_STRING'], $parsedQuery);
+    if (is_array($parsedQuery)) {
+        $_GET = array_merge($_GET, $parsedQuery);
+    }
+}
+
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/auth_helper.php';

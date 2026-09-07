@@ -4,8 +4,8 @@
 
 .room-modal-container {
     position: relative;
-    width: min(95vw, min(95vh * 1.43, 1200px));
-    width: min(95dvw, min(95dvh * 1.43, 1200px));
+    width: min(99vw, min(99vh * 1.43, 1600px));
+    width: min(99dvw, min(99dvh * 1.43, 1600px));
     max-height: 100%;
     height: auto;
     aspect-ratio: auto;
@@ -56,16 +56,16 @@
 
 @media (max-width: 768px) {
     .room-modal-container {
-        width: min(98vw, min(98vh * 1.43, 800px));
-        width: min(98dvw, min(98dvh * 1.43, 800px));
+        width: min(99vw, min(99vh * 1.43, 900px));
+        width: min(99dvw, min(99dvh * 1.43, 900px));
         aspect-ratio: 1280 / 896;
     }
 }
 
 @media (max-width: 480px) {
     .room-modal-container {
-        width: min(96vw, min(96vh * 1.43, 600px));
-        width: min(96dvw, min(96dvh * 1.43, 600px));
+        width: min(99vw, min(99vh * 1.43, 700px));
+        width: min(99dvw, min(99dvh * 1.43, 700px));
         aspect-ratio: 1280 / 896;
     }
 }

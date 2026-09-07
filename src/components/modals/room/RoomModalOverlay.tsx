@@ -71,7 +71,7 @@ export const RoomModalOverlay: React.FC<RoomModalOverlayProps> = ({
                 backdropFilter: is_bare ? 'none' : 'blur(8px)',
                 width: is_bare ? '100%' : '100vw',
                 height: is_bare ? '100%' : '100vh',
-                padding: (is_bare || renderContext === 'fullscreen') ? '0' : '2.5vh 2.5vw',
+                padding: (is_bare || renderContext === 'fullscreen') ? '0' : 'clamp(6px, 1vh, 16px) clamp(6px, 1vw, 16px)',
                 boxSizing: 'border-box',
                 overflow: 'hidden'
             }}
@@ -96,9 +96,9 @@ export const RoomModalOverlay: React.FC<RoomModalOverlayProps> = ({
                     borderRadius: (is_bare || renderContext === 'fullscreen') ? '0' : '12px',
                     overflow: 'hidden',
                     position: 'relative',
-                    width: (is_bare || renderContext === 'fullscreen') ? '100%' : `min(95vw, calc(95vh * ${ratio}))`,
-                    height: (is_bare || renderContext === 'fullscreen') ? '100%' : `min(95vh, calc(95vw / ${ratio}))`,
-                    minHeight: (is_bare || renderContext === 'fullscreen') ? 'none' : 'min(400px, 95vh)',
+                    width: (is_bare || renderContext === 'fullscreen') ? '100%' : `min(99vw, calc(99vh * ${ratio}))`,
+                    height: (is_bare || renderContext === 'fullscreen') ? '100%' : `min(99vh, calc(99vw / ${ratio}))`,
+                    minHeight: (is_bare || renderContext === 'fullscreen') ? 'none' : 'min(400px, 99vh)',
                     boxShadow: (is_bare || renderContext === 'fullscreen') ? 'none' : '0 10px 40px rgba(0,0,0,0.5)',
                     opacity: isLoading ? 0.5 : 1,
                     transition: 'all 0.3s ease'

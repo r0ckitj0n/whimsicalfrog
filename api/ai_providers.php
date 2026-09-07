@@ -201,19 +201,26 @@ class AIProviders
 
     private function getProviderForMethod($method)
     {
-        // For vision-specific tasks, prefer a dedicated vision provider (ai_vision_provider)
-        // whenever the primary provider doesn't itself support image analysis. This lets a
-        // site keep a cheaper/preferred text provider (e.g. one without vision support)
-        // configured as ai_provider while vision tasks still succeed via a capable provider,
-        // instead of failing outright with "does not support image analysis".
-        if ($method === 'analyzeItemImage' || $method === 'detectObjectBoundaries') {
-            if (!$this->provider->supportsImages()) {
-                $visionOverride = $this->getVisionProviderOverride();
-                if ($visionOverride) {
-                    return $visionOverride;
-                }
+        // For item-info vision analysis specifically, prefer a dedicated vision provider
+        // (ai_vision_provider) whenever the primary provider doesn't itself support images.
+        // This lets a site keep a cheaper/preferred text provider (e.g. one without vision
+        // support) configured as ai_provider while this task still succeeds via a capable
+        // provider, instead of failing outright with "does not support image analysis".
+        //
+        // detectObjectBoundaries is deliberately excluded from this override: it already has
+        // a reliable non-AI heuristic fallback (GDImageHelper/VisionHeuristics, invoked via
+        // LocalProvider) that has no dependency on any external vision API credentials being
+        // configured/valid. Routing it through an unverified vision override would trade a
+        // working local fallback for a network call that may fail closed for an unrelated
+        // reason (bad/missing API key, quota, etc.), breaking image crop/upload processing
+        // that worked before. currentModelSupportsImages() still reports true so callers that
+        // gate on it proceed, but they land back on the primary (local) provider here, which
+        // preserves the original heuristic-based behavior.
+        if ($method === 'analyzeItemImage' && !$this->provider->supportsImages()) {
+            $visionOverride = $this->getVisionProviderOverride();
+            if ($visionOverride) {
+                return $visionOverride;
             }
-            return $this->provider;
         }
         if ($this->settings['fallback_to_local'] && $this->provider !== $this->localProvider) {
             return $this->provider;
@@ -226,8 +233,7 @@ class AIProviders
         $providerName = $this->settings['ai_provider'] ?? WF_Constants::AI_PROVIDER_JONS_AI;
         $modelName = $this->resolveActiveModelForDiagnostics();
         $fallbackAllowed = !in_array($method, ['analyzeItemImage', 'detectObjectBoundaries'], true);
-        $isVisionMethod = in_array($method, ['analyzeItemImage', 'detectObjectBoundaries'], true);
-        $usingVisionOverride = $isVisionMethod && !$this->provider->supportsImages() && $this->getVisionProviderOverride() !== null;
+        $usingVisionOverride = $method === 'analyzeItemImage' && !$this->provider->supportsImages() && $this->getVisionProviderOverride() !== null;
         if ($usingVisionOverride) {
             $providerName = trim((string) ($this->settings['ai_vision_provider'] ?? $providerName));
             $modelName = $this->settings[$providerName . '_model'] ?? $modelName;

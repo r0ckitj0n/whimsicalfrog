@@ -168,10 +168,51 @@ class AIProviders
         }
     }
 
+    /**
+     * Resolve a dedicated vision-capable provider instance, if one is configured
+     * and actually supports images. Returns null when no override should apply
+     * (e.g. the primary provider already supports images, or no vision provider
+     * is configured/usable).
+     */
+    private function getVisionProviderOverride()
+    {
+        $visionProviderType = trim((string) ($this->settings['ai_vision_provider'] ?? ''));
+        if ($visionProviderType === '') {
+            return null;
+        }
+        $primaryType = $this->settings['ai_provider'] ?? WF_Constants::AI_PROVIDER_JONS_AI;
+        if ($visionProviderType === $primaryType) {
+            // Already using this provider as primary; no separate override needed.
+            return null;
+        }
+
+        try {
+            $candidate = $this->getProviderInstance($visionProviderType);
+        } catch (\Throwable $e) {
+            error_log("AI vision provider override failed to instantiate ({$visionProviderType}): " . $e->getMessage());
+            return null;
+        }
+
+        if (!$candidate || $candidate === $this->localProvider || !$candidate->supportsImages()) {
+            return null;
+        }
+        return $candidate;
+    }
+
     private function getProviderForMethod($method)
     {
-        // Local provider does not support image analysis; use the selected provider directly so errors are not masked.
+        // For vision-specific tasks, prefer a dedicated vision provider (ai_vision_provider)
+        // whenever the primary provider doesn't itself support image analysis. This lets a
+        // site keep a cheaper/preferred text provider (e.g. one without vision support)
+        // configured as ai_provider while vision tasks still succeed via a capable provider,
+        // instead of failing outright with "does not support image analysis".
         if ($method === 'analyzeItemImage' || $method === 'detectObjectBoundaries') {
+            if (!$this->provider->supportsImages()) {
+                $visionOverride = $this->getVisionProviderOverride();
+                if ($visionOverride) {
+                    return $visionOverride;
+                }
+            }
             return $this->provider;
         }
         if ($this->settings['fallback_to_local'] && $this->provider !== $this->localProvider) {
@@ -185,12 +226,19 @@ class AIProviders
         $providerName = $this->settings['ai_provider'] ?? WF_Constants::AI_PROVIDER_JONS_AI;
         $modelName = $this->resolveActiveModelForDiagnostics();
         $fallbackAllowed = !in_array($method, ['analyzeItemImage', 'detectObjectBoundaries'], true);
+        $isVisionMethod = in_array($method, ['analyzeItemImage', 'detectObjectBoundaries'], true);
+        $usingVisionOverride = $isVisionMethod && !$this->provider->supportsImages() && $this->getVisionProviderOverride() !== null;
+        if ($usingVisionOverride) {
+            $providerName = trim((string) ($this->settings['ai_vision_provider'] ?? $providerName));
+            $modelName = $this->settings[$providerName . '_model'] ?? $modelName;
+        }
         $this->lastRunDiagnostics = [
             'method' => $method,
             'provider' => $providerName,
             'model' => $modelName,
             'fallback_attempted' => false,
             'fallback_used' => false,
+            'vision_override_used' => $usingVisionOverride,
             'provider_error' => null,
             'fallback_error' => null,
         ];
@@ -281,7 +329,10 @@ class AIProviders
 
     public function currentModelSupportsImages()
     {
-        return $this->provider->supportsImages();
+        if ($this->provider->supportsImages()) {
+            return true;
+        }
+        return $this->getVisionProviderOverride() !== null;
     }
 
     public function generateMarketingContentWithImages($name, $description, $category, $images = [], $brandVoice = '', $contentTone = '')

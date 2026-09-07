@@ -17,7 +17,7 @@
   transition: all 0.3s ease;
   pointer-events: none;
   overscroll-behavior: contain;
-  padding: 2.5vh 2.5vw !important;
+  padding: clamp(6px, 1vh, 16px) clamp(6px, 1vw, 16px) !important;
   box-sizing: border-box !important;
 }
 

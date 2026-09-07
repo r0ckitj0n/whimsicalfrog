@@ -1,18 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# One-time production data patch:
-# Room 16 (Ne'Qwa Art Ornaments) storefront background was stuck on an older
-# "realistic" AI generation (backgrounds.id=80, plain wood shelves, no Ne'Qwa
-# branding) while room_settings.background_url already pointed at a nicer,
-# more recent whimsical generation (16-ne-qwa-art-ornaments-room16-624479)
-# that was never inserted into the `backgrounds` catalog table nor marked
-# active, so the storefront (which reads backgrounds.is_active) never picked
-# it up. This patch:
-#   1. Inserts a catalog row for the 624479 asset if one doesn't already exist.
-#   2. Deactivates all other room 16 backgrounds.
-#   3. Activates the 624479 row.
-#   4. Re-affirms room_settings.background_url stays in sync.
+# Production data patch (v2 -- supersedes the v1 run from earlier today):
+#
+# v1 (earlier today) activated backgrounds.id=118 (16-ne-qwa-art-ornaments-
+# room16-624479), reasoning it was the "nicer" of the room's stored options.
+# That was wrong: its own AI generation prompt (ai_generation_history id=23)
+# literally reads "A high-quality modern 3D children's cartoon animation
+# render (Pixar-esque)" -- exactly the cartoon look the stakeholder does not
+# want, and exactly what he reported seeing again after that deploy.
+#
+# This v2 patch instead activates backgrounds.id=105 ("Ne Qwa Art Cabin
+# Interior (Realistic)"), a photorealistic rustic-cabin scene. Unlike every
+# other room-16 background, id=105 has no matching ai_generation_history row
+# at all -- it was not produced by the cartoon-style AI template, and its
+# created_at (2026-07-03) is by far the most recent of the room's assets,
+# consistent with it being the stakeholder's own more recent upload that had
+# never actually been activated (so it never showed on the storefront).
 # Idempotent: safe to re-run.
 #
 # Usage:
@@ -34,17 +38,11 @@ fi
 API_URL="${WF_DEPLOY_BASE_URL%/}/api/database_maintenance.php"
 
 SQL_CONTENT=$(cat <<'SQL'
-INSERT INTO `backgrounds` (`room_number`, `name`, `image_filename`, `png_filename`, `webp_filename`, `is_active`, `theme`, `created_at`)
-SELECT '16', "16 - Ne'Qwa Art Ornaments 20260222-192158 (restored)", 'backgrounds/16-ne-qwa-art-ornaments-room16-624479.png', 'backgrounds/16-ne-qwa-art-ornaments-room16-624479.png', 'backgrounds/16-ne-qwa-art-ornaments-room16-624479.webp', 0, 'whimsical', '2026-02-22 19:21:58'
-WHERE NOT EXISTS (
-  SELECT 1 FROM `backgrounds` WHERE `room_number` = '16' AND `webp_filename` = 'backgrounds/16-ne-qwa-art-ornaments-room16-624479.webp'
-);
-
 UPDATE `backgrounds` SET `is_active` = 0 WHERE `room_number` = '16';
 
-UPDATE `backgrounds` SET `is_active` = 1 WHERE `room_number` = '16' AND `webp_filename` = 'backgrounds/16-ne-qwa-art-ornaments-room16-624479.webp';
+UPDATE `backgrounds` SET `is_active` = 1 WHERE `room_number` = '16' AND `webp_filename` = 'backgrounds/realistic/realistic-room16.webp';
 
-UPDATE `room_settings` SET `background_url` = '/images/backgrounds/16-ne-qwa-art-ornaments-room16-624479.webp' WHERE `room_number` = '16';
+UPDATE `room_settings` SET `background_url` = '/images/backgrounds/realistic/realistic-room16.webp' WHERE `room_number` = '16';
 SQL
 )
 

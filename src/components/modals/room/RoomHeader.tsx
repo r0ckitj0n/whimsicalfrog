@@ -27,11 +27,14 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({ room_number, room_name, 
             <div className="back-button-container" style={{ pointerEvents: 'auto', position: 'relative', top: 'unset', left: 'unset' }}>
                 <button
                     type="button"
-                    className="admin-action-btn btn-icon--close"
+                    className="room-modal-back-btn"
                     onClick={onClose}
-                    aria-label="Close"
+                    aria-label="Back to Main Room"
                     data-help-id="common-close"
-                />
+                >
+                    <span aria-hidden="true">←</span>
+                    <span>Back</span>
+                </button>
             </div>
             <div className="room-modal-title-container">
                 <h2 id="room-modal-title" className="room-modal-title wf-brand-font">

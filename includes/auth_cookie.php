@@ -93,7 +93,19 @@ function wf_auth_parse_cookie(?string $cookieVal): ?array
 
 function wf_auth_set_cookie($user_id, string $domain, bool $secure): void
 {
-    [$val, $exp] = wf_auth_make_cookie($user_id);
+    // WF_AUTH is a stateless *recovery aid* on top of the primary PHP-session
+    // login ($_SESSION['user']); it is not required for a login to succeed.
+    // If WF_AUTH_SECRET is not configured on this environment, wf_auth_secret()
+    // throws. Previously that exception propagated out of every successful
+    // login (process_login.php / seal_login.php / auth_redirect_probe.php),
+    // turning a correct-credentials login into an HTTP 500. Fail this
+    // enhancement closed-but-quiet instead of failing the whole login.
+    try {
+        [$val, $exp] = wf_auth_make_cookie($user_id);
+    } catch (Throwable $e) {
+        error_log('[auth_cookie] Unable to mint WF_AUTH cookie (login still succeeds via PHP session): ' . $e->getMessage());
+        return;
+    }
     $sameSite = $secure ? 'None' : 'Lax';
     $opts = [
         'expires' => $exp,

@@ -129,6 +129,20 @@ $legacyFallbackSecret = implode('', ['wf_auth_', 'fallback_', 'secret_', '2025_'
 $forgedFallbackCookie = wf_make_test_auth_cookie('7', $legacyFallbackSecret);
 wf_assert(wf_auth_parse_cookie($forgedFallbackCookie) === null, 'Fallback-signed WF_AUTH cookie must be rejected when WF_AUTH_SECRET is unset.');
 
+// Regression: a missing WF_AUTH_SECRET must never turn a successful login
+// into a fatal error. wf_auth_set_cookie() is called unconditionally right
+// after credential verification in functions/process_login.php and
+// api/seal_login.php, so it must fail closed-but-quiet, not throw.
+$loginStillSucceeds = true;
+$thrownMessage = '';
+try {
+    wf_auth_set_cookie('7', '', false);
+} catch (Throwable $e) {
+    $loginStillSucceeds = false;
+    $thrownMessage = $e->getMessage();
+}
+wf_assert($loginStillSucceeds, 'wf_auth_set_cookie() must not throw when WF_AUTH_SECRET is unset (would 500 every login): ' . $thrownMessage);
+
 putenv('WF_AUTH_SECRET=critical-regression-test-secret');
 $validCookie = wf_make_test_auth_cookie('7', 'critical-regression-test-secret');
 $parsed = wf_auth_parse_cookie($validCookie);

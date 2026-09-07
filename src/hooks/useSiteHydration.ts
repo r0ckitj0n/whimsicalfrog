@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useItemModal } from './useItemModal.js';
 import { useAuthModal } from './useAuthModal.js';
 import { useApp } from '../context/AppContext.js';
 import { IShopData, IReceiptData, IAboutData, IContactData, ISiteSettings } from '../types/index.js';
 import { ApiClient } from '../core/ApiClient.js';
 import { prefetchFeaturedProducts } from '../utils/featuredProductsPrefetch.js';
+import { detectPageFromLocation, locationNeedsShopData } from '../utils/pageRoute.js';
 
 /**
  * useSiteHydration Hook
@@ -15,11 +17,21 @@ export const useSiteHydration = () => {
     const { openLogin, openAccountSettings } = useAuthModal();
 
     const { receiptOrderId, setReceiptOrderId } = useApp();
+    const location = useLocation();
+    const spaRouteReadyRef = useRef(false);
     const [shop_data, setShopData] = useState<IShopData | null>(null);
     const [receipt_data, setReceiptData] = useState<IReceiptData | null>(null);
     const [about_data, setAboutData] = useState<IAboutData | null>(null);
     const [contact_data, setContactData] = useState<IContactData | null>(null);
-    const [site_settings, setSiteSettings] = useState<ISiteSettings | null>(null);
+    const [site_settings, setSiteSettings] = useState<ISiteSettings | null>(() => {
+        if (typeof window === 'undefined') return null;
+        try {
+            const cached = sessionStorage.getItem('wf_site_settings_v1');
+            return cached ? (JSON.parse(cached) as ISiteSettings) : null;
+        } catch {
+            return null;
+        }
+    });
     const [is_payment_modal_open, set_is_payment_modal_open] = useState(false);
 
     const loadFromDOM = () => {
@@ -147,6 +159,7 @@ export const useSiteHydration = () => {
             try {
                 // Pass current path to API for correct background resolution
                 const currentPath = window.location.pathname;
+                const needsShop = locationNeedsShopData(currentPath, window.location.search);
                 const data = await ApiClient.get<{
                     site_settings?: ISiteSettings;
                     shop_data?: IShopData;
@@ -155,9 +168,19 @@ export const useSiteHydration = () => {
                     background_url?: string;
                     branding?: { style?: string };
                     auth?: { isLoggedIn?: boolean; user_id?: string | number; userData?: { role?: string } };
-                }>('/api/bootstrap.php', { path: currentPath });
+                }>('/api/bootstrap.php', {
+                    path: currentPath,
+                    include_shop: needsShop ? '1' : '0'
+                });
 
-                if (data.site_settings) setSiteSettings(data.site_settings);
+                if (data.site_settings) {
+                    setSiteSettings(data.site_settings);
+                    try {
+                        sessionStorage.setItem('wf_site_settings_v1', JSON.stringify(data.site_settings));
+                    } catch {
+                        // sessionStorage may be unavailable; ignore
+                    }
+                }
                 if (data.shop_data) setShopData(data.shop_data);
                 if (data.about_data) setAboutData(data.about_data);
                 if (data.contact_data) setContactData(data.contact_data);
@@ -233,7 +256,7 @@ export const useSiteHydration = () => {
                 // For now, site_settings and shop_data are the main ones needed here.
 
                 // Only fall back to DOM for data the bootstrap API did not provide.
-                if (!data.site_settings || !data.shop_data || !data.about_data || !data.contact_data) {
+                if (!data.site_settings || !data.about_data || !data.contact_data || (needsShop && !data.shop_data)) {
                     loadFromDOM();
                 }
             } catch (e) {
@@ -273,6 +296,73 @@ export const useSiteHydration = () => {
     }, [openItemModal, openLogin, openAccountSettings]);
 
     const is_bare = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('bare') === '1';
+
+
+    // Keep data-page / backgrounds / shop catalog in sync during SPA navigations.
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        if (!site_settings) return;
+
+        // Skip the first run — initial bootstrap already hydrated this route.
+        if (!spaRouteReadyRef.current) {
+            spaRouteReadyRef.current = true;
+            const page = detectPageFromLocation(location.pathname, location.search);
+            document.body.setAttribute('data-page', page);
+            return;
+        }
+
+        const page = detectPageFromLocation(location.pathname, location.search);
+        document.body.setAttribute('data-page', page);
+        document.body.setAttribute('data-path', location.pathname.toLowerCase());
+
+        if (page === 'about' || page === 'contact' || page === 'room_main' || page === 'admin/settings') {
+            document.body.classList.add('room-bg-main');
+        }
+
+        const needsShop = locationNeedsShopData(location.pathname, location.search);
+        let cancelled = false;
+
+        const syncRouteBootstrap = async () => {
+            try {
+                const data = await ApiClient.get<{
+                    shop_data?: IShopData;
+                    background_url?: string;
+                    about_data?: IAboutData;
+                    contact_data?: IContactData;
+                }>('/api/bootstrap.php', {
+                    path: location.pathname,
+                    include_shop: needsShop ? '1' : '0'
+                });
+                if (cancelled) return;
+
+                if (needsShop && data.shop_data) {
+                    setShopData(data.shop_data);
+                }
+                if (data.about_data) setAboutData(data.about_data);
+                if (data.contact_data) setContactData(data.contact_data);
+
+                const isBare = new URLSearchParams(location.search).get('bare') === '1';
+                if (data.background_url && !isBare) {
+                    document.body.setAttribute('data-bg-url', data.background_url);
+                    document.body.setAttribute('data-bg-applied', '1');
+                    document.body.style.setProperty('--wf-body-bg', `url("${data.background_url}")`);
+                    document.body.style.setProperty('--body-bg', `url("${data.background_url}")`);
+                    document.body.style.backgroundImage = `url("${data.background_url}")`;
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                    document.body.style.backgroundRepeat = 'no-repeat';
+                    document.body.style.backgroundAttachment = 'fixed';
+                }
+            } catch (e) {
+                console.error('[SiteHydration] SPA route sync failed', e);
+            }
+        };
+
+        void syncRouteBootstrap();
+        return () => {
+            cancelled = true;
+        };
+    }, [location.pathname, location.search, site_settings]);
 
     return {
         shop_data,

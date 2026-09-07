@@ -7,7 +7,6 @@ import type {
     IFeaturedSplashProduct,
     ILoadingMessagePair
 } from '../types/loadingSplash.js';
-import { AdminLoading } from './admin/AdminLoading.js';
 import '../styles/components/ui/site-loading-splash.css';
 
 type SplashMode = 'pending' | 'whimsical' | 'fallback';
@@ -71,7 +70,22 @@ export const SiteLoadingSplash: React.FC = () => {
     }, []);
 
     if (mode === 'fallback') {
-        return <AdminLoading />;
+        return (
+            <div
+                className="wf-site-loading-splash flex min-h-[60vh] flex-col items-center justify-center px-6 py-10 text-center"
+                role="status"
+                aria-live="polite"
+                aria-busy="true"
+            >
+                <div className="wf-site-loading-splash__pond relative mb-5 flex h-14 w-14 items-center justify-center">
+                    <span className="wf-site-loading-splash__ripple" aria-hidden="true" />
+                    <span className="wf-site-loading-splash__frog text-3xl" aria-hidden="true">🐸</span>
+                </div>
+                <div className="wf-site-loading-splash__dots mt-2 flex items-center justify-center gap-1.5" aria-hidden="true">
+                    <span /><span /><span />
+                </div>
+            </div>
+        );
     }
 
     if (mode === 'pending' || !content) {

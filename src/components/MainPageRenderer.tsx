@@ -1,14 +1,15 @@
 import React, { lazy } from 'react';
 import type { IShopData, IReceiptData, IAboutData } from '../types/index.js';
+import { MainRoom } from './MainRoom.js';
+import { LandingPage } from './LandingPage.js';
+import { ShopView } from './storefront/ShopView.js';
+import { ProductDetailView } from './storefront/ProductDetailView.js';
+import { ReceiptView } from './storefront/ReceiptView.js';
+import { AboutView } from './storefront/AboutView.js';
+import { PageLoadingFallback } from './ui/PageLoadingFallback.js';
 
 const AdminAuthGuard = lazy(() => import('./admin/AdminAuthGuard.js').then(m => ({ default: m.AdminAuthGuard })));
 const AdminConductor = lazy(() => import('./admin/AdminConductor.js').then(m => ({ default: m.AdminConductor })));
-const MainRoom = lazy(() => import('./MainRoom.js').then(m => ({ default: m.MainRoom })));
-const LandingPage = lazy(() => import('./LandingPage.js').then(m => ({ default: m.LandingPage })));
-const ShopView = lazy(() => import('./storefront/ShopView.js').then(m => ({ default: m.ShopView })));
-const ProductDetailView = lazy(() => import('./storefront/ProductDetailView.js').then(m => ({ default: m.ProductDetailView })));
-const ReceiptView = lazy(() => import('./storefront/ReceiptView.js').then(m => ({ default: m.ReceiptView })));
-const AboutView = lazy(() => import('./storefront/AboutView.js').then(m => ({ default: m.AboutView })));
 
 interface MainPageRendererProps {
     isLoginPath: boolean;
@@ -54,18 +55,26 @@ export const MainPageRenderer: React.FC<MainPageRendererProps> = ({
             {(isLandingPageVisible || (isBare && roomIdParam === 'A')) && (
                 <LandingPage />
             )}
-            {(isShopVisible || (isBare && roomIdParam === 'S')) && shopData && (
-                <ShopView
-                    categories={shopData.categories}
-                    current_page={shopData.current_page}
-                    onOpenItem={openItemModal}
-                />
+            {(isShopVisible || (isBare && roomIdParam === 'S')) && (
+                shopData ? (
+                    <ShopView
+                        categories={shopData.categories}
+                        current_page={shopData.current_page}
+                        onOpenItem={openItemModal}
+                    />
+                ) : (
+                    <PageLoadingFallback />
+                )
             )}
-            {isProductVisible && shopData && (
-                <ProductDetailView
-                    categories={shopData.categories}
-                    onOpenItem={openItemModal}
-                />
+            {isProductVisible && (
+                shopData ? (
+                    <ProductDetailView
+                        categories={shopData.categories}
+                        onOpenItem={openItemModal}
+                    />
+                ) : (
+                    <PageLoadingFallback />
+                )
             )}
             {receiptData && <ReceiptView data={receiptData} />}
             {aboutData && !isBare && <AboutView data={aboutData} />}

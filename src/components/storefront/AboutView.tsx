@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { IAboutData } from '../../types/index.js';
 import { PAGE } from '../../core/constants.js';
 import { VersionInfoModal } from '../modals/VersionInfoModal.js';
@@ -16,10 +17,12 @@ interface AboutViewProps {
 export const AboutView: React.FC<AboutViewProps> = ({ data }) => {
     const [isVersionModalOpen, setIsVersionModalOpen] = useState(false);
     const { versionInfo, isLoading, error, refreshVersionInfo } = useVersionInfo(isVersionModalOpen);
+    const location = useLocation();
     const page = document.body.getAttribute('data-page');
+    const isAboutRoute = location.pathname.includes('/about') || page === PAGE.ABOUT;
 
     // Only render if on the about page and data is available
-    if (page !== PAGE.ABOUT || !data) {
+    if (!isAboutRoute || !data) {
         return null;
     }
 

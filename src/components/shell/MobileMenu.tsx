@@ -1,5 +1,6 @@
 import { useAuthModal } from '../../hooks/useAuthModal.js';
 import { useAuthContext } from '../../context/AuthContext.js';
+import { Link } from 'react-router-dom';
 
 interface MobileMenuProps {
     isOpen: boolean;
@@ -38,11 +39,11 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
 
             <div className={`mobile-menu ${isOpen ? 'show' : ''}`} id="mobile-menu" role="navigation" aria-label="Mobile navigation">
                 <div className="mobile-nav-links">
-                    <a href="/" className="mobile-nav-link" onClick={onClose}>Home</a>
-                    <a href="/room_main" className="mobile-nav-link" onClick={onClose}>Main Room</a>
-                    <a href="/shop" className="mobile-nav-link" onClick={onClose}>Shop</a>
-                    <a href="/about" className="mobile-nav-link" onClick={onClose}>About</a>
-                    <a href="/contact" className="mobile-nav-link" onClick={onClose}>Contact</a>
+                    <Link to="/" className="mobile-nav-link" onClick={onClose}>Home</Link>
+                    <Link to="/room_main" className="mobile-nav-link" onClick={onClose}>Main Room</Link>
+                    <Link to="/shop" className="mobile-nav-link" onClick={onClose}>Shop</Link>
+                    <Link to="/about" className="mobile-nav-link" onClick={onClose}>About</Link>
+                    <Link to="/contact" className="mobile-nav-link" onClick={onClose}>Contact</Link>
 
                     <div className="mobile-auth-section">
                         {isLoggedIn ? (
@@ -51,9 +52,9 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
                                     {username || 'User'}
                                 </a>
                                 {isAdmin && (
-                                    <a href="/admin?section=settings" className="mobile-nav-link" onClick={onClose}>
+                                    <Link to="/admin?section=settings" className="mobile-nav-link" onClick={onClose}>
                                         Settings
-                                    </a>
+                                    </Link>
                                 )}
                                 <a href="#" className="mobile-nav-link" onClick={handleAction(logout)}>Logout</a>
                             </>

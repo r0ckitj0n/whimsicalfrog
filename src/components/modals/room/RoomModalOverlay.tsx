@@ -77,6 +77,27 @@ export const RoomModalOverlay: React.FC<RoomModalOverlayProps> = ({
             }}
             onClick={(e) => e.target === e.currentTarget && onClose()}
         >
+            {!is_bare && renderContext !== 'fullscreen' && bgStyle?.backgroundImage && (
+                // Fill the letterbox margins with a blurred echo of the room's own
+                // background instead of flat black, so the room reads as filling the
+                // screen even though the interactive canvas keeps its true aspect ratio
+                // (item hotspot coordinates stay accurate; only this decorative layer stretches).
+                <div
+                    aria-hidden="true"
+                    style={{
+                        position: 'absolute',
+                        inset: 0,
+                        backgroundImage: bgStyle.backgroundImage,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                        filter: 'blur(28px) brightness(0.55) saturate(1.1)',
+                        transform: 'scale(1.1)',
+                        opacity: 0.9,
+                        pointerEvents: 'none'
+                    }}
+                />
+            )}
             <style>{`
                 .room-item.sold-out img {
                     filter: grayscale(1) !important;

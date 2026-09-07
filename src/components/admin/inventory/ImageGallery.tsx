@@ -29,6 +29,8 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
     const [isProcessingAll, setIsProcessingAll] = useState(false);
     const [imageTweakPrompt, setImageTweakPrompt] = useState('');
     const { isSubmitting: isSubmittingImageTweak, submitImageEdit } = useAIImageEdit();
+    const [isDragActive, setIsDragActive] = useState(false);
+    const dragCounterRef = React.useRef(0);
 
     useEffect(() => {
         onImagesChanged?.(images);
@@ -38,6 +40,46 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
         if (e.target.files && e.target.files.length > 0) {
             uploadImages(e.target.files);
         }
+        // Allow re-selecting the same file(s) after a failed upload.
+        e.target.value = '';
+    };
+
+    const filterImageFiles = (fileList: FileList): File[] =>
+        Array.from(fileList).filter((file) => file.type.startsWith('image/'));
+
+    const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (isReadOnly) return;
+        dragCounterRef.current += 1;
+        setIsDragActive(true);
+    };
+
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounterRef.current = Math.max(0, dragCounterRef.current - 1);
+        if (dragCounterRef.current === 0) setIsDragActive(false);
+    };
+
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounterRef.current = 0;
+        setIsDragActive(false);
+        if (isReadOnly) return;
+
+        const droppedFiles = filterImageFiles(e.dataTransfer.files);
+        if (droppedFiles.length === 0) {
+            window.WFToast?.error?.('Drop image files only (PNG, JPG, JPEG, WebP, GIF)');
+            return;
+        }
+        uploadImages(droppedFiles);
     };
 
     const openViewer = (image: IItemImage) => {
@@ -163,7 +205,14 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
             <div>
                 {error && <div className="p-2 mb-2 bg-[var(--brand-error)]/5 border border-[var(--brand-error)]/20 text-[var(--brand-error)] text-sm rounded">{error}</div>}
                 {!isReadOnly && (
-                    <div className="multi-image-upload-section">
+                    <div
+                        className={`multi-image-upload-section rounded-xl border-2 border-dashed p-6 text-center transition-colors ${isDragActive ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 bg-slate-50'}`}
+                        onDragEnter={handleDragEnter}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        data-testid="image-dropzone"
+                    >
                         <input
                             type="file"
                             id="singleStepImageUpload"
@@ -172,6 +221,10 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
                             className="hidden"
                             onChange={handleFileChange}
                         />
+                        <div className="text-2xl mb-1" aria-hidden="true">🖼️</div>
+                        <p className="text-xs text-slate-600 mb-2">
+                            {isDragActive ? 'Drop image to upload' : 'Drag & drop a product image here'}
+                        </p>
                         <label
                             htmlFor="singleStepImageUpload"
                             className="inline-flex items-center gap-2 rounded-lg px-4 py-2 font-bold uppercase tracking-widest text-xs bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition-colors cursor-pointer"
@@ -281,7 +334,14 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
                 </div>
 
                 {!isReadOnly && (
-                    <div className="multi-image-upload-section mt-4 pt-4 border-t border-gray-200">
+                    <div
+                        className={`multi-image-upload-section mt-4 pt-4 border-t border-gray-200 rounded-b-lg transition-colors ${isDragActive ? 'bg-emerald-50 ring-2 ring-inset ring-emerald-400' : ''}`}
+                        onDragEnter={handleDragEnter}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        data-testid="image-dropzone"
+                    >
                         <input
                             type="file"
                             id="multiImageUpload"
@@ -290,7 +350,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
                             className="hidden"
                             onChange={handleFileChange}
                         />
-                        <div className="upload-controls">
+                        <div className={`upload-controls rounded-xl border-2 border-dashed p-4 ${isDragActive ? 'border-emerald-500' : 'border-slate-200'}`}>
                             <div className="flex gap-3 flex-wrap items-center mb-3">
                                 <label
                                     htmlFor="multiImageUpload"
@@ -299,7 +359,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
                                     Upload Images
                                 </label>
                                 <div className="text-sm text-gray-500">
-                                    Maximum file size: 10MB per image. Supported formats: PNG, JPG, JPEG, WebP, GIF
+                                    {isDragActive ? 'Drop to upload' : 'Or drag & drop images here.'} Maximum file size: 10MB per image. Supported formats: PNG, JPG, JPEG, WebP, GIF
                                 </div>
                             </div>
 

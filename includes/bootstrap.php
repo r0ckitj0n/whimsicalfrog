@@ -30,15 +30,23 @@ function wf_bootstrap() {
 
     // 3. Initialize Session
     require_once __DIR__ . '/session.php';
-    session_init([
-        'name' => 'PHPSESSID',
-        'lifetime' => 0,
-        'path' => '/',
-        'domain' => $cookieDomain,
-        'secure' => $isHttps,
-        'httponly' => true,
-        'samesite' => 'None',
-    ]);
+    try {
+        session_init([
+            'name' => 'PHPSESSID',
+            'lifetime' => 0,
+            'path' => '/',
+            'domain' => $cookieDomain,
+            'secure' => $isHttps,
+            'httponly' => true,
+            'samesite' => 'None',
+        ]);
+    } catch (\Throwable $e) {
+        // Fail closed but do not crash the request: a session integrity failure
+        // (e.g. fingerprint mismatch, corrupt session store) should degrade to an
+        // anonymous/logged-out request instead of surfacing as an HTTP 500 to every
+        // visitor who happens to hit it. The underlying condition is still logged.
+        error_log('[bootstrap] session initialization failed: ' . $e->getMessage());
+    }
 
     // 4. Security definition
     if (!defined('INCLUDED_FROM_INDEX')) {

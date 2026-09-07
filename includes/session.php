@@ -189,9 +189,17 @@ class SessionManager
         if (!isset($_SESSION['_session_fingerprint'])) {
             $_SESSION['_session_fingerprint'] = self::generateFingerprint();
         } elseif ($_SESSION['_session_fingerprint'] !== self::generateFingerprint()) {
-            // Potential session hijacking
-            self::destroy();
-            throw new Exception('Session security violation detected');
+            // Potential session hijacking: fail closed by wiping any privileged
+            // session data and starting a fresh anonymous session, rather than
+            // throwing. An uncaught exception here would crash every request
+            // (HTTP 500) for the visitor instead of simply logging them out.
+            error_log('[session] Fingerprint mismatch detected; resetting session data.');
+            $_SESSION = [];
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_regenerate_id(true);
+            }
+            $_SESSION['_session_created'] = time();
+            $_SESSION['_session_fingerprint'] = self::generateFingerprint();
         }
 
         // Set last activity

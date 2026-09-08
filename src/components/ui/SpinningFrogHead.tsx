@@ -9,8 +9,8 @@ export const SpinningFrogHead: React.FC = () => (
             className="wf-spinning-frog-head"
             src={BRAND_ASSET.FROG_HEAD}
             alt=""
-            width={128}
-            height={128}
+            width={160}
+            height={160}
             loading="eager"
             decoding="async"
         />

@@ -203,7 +203,9 @@ function initializeAISettings($pdo)
     $defaultSettings = [
         'ai_provider' => ['jons_ai', $descriptions['ai_provider'], 'text', $displayNames['ai_provider']],
         'openai_api_key' => ['', $descriptions['openai_api_key'], 'text', $displayNames['openai_api_key']],
-        'openai_model' => ['gpt-3.5-turbo', $descriptions['openai_model'], 'text', $displayNames['openai_model']],
+        'openai_model' => ['gpt-4o-mini', $descriptions['openai_model'], 'text', $displayNames['openai_model']],
+        'openai_image_model' => ['gpt-image-1-mini', $descriptions['openai_image_model'], 'text', $displayNames['openai_image_model']],
+        'openai_image_edit_model' => ['gpt-image-1-mini', $descriptions['openai_image_edit_model'], 'text', $displayNames['openai_image_edit_model']],
         'anthropic_api_key' => ['', $descriptions['anthropic_api_key'], 'text', $displayNames['anthropic_api_key']],
         'anthropic_model' => ['claude-3-haiku-20240307', $descriptions['anthropic_model'], 'text', $displayNames['anthropic_model']],
         'google_api_key' => ['', $descriptions['google_api_key'], 'text', $displayNames['google_api_key']],

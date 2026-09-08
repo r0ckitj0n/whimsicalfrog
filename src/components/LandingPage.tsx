@@ -178,7 +178,6 @@ export const LandingPage: React.FC = () => {
                             aria-hidden="true"
                             className="landing-bg-image absolute inset-0 h-full w-full"
                             decoding="async"
-                            fetchPriority="high"
                             loading="eager"
                         />
                     </picture>

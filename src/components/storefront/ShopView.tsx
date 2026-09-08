@@ -32,10 +32,23 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
 
     type HelpTopicKey = 'categories' | 'shipping' | 'custom';
     const [activeHelpTopic, setActiveHelpTopic] = React.useState<HelpTopicKey | null>(null);
+    const [isPainted, setIsPainted] = React.useState(false);
+
+    React.useLayoutEffect(() => {
+        if (!isVisible) return;
+        let innerFrame = 0;
+        const outerFrame = requestAnimationFrame(() => {
+            innerFrame = requestAnimationFrame(() => setIsPainted(true));
+        });
+        return () => {
+            cancelAnimationFrame(outerFrame);
+            cancelAnimationFrame(innerFrame);
+        };
+    }, [isVisible, filteredItems.length]);
 
     if (!isVisible) return null;
-    if (!isShopReady) return <ShopLoadingScreen />;
 
+    const showLoader = !isShopReady || !isPainted;
     const visibleCategories = categoryList.filter(cat => cat.slug !== 'uncategorized' && (cat.items?.length ?? 0) > 0);
 
     return (
@@ -55,6 +68,8 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
                 onSearchChange={setSearchQuery}
                 current_page={current_page}
             />
+
+            {showLoader && <ShopLoadingScreen nested />}
 
             <div className="sr-only">
                 <h1>Custom Gifts, Tumblers, Shirts, and Resin Keepsakes</h1>

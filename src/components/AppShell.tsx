@@ -1,4 +1,4 @@
-import React, { useEffect, Suspense } from 'react';
+import React, { useEffect, useLayoutEffect, Suspense } from 'react';
 import useRoomManager from '../hooks/use-room-manager.js';
 import '../styles/components/buttons/emojis.css';
 import usePageRouter from '../hooks/use-page-router.js';
@@ -149,6 +149,15 @@ export const AppShell: React.FC = () => {
     const [searchParams] = useSearchParams();
     const section = searchParams.get('section') || '';
     const roomIdParam = searchParams.get('room_id');
+
+    useLayoutEffect(() => {
+        if (typeof document === 'undefined') return;
+        const coverShopWait = locationNeedsShopData(location.pathname, location.search);
+        document.body.classList.toggle('wf-shop-loading', coverShopWait);
+        return () => {
+            document.body.classList.remove('wf-shop-loading');
+        };
+    }, [location.pathname, location.search]);
 
     const isContextModalOpen = Boolean(modal?.isOpen);
 

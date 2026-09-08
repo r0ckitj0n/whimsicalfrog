@@ -317,6 +317,8 @@ export const useSiteHydration = () => {
 
         if (page === 'about' || page === 'contact' || page === 'room_main' || page === 'admin/settings') {
             document.body.classList.add('room-bg-main');
+        } else {
+            document.body.classList.remove('room-bg-main');
         }
 
         const needsShop = locationNeedsShopData(location.pathname, location.search);
@@ -342,7 +344,7 @@ export const useSiteHydration = () => {
                 if (data.contact_data) setContactData(data.contact_data);
 
                 const isBare = new URLSearchParams(location.search).get('bare') === '1';
-                if (data.background_url && !isBare) {
+                if (data.background_url && !isBare && !needsShop) {
                     document.body.setAttribute('data-bg-url', data.background_url);
                     document.body.setAttribute('data-bg-applied', '1');
                     document.body.style.setProperty('--wf-body-bg', `url("${data.background_url}")`);

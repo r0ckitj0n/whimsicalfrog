@@ -37,6 +37,13 @@ body[data-bg-url] {
   background-repeat: no-repeat;
 }
 
+body.wf-shop-loading,
+body.wf-shop-loading[data-bg-url],
+body.wf-shop-loading[data-bg-url][data-bg-applied="1"] {
+  background-image: none !important;
+  background-color: #000 !important;
+}
+
 #wf-root {
   position: relative;
 }

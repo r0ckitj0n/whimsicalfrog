@@ -32,30 +32,17 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
 
     type HelpTopicKey = 'categories' | 'shipping' | 'custom';
     const [activeHelpTopic, setActiveHelpTopic] = React.useState<HelpTopicKey | null>(null);
-    const [isPainted, setIsPainted] = React.useState(false);
-
-    React.useLayoutEffect(() => {
-        if (!isVisible) return;
-        let innerFrame = 0;
-        const outerFrame = requestAnimationFrame(() => {
-            innerFrame = requestAnimationFrame(() => setIsPainted(true));
-        });
-        return () => {
-            cancelAnimationFrame(outerFrame);
-            cancelAnimationFrame(innerFrame);
-        };
-    }, [isVisible, filteredItems.length]);
 
     if (!isVisible) return null;
+    if (!isShopReady) return <ShopLoadingScreen />;
 
-    const showLoader = !isShopReady || !isPainted;
     const visibleCategories = categoryList.filter(cat => cat.slug !== 'uncategorized' && (cat.items?.length ?? 0) > 0);
 
     return (
         <section
             id="shopPage"
-            className="fixed inset-0 pt-20 flex flex-col items-center overflow-hidden z-base bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: bgUrl ? `url("${bgUrl}")` : 'none' }}
+            className="fixed inset-0 pt-20 flex flex-col items-center overflow-hidden z-base bg-black bg-cover bg-center bg-no-repeat"
+            style={bgUrl ? { backgroundImage: `url("${bgUrl}")` } : undefined}
         >
             <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-20" />
 
@@ -68,8 +55,6 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
                 onSearchChange={setSearchQuery}
                 current_page={current_page}
             />
-
-            {showLoader && <ShopLoadingScreen nested />}
 
             <div className="sr-only">
                 <h1>Custom Gifts, Tumblers, Shirts, and Resin Keepsakes</h1>

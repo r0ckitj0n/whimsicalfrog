@@ -7,12 +7,20 @@
 require_once __DIR__ . '/../includes/bootstrap.php';
 wf_bootstrap();
 
+// PHP CLI (used by local concurrent server without php-cgi) does not auto-fill $_GET.
+if ((empty($_GET) || !isset($_GET['path'])) && !empty($_SERVER['QUERY_STRING'])) {
+    parse_str($_SERVER['QUERY_STRING'], $parsedQuery);
+    if (is_array($parsedQuery)) {
+        $_GET = array_merge($_GET, $parsedQuery);
+    }
+}
+
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/../includes/site_settings.php';
 require_once __DIR__ . '/../includes/branding_tokens_helper.php';
-require_once __DIR__ . '/../includes/shop_data_loader.php';
+require_once __DIR__ . '/../includes/functions/image_helpers.php';
 
 // Set headers for JSON response
 header('Content-Type: application/json');
@@ -30,7 +38,7 @@ if (!function_exists('wf_bootstrap_emit')) {
             header('Pragma: no-cache');
             header('Expires: 0');
         }
-        echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+        echo json_encode($payload, JSON_UNESCAPED_SLASHES);
         exit;
     }
 }
@@ -95,9 +103,27 @@ try {
     $branding_tokens = BrandingTokens::getTokens();
     $branding_style = BrandingTokens::buildStyleBlock($branding_tokens);
 
-    // 4. Shop/About/Contact Data (always include for simplicity in decoupled mode)
+    // 4. Shop/About/Contact Data
+    // Resolve path early so we can skip the heavy shop catalog on non-shop pages.
+    $reqPath = $_GET['path'] ?? parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+    $reqPath = strtolower(trim(urldecode((string) $reqPath), '/'));
+    $roomIdParam = $_GET['room_id'] ?? null;
+    $includeShopParam = $_GET['include_shop'] ?? null;
+    if ($includeShopParam === null) {
+        $includeShop = (
+            $roomIdParam === 'S'
+            || strpos($reqPath, 'shop') !== false
+            || strpos($reqPath, 'product') !== false
+        );
+    } else {
+        $includeShop = ($includeShopParam === '1' || $includeShopParam === 'true');
+    }
+
     $shop_data = null;
-    if (isset($categories) && !empty($categories)) {
+    if ($includeShop) {
+        require_once __DIR__ . '/../includes/shop_data_loader.php';
+    }
+    if ($includeShop && isset($categories) && !empty($categories)) {
         require_once __DIR__ . '/../includes/image_helper.php';
         require_once __DIR__ . '/../includes/business_settings_helper.php';
 
@@ -203,10 +229,7 @@ try {
     // 5. Determine background based on current page
     // Each page now has its own dedicated background setting in the database
     $bgRoomType = 'A'; // default to landing page
-    // Prefer the 'path' parameter from frontend over REQUEST_URI (which is the API endpoint path)
-    $reqPath = $_GET['path'] ?? parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
-    $reqPath = strtolower(trim(urldecode($reqPath), '/'));
-    $roomIdParam = $_GET['room_id'] ?? null;
+    // $reqPath / $roomIdParam already resolved above for include_shop
 
     if ($roomIdParam === 'S' || strpos($reqPath, 'shop') !== false) {
         $bgRoomType = 'S';
@@ -216,9 +239,12 @@ try {
         $bgRoomType = 'about';
     } elseif (strpos($reqPath, 'contact') !== false) {
         $bgRoomType = 'contact';
-    } elseif ($roomIdParam === '0' || strpos($reqPath, 'room_main') !== false) {
+    } elseif ($roomIdParam !== null && $roomIdParam !== '') {
+        // Honor explicit room_id for main room, landing, and numbered rooms.
+        $bgRoomType = (string) $roomIdParam;
+    } elseif (strpos($reqPath, 'room_main') !== false) {
         $bgRoomType = '0';
-    } elseif ($roomIdParam === 'A' || $reqPath === '' || $reqPath === 'index.html' || strpos($reqPath, 'landing') !== false) {
+    } elseif ($reqPath === '' || $reqPath === 'index.html' || strpos($reqPath, 'landing') !== false) {
         $bgRoomType = 'A';
     }
 

@@ -679,3 +679,14 @@ Use these commands in the dashboard environment (or `.cursor/environment.json`):
 - **start:** `bash scripts/cloud/start.sh` — MariaDB, PHP `:8080`, Vite `:5176` in the foreground.
 
 Do not save dashboard install/start paths until those scripts are on `main`. Local admin probe (dev only): `/api/auth_redirect_probe.php?token=wf_probe_2025_09&next=shop`.
+
+### GitHub is the source of truth (mandatory)
+
+Cloud workspaces can have **stale** copies of live-edited media (especially `images/signs/`). Direct FTP/SFTP deploys from a cloud agent have overwritten newer live signs with older local files.
+
+**Required workflow for Cursor agents:**
+
+1. **Ship code through GitHub only** — branch → commit → push → PR → merge. Prefer GitHub Actions for production deploys (`Actions → Deploy to IONOS`). Do **not** run `./scripts/deploy.sh --lite` from a cloud agent unless the user explicitly asks for a direct deploy.
+2. **Never upload room signs from a cloud workspace** — `images/signs/` is live-edited. `deploy.sh` skips signs unless `--include-signs` is passed. Do not pass `--include-signs` unless the user explicitly requests it.
+3. **Retain live media in GitHub** — after pulling current live signs/backgrounds (`bash scripts/cloud/pull_live_backup.sh --files-only`, or an exact signs mirror), commit them on a PR so GitHub keeps the canonical copies. Do not leave live media only on the server or only in an ephemeral cloud VM.
+4. **Default deploy mode is `--security-only`** — routine `main` pushes must not mirror the whole tree or touch images/`dist/`/.env/database. Use `lite` / `dist-only` only when the user explicitly wants that broader sync, and still without `--include-signs` unless asked.

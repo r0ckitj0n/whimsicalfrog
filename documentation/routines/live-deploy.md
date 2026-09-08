@@ -30,6 +30,16 @@ That means live content stays in place unless a path is explicitly allowlisted a
 | `env-only` | `./scripts/deploy.sh --env-only` | Upload `.env.live` → live `.env` |
 | `full` | `./scripts/deploy_full.sh` | Dangerous: can restore local DB onto live |
 
+### Room signs are protected
+
+`images/signs/` is edited on the live site. Lite/code deploys **do not** upload signs unless you pass `--include-signs`.
+
+Prefer this flow instead of pushing signs from a laptop/cloud agent:
+
+1. Pull current live signs into git (`bash scripts/cloud/pull_live_backup.sh --files-only`, or mirror `images/signs` from live).
+2. Commit and open a PR so GitHub retains them.
+3. Only use `--include-signs` when you intentionally want local/git signs to overwrite live.
+
 ## Adding a new security-critical path
 
 1. Land the fix on `main` through a PR.

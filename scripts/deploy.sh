@@ -42,6 +42,8 @@ PRESERVE_IMAGES=1
 PURGE_IMAGES=0
 CODE_ONLY=0
 SECURITY_ONLY=0
+# Room signs are live-edited. Never upload them unless explicitly requested.
+INCLUDE_SIGNS=0
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -55,6 +57,12 @@ while [[ $# -gt 0 ]]; do
       ;;
     --purge-images)
       PURGE_IMAGES=1
+      shift
+      ;;
+    --include-signs)
+      # Explicit opt-in: push local images/signs to live. Prefer committing signs
+      # to GitHub and reviewing a PR instead of syncing from a cloud workspace.
+      INCLUDE_SIGNS=1
       shift
       ;;
     --purge)
@@ -556,9 +564,11 @@ EOL
       fi
       rm -f deploy_backgrounds.txt
 
-      # 2) signs (mtime-based, no delete). Live-edited signs keep precedence.
-      echo -e "${GREEN}🪧 Ensuring sign images are updated (mtime-based; no deletes)...${NC}"
-      cat > deploy_signs.txt << EOL
+      # 2) signs — opt-in only. Live room signs are edited on production; cloud/local
+      # workspaces often have stale copies. Default is skip; use --include-signs to push.
+      if [ "$INCLUDE_SIGNS" = "1" ]; then
+        echo -e "${GREEN}🪧 Uploading sign images (--include-signs; mtime-based; no deletes)...${NC}"
+        cat > deploy_signs.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
 set cmd:fail-exit yes
@@ -567,14 +577,17 @@ mirror --reverse --verbose --only-newer --no-perms \
   images/signs images/signs
 bye
 EOL
-      if [ "${WF_DRY_RUN:-0}" = "1" ]; then
-        echo -e "${YELLOW}DRY-RUN: Skipping sign sync (mtime-based)${NC}"
-      elif lftp -f deploy_signs.txt; then
-        echo -e "${GREEN}✅ Sign images synced (mtime-based)${NC}"
+        if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+          echo -e "${YELLOW}DRY-RUN: Skipping sign sync (mtime-based)${NC}"
+        elif lftp -f deploy_signs.txt; then
+          echo -e "${GREEN}✅ Sign images synced (mtime-based)${NC}"
+        else
+          echo -e "${YELLOW}⚠️  Sign image sync failed; continuing${NC}"
+        fi
+        rm -f deploy_signs.txt
       else
-        echo -e "${YELLOW}⚠️  Sign image sync failed; continuing${NC}"
+        echo -e "${YELLOW}🪧 Skipping sign image upload (live signs protected; pass --include-signs to override)${NC}"
       fi
-      rm -f deploy_signs.txt
 
       # 3) remaining images (items/logos/etc) without --delete
       echo -e "${GREEN}🖼️  Syncing other images (no deletes)...${NC}"

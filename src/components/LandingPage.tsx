@@ -22,6 +22,7 @@ export const LandingPage: React.FC = () => {
 
     const [destinations, setDestinations] = useState<IDoorDestination[]>([]);
     const [bgUrl, setBgUrl] = useState('');
+    const [bgWebpUrl, setBgWebpUrl] = useState('');
 
     const {
         coordinates,
@@ -74,12 +75,19 @@ export const LandingPage: React.FC = () => {
             }
 
             if (bgRes.status === 'fulfilled') {
-                const fetchedBg = bgRes.value?.background?.webp_filename
-                    || bgRes.value?.background?.png_filename
-                    || bgRes.value?.background?.image_filename;
+                const pngOrImage = bgRes.value?.background?.png_filename
+                    || bgRes.value?.background?.image_filename
+                    || '';
+                const webp = bgRes.value?.background?.webp_filename || '';
+                const primary = pngOrImage || webp;
 
-                if (fetchedBg) {
-                    setBgUrl(resolveBackgroundAssetUrl(fetchedBg));
+                if (primary) {
+                    setBgUrl(resolveBackgroundAssetUrl(primary));
+                }
+                if (webp) {
+                    setBgWebpUrl(resolveBackgroundAssetUrl(webp));
+                } else {
+                    setBgWebpUrl('');
                 }
             } else {
                 console.error('[LandingPage] Failed to load background', bgRes.reason);
@@ -156,13 +164,26 @@ export const LandingPage: React.FC = () => {
                 className="absolute inset-0 pointer-events-none overflow-hidden"
                 style={{
                     ...worldStyles,
-                    zIndex: 0,
-                    backgroundImage: bgUrl ? `url(${bgUrl})` : 'none',
-                    backgroundSize: '100% 100%',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat'
+                    zIndex: 0
                 }}
-            />
+            >
+                {bgUrl ? (
+                    <picture className="absolute inset-0 h-full w-full">
+                        {bgWebpUrl ? (
+                            <source srcSet={bgWebpUrl} type="image/webp" />
+                        ) : null}
+                        <img
+                            src={bgUrl}
+                            alt=""
+                            aria-hidden="true"
+                            className="landing-bg-image absolute inset-0 h-full w-full"
+                            decoding="async"
+                            fetchPriority="high"
+                            loading="eager"
+                        />
+                    </picture>
+                ) : null}
+            </div>
             <div
                 className="relative w-full h-full flex items-center justify-center room-items-container"
                 style={{ '--icon-panel-color': iconPanelColor } as React.CSSProperties}

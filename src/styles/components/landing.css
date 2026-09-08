@@ -1,5 +1,15 @@
 /* Landing page styles (Vite-managed) */
 
+/* Fullscreen room background: crisp bitmap scaling (avoid CSS background soft-upscale) */
+.landing-bg-image {
+  object-fit: fill;
+  object-position: center;
+  image-rendering: auto;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
 /* Basic layout for the landing section; background is applied via body[data-bg-url] */
 .landing-section {
   position: fixed;

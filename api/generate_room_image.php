@@ -605,7 +605,12 @@ try {
     $pngAbs = $imagesRoot . '/' . $pngRel;
     $webpAbs = $imagesRoot . '/' . $webpRel;
 
-    ImageUploadHelper::resizeFillToPng($sourcePath, $pngAbs, 1280, 896);
+    // Fullscreen rooms (landing A / main 0) keep UHD output so backgrounds stay sharp on retina displays.
+    // Modal/item rooms keep the legacy 1280x896 canvas used by room coordinates tooling.
+    $isFullscreenRoom = in_array(strtoupper((string) $roomNumber), ['A', '0'], true);
+    $targetW = $isFullscreenRoom ? 3840 : 1280;
+    $targetH = $isFullscreenRoom ? 2688 : 896;
+    ImageUploadHelper::resizeFillToPng($sourcePath, $pngAbs, $targetW, $targetH);
     if (!file_exists($pngAbs) || (int) @filesize($pngAbs) <= 0) {
         throw new RuntimeException('Generated PNG output is missing or empty');
     }

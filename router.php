@@ -2,6 +2,15 @@
 
 // router.php
 
+// Local concurrent PHP server uses `php` CLI (not php-cgi), which does not
+// populate $_GET from QUERY_STRING. Ensure query params are available.
+if ((empty($_GET)) && !empty($_SERVER['QUERY_STRING'])) {
+    parse_str($_SERVER['QUERY_STRING'], $parsedQuery);
+    if (is_array($parsedQuery)) {
+        $_GET = $parsedQuery;
+    }
+}
+
 // Identify which server/workspace is responding
 header('X-WF-Server-Workspace: ' . __DIR__);
 header('X-WF-Server-CWD: ' . getcwd());

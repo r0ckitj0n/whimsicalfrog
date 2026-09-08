@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 interface NavItem {
     label: string;
@@ -23,14 +23,14 @@ export const Navigation: React.FC = () => {
                 const isActive = currentPath === item.url || (item.url !== '/' && currentPath.startsWith(item.url));
 
                 return (
-                    <a
+                    <Link
                         key={item.url}
-                        href={item.url}
+                        to={item.url}
                         className={`font-title-primary text-lg text-[var(--brand-primary)] transition-opacity hover:opacity-80 ${isActive ? 'font-bold' : ''} ${item.isImage ? 'nav-image-link' : ''}`}
                         aria-current={isActive ? 'page' : undefined}
                     >
                         {item.label}
-                    </a>
+                    </Link>
                 );
             })}
         </nav>

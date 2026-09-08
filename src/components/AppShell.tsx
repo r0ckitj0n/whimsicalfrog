@@ -19,9 +19,11 @@ import { AnalyticsBridge } from '../AnalyticsBridge.js';
 import { Header } from './shell/Header.js';
 import { Footer } from './shell/Footer.js';
 import { GlobalProcessingOverlay } from './GlobalProcessingOverlay.js';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { SETTINGS_MODAL_SECTIONS } from '../core/constants.js';
-import { AdminLoading } from './admin/AdminLoading.js';
+import { PageLoadingFallback } from './ui/PageLoadingFallback.js';
+import { detectPageFromLocation } from '../utils/pageRoute.js';
+import { SiteLoadingSplash } from './SiteLoadingSplash.js';
 import { useAppEffects } from '../hooks/useAppEffects.js';
 import { GlobalModalWrapper } from './modals/GlobalModalWrapper.js';
 import { MainPageRenderer } from './MainPageRenderer.js';
@@ -130,7 +132,7 @@ export const AppShell: React.FC = () => {
 
     const handleCloseReceipt = () => {
         setReceiptOrderId(null);
-        if (window.location.pathname.includes('/receipt')) {
+        if (location.pathname.includes('/receipt')) {
             const lastRoom = localStorage.getItem('wf_last_room') || '0';
             window.location.href = `/room_main?room_id=${lastRoom}`;
             return;
@@ -142,6 +144,7 @@ export const AppShell: React.FC = () => {
         }
     };
 
+    const location = useLocation();
     const [searchParams] = useSearchParams();
     const section = searchParams.get('section') || '';
     const roomIdParam = searchParams.get('room_id');
@@ -165,21 +168,23 @@ export const AppShell: React.FC = () => {
         SETTINGS_MODAL_SECTIONS
     });
 
-    const pageAttr = document.body.getAttribute('data-page');
+    const pageAttr = detectPageFromLocation(location.pathname, location.search);
 
     if (!site_settings) {
-        return <AdminLoading />;
+        // Storefront hydration gate — whimsical splash (falls back if no featured items).
+        // Admin section Suspense still uses AdminLoading inside admin switches.
+        return <SiteLoadingSplash />;
     }
 
-    const isLoginPath = window.location.pathname.includes('/login');
+    const isLoginPath = location.pathname.includes('/login');
     const isPOS = pageAttr === 'admin/pos' ||
-        window.location.pathname.includes('/pos') ||
+        location.pathname.includes('/pos') ||
         window.location.search.includes('section=pos');
 
     const isAdmin = pageAttr?.startsWith('admin');
     const containerClasses = `wf-app-container ${isAdmin ? 'flex flex-col h-screen min-h-0 overflow-hidden' : ''}`;
 
-    const currentPath = window.location.pathname;
+    const currentPath = location.pathname;
     const isLandingPageVisible = Boolean(!isPOS && !isAdmin && (
         roomIdParam === 'A' ||
         (!roomIdParam && (currentPath === '/' || currentPath === '/index.html') && !section)
@@ -188,11 +193,11 @@ export const AppShell: React.FC = () => {
         roomIdParam === '0' ||
         (currentPath.includes('/room_main') && !section)
     ));
-    const isShopVisible = Boolean(!isPOS && shop_data && (
+    const isShopVisible = Boolean(!isPOS && (
         currentPath.includes('/shop') || roomIdParam === 'S'
     ));
     const isProductVisible = Boolean(!isPOS && !isAdmin && currentPath.includes('/product/'));
-    const shouldHideVisualFooter = Boolean((pageAttr === 'landing' || window.location.pathname === '/') && !isLoggedIn && authMode === 'none');
+    const shouldHideVisualFooter = Boolean((pageAttr === 'landing' || location.pathname === '/') && !isLoggedIn && authMode === 'none');
 
     return (
         <div className={containerClasses}>
@@ -205,7 +210,7 @@ export const AppShell: React.FC = () => {
             <HeaderManager />
             <ContactManager businessData={contact_data || undefined} />
 
-            <Suspense fallback={<AdminLoading />}>
+            <Suspense fallback={<PageLoadingFallback />}>
                 <MainPageRenderer
                     isLoginPath={isLoginPath}
                     pageAttr={pageAttr}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import logger from '../core/logger.js';
 import { useContact } from '../hooks/useContact.js';
 import { BusinessInfo } from './contact/BusinessInfo.js';
@@ -49,9 +50,11 @@ export const ContactManager: React.FC<ContactManagerProps> = ({ businessData }) 
         }
     }, [businessData]);
 
+    const location = useLocation();
     const page = document.body.getAttribute('data-page');
+    const isContactRoute = location.pathname.includes('/contact') || page === PAGE.CONTACT;
 
-    if (page !== PAGE.CONTACT) {
+    if (!isContactRoute) {
         return null;
     }
 

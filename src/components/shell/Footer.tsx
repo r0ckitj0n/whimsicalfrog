@@ -1,5 +1,6 @@
 import React from 'react';
 import { ISiteSettings } from '../../types/index.js';
+import { Link } from 'react-router-dom';
 
 interface FooterProps {
     settings: ISiteSettings | null;
@@ -32,9 +33,9 @@ export const Footer: React.FC<FooterProps> = ({ settings, isSlim }) => {
                         <div className="footer-section">
                             <h3 className="footer-heading">Quick Links</h3>
                             <ul className="footer-nav">
-                                <li><a href="/shop">Shop</a></li>
-                                <li><a href="/about">About Us</a></li>
-                                <li><a href="/contact">Contact</a></li>
+                                <li><Link to="/shop">Shop</Link></li>
+                                <li><Link to="/about">About Us</Link></li>
+                                <li><Link to="/contact">Contact</Link></li>
                                 <li><a href="/custom">Custom Orders</a></li>
                             </ul>
                         </div>

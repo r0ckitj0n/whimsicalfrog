@@ -1,0 +1,78 @@
+/* Lightweight whimsical motion for the storefront hydration splash. */
+
+.wf-site-loading-splash__frog {
+    display: inline-block;
+    animation: wf-splash-hop 1.6s ease-in-out infinite;
+    transform-origin: 50% 100%;
+    z-index: var(--wf-z-elevated);
+}
+
+.wf-site-loading-splash__ripple {
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    border: 2px solid color-mix(in srgb, var(--brand-primary) 35%, transparent);
+    animation: wf-splash-ripple 1.6s ease-out infinite;
+    z-index: var(--wf-z-base);
+}
+
+.wf-site-loading-splash__dots span {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 9999px;
+    background: var(--brand-primary);
+    opacity: 0.35;
+    animation: wf-splash-dot 1.2s ease-in-out infinite;
+}
+
+.wf-site-loading-splash__dots span:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.wf-site-loading-splash__dots span:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes wf-splash-hop {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-8px);
+    }
+    55% {
+        transform: translateY(-2px);
+    }
+}
+
+@keyframes wf-splash-ripple {
+    0% {
+        transform: scale(0.55);
+        opacity: 0.55;
+    }
+    100% {
+        transform: scale(1.35);
+        opacity: 0;
+    }
+}
+
+@keyframes wf-splash-dot {
+    0%,
+    100% {
+        opacity: 0.25;
+        transform: translateY(0);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(-3px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wf-site-loading-splash__frog,
+    .wf-site-loading-splash__ripple,
+    .wf-site-loading-splash__dots span {
+        animation: none;
+    }
+}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 interface LogoProps {
     siteName: string;
@@ -36,7 +37,7 @@ export const Logo: React.FC<LogoProps> = ({
     return (
         <div className="logo-link">
             {logoImage && (
-                <a href={imageHref} className="logo-image-link" aria-label={`${siteName} - Landing Page`}>
+                <Link to={imageHref} className="logo-image-link" aria-label={`${siteName} - Landing Page`}>
                     <picture>
                         <source srcSet={logoImage.replace(/\.(png|jpe?g)$/i, '.webp')} type="image/webp" />
                         <img
@@ -46,7 +47,7 @@ export const Logo: React.FC<LogoProps> = ({
                             loading="lazy"
                         />
                     </picture>
-                </a>
+                </Link>
             )}
 
             {isTitleMenuButton ? (
@@ -59,9 +60,9 @@ export const Logo: React.FC<LogoProps> = ({
                     {textContent}
                 </button>
             ) : (
-                <a href={titleHref} className="logo-text-trigger" aria-label={`${siteName} - Main Room`} onClick={handleTitleClick}>
+                <Link to={titleHref} className="logo-text-trigger" aria-label={`${siteName} - Main Room`} onClick={handleTitleClick}>
                     {textContent}
-                </a>
+                </Link>
             )}
         </div>
     );

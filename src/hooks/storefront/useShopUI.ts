@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ApiClient } from '../../core/ApiClient.js';
-import { CATEGORY } from '../../core/constants.js';
+import { CATEGORY, SHOP_LOADER_MIN_MS } from '../../core/constants.js';
 import { IShopCategory as Category, IShopItem as Item } from '../../types/index.js';
 import { resolveBackgroundAssetUrl } from '../../utils/background-url.js';
 
@@ -22,10 +22,20 @@ export const useShopUI = ({ categories, isVisible }: UseShopUIProps) => {
     useEffect(() => {
         if (!isVisible) return;
         let cancelled = false;
+        let readyTimer: number | undefined;
+        const startedAt = Date.now();
         setIsShopReady(false);
 
         const markReady = () => {
-            if (!cancelled) setIsShopReady(true);
+            if (cancelled) return;
+            const remaining = SHOP_LOADER_MIN_MS - (Date.now() - startedAt);
+            if (remaining > 0) {
+                readyTimer = window.setTimeout(() => {
+                    if (!cancelled) setIsShopReady(true);
+                }, remaining);
+                return;
+            }
+            setIsShopReady(true);
         };
 
         const loadBackground = async () => {
@@ -54,6 +64,7 @@ export const useShopUI = ({ categories, isVisible }: UseShopUIProps) => {
         loadBackground();
         return () => {
             cancelled = true;
+            if (readyTimer !== undefined) window.clearTimeout(readyTimer);
         };
     }, [isVisible]);
 

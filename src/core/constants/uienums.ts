@@ -103,6 +103,8 @@ export const BRAND_ASSET = {
     FROG_HEAD: '/images/logos/apple-touch-icon.png'
 } as const;
 
+export const SHOP_LOADER_MIN_MS = 800;
+
 export const PAGE = {
     LANDING: 'landing',
     SHOP: 'shop',

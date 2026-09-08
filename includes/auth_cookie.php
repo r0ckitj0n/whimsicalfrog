@@ -93,7 +93,15 @@ function wf_auth_parse_cookie(?string $cookieVal): ?array
 
 function wf_auth_set_cookie($user_id, string $domain, bool $secure): void
 {
-    [$val, $exp] = wf_auth_make_cookie($user_id);
+    // WF_AUTH is a stateless recovery aid on top of PHP-session login.
+    // If WF_AUTH_SECRET is unset, wf_auth_make_cookie() throws. That must not
+    // turn a successful credential check into HTTP 500 — fail closed-but-quiet.
+    try {
+        [$val, $exp] = wf_auth_make_cookie($user_id);
+    } catch (Throwable $e) {
+        error_log('[auth_cookie] Unable to mint WF_AUTH cookie (login still succeeds via PHP session): ' . $e->getMessage());
+        return;
+    }
     $sameSite = $secure ? 'None' : 'Lax';
     $opts = [
         'expires' => $exp,

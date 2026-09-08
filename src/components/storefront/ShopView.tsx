@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useShopUI } from '../../hooks/storefront/useShopUI.js';
 import { ShopHeader } from './shop/partials/ShopHeader.js';
 import { ProductGridArea } from './shop/partials/ProductGridArea.js';
+import { ShopLoadingScreen } from './shop/ShopLoadingScreen.js';
 import { IShopCategory as Category, IShopItem as Item } from '../../types/index.js';
 import { categoryPathFromSlug } from '../../utils/product-url.js';
 
@@ -19,7 +20,7 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
     const {
         activeCategory, setActiveCategory,
         searchQuery, setSearchQuery,
-        bgUrl, categoryList, filteredItems,
+        bgUrl, isShopReady, categoryList, filteredItems,
         expandedSkus, toggleExpand,
         navigate, handleClear
     } = useShopUI({ categories, isVisible });
@@ -33,6 +34,7 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
     const [activeHelpTopic, setActiveHelpTopic] = React.useState<HelpTopicKey | null>(null);
 
     if (!isVisible) return null;
+    if (!isShopReady) return <ShopLoadingScreen />;
 
     const visibleCategories = categoryList.filter(cat => cat.slug !== 'uncategorized' && (cat.items?.length ?? 0) > 0);
 

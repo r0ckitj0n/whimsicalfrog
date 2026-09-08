@@ -16,25 +16,45 @@ export const useShopUI = ({ categories, isVisible }: UseShopUIProps) => {
     const [activeCategory, setActiveCategory] = useState<string>(CATEGORY.ALL);
     const [searchQuery, setSearchQuery] = useState('');
     const [bgUrl, setBgUrl] = useState('');
+    const [isShopReady, setIsShopReady] = useState(false);
     const [expandedSkus, setExpandedSkus] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         if (!isVisible) return;
+        let cancelled = false;
+        setIsShopReady(false);
+
+        const markReady = () => {
+            if (!cancelled) setIsShopReady(true);
+        };
+
         const loadBackground = async () => {
             try {
                 const bgData = await ApiClient.get<{ background: { webp_filename?: string; png_filename?: string; image_filename?: string } }>(
                     '/api/get_background.php',
                     { room: 'S' }
                 );
+                if (cancelled) return;
                 const fetchedBg = bgData?.background?.webp_filename || bgData?.background?.png_filename || bgData?.background?.image_filename;
                 if (fetchedBg) {
-                    setBgUrl(resolveBackgroundAssetUrl(fetchedBg));
+                    const resolved = resolveBackgroundAssetUrl(fetchedBg);
+                    setBgUrl(resolved);
+                    const preload = new Image();
+                    preload.onload = markReady;
+                    preload.onerror = markReady;
+                    preload.src = resolved;
+                    return;
                 }
+                markReady();
             } catch (err) {
                 console.error('[ShopView] Failed to load background', err);
+                markReady();
             }
         };
         loadBackground();
+        return () => {
+            cancelled = true;
+        };
     }, [isVisible]);
 
     useEffect(() => {
@@ -116,7 +136,7 @@ export const useShopUI = ({ categories, isVisible }: UseShopUIProps) => {
     return {
         activeCategory, setActiveCategory,
         searchQuery, setSearchQuery,
-        bgUrl, categoryList, filteredItems,
+        bgUrl, isShopReady, categoryList, filteredItems,
         expandedSkus, toggleExpand,
         navigate, handleClear: () => { setSearchQuery(''); setActiveCategory(CATEGORY.ALL); }
     };

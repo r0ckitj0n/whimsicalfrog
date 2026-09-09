@@ -39,14 +39,20 @@ That means live content stays in place unless a path is explicitly allowlisted a
 ## Manual deploy
 
 ```bash
-# Preferred / safe
+# Preferred for agents / routine publishes (backup-first, no live-data deletes)
+./scripts/deploy_agent_safe.sh --frontend
+./scripts/deploy_agent_safe.sh --code
+
+# Auth/session allowlist only
 ./scripts/deploy.sh --security-only
 
-# Intentional full code sync (overwrites non-image live files)
+# Intentional broad code sync (can overwrite non-image live files; prefer agent-safe instead)
 ./scripts/deploy.sh --lite
 ```
 
 Required secrets / `.env` keys: `WF_DEPLOY_HOST`, `WF_DEPLOY_USER`, `WF_DEPLOY_PASS`.
+
+See also: `documentation/routines/agent-safe-deploy.md`.
 
 ## Pulling live content back into local
 

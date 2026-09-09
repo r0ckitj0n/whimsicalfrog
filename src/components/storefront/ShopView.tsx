@@ -21,7 +21,7 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
         searchQuery, setSearchQuery,
         bgUrl, categoryList, filteredItems,
         expandedSkus, toggleExpand,
-        navigate, handleClear
+        handleClear
     } = useShopUI({ categories, isVisible });
 
     const handleAddToCart = (item: Item) => {
@@ -42,13 +42,14 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
             className="fixed inset-0 pt-20 flex flex-col items-center overflow-hidden z-base bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: bgUrl ? `url("${bgUrl}")` : 'none' }}
         >
-            {/* Top fade (~100px), below the site header. Back button at its bottom edge. */}
-            <div className="shop-top-gradient absolute top-20 left-0 right-0 h-[100px] bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-20">
-                <ShopBackButton navigate={navigate} />
-            </div>
+            {/* Top fade (~100px), below the site header. Decorative only. */}
+            <div className="shop-top-gradient absolute top-20 left-0 right-0 h-[100px] bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-20" aria-hidden="true" />
+
+            {/* Back button aligned to the bottom of the gradient band; clickable sibling layer. */}
+            <ShopBackButton />
 
             {/* Clear the absolute 100px gradient so filters sit below it in page flow. */}
-            <div className="w-full shrink-0 h-[100px]" aria-hidden="true" />
+            <div className="w-full shrink-0 h-[100px] pointer-events-none" aria-hidden="true" />
 
             <ShopHeader
                 categoryList={categoryList}

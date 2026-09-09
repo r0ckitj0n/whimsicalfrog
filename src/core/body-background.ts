@@ -77,7 +77,10 @@ export async function initBodyBackground(): Promise<void> {
         const body = document.body;
         if (!body) return;
         if (locationNeedsShopData(window.location.pathname, window.location.search)) {
-            body.style.removeProperty('background-image');
+            // Shop boot owns body wallpaper (roomS under the frog). Do not clear it.
+            if (!document.documentElement.classList.contains('wf-shop-boot')) {
+                body.style.removeProperty('background-image');
+            }
             return;
         }
 

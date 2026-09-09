@@ -1,5 +1,5 @@
 /**
- * Christmas Catalog page rooms (Sears/Amazon-style page spreads).
+ * Christmas Catalog page rooms (Whimsical Frog holiday catalog page spreads).
  * Room 6 (Christmas) opens page 1; each page is its own room with unique art.
  */
 export const CHRISTMAS_ROOM_NUMBER = '6';

@@ -23,7 +23,7 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
         searchQuery, setSearchQuery,
         bgUrl, isShopReady, categoryList, filteredItems,
         expandedSkus, toggleExpand,
-        navigate, handleClear
+        handleClear
     } = useShopUI({ categories, isVisible });
 
     const handleAddToCart = (item: Item) => {
@@ -78,10 +78,14 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
             className="fixed inset-0 pt-20 flex flex-col items-center overflow-hidden z-base bg-black bg-cover bg-center bg-no-repeat"
             style={bgUrl ? { backgroundImage: `url("${bgUrl}")` } : undefined}
         >
-            <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-20" />
+            {/* Soft fade under the site header — no tall empty band */}
+            <div
+                className="shop-top-gradient absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-20"
+                aria-hidden="true"
+            />
 
+            {/* Back under logo, then filters below Back */}
             <ShopHeader
-                navigate={navigate}
                 categoryList={categoryList}
                 activeCategory={activeCategory}
                 onCategoryChange={setActiveCategory}

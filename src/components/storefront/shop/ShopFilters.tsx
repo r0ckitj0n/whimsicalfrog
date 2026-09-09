@@ -26,9 +26,9 @@ export const ShopFilters: React.FC<ShopFiltersProps> = ({
     current_page
 }) => {
     return (
-        <div className="flex justify-center items-center w-full px-0 py-2">
-            {/* Centered Category Filter Buttons */}
-            <div className="flex flex-wrap items-center justify-center gap-3">
+        <div className="flex justify-start items-center w-full px-0 py-0">
+            {/* Category filters — left-aligned under Back to Main Room */}
+            <div className="flex flex-wrap items-center justify-start gap-3">
                 <button
                     type="button"
                     onClick={() => onCategoryChange(CATEGORY.ALL)}

@@ -8,7 +8,7 @@ interface RoomHeaderProps {
     onClose: () => void;
 }
 
-export const RoomHeader: React.FC<RoomHeaderProps> = ({ room_number, room_name, category, panelColor, onClose }) => {
+export const RoomHeader: React.FC<RoomHeaderProps> = ({ room_number, room_name, category, onClose }) => {
     return (
         <div className="room-modal-header" style={{
             flex: '0 0 auto',
@@ -27,11 +27,13 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({ room_number, room_name, 
             <div className="back-button-container" style={{ pointerEvents: 'auto', position: 'relative', top: 'unset', left: 'unset' }}>
                 <button
                     type="button"
-                    className="admin-action-btn btn-icon--close"
                     onClick={onClose}
-                    aria-label="Close"
+                    className="px-6 py-2.5 text-[14px] font-merienda rounded-full bg-brand-primary text-white shadow-[0_0_15px_rgba(var(--brand-primary-rgb),0.3)] transition-all duration-300 hover:brightness-110 hover:scale-105 active:scale-95"
+                    aria-label="Back to Main Room"
                     data-help-id="common-close"
-                />
+                >
+                    Back to Main Room
+                </button>
             </div>
             <div className="room-modal-title-container">
                 <h2 id="room-modal-title" className="room-modal-title wf-brand-font">

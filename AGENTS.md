@@ -679,3 +679,17 @@ Use these commands in the dashboard environment (or `.cursor/environment.json`):
 - **start:** `bash scripts/cloud/start.sh` — MariaDB, PHP `:8080`, Vite `:5176` in the foreground.
 
 Do not save dashboard install/start paths until those scripts are on `main`. Local admin probe (dev only): `/api/auth_redirect_probe.php?token=wf_probe_2025_09&next=shop`.
+
+## Live Deploy Standing Process (Required for Agents)
+
+When an agent ships changes that should go live, use the backup-first safe deploy — **do not** run destructive whole-tree mirrors.
+
+1. Land the change on `main` (merge the PR).
+2. Run: `bash scripts/deploy_agent_safe.sh --frontend` (UI) or `--code` / `--paths ...` as appropriate.
+3. That script **always**:
+   - Snapshots the live files it is about to replace into `backups/pre-deploy/<timestamp>/`
+   - Avoids deleting/overwriting live-owned data: `.env`, `images/`, `backups/`, `sessions/`, `logs/`, `data/`
+   - Uploads only the intended code/build artifacts
+4. Full policy: `documentation/routines/agent-safe-deploy.md` and `documentation/routines/live-deploy.md`.
+
+**Never** use `deploy_full.sh`, `--purge*`, or root-level `mirror --delete` for routine agent publishes. Live content often newer than the agent workspace must win for data/media.

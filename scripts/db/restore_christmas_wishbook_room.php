@@ -87,7 +87,7 @@ function wf_restore_wishbook_mapping(): void
             "UPDATE area_mappings
              SET mapping_type = 'content',
                  content_target = ?,
-                 link_label = 'Christmas Wish Book',
+                 link_label = 'Christmas Catalog',
                  content_image = ?,
                  link_image = ?,
                  is_active = 1,
@@ -102,7 +102,7 @@ function wf_restore_wishbook_mapping(): void
     Database::execute(
         "INSERT INTO area_mappings
             (room_number, area_selector, mapping_type, link_label, content_target, content_image, link_image, display_order, is_active)
-         VALUES (?, ?, 'content', 'Christmas Wish Book', ?, ?, ?, 100, 1)",
+         VALUES (?, ?, 'content', 'Christmas Catalog', ?, ?, ?, 100, 1)",
         [CHRISTMAS_ROOM, WISHBOOK_AREA, 'room:' . WISHBOOK_ROOM, $signUrl, $signUrl]
     );
 }

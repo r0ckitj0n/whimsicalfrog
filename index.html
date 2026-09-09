@@ -40,6 +40,14 @@
                     window.__wfPaintShopBootBg();
                 });
             }
+            // Hide the crawler SEO shell as early as possible (before React mounts).
+            document.addEventListener('DOMContentLoaded', function () {
+                var shell = document.getElementById('wf-seo-shell');
+                if (shell) {
+                    shell.setAttribute('hidden', '');
+                    shell.setAttribute('aria-hidden', 'true');
+                }
+            });
         })();
     </script>
     <title>Whimsical Frog | Handmade Decor & Gifts</title>
@@ -112,12 +120,27 @@
             font-family: 'Nunito', sans-serif;
         }
 
+        /* Critical: must exist before async Tailwind/CSS or React sr-only text flashes. */
+        .sr-only {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            clip-path: inset(50%) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+
         #wf-startup-loader {
             display: none;
         }
 
+        /* Hide SEO shell as soon as JS marks the document; keep it for no-JS crawlers. */
         html.wf-js #wf-seo-shell {
-            display: none;
+            display: none !important;
         }
 
         html.wf-js #wf-startup-loader {

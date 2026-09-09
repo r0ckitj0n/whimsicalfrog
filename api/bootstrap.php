@@ -287,6 +287,16 @@ try {
         $bgRoomType = '0';
     } elseif ($roomIdParam === 'A' || $reqPath === '' || $reqPath === 'index.html' || strpos($reqPath, 'landing') !== false) {
         $bgRoomType = 'A';
+    } elseif ($roomIdParam !== null && $roomIdParam !== '') {
+        // Deep links like /rooms/t-shirts-apparel (?room_id=1) must not paint landing wallpaper.
+        $bgRoomType = $roomIdParam;
+    } elseif (preg_match('#^rooms/([^/]+)$#', $reqPath) === 1) {
+        // Resolve room slug → number when bootstrap is called with a room path.
+        require_once __DIR__ . '/../includes/helpers/SpaSeoHelper.php';
+        $resolved = SpaSeoHelper::resolveRoomNumberForPath('/' . $reqPath);
+        if (is_string($resolved) && $resolved !== '') {
+            $bgRoomType = $resolved;
+        }
     }
 
     $backgroundUrl = function_exists('get_active_background') ? ('/' . ltrim(get_active_background($bgRoomType), '/')) : '/images/backgrounds/background-roomA.webp';

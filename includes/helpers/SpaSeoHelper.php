@@ -106,6 +106,10 @@ class SpaSeoHelper
             return '';
         }
 
+        // Keep category discovery complete, but cap product links so every SPA HTML
+        // response is not bloated with hundreds of product anchors (parse/paint cost).
+        $maxProductLinks = 60;
+
         $style = 'position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;border:0!important;white-space:nowrap!important;';
         $html = '<nav aria-label="Catalog URLs" data-wf-seo-nav="catalog" style="' . $style . '"><ul>';
         $categoryMap = [];
@@ -122,7 +126,11 @@ class SpaSeoHelper
             $html .= '<li><a href="' . self::escape($categoryPath) . '">' . self::escape($label) . '</a></li>';
         }
 
+        $productCount = 0;
         foreach ($items as $item) {
+            if ($productCount >= $maxProductLinks) {
+                break;
+            }
             $sku = trim((string) ($item['sku'] ?? ''));
             if ($sku === '') {
                 continue;
@@ -130,6 +138,7 @@ class SpaSeoHelper
             $path = self::canonicalProductPath($item);
             $label = trim((string) ($item['name'] ?? $item['title'] ?? $sku));
             $html .= '<li><a href="' . self::escape($path) . '">' . self::escape($label) . '</a></li>';
+            $productCount++;
         }
         $html .= '</ul></nav>';
 
@@ -585,8 +594,8 @@ class SpaSeoHelper
                         WHERE ms2.sku = i.sku
                     )
                  WHERE i.status = 'live' AND i.is_active = 1 AND i.is_archived = 0
-                 ORDER BY i.name ASC
-                 LIMIT 1000"
+                 ORDER BY i.updated_at DESC, i.name ASC
+                 LIMIT 120"
             );
         } catch (Throwable $e) {
             error_log('[SpaSeoHelper] Failed to load shop SEO items: ' . $e->getMessage());

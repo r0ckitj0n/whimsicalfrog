@@ -309,10 +309,16 @@
     <script>
         (async function loadViteBuiltAssets() {
             // Prefer Vite's native ESM entry when the Vite client is reachable (local/dev).
-            // Avoid hardcoding hostnames — they can collide with environment secret values.
+            // Production SPA fallback often returns HTTP 200 HTML for /@vite/client —
+            // that must NOT count as Vite available or the app never loads dist bundles.
             try {
                 const probe = await fetch('/@vite/client', { cache: 'no-store' });
-                if (probe.ok) {
+                const contentType = (probe.headers.get('content-type') || '').toLowerCase();
+                const looksLikeJs =
+                    contentType.includes('javascript') ||
+                    contentType.includes('ecmascript') ||
+                    contentType.includes('typescript');
+                if (probe.ok && looksLikeJs) {
                     const viteClient = document.createElement('script');
                     viteClient.type = 'module';
                     viteClient.src = '/@vite/client';

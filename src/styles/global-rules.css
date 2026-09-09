@@ -75,7 +75,7 @@ html.wf-shop-boot #wf-startup-loader {
 .wf-shop-loading-overlay {
   position: fixed !important;
   inset: 0 !important;
-  z-index: 2147483646 !important;
+  z-index: 2147483647 !important;
   display: flex;
   flex-direction: column;
   align-items: center;

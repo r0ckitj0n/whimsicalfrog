@@ -25,8 +25,8 @@ let shopCatalogPromise: Promise<unknown> | null = null;
 let cachedShopBgUrl = '';
 let cachedShopDataMemory: unknown = null;
 
-/** Above every room/header stacking context (fixed layers inside #wf-root compete in the root context). */
-const OVERLAY_Z = '2147483646';
+/** Match --wf-z-topmost so nothing in the room tree can stack above the frog. */
+const OVERLAY_Z = '2147483647';
 
 const OVERLAY_CSS = `
 :root {

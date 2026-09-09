@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { ShopFilters } from '../ShopFilters.js';
 import { IShopCategory as Category } from '../../../../types/index.js';
 
@@ -18,12 +17,17 @@ interface ShopHeaderProps {
  */
 export const ShopBackButton: React.FC = () => (
     <div className="shop-back-btn-wrapper relative z-30 w-full shrink-0 h-[100px] flex items-end px-5 pb-2">
-        <Link
-            to="/room_main"
+        <a
+            href="/room_main"
             className="inline-flex px-6 py-2.5 text-[14px] font-merienda rounded-full bg-brand-primary text-white shadow-[0_0_15px_rgba(var(--brand-primary-rgb),0.3)] transition-all duration-300 hover:brightness-110 hover:scale-105 active:scale-95"
+            onClick={(e) => {
+                // Prefer a full navigation — room pages rely on location-driven visibility.
+                e.preventDefault();
+                window.location.assign('/room_main');
+            }}
         >
             Back to Main Room
-        </Link>
+        </a>
     </div>
 );
 

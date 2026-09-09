@@ -95,6 +95,40 @@ export const AppShell: React.FC = () => {
         closeRoom
     } = useRoomManager();
 
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        window.openRoom = (roomNumber: string | number) => {
+            void openRoom(roomNumber);
+        };
+        window.roomModalManager = {
+            init: () => undefined,
+            show: (roomNumber: string | number) => {
+                void openRoom(roomNumber);
+            },
+            hide: () => {
+                closeRoom();
+            },
+            openRoom: (roomNumber: string | number) => {
+                void openRoom(roomNumber);
+            },
+            getRoomData: async () => null,
+            preloadRoomContent: async () => undefined,
+            preloadSingleRoom: async () => null,
+            invalidateRoom: () => undefined,
+            clearCache: () => undefined
+        };
+
+        return () => {
+            if (window.openRoom) {
+                delete window.openRoom;
+            }
+            if (window.roomModalManager) {
+                delete window.roomModalManager;
+            }
+        };
+    }, [openRoom, closeRoom]);
+
     const {
         isOpen: isItemModalOpen,
         sku: itemModalSku,

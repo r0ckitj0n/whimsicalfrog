@@ -62,10 +62,13 @@ export const RoomBody: React.FC<RoomBodyProps> = ({
                 width: '100%',
                 minWidth: isFullscreen ? '100%' : `${dims.w * 0.5}px`, // Prevent total collapse
                 minHeight: isFullscreen ? '400px' : `${dims.h * 0.5}px`,
-                height: (isFullscreen || window.location.search.includes('bare=1')) ? '100%' : 'auto',
+                // Parent modal container already owns the room aspect ratio.
+                // Avoid a second aspect-ratio on the body (plus RoomHeader) or the
+                // sides/tops of backgrounds get clipped by overflow:hidden.
+                height: (isFullscreen || window.location.search.includes('bare=1')) ? '100%' : '100%',
                 maxWidth: '100%',
                 maxHeight: '100%',
-                aspectRatio: (isFullscreen || window.location.search.includes('bare=1')) ? 'auto' : `${dims.w} / ${dims.h}`,
+                aspectRatio: 'auto',
                 margin: '0 auto',
                 position: 'relative'
             }}

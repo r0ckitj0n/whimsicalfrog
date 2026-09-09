@@ -143,7 +143,16 @@ try {
         foreach ($mappings as $index => $mapping) {
             $type = $mapping['mapping_type'] ?? 'item';
             $selector = $mapping['area_selector'] ?? '';
-            $imgUrl = $mapping['image_url'] ?? $mapping['content_image'] ?? $mapping['link_image'] ?? '/images/items/placeholder.webp';
+            $imgUrl = trim((string) ($mapping['image_url'] ?? ''));
+            if ($imgUrl === '') {
+                $imgUrl = trim((string) ($mapping['content_image'] ?? ''));
+            }
+            if ($imgUrl === '') {
+                $imgUrl = trim((string) ($mapping['link_image'] ?? ''));
+            }
+            if ($imgUrl === '') {
+                $imgUrl = '/images/items/placeholder.webp';
+            }
             $coords = $mapping['coords'] ?? null;
 
             $coordAttrs = '';
@@ -284,11 +293,12 @@ try {
                 $typeClass = $isShortcutType ? 'room-item-shortcut' : 'room-item-button';
                 $escapedType = htmlspecialchars((string) $type);
                 // Check if target is a room reference
+                $imgClass = $isShortcutType ? ' class="room-item-shortcut-img"' : '';
                 if (preg_match('/^room:(\w+)$/', $target, $matches)) {
                     $roomNum = $matches[1];
                     $htmlContent .= sprintf(
                         '<div class="room-item room-item-icon %s %s" data-mapping-type="%s" data-action="openRoom" data-room="%s" data-params=\'{"room":"%s"}\' %s %s>
-                        <img src="%s" alt="%s" loading="lazy">
+                        <img%s src="%s" alt="%s" loading="lazy">
                     </div>',
                         $typeClass,
                         $selectorClass,
@@ -297,6 +307,7 @@ try {
                         htmlspecialchars($roomNum),
                         $coordAttrs,
                         $inlineStyle,
+                        $imgClass,
                         htmlspecialchars($imgUrl),
                         htmlspecialchars($label)
                     );
@@ -304,7 +315,7 @@ try {
                     // Fallback to page navigation
                     $htmlContent .= sprintf(
                         '<a href="%s" class="room-item room-item-icon room-item-content %s %s" data-mapping-type="%s" %s %s>
-                        <img src="%s" alt="%s" loading="lazy">
+                        <img%s src="%s" alt="%s" loading="lazy">
                     </a>',
                         htmlspecialchars($target ?: '/'),
                         $typeClass,
@@ -312,6 +323,7 @@ try {
                         $escapedType,
                         $coordAttrs,
                         $inlineStyle,
+                        $imgClass,
                         htmlspecialchars($imgUrl),
                         htmlspecialchars($label)
                     );

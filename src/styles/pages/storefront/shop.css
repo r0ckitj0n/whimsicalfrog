@@ -71,16 +71,14 @@
     border: 2px solid var(--brand-primary);
   }
 
-  /* 100px band under the header; Back sits at the bottom of this band */
+  /* Compact back control under the header — no empty spacer bar */
   .shop-back-btn-wrapper {
-    height: 100px;
     display: flex;
-    align-items: flex-end;
     justify-content: flex-start;
   }
 
   .shop-top-gradient {
-    height: 100px;
+    height: 7rem;
   }
 
   body[data-page='shop'] .shop-footer-help {

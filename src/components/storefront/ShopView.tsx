@@ -42,13 +42,13 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
             className="fixed inset-0 pt-20 flex flex-col items-center overflow-hidden z-base bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: bgUrl ? `url("${bgUrl}")` : 'none' }}
         >
-            {/* Decorative 100px fade under the site header */}
+            {/* Soft fade under the site header — no tall empty band */}
             <div
-                className="shop-top-gradient absolute top-20 left-0 right-0 h-[100px] bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-20"
+                className="shop-top-gradient absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-20"
                 aria-hidden="true"
             />
 
-            {/* Back (under logo) then filters — single column, filters below Back */}
+            {/* Back under logo, then filters below Back */}
             <ShopHeader
                 categoryList={categoryList}
                 activeCategory={activeCategory}

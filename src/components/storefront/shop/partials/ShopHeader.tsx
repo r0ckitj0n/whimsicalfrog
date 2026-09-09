@@ -11,7 +11,7 @@ interface ShopHeaderProps {
     current_page: string;
 }
 
-/** Back control — pinned to the bottom of the 100px gradient band. */
+/** Back control — directly under the logo/title. */
 export const ShopBackButton: React.FC = () => (
     <a
         href="/room_main"
@@ -26,9 +26,8 @@ export const ShopBackButton: React.FC = () => (
 );
 
 /**
- * Shop top controls:
- * 1) 100px band matching the top gradient — Back sits at its bottom, under the logo
- * 2) Category filters in normal flow below that band (below Back / below the gradient)
+ * Shop top controls stacked under the header:
+ * Back first, then category filters (All Items directly below Back).
  */
 export const ShopHeader: React.FC<ShopHeaderProps> = ({
     categoryList,
@@ -39,20 +38,18 @@ export const ShopHeader: React.FC<ShopHeaderProps> = ({
     current_page
 }) => {
     return (
-        <div className="shop-top-controls relative z-30 w-full flex flex-col items-stretch">
-            <div className="shop-back-btn-wrapper w-full h-[100px] flex items-end justify-start px-5 pb-2">
+        <div className="shop-top-controls relative z-30 w-full px-5 pt-3 pb-3 flex flex-col items-start gap-3">
+            <div className="shop-back-btn-wrapper">
                 <ShopBackButton />
             </div>
-            <div className="w-full px-5 pt-2 pb-3">
-                <ShopFilters
-                    categoryList={categoryList}
-                    activeCategory={activeCategory}
-                    onCategoryChange={onCategoryChange}
-                    searchQuery={searchQuery}
-                    onSearchChange={onSearchChange}
-                    current_page={current_page}
-                />
-            </div>
+            <ShopFilters
+                categoryList={categoryList}
+                activeCategory={activeCategory}
+                onCategoryChange={onCategoryChange}
+                searchQuery={searchQuery}
+                onSearchChange={onSearchChange}
+                current_page={current_page}
+            />
         </div>
     );
 };

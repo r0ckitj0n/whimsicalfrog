@@ -18,12 +18,13 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../api/config.php';
 require_once __DIR__ . '/../../includes/backgrounds/manager.php';
 require_once __DIR__ . '/../../includes/helpers/ImagePathNormalizer.php';
+require_once __DIR__ . '/christmas_catalog_layouts.php';
 
 const CHRISTMAS_ROOM = '6';
 const CATALOG_ENTRY_AREA = '.area-15';
 const CATALOG_SIGN_URL = '/images/signs/realistic/realistic-sign-christmas-catalog.webp';
-const PREV_SIGN_URL = '/images/signs/realistic/realistic-sign-catalog-previous-page.webp';
-const NEXT_SIGN_URL = '/images/signs/realistic/realistic-sign-catalog-next-page.webp';
+const PREV_SIGN_URL = '/images/signs/realistic/realistic-sign-catalog-previous-page-v2.webp';
+const NEXT_SIGN_URL = '/images/signs/realistic/realistic-sign-catalog-next-page-v2.webp';
 const PREV_AREA = '.area-1';
 const NEXT_AREA = '.area-2';
 
@@ -238,6 +239,61 @@ function wf_ensure_connection(string $source, string $target): void
     );
 }
 
+
+function wf_seed_realistic_christmas_catalog_prompt(): void
+{
+    $prompt = <<<'PROMPT'
+{{image_style_declaration}} Christmas Catalog page {{room_number}}.
+Room name: {{room_name}}.
+Door label: {{door_label}}.
+Display order: {{display_order}}.
+Room description/context: {{room_description}}.
+
+Create a themed {{scene_type}} with a {{room_theme}} direction {{location_phrase}}.
+
+The page is a photorealistic mid-1950s American Christmas mail-order catalog spread printed on warm cream aged paper with visible paper fiber grain and soft period print screening. Include a subtle center fold crease and thin festive red/green outer border.
+The area features prominent {{display_furniture_style}} intended for future product placement.
+{{critical_constraint_line}}
+{{no_props_line}}
+{{decorative_elements_line}}
+{{open_display_zones_line}}
+
+Leave a generous clear empty cream margin across the entire bottom 20 percent of the page for previous/next navigation buttons. Do not place frames in that bottom band.
+
+{{character_statement}}
+
+Atmosphere: {{vibe_adjectives}}.
+Color palette: {{color_scheme}}.
+{{aesthetic_statement}}
+
+{{art_style_line}}
+{{surfaces_line}}
+{{text_constraint_line}}
+{{lighting_line}}
+PROMPT;
+
+    $existing = Database::queryOne(
+        'SELECT id FROM ai_prompt_templates WHERE template_key = ? LIMIT 1',
+        ['realistic_christmas_catalog_page']
+    );
+    $name = 'Realistic Christmas Catalog Page';
+    $desc = 'Photorealistic 1950s Christmas catalog page spreads with empty product frames, no text, and clear bottom nav band.';
+    if ($existing) {
+        Database::execute(
+            'UPDATE ai_prompt_templates
+             SET template_name = ?, description = ?, prompt_text = ?, context_type = ?, is_active = 1, updated_at = CURRENT_TIMESTAMP
+             WHERE id = ?',
+            [$name, $desc, $prompt, 'room', $existing['id']]
+        );
+        return;
+    }
+    Database::execute(
+        'INSERT INTO ai_prompt_templates (template_key, template_name, description, context_type, prompt_text, is_active)
+         VALUES (?, ?, ?, ?, ?, 1)',
+        ['realistic_christmas_catalog_page', $name, $desc, 'room', $prompt]
+    );
+}
+
 function wf_point_christmas_entry_to_first_page(string $firstRoom): void
 {
     $signUrl = ImagePathNormalizer::normalizeSignUrl(CATALOG_SIGN_URL);
@@ -320,6 +376,7 @@ function wf_point_christmas_entry_to_first_page(string $firstRoom): void
 }
 
 try {
+    wf_seed_realistic_christmas_catalog_prompt();
     $pageCount = count(CATALOG_PAGES);
     $firstRoom = CATALOG_PAGES[0]['room'];
 
@@ -327,36 +384,21 @@ try {
         $room = $page['room'];
         $title = $page['title'];
         $file = $page['file'];
-        $bgUrl = ImagePathNormalizer::normalizeBackgroundUrl(wf_bg_db_ref($file, 'webp'));
+        $bgUrl = ImagePathNormalizer::normalizeBackgroundUrl(wf_bg_db_ref($file, 'webp')) . '?v=1950clean';
         $displayOrder = 70 + $page['page'];
 
         wf_upsert_room_settings($room, $title, $bgUrl, $displayOrder);
         $bgId = wf_upsert_background($room, $file);
 
-        $rects = [];
         $hasPrev = $index > 0;
         $hasNext = $index < ($pageCount - 1);
 
-        if ($hasPrev) {
-            $rects[] = [
-                'id' => 'catalog-prev-page',
-                'top' => 700,
-                'left' => 40,
-                'width' => 160,
-                'height' => 170,
-                'selector' => PREV_AREA,
-            ];
-        }
-        if ($hasNext) {
-            $rects[] = [
-                'id' => 'catalog-next-page',
-                'top' => 700,
-                'left' => 1080,
-                'width' => 160,
-                'height' => 170,
-                'selector' => NEXT_AREA,
-            ];
-        }
+        // Unique per-page item frames stay in the upper content band;
+        // prev/next plaques sit in the intentional bottom nav band.
+        $rects = array_merge(
+            wf_christmas_catalog_item_slots((int) $page['page']),
+            wf_christmas_catalog_nav_rects($hasPrev, $hasNext)
+        );
 
         wf_upsert_room_map($room, "Christmas Catalog Page {$page['page']}", $rects);
 
@@ -402,8 +444,14 @@ try {
 
     echo "OK Christmas Catalog pages restored ({$pageCount} rooms)\n";
     echo '  entry mapping: ' . json_encode($entry) . "\n";
+    if (!empty($GLOBALS['WF_RESTORE_CHRISTMAS_CATALOG_AS_LIBRARY'])) {
+        return;
+    }
     exit(0);
 } catch (Throwable $e) {
+    if (!empty($GLOBALS['WF_RESTORE_CHRISTMAS_CATALOG_AS_LIBRARY'])) {
+        throw $e;
+    }
     fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n");
     exit(1);
 }

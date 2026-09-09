@@ -71,12 +71,15 @@
     border: 2px solid var(--brand-primary);
   }
 
-  /* Back button sits under page logo/title, above All Items */
+  /* Back button lives inside the top gradient; keep it clickable */
   .shop-back-btn-wrapper {
-    position: relative;
     display: flex;
     justify-content: flex-start;
     z-index: var(--wf-z-elevated);
+  }
+
+  .shop-top-gradient {
+    height: 100px;
   }
 
   body[data-page='shop'] .shop-footer-help {

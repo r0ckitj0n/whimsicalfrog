@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useShopUI } from '../../hooks/storefront/useShopUI.js';
-import { ShopHeader } from './shop/partials/ShopHeader.js';
+import { ShopHeader, ShopBackButton } from './shop/partials/ShopHeader.js';
 import { ProductGridArea } from './shop/partials/ProductGridArea.js';
 import { IShopCategory as Category, IShopItem as Item } from '../../types/index.js';
 import { categoryPathFromSlug } from '../../utils/product-url.js';
@@ -42,10 +42,15 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
             className="fixed inset-0 pt-20 flex flex-col items-center overflow-hidden z-base bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: bgUrl ? `url("${bgUrl}")` : 'none' }}
         >
-            <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-20" />
+            {/* Top fade (~100px). Back button sits at its bottom edge. */}
+            <div className="shop-top-gradient absolute top-0 left-0 right-0 h-[100px] bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-20">
+                <ShopBackButton navigate={navigate} />
+            </div>
+
+            {/* Clear the absolute 100px gradient (section already has pt-20 / 80px). */}
+            <div className="w-full shrink-0 h-5" aria-hidden="true" />
 
             <ShopHeader
-                navigate={navigate}
                 categoryList={categoryList}
                 activeCategory={activeCategory}
                 onCategoryChange={setActiveCategory}

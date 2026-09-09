@@ -18,7 +18,7 @@ require_once __DIR__ . '/../../includes/helpers/ImagePathNormalizer.php';
 const CHRISTMAS_ROOM = '6';
 const WISHBOOK_ROOM = '18';
 const CATALOG_BACKGROUND_ID = 116;
-const WISHBOOK_SIGN_URL = '/images/signs/realistic/realistic-sign-christmas-wishbook.webp';
+const WISHBOOK_SIGN_URL = '/images/signs/realistic/realistic-sign-christmas-catalog.webp';
 const WISHBOOK_AREA = '.area-15';
 
 function wf_restore_wishbook_map_coords(): void

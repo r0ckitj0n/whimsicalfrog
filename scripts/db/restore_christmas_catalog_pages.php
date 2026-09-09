@@ -444,8 +444,14 @@ try {
 
     echo "OK Christmas Catalog pages restored ({$pageCount} rooms)\n";
     echo '  entry mapping: ' . json_encode($entry) . "\n";
+    if (!empty($GLOBALS['WF_RESTORE_CHRISTMAS_CATALOG_AS_LIBRARY'])) {
+        return;
+    }
     exit(0);
 } catch (Throwable $e) {
+    if (!empty($GLOBALS['WF_RESTORE_CHRISTMAS_CATALOG_AS_LIBRARY'])) {
+        throw $e;
+    }
     fwrite(STDERR, 'ERROR: ' . $e->getMessage() . "\n");
     exit(1);
 }

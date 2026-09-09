@@ -45,11 +45,8 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
             {/* Top fade (~100px), below the site header. Decorative only. */}
             <div className="shop-top-gradient absolute top-20 left-0 right-0 h-[100px] bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-20" aria-hidden="true" />
 
-            {/* Back button aligned to the bottom of the gradient band; clickable sibling layer. */}
+            {/* In-flow row aligned to the gradient band; keeps the link clickable. */}
             <ShopBackButton />
-
-            {/* Clear the absolute 100px gradient so filters sit below it in page flow. */}
-            <div className="w-full shrink-0 h-[100px] pointer-events-none" aria-hidden="true" />
 
             <ShopHeader
                 categoryList={categoryList}

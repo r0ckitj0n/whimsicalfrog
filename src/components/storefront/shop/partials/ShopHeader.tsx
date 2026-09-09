@@ -13,19 +13,17 @@ interface ShopHeaderProps {
 }
 
 /**
- * Back control — positioned at the bottom of the top gradient band.
- * Kept outside the decorative gradient so clicks are not blocked by pointer-events-none.
+ * Back control in normal flow — fills the 100px gradient band and
+ * aligns the link to the bottom so it stays clickable.
  */
 export const ShopBackButton: React.FC = () => (
-    <div className="shop-back-btn-layer absolute top-20 left-0 right-0 h-[100px] z-30 pointer-events-none">
-        <div className="shop-back-btn-wrapper absolute bottom-2 left-5 pointer-events-auto">
-            <Link
-                to="/room_main"
-                className="inline-flex px-6 py-2.5 text-[14px] font-merienda rounded-full bg-brand-primary text-white shadow-[0_0_15px_rgba(var(--brand-primary-rgb),0.3)] transition-all duration-300 hover:brightness-110 hover:scale-105 active:scale-95"
-            >
-                Back to Main Room
-            </Link>
-        </div>
+    <div className="shop-back-btn-wrapper relative z-30 w-full shrink-0 h-[100px] flex items-end px-5 pb-2">
+        <Link
+            to="/room_main"
+            className="inline-flex px-6 py-2.5 text-[14px] font-merienda rounded-full bg-brand-primary text-white shadow-[0_0_15px_rgba(var(--brand-primary-rgb),0.3)] transition-all duration-300 hover:brightness-110 hover:scale-105 active:scale-95"
+        >
+            Back to Main Room
+        </Link>
     </div>
 );
 

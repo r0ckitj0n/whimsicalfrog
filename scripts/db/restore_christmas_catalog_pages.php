@@ -22,8 +22,8 @@ require_once __DIR__ . '/../../includes/helpers/ImagePathNormalizer.php';
 const CHRISTMAS_ROOM = '6';
 const CATALOG_ENTRY_AREA = '.area-15';
 const CATALOG_SIGN_URL = '/images/signs/realistic/realistic-sign-christmas-catalog.webp';
-const PREV_SIGN_URL = '/images/signs/realistic/realistic-sign-catalog-previous-page.webp';
-const NEXT_SIGN_URL = '/images/signs/realistic/realistic-sign-catalog-next-page.webp';
+const PREV_SIGN_URL = '/images/signs/realistic/realistic-sign-catalog-previous-page-v2.webp';
+const NEXT_SIGN_URL = '/images/signs/realistic/realistic-sign-catalog-next-page-v2.webp';
 const PREV_AREA = '.area-1';
 const NEXT_AREA = '.area-2';
 
@@ -338,22 +338,24 @@ try {
         $hasNext = $index < ($pageCount - 1);
 
         if ($hasPrev) {
+            // Aspect matches transparent plaque cutout (~146x104)
             $rects[] = [
                 'id' => 'catalog-prev-page',
-                'top' => 690,
-                'left' => 30,
-                'width' => 170,
-                'height' => 180,
+                'top' => 720,
+                'left' => 20,
+                'width' => 200,
+                'height' => 145,
                 'selector' => PREV_AREA,
             ];
         }
         if ($hasNext) {
+            // Aspect matches transparent plaque cutout (~137x118)
             $rects[] = [
                 'id' => 'catalog-next-page',
-                'top' => 690,
-                'left' => 1080,
-                'width' => 170,
-                'height' => 180,
+                'top' => 710,
+                'left' => 1060,
+                'width' => 200,
+                'height' => 170,
                 'selector' => NEXT_AREA,
             ];
         }

@@ -103,8 +103,8 @@ export const BRAND_ASSET = {
     FROG_HEAD: '/images/logos/apple-touch-icon.png'
 } as const;
 
-/** Short beat so the spinning frog is noticeable once catalog is in memory. */
-export const SHOP_LOADER_MIN_MS = 150;
+/** One full spin (~1.15s) so the frog is unmistakable once the catalog is warm. */
+export const SHOP_LOADER_MIN_MS = 700;
 
 export const PAGE = {
     LANDING: 'landing',

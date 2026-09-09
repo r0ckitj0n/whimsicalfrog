@@ -71,18 +71,14 @@
     border: 2px solid var(--brand-primary);
   }
 
-  /* Back Button Wrapper Responsive Logic */
+  /* Compact back control under the header — no empty spacer bar */
   .shop-back-btn-wrapper {
-    position: absolute;
-    left: 2rem;
-    display: none;
-    z-index: var(--wf-z-elevated);
+    display: flex;
+    justify-content: flex-start;
   }
 
-  @media (min-width: 768px) {
-    .shop-back-btn-wrapper {
-      display: block;
-    }
+  .shop-top-gradient {
+    height: 7rem;
   }
 
   body[data-page='shop'] .shop-footer-help {

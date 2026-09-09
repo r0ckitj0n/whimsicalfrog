@@ -27,7 +27,7 @@ export const ShopHeader: React.FC<ShopHeaderProps> = ({
             <div className="shop-back-btn-wrapper w-full flex justify-start">
                 <button
                     type="button"
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate('/room_main')}
                     className="px-6 py-2.5 text-[14px] font-merienda rounded-full bg-brand-primary text-white shadow-[0_0_15px_rgba(var(--brand-primary-rgb),0.3)] transition-all duration-300 hover:brightness-110 hover:scale-105 active:scale-95"
                 >
                     Back to Main Room

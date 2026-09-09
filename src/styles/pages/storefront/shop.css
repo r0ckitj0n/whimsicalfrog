@@ -71,11 +71,12 @@
     border: 2px solid var(--brand-primary);
   }
 
-  /* Back button row fills the gradient band in normal flow */
+  /* 100px band under the header; Back sits at the bottom of this band */
   .shop-back-btn-wrapper {
+    height: 100px;
     display: flex;
-    justify-content: flex-start;
     align-items: flex-end;
+    justify-content: flex-start;
   }
 
   .shop-top-gradient {

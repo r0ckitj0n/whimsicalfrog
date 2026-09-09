@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useShopUI } from '../../hooks/storefront/useShopUI.js';
-import { ShopHeader, ShopBackButton } from './shop/partials/ShopHeader.js';
+import { ShopHeader } from './shop/partials/ShopHeader.js';
 import { ProductGridArea } from './shop/partials/ProductGridArea.js';
 import { IShopCategory as Category, IShopItem as Item } from '../../types/index.js';
 import { categoryPathFromSlug } from '../../utils/product-url.js';
@@ -42,12 +42,13 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
             className="fixed inset-0 pt-20 flex flex-col items-center overflow-hidden z-base bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: bgUrl ? `url("${bgUrl}")` : 'none' }}
         >
-            {/* Top fade (~100px), below the site header. Decorative only. */}
-            <div className="shop-top-gradient absolute top-20 left-0 right-0 h-[100px] bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-20" aria-hidden="true" />
+            {/* Decorative 100px fade under the site header */}
+            <div
+                className="shop-top-gradient absolute top-20 left-0 right-0 h-[100px] bg-gradient-to-b from-black/80 to-transparent pointer-events-none z-20"
+                aria-hidden="true"
+            />
 
-            {/* In-flow row aligned to the gradient band; keeps the link clickable. */}
-            <ShopBackButton />
-
+            {/* Back (under logo) then filters — single column, filters below Back */}
             <ShopHeader
                 categoryList={categoryList}
                 activeCategory={activeCategory}

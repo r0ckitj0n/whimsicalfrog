@@ -384,7 +384,7 @@ try {
         $room = $page['room'];
         $title = $page['title'];
         $file = $page['file'];
-        $bgUrl = ImagePathNormalizer::normalizeBackgroundUrl(wf_bg_db_ref($file, 'webp'));
+        $bgUrl = ImagePathNormalizer::normalizeBackgroundUrl(wf_bg_db_ref($file, 'webp')) . '?v=1950clean';
         $displayOrder = 70 + $page['page'];
 
         wf_upsert_room_settings($room, $title, $bgUrl, $displayOrder);

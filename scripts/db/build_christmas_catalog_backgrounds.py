@@ -111,33 +111,44 @@ CREAM = (238, 226, 200)
 
 
 def load_ai(page: int) -> Image.Image | None:
-    name = AI_SOURCES.get(page)
-    ai = None
-    if name:
-        for path in (ARTIFACT_DIR / name, GEN_DIR / name):
-            if path.exists():
-                ai = Image.open(path).convert("RGB").resize((W, H), Image.Resampling.LANCZOS)
-                break
+    """
+    Return clean aged catalog paper only.
+
+    Do NOT blend filled Sears-style references — those reintroduce ghost text.
+    Prefer an averaged wash of empty AI page refs when available; otherwise
+    synthesize paper.
+    """
     rich_path = GEN_DIR / "rich-paper.png"
     if not rich_path.exists():
-        sears = ROOT / ".local/state/catalog-refs/sears-style-ref-p02.png"
-        if sears.exists():
-            src = Image.open(sears).convert("RGB").resize((W, H), Image.Resampling.LANCZOS)
-            arr = np.asarray(src).astype(np.float32)
-            gray = arr.mean(2, keepdims=True)
+        refs: list[Image.Image] = []
+        for name in (
+            "catalog-p02-ornaments-v2.png",
+            "catalog-p04-lights-v2.png",
+            "catalog-p01-cover-v2.png",
+            "catalog-p08-kitchen-v2.png",
+        ):
+            for base in (ARTIFACT_DIR, GEN_DIR):
+                path = base / name
+                if path.exists():
+                    refs.append(Image.open(path).convert("RGB").resize((W, H), Image.Resampling.LANCZOS))
+                    break
+        if refs:
+            stack = np.stack([np.asarray(r).astype(np.float32) for r in refs], axis=0).mean(0)
             paper = np.array(CREAM, dtype=np.float32)
-            span = float(gray.max() - gray.min()) or 1.0
-            norm = (gray - gray.min()) / span
-            grain = paper * (0.82 + 0.28 * norm) + (arr - gray) * 0.15
-            Image.fromarray(np.clip(grain, 0, 255).astype(np.uint8)).save(rich_path)
+            lum = stack.mean(2)
+            blur = np.asarray(
+                Image.fromarray(np.clip(stack, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(10))
+            ).astype(np.float32)
+            grain = stack - blur
+            clean = paper + np.clip(grain, -14, 14) * 0.7
+            dark = np.clip((185 - lum) / 90.0, 0, 1)[..., None]
+            clean = clean * (1 - dark * 0.95) + paper * (dark * 0.95)
+            Image.fromarray(np.clip(clean, 0, 255).astype(np.uint8)).save(rich_path)
+        else:
+            synthesize_paper(page).save(rich_path)
     if rich_path.exists():
-        rich = Image.open(rich_path).convert("RGB").resize((W, H), Image.Resampling.LANCZOS)
-        if ai is None:
-            return rich
-        a = np.asarray(ai).astype(np.float32)
-        r = np.asarray(rich).astype(np.float32)
-        return Image.fromarray(np.clip(a * 0.35 + r * 0.65, 0, 255).astype(np.uint8), "RGB")
-    return ai
+        return Image.open(rich_path).convert("RGB").resize((W, H), Image.Resampling.LANCZOS)
+    return None
 
 
 def paper_color_from(im: Image.Image) -> np.ndarray:

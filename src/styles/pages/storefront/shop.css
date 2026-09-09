@@ -71,11 +71,11 @@
     border: 2px solid var(--brand-primary);
   }
 
-  /* Back button sits centered above category filters */
+  /* Back button sits under page logo/title, above All Items */
   .shop-back-btn-wrapper {
     position: relative;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     z-index: var(--wf-z-elevated);
   }
 

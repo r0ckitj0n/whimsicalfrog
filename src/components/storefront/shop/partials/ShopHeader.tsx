@@ -23,7 +23,8 @@ export const ShopHeader: React.FC<ShopHeaderProps> = ({
 }) => {
     return (
         <div className="relative z-30 w-full px-5 py-4 mt-[20px] flex flex-col items-center justify-center gap-3">
-            <div className="shop-back-btn-wrapper">
+            {/* Below page logo/title; above All Items category filters */}
+            <div className="shop-back-btn-wrapper w-full flex justify-start">
                 <button
                     type="button"
                     onClick={() => navigate('/')}

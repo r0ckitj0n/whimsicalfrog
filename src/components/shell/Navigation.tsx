@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { showShopBootOverlay } from '../../core/shop-boot-overlay.js';
+import { hrefNeedsShopLoader } from '../../utils/pageRoute.js';
 
 interface NavItem {
     label: string;
@@ -26,6 +28,9 @@ export const Navigation: React.FC = () => {
                     <Link
                         key={item.url}
                         to={item.url}
+                        onClick={() => {
+                            if (hrefNeedsShopLoader(item.url)) showShopBootOverlay();
+                        }}
                         className={`font-title-primary text-lg text-[var(--brand-primary)] transition-opacity hover:opacity-80 ${isActive ? 'font-bold' : ''} ${item.isImage ? 'nav-image-link' : ''}`}
                         aria-current={isActive ? 'page' : undefined}
                     >

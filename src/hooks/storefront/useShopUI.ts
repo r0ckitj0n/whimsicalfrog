@@ -1,9 +1,12 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ApiClient } from '../../core/ApiClient.js';
-import { CATEGORY } from '../../core/constants.js';
+import { CATEGORY, SHOP_LOADER_MIN_MS } from '../../core/constants.js';
+import {
+    DEFAULT_SHOP_BG_URL,
+    getCachedShopBackgroundUrl,
+    prefetchShopBackground,
+} from '../../core/shop-boot-overlay.js';
 import { IShopCategory as Category, IShopItem as Item } from '../../types/index.js';
-import { resolveBackgroundAssetUrl } from '../../utils/background-url.js';
 
 interface UseShopUIProps {
     categories: Record<string, Category>;
@@ -15,26 +18,32 @@ export const useShopUI = ({ categories, isVisible }: UseShopUIProps) => {
     const navigate = useNavigate();
     const [activeCategory, setActiveCategory] = useState<string>(CATEGORY.ALL);
     const [searchQuery, setSearchQuery] = useState('');
-    const [bgUrl, setBgUrl] = useState('');
+    // Wallpaper under the frog is handled by the boot overlay; don't block shop chrome on it.
+    const [bgUrl, setBgUrl] = useState(
+        () => getCachedShopBackgroundUrl() || DEFAULT_SHOP_BG_URL
+    );
+    const [isShopReady, setIsShopReady] = useState(false);
     const [expandedSkus, setExpandedSkus] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         if (!isVisible) return;
-        const loadBackground = async () => {
-            try {
-                const bgData = await ApiClient.get<{ background: { webp_filename?: string; png_filename?: string; image_filename?: string } }>(
-                    '/api/get_background.php',
-                    { room: 'S' }
-                );
-                const fetchedBg = bgData?.background?.webp_filename || bgData?.background?.png_filename || bgData?.background?.image_filename;
-                if (fetchedBg) {
-                    setBgUrl(resolveBackgroundAssetUrl(fetchedBg));
-                }
-            } catch (err) {
-                console.error('[ShopView] Failed to load background', err);
-            }
+        let cancelled = false;
+        let readyTimer: number | undefined;
+        setIsShopReady(false);
+
+        // ShopView only mounts once catalog data exists — keep a short frog beat, then reveal.
+        readyTimer = window.setTimeout(() => {
+            if (!cancelled) setIsShopReady(true);
+        }, SHOP_LOADER_MIN_MS);
+
+        void prefetchShopBackground().then((url) => {
+            if (!cancelled && url) setBgUrl(url);
+        });
+
+        return () => {
+            cancelled = true;
+            if (readyTimer !== undefined) window.clearTimeout(readyTimer);
         };
-        loadBackground();
     }, [isVisible]);
 
     useEffect(() => {
@@ -116,7 +125,7 @@ export const useShopUI = ({ categories, isVisible }: UseShopUIProps) => {
     return {
         activeCategory, setActiveCategory,
         searchQuery, setSearchQuery,
-        bgUrl, categoryList, filteredItems,
+        bgUrl, isShopReady, categoryList, filteredItems,
         expandedSkus, toggleExpand,
         navigate, handleClear: () => { setSearchQuery(''); setActiveCategory(CATEGORY.ALL); }
     };

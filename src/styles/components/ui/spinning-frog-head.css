@@ -1,0 +1,61 @@
+/* Shop catalog loading: spinning frog-head medallion. */
+
+.wf-spinning-frog-head-wrap {
+    position: relative;
+    width: 12rem;
+    height: 12rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wf-spinning-frog-head__ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    border: 3px solid color-mix(in srgb, var(--brand-primary) 55%, transparent);
+    animation: wf-frog-head-ripple 1.4s ease-out infinite;
+    z-index: var(--wf-z-base);
+    pointer-events: none;
+}
+
+.wf-spinning-frog-head {
+    display: block;
+    width: 10rem;
+    height: 10rem;
+    border-radius: 9999px;
+    object-fit: cover;
+    animation: wf-frog-head-spin 1.15s linear infinite;
+    transform-origin: center;
+    z-index: var(--wf-z-elevated);
+    will-change: transform;
+}
+
+@keyframes wf-frog-head-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes wf-frog-head-ripple {
+    0% {
+        transform: scale(0.92);
+        opacity: 0.7;
+    }
+
+    100% {
+        transform: scale(1.18);
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wf-spinning-frog-head,
+    .wf-spinning-frog-head__ring {
+        animation: none;
+    }
+}

@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useShopUI } from '../../hooks/storefront/useShopUI.js';
 import { ShopHeader } from './shop/partials/ShopHeader.js';
 import { ProductGridArea } from './shop/partials/ProductGridArea.js';
+import { ShopLoadingScreen } from './shop/ShopLoadingScreen.js';
+import { hideShopBootOverlay } from '../../core/shop-boot-overlay.js';
 import { IShopCategory as Category, IShopItem as Item } from '../../types/index.js';
 import { categoryPathFromSlug } from '../../utils/product-url.js';
 
@@ -19,7 +21,7 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
     const {
         activeCategory, setActiveCategory,
         searchQuery, setSearchQuery,
-        bgUrl, categoryList, filteredItems,
+        bgUrl, isShopReady, categoryList, filteredItems,
         expandedSkus, toggleExpand,
         handleClear
     } = useShopUI({ categories, isVisible });
@@ -32,15 +34,49 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
     type HelpTopicKey = 'categories' | 'shipping' | 'custom';
     const [activeHelpTopic, setActiveHelpTopic] = React.useState<HelpTopicKey | null>(null);
 
+    useLayoutEffect(() => {
+        if (!isVisible || !isShopReady) return;
+        // Keep the frog up until the first product card commits (or the catalog is empty).
+        if (filteredItems.length === 0) {
+            hideShopBootOverlay();
+            return;
+        }
+        const hasCard = document.querySelector('#shopPage [data-sku], #shopPage [data-sku-card]');
+        if (hasCard) {
+            hideShopBootOverlay();
+            return;
+        }
+        const raf = window.requestAnimationFrame(() => {
+            hideShopBootOverlay();
+        });
+        return () => window.cancelAnimationFrame(raf);
+    }, [isVisible, isShopReady, filteredItems.length]);
+
     if (!isVisible) return null;
+
+    // Paint the shop wallpaper immediately; the frog overlay sits on top until items are ready.
+    if (!isShopReady) {
+        return (
+            <>
+                <ShopLoadingScreen />
+                <section
+                    id="shopPage"
+                    className="fixed inset-0 pt-20 flex flex-col items-center overflow-hidden z-base bg-black bg-cover bg-center bg-no-repeat"
+                    style={bgUrl ? { backgroundImage: `url("${bgUrl}")` } : undefined}
+                    aria-busy="true"
+                    aria-label="Loading the shop"
+                />
+            </>
+        );
+    }
 
     const visibleCategories = categoryList.filter(cat => cat.slug !== 'uncategorized' && (cat.items?.length ?? 0) > 0);
 
     return (
         <section
             id="shopPage"
-            className="fixed inset-0 pt-20 flex flex-col items-center overflow-hidden z-base bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: bgUrl ? `url("${bgUrl}")` : 'none' }}
+            className="fixed inset-0 pt-20 flex flex-col items-center overflow-hidden z-base bg-black bg-cover bg-center bg-no-repeat"
+            style={bgUrl ? { backgroundImage: `url("${bgUrl}")` } : undefined}
         >
             {/* Soft fade under the site header — no tall empty band */}
             <div

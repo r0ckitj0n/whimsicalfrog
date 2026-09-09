@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useLayoutEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import type { IShopCategory, IShopItem } from '../../types/index.js';
 import { categoryPathFromSlug, productPathFromItem, productSlugFromItem } from '../../utils/product-url.js';
+import { hideShopBootOverlay } from '../../core/shop-boot-overlay.js';
 
 interface ProductDetailViewProps {
     categories: Record<string, IShopCategory>;
@@ -15,6 +16,9 @@ const slugify = (value: string): string => value
 
 export const ProductDetailView: React.FC<ProductDetailViewProps> = ({ categories, onOpenItem }) => {
     const location = useLocation();
+    useLayoutEffect(() => {
+        hideShopBootOverlay();
+    }, []);
     const match = location.pathname.match(/^\/product\/([^/]+)$/i);
     const identifier = match?.[1] ? decodeURIComponent(match[1]) : null;
 

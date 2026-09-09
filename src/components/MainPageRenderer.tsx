@@ -7,6 +7,7 @@ import { ProductDetailView } from './storefront/ProductDetailView.js';
 import { ReceiptView } from './storefront/ReceiptView.js';
 import { AboutView } from './storefront/AboutView.js';
 import { PageLoadingFallback } from './ui/PageLoadingFallback.js';
+import { ShopLoadingScreen } from './storefront/shop/ShopLoadingScreen.js';
 
 const AdminAuthGuard = lazy(() => import('./admin/AdminAuthGuard.js').then(m => ({ default: m.AdminAuthGuard })));
 const AdminConductor = lazy(() => import('./admin/AdminConductor.js').then(m => ({ default: m.AdminConductor })));
@@ -63,7 +64,7 @@ export const MainPageRenderer: React.FC<MainPageRendererProps> = ({
                         onOpenItem={openItemModal}
                     />
                 ) : (
-                    <PageLoadingFallback />
+                    <ShopLoadingScreen />
                 )
             )}
             {isProductVisible && (
@@ -73,7 +74,7 @@ export const MainPageRenderer: React.FC<MainPageRendererProps> = ({
                         onOpenItem={openItemModal}
                     />
                 ) : (
-                    <PageLoadingFallback />
+                    <ShopLoadingScreen />
                 )
             )}
             {receiptData && <ReceiptView data={receiptData} />}

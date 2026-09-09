@@ -1,6 +1,7 @@
 import React from 'react';
 import { ISiteSettings } from '../../types/index.js';
 import { Link } from 'react-router-dom';
+import { showShopBootOverlay } from '../../core/shop-boot-overlay.js';
 
 interface FooterProps {
     settings: ISiteSettings | null;
@@ -33,7 +34,7 @@ export const Footer: React.FC<FooterProps> = ({ settings, isSlim }) => {
                         <div className="footer-section">
                             <h3 className="footer-heading">Quick Links</h3>
                             <ul className="footer-nav">
-                                <li><Link to="/shop">Shop</Link></li>
+                                <li><Link to="/shop" onClick={showShopBootOverlay}>Shop</Link></li>
                                 <li><Link to="/about">About Us</Link></li>
                                 <li><Link to="/contact">Contact</Link></li>
                                 <li><a href="/custom">Custom Orders</a></li>

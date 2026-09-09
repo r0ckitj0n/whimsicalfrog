@@ -65,6 +65,62 @@ function generateDynamicFallbacks()
     return $fallbacks;
 }
 
+
+function wf_background_file_exists($relPath) {
+    $rel = ltrim(str_replace('\\', '/', (string)$relPath), '/');
+    if ($rel === '') return false;
+    // Accept both "backgrounds/..." and bare filenames.
+    $candidates = [];
+    if (str_starts_with($rel, 'images/')) {
+        $candidates[] = __DIR__ . '/../' . $rel;
+    } elseif (str_starts_with($rel, 'backgrounds/')) {
+        $candidates[] = __DIR__ . '/../images/' . $rel;
+    } else {
+        $candidates[] = __DIR__ . '/../images/backgrounds/' . $rel;
+        $candidates[] = __DIR__ . '/../images/' . $rel;
+    }
+    foreach ($candidates as $abs) {
+        if (is_file($abs) && filesize($abs) > 0) return true;
+    }
+    return false;
+}
+
+function wf_normalize_background_row(array $background, string $roomNumber): array {
+    $fields = ['webp_filename', 'png_filename', 'image_filename'];
+    $hasFile = false;
+    foreach ($fields as $field) {
+        if (!empty($background[$field]) && wf_background_file_exists($background[$field])) {
+            $hasFile = true;
+            break;
+        }
+    }
+    if ($hasFile) {
+        return $background;
+    }
+
+    // DB points at missing "realistic" assets — use on-disk room wallpaper.
+    $imagesRoot = realpath(__DIR__ . '/../images') ?: (__DIR__ . '/../images');
+    $webp = "background-room{$roomNumber}.webp";
+    $png = "background-room{$roomNumber}.png";
+    $chosen = null;
+    foreach ([$webp, $png] as $fn) {
+        if (is_file($imagesRoot . '/backgrounds/' . $fn)) {
+            $chosen = $fn;
+            break;
+        }
+    }
+    if (!$chosen) {
+        return $background;
+    }
+    $background['name'] = ($background['name'] ?? 'Shop') . ' (disk fallback)';
+    $background['image_filename'] = 'backgrounds/' . $chosen;
+    $background['webp_filename'] = str_ends_with($chosen, '.webp') ? ('backgrounds/' . $chosen) : null;
+    $background['png_filename'] = str_ends_with($chosen, '.png') ? ('backgrounds/' . $chosen) : (
+        is_file($imagesRoot . '/backgrounds/' . $png) ? ('backgrounds/' . $png) : null
+    );
+    return $background;
+}
+
 try {
     try {
         Database::getInstance();
@@ -112,6 +168,7 @@ try {
     $t1 = microtime(true);
 
     if ($background) {
+        $background = wf_normalize_background_row($background, (string)$rn);
         $resp = ['success' => true, 'background' => $background];
         if ((isset($_GET['perf']) && $_GET['perf'] == '1')) {
             $dur = (int)round(($t1 - $t0) * 1000);
@@ -137,6 +194,7 @@ try {
             [$rn]
         );
         if ($latest) {
+            $latest = wf_normalize_background_row($latest, (string)$rn);
             $resp = ['success' => true, 'background' => $latest];
             wf_cache_set($ck, $resp);
             Response::json($resp);

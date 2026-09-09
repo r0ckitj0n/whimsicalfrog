@@ -1,4 +1,4 @@
-import React, { useEffect, Suspense } from 'react';
+import React, { useEffect, useLayoutEffect, Suspense } from 'react';
 import useRoomManager from '../hooks/use-room-manager.js';
 import '../styles/components/buttons/emojis.css';
 import usePageRouter from '../hooks/use-page-router.js';
@@ -22,8 +22,10 @@ import { GlobalProcessingOverlay } from './GlobalProcessingOverlay.js';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { SETTINGS_MODAL_SECTIONS } from '../core/constants.js';
 import { PageLoadingFallback } from './ui/PageLoadingFallback.js';
-import { detectPageFromLocation } from '../utils/pageRoute.js';
+import { detectPageFromLocation, locationNeedsShopData } from '../utils/pageRoute.js';
 import { SiteLoadingSplash } from './SiteLoadingSplash.js';
+import { ShopLoadingScreen } from './storefront/shop/ShopLoadingScreen.js';
+import { hideShopBootOverlay } from '../core/shop-boot-overlay.js';
 import { useAppEffects } from '../hooks/useAppEffects.js';
 import { GlobalModalWrapper } from './modals/GlobalModalWrapper.js';
 import { MainPageRenderer } from './MainPageRenderer.js';
@@ -149,6 +151,15 @@ export const AppShell: React.FC = () => {
     const section = searchParams.get('section') || '';
     const roomIdParam = searchParams.get('room_id');
 
+    useLayoutEffect(() => {
+        if (typeof document === 'undefined') return;
+        const coverShopWait = locationNeedsShopData(location.pathname, location.search);
+        document.body.classList.toggle('wf-shop-loading', coverShopWait);
+        if (!coverShopWait) {
+            hideShopBootOverlay();
+        }
+    }, [location.pathname, location.search]);
+
     const isContextModalOpen = Boolean(modal?.isOpen);
 
     useAppEffects({
@@ -171,8 +182,11 @@ export const AppShell: React.FC = () => {
     const pageAttr = detectPageFromLocation(location.pathname, location.search);
 
     if (!site_settings) {
-        // Storefront hydration gate — whimsical splash (falls back if no featured items).
-        // Admin section Suspense still uses AdminLoading inside admin switches.
+        // Storefront hydration gate — shop gets a spinning frog head while the catalog boots.
+        // Other routes keep the whimsical splash (falls back if no featured items).
+        if (locationNeedsShopData(location.pathname, location.search)) {
+            return <ShopLoadingScreen />;
+        }
         return <SiteLoadingSplash />;
     }
 

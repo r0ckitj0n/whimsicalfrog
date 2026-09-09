@@ -99,6 +99,13 @@ export const Z_INDEX = {
     CURSOR: 'var(--wf-z-cursor)'
 } as const;
 
+export const BRAND_ASSET = {
+    FROG_HEAD: '/images/logos/apple-touch-icon.png'
+} as const;
+
+/** One full spin (~1.15s) so the frog is unmistakable once the catalog is warm. */
+export const SHOP_LOADER_MIN_MS = 700;
+
 export const PAGE = {
     LANDING: 'landing',
     SHOP: 'shop',

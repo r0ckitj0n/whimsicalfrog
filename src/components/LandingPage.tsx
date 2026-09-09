@@ -3,6 +3,8 @@ import { useRoomCoordinates } from '../hooks/useRoomCoordinates.js';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ApiClient } from '../core/ApiClient.js';
 import { resolveBackgroundAssetUrl } from '../utils/background-url.js';
+import { showShopBootOverlay } from '../core/shop-boot-overlay.js';
+import { hrefNeedsShopLoader, shopNavigationHref } from '../utils/pageRoute.js';
 import type { IDoorDestination } from '../types/room.js';
 
 /**
@@ -49,6 +51,7 @@ export const LandingPage: React.FC = () => {
     useEffect(() => {
         if (!isVisible) return;
         if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) {
+            showShopBootOverlay();
             navigate('/shop', { replace: true });
             return;
         }
@@ -141,6 +144,13 @@ export const LandingPage: React.FC = () => {
         return `/room_main?room_id=${encodeURIComponent(t)}`;
     };
 
+    const handleDestinationClick = (event: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+        if (!hrefNeedsShopLoader(href)) return;
+        event.preventDefault();
+        showShopBootOverlay();
+        navigate(shopNavigationHref(href));
+    };
+
     return (
         <div
             ref={containerRef}
@@ -184,6 +194,7 @@ export const LandingPage: React.FC = () => {
                         <a
                             key={idx}
                             href={resolveHref(dest.target)}
+                            onClick={(event) => handleDestinationClick(event, resolveHref(dest.target))}
                             className={`room-item-icon absolute group transition-opacity duration-300 overflow-visible ${isShortcutType ? 'room-item-shortcut' : ''} ${!isLoading && coordinates.length > 0 ? 'opacity-100' : 'opacity-0'}`}
                             data-mapping-type={mappingType || undefined}
                             aria-label={dest.label || 'Explore'}

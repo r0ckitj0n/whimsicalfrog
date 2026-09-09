@@ -5,6 +5,7 @@ import { useAuthModal } from './useAuthModal.js';
 import { useApp } from '../context/AppContext.js';
 import { IShopData, IReceiptData, IAboutData, IContactData, ISiteSettings } from '../types/index.js';
 import { ApiClient } from '../core/ApiClient.js';
+import { readCachedShopData, writeCachedShopData, prefetchShopCatalog, prefetchShopBackground } from '../core/shop-boot-overlay.js';
 import { prefetchFeaturedProducts } from '../utils/featuredProductsPrefetch.js';
 import { detectPageFromLocation, locationNeedsShopData } from '../utils/pageRoute.js';
 
@@ -19,7 +20,10 @@ export const useSiteHydration = () => {
     const { receiptOrderId, setReceiptOrderId } = useApp();
     const location = useLocation();
     const spaRouteReadyRef = useRef(false);
-    const [shop_data, setShopData] = useState<IShopData | null>(null);
+    const [shop_data, setShopData] = useState<IShopData | null>(() => {
+        if (typeof window === 'undefined') return null;
+        return readCachedShopData<IShopData>();
+    });
     const [receipt_data, setReceiptData] = useState<IReceiptData | null>(null);
     const [about_data, setAboutData] = useState<IAboutData | null>(null);
     const [contact_data, setContactData] = useState<IContactData | null>(null);
@@ -148,6 +152,13 @@ export const useSiteHydration = () => {
 
         // Warm the loading-splash featured product cache in parallel with bootstrap.
         prefetchFeaturedProducts();
+        // Warm shop wallpaper + catalog so Shop clicks feel instant.
+        void prefetchShopBackground();
+        void prefetchShopCatalog().then((cached) => {
+            if (cached) {
+                setShopData((prev) => prev ?? (cached as IShopData));
+            }
+        });
 
         // Detect order_id from URL (for redirects from checkout or direct links)
         const orderIdFromUrl = searchParams.get('order_id');
@@ -181,10 +192,13 @@ export const useSiteHydration = () => {
                         // sessionStorage may be unavailable; ignore
                     }
                 }
-                if (data.shop_data) setShopData(data.shop_data);
+                if (data.shop_data) {
+                    setShopData(data.shop_data);
+                    writeCachedShopData(data.shop_data);
+                }
                 if (data.about_data) setAboutData(data.about_data);
                 if (data.contact_data) setContactData(data.contact_data);
-                if (data.background_url && !document.body.getAttribute('data-bg-url') && !is_bare) {
+                if (data.background_url && !document.body.getAttribute('data-bg-url') && !is_bare && !needsShop) {
                     document.body.setAttribute('data-bg-url', data.background_url);
                     document.body.setAttribute('data-bg-applied', '1');
                     document.body.style.setProperty('--wf-body-bg', `url("${data.background_url}")`);
@@ -194,6 +208,10 @@ export const useSiteHydration = () => {
                     document.body.style.backgroundPosition = 'center';
                     document.body.style.backgroundRepeat = 'no-repeat';
                     document.body.style.backgroundAttachment = 'fixed';
+                }
+                if (needsShop) {
+                    document.body.style.removeProperty('background-image');
+                    document.body.classList.add('wf-shop-loading');
                 }
 
                 // Nuclear option for the mysterious vignette
@@ -317,10 +335,20 @@ export const useSiteHydration = () => {
 
         if (page === 'about' || page === 'contact' || page === 'room_main' || page === 'admin/settings') {
             document.body.classList.add('room-bg-main');
+        } else {
+            document.body.classList.remove('room-bg-main');
         }
 
         const needsShop = locationNeedsShopData(location.pathname, location.search);
         let cancelled = false;
+
+        // Promote prefetched catalog into React state immediately (don't wait on bootstrap).
+        if (needsShop) {
+            const cachedShop = readCachedShopData<IShopData>();
+            if (cachedShop) {
+                setShopData((prev) => prev ?? cachedShop);
+            }
+        }
 
         const syncRouteBootstrap = async () => {
             try {
@@ -337,12 +365,16 @@ export const useSiteHydration = () => {
 
                 if (needsShop && data.shop_data) {
                     setShopData(data.shop_data);
+                    writeCachedShopData(data.shop_data);
                 }
                 if (data.about_data) setAboutData(data.about_data);
                 if (data.contact_data) setContactData(data.contact_data);
 
                 const isBare = new URLSearchParams(location.search).get('bare') === '1';
-                if (data.background_url && !isBare) {
+                if (needsShop) {
+                    document.body.style.removeProperty('background-image');
+                    document.body.classList.add('wf-shop-loading');
+                } else if (data.background_url && !isBare) {
                     document.body.setAttribute('data-bg-url', data.background_url);
                     document.body.setAttribute('data-bg-applied', '1');
                     document.body.style.setProperty('--wf-body-bg', `url("${data.background_url}")`);

@@ -3,6 +3,7 @@
 import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import { installShopBootOverlayGuards } from '../core/shop-boot-overlay.js';
 import App from './App.js';
 
 /**
@@ -24,6 +25,8 @@ declare global {
 }
 
 const init = () => {
+    installShopBootOverlayGuards();
+
     // 1. Check for existing root or mounting state
     const currentRoot = window.__WF_REACT_ROOT__;
 

@@ -4,8 +4,43 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <!-- Warm the shop wallpaper + frog so SPA Shop clicks do not flash black. -->
+    <link rel="preload" as="image" href="/images/backgrounds/background-roomS.webp">
+    <link rel="preload" as="image" href="/images/logos/apple-touch-icon.png">
     <script>
         document.documentElement.classList.add('wf-js');
+        (function () {
+            var path = String(location.pathname || '').toLowerCase();
+            var search = location.search || '';
+            var shopBoot = (
+                path === '/shop' ||
+                path.indexOf('/shop/') === 0 ||
+                path.indexOf('/product/') !== -1 ||
+                /(?:\?|&)room_id=S(?:&|$)/.test(search)
+            );
+            if (shopBoot) {
+                document.documentElement.classList.add('wf-shop-boot');
+            }
+            // Shop wallpaper under the frog — paint before any JS modules load.
+            window.__wfPaintShopBootBg = function (url) {
+                var bgUrl = url || '/images/backgrounds/background-roomS.webp';
+                var cssUrl = 'url("' + bgUrl + '")';
+                document.documentElement.style.setProperty('--wf-shop-boot-bg-image', cssUrl);
+                var layer = document.getElementById('wf-shop-boot-bg');
+                if (layer) {
+                    layer.style.setProperty('background-image', cssUrl, 'important');
+                    layer.style.setProperty('background-size', 'cover', 'important');
+                    layer.style.setProperty('background-position', 'center', 'important');
+                    layer.setAttribute('data-bg', bgUrl);
+                }
+            };
+            if (shopBoot) {
+                // Run after the overlay node exists (end of body); also try now.
+                document.addEventListener('DOMContentLoaded', function () {
+                    window.__wfPaintShopBootBg();
+                });
+            }
+        })();
     </script>
     <title>Whimsical Frog | Handmade Decor & Gifts</title>
     <meta name="description"
@@ -98,6 +133,119 @@
                 #0a0a0a;
         }
 
+        html.wf-shop-boot #wf-root,
+        html.wf-shop-boot #wf-startup-loader,
+        html.wf-shop-boot #landingPage-react,
+        html.wf-shop-boot #mainRoomPage-react {
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+
+        html.wf-shop-boot #wf-startup-loader,
+        html.wf-shop-boot #landingPage-react,
+        html.wf-shop-boot #mainRoomPage-react {
+            display: none !important;
+        }
+
+        html.wf-shop-boot body {
+            background-color: #000 !important;
+            background-image: var(--wf-shop-boot-bg-image, url("/images/backgrounds/background-roomS.webp")) !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-attachment: fixed !important;
+        }
+
+        #wf-shop-boot-overlay {
+            display: none;
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 2147483647 !important;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: transparent;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        html.wf-shop-boot #wf-shop-boot-overlay {
+            display: flex !important;
+        }
+
+        #wf-shop-boot-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background-color: #000;
+            background-image: var(--wf-shop-boot-bg-image, url("/images/backgrounds/background-roomS.webp")) !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+        }
+
+        #wf-shop-boot-bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            pointer-events: none;
+        }
+
+        #wf-shop-boot-overlay .wf-spinning-frog-head-wrap {
+            position: relative;
+            z-index: 2;
+            width: 12rem;
+            height: 12rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #wf-shop-boot-overlay .wf-spinning-frog-head__ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 9999px;
+            border: 3px solid rgba(135, 172, 58, 0.55);
+            animation: wf-frog-head-ripple 1.4s ease-out infinite;
+            pointer-events: none;
+        }
+
+        #wf-shop-boot-overlay .wf-spinning-frog-head {
+            display: block;
+            width: 10rem;
+            height: 10rem;
+            border-radius: 9999px;
+            object-fit: cover;
+            animation: wf-frog-head-spin 1.15s linear infinite;
+            transform-origin: center;
+        }
+
+        #wf-shop-boot-overlay .wf-sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+        }
+
+        @keyframes wf-frog-head-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes wf-frog-head-ripple {
+            0% { transform: scale(0.92); opacity: 0.7; }
+            100% { transform: scale(1.18); opacity: 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #wf-shop-boot-overlay .wf-spinning-frog-head,
+            #wf-shop-boot-overlay .wf-spinning-frog-head__ring {
+                animation: none;
+            }
+        }
+
         .wf-loader-card {
             width: min(92vw, 28rem);
             border: 1px solid rgba(255, 255, 255, 0.12);
@@ -160,6 +308,25 @@
     </style>
     <script>
         (async function loadViteBuiltAssets() {
+            // Prefer Vite's native ESM entry when the Vite client is reachable (local/dev).
+            // Avoid hardcoding hostnames — they can collide with environment secret values.
+            try {
+                const probe = await fetch('/@vite/client', { cache: 'no-store' });
+                if (probe.ok) {
+                    const viteClient = document.createElement('script');
+                    viteClient.type = 'module';
+                    viteClient.src = '/@vite/client';
+                    document.head.appendChild(viteClient);
+                    const entry = document.createElement('script');
+                    entry.type = 'module';
+                    entry.src = '/src/entries/main.tsx';
+                    document.head.appendChild(entry);
+                    return;
+                }
+            } catch (_devErr) {
+                // Fall through to built manifests.
+            }
+
             const cacheBust = `v=${Date.now().toString(36)}`;
             const candidates = [
                 { manifestUrl: `/dist/.vite/manifest.json?${cacheBust}`, assetPrefix: '/dist/' },
@@ -354,7 +521,19 @@
             </footer>
         </main>
     </div>
+    <div id="wf-shop-boot-overlay" role="status" aria-live="polite" aria-busy="true" aria-label="Loading the shop">
+        <div id="wf-shop-boot-bg" aria-hidden="true"></div>
+        <div class="wf-spinning-frog-head-wrap" aria-hidden="true">
+            <span class="wf-spinning-frog-head__ring"></span>
+            <img class="wf-spinning-frog-head" src="/images/logos/apple-touch-icon.png" alt="" width="160" height="160" fetchpriority="high">
+        </div>
+        <span class="wf-sr-only">Loading the shop…</span>
+    </div>
     <script>
+        // Paint shop wallpaper under the frog as soon as the overlay node exists.
+        if (typeof window.__wfPaintShopBootBg === 'function') {
+            window.__wfPaintShopBootBg();
+        }
         // Synchronously apply admin-view class before React loads
         // This fixes timing issues with CSS icon selectors that depend on body.admin-view
         (function () {

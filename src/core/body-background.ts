@@ -1,5 +1,6 @@
 import { ApiClient } from './ApiClient.js';
 import logger from './logger.js';
+import { locationNeedsShopData } from '../utils/pageRoute.js';
 
 /**
  * Body Background Utility
@@ -75,6 +76,13 @@ export async function initBodyBackground(): Promise<void> {
     try {
         const body = document.body;
         if (!body) return;
+        if (locationNeedsShopData(window.location.pathname, window.location.search)) {
+            // Shop boot owns body wallpaper (roomS under the frog). Do not clear it.
+            if (!document.documentElement.classList.contains('wf-shop-boot')) {
+                body.style.removeProperty('background-image');
+            }
+            return;
+        }
 
         let url = body.dataset.bgUrl;
         if (!url) {

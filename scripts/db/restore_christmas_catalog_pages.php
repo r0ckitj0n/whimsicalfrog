@@ -340,20 +340,20 @@ try {
         if ($hasPrev) {
             $rects[] = [
                 'id' => 'catalog-prev-page',
-                'top' => 690,
-                'left' => 30,
-                'width' => 170,
-                'height' => 180,
+                'top' => 700,
+                'left' => 40,
+                'width' => 160,
+                'height' => 170,
                 'selector' => PREV_AREA,
             ];
         }
         if ($hasNext) {
             $rects[] = [
                 'id' => 'catalog-next-page',
-                'top' => 690,
+                'top' => 700,
                 'left' => 1080,
-                'width' => 170,
-                'height' => 180,
+                'width' => 160,
+                'height' => 170,
                 'selector' => NEXT_AREA,
             ];
         }

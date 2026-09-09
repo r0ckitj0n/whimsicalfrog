@@ -35,8 +35,22 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
     const [activeHelpTopic, setActiveHelpTopic] = React.useState<HelpTopicKey | null>(null);
 
     useLayoutEffect(() => {
-        if (isVisible && isShopReady) hideShopBootOverlay();
-    }, [isVisible, isShopReady]);
+        if (!isVisible || !isShopReady) return;
+        // Keep the frog up until the first product card commits (or the catalog is empty).
+        if (filteredItems.length === 0) {
+            hideShopBootOverlay();
+            return;
+        }
+        const hasCard = document.querySelector('#shopPage [data-sku], #shopPage [data-sku-card]');
+        if (hasCard) {
+            hideShopBootOverlay();
+            return;
+        }
+        const raf = window.requestAnimationFrame(() => {
+            hideShopBootOverlay();
+        });
+        return () => window.cancelAnimationFrame(raf);
+    }, [isVisible, isShopReady, filteredItems.length]);
 
     if (!isVisible) return null;
 

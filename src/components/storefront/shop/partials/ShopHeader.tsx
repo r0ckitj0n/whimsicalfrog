@@ -22,7 +22,7 @@ export const ShopHeader: React.FC<ShopHeaderProps> = ({
     current_page
 }) => {
     return (
-        <div className="relative z-30 w-full px-5 py-4 mt-[20px] flex items-center justify-center">
+        <div className="relative z-30 w-full px-5 py-4 mt-[20px] flex flex-col items-center justify-center gap-3">
             <div className="shop-back-btn-wrapper">
                 <button
                     type="button"
@@ -33,23 +33,14 @@ export const ShopHeader: React.FC<ShopHeaderProps> = ({
                 </button>
             </div>
 
-            <div className="md:hidden mr-4">
-                <button type="button" onClick={() => navigate('/')} className="p-2.5 rounded-full bg-brand-primary text-white shadow-lg flex items-center justify-center">
-                    <span className="btn-icon--back" style={{ fontSize: '20px' }} />
-                </button>
-            </div>
-
-            <div className="flex-1 flex justify-center">
-                <ShopFilters
-                    categoryList={categoryList}
-                    activeCategory={activeCategory}
-                    onCategoryChange={onCategoryChange}
-                    searchQuery={searchQuery}
-                    onSearchChange={onSearchChange}
-                    current_page={current_page}
-                />
-            </div>
-            <div className="absolute right-8 hidden lg:block w-[180px]" />
+            <ShopFilters
+                categoryList={categoryList}
+                activeCategory={activeCategory}
+                onCategoryChange={onCategoryChange}
+                searchQuery={searchQuery}
+                onSearchChange={onSearchChange}
+                current_page={current_page}
+            />
         </div>
     );
 };

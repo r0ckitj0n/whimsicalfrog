@@ -71,18 +71,12 @@
     border: 2px solid var(--brand-primary);
   }
 
-  /* Back Button Wrapper Responsive Logic */
+  /* Back button sits centered above category filters */
   .shop-back-btn-wrapper {
-    position: absolute;
-    left: 2rem;
-    display: none;
+    position: relative;
+    display: flex;
+    justify-content: center;
     z-index: var(--wf-z-elevated);
-  }
-
-  @media (min-width: 768px) {
-    .shop-back-btn-wrapper {
-      display: block;
-    }
   }
 
   body[data-page='shop'] .shop-footer-help {

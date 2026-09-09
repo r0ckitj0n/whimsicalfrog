@@ -39,7 +39,22 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
     }, [isVisible, isShopReady]);
 
     if (!isVisible) return null;
-    if (!isShopReady) return <ShopLoadingScreen />;
+
+    // Paint the shop wallpaper immediately; the frog overlay sits on top until items are ready.
+    if (!isShopReady) {
+        return (
+            <>
+                <ShopLoadingScreen />
+                <section
+                    id="shopPage"
+                    className="fixed inset-0 pt-20 flex flex-col items-center overflow-hidden z-base bg-black bg-cover bg-center bg-no-repeat"
+                    style={bgUrl ? { backgroundImage: `url("${bgUrl}")` } : undefined}
+                    aria-busy="true"
+                    aria-label="Loading the shop"
+                />
+            </>
+        );
+    }
 
     const visibleCategories = categoryList.filter(cat => cat.slug !== 'uncategorized' && (cat.items?.length ?? 0) > 0);
 

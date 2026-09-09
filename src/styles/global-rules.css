@@ -37,16 +37,15 @@ body[data-bg-url] {
   background-repeat: no-repeat;
 }
 
+/* Keep prior room photos off the body during the shop wait.
+   The shop wallpaper is painted on #wf-shop-boot-bg under the frog. */
 body.wf-shop-loading,
 body.wf-shop-loading[data-bg-url],
-body.wf-shop-loading[data-bg-url][data-bg-applied="1"],
-html.wf-shop-boot,
-html.wf-shop-boot body {
+body.wf-shop-loading[data-bg-url][data-bg-applied="1"] {
   background-image: none !important;
   background-color: #000 !important;
 }
 
-/* Room photos must not paint over the shop boot overlay. */
 html.wf-shop-boot #landingPage-react,
 html.wf-shop-boot #mainRoomPage-react,
 html.wf-shop-boot #wf-startup-loader {
@@ -64,7 +63,7 @@ html.wf-shop-boot #wf-startup-loader {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: #000;
+  background: transparent;
   pointer-events: auto;
 }
 
@@ -74,6 +73,30 @@ html.wf-shop-boot #wf-startup-loader {
 
 html.wf-shop-boot #wf-shop-boot-overlay {
   display: flex !important;
+}
+
+#wf-shop-boot-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-color: #000;
+  background-image: var(--wf-shop-boot-bg-image, url("/images/backgrounds/background-roomS.webp"));
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+#wf-shop-boot-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+#wf-shop-boot-overlay .wf-spinning-frog-head-wrap {
+  position: relative;
+  z-index: 1;
 }
 
 #wf-root {

@@ -123,8 +123,8 @@ try {
         require_once __DIR__ . '/../includes/shop_data_loader.php';
     }
     if ($includeShop && isset($categories) && !empty($categories)) {
-        require_once __DIR__ . '/../includes/image_helper.php';
         require_once __DIR__ . '/../includes/business_settings_helper.php';
+        // image_helper no longer required for shop catalog — batch SQL covers gaps.
 
         // Canonical active/live SKU filter from items table (single source of truth).
         // This prevents stale/legacy category payloads from showing inactive items.
@@ -148,6 +148,47 @@ try {
             error_log('[bootstrap] active inventory filter unavailable: ' . $e->getMessage());
         }
 
+        // Collect SKUs missing a joined image_url so we can batch-fill once (no N+1).
+        $missingImageSkus = [];
+        foreach ($categories as $catData) {
+            foreach (($catData['items'] ?? []) as $item) {
+                $sku = (string) ($item['sku'] ?? '');
+                if ($sku === '') {
+                    continue;
+                }
+                $existing = trim((string) ($item['image_url'] ?? ''));
+                if ($existing === '') {
+                    $missingImageSkus[$sku] = true;
+                }
+            }
+        }
+        $primaryImagesBySku = [];
+        if (!empty($missingImageSkus)) {
+            try {
+                $skuList = array_keys($missingImageSkus);
+                $placeholders = implode(',', array_fill(0, count($skuList), '?'));
+                $rows = Database::queryAll(
+                    "SELECT sku, image_path
+                     FROM item_images
+                     WHERE sku IN ($placeholders)
+                     ORDER BY is_primary DESC, id ASC",
+                    $skuList
+                );
+                foreach ($rows as $row) {
+                    $sku = (string) ($row['sku'] ?? '');
+                    if ($sku === '' || isset($primaryImagesBySku[$sku])) {
+                        continue;
+                    }
+                    $path = trim((string) ($row['image_path'] ?? ''));
+                    if ($path !== '') {
+                        $primaryImagesBySku[$sku] = $path;
+                    }
+                }
+            } catch (\Throwable $e) {
+                error_log('[bootstrap] batch primary image lookup failed: ' . $e->getMessage());
+            }
+        }
+
         $processed_categories = [];
         foreach ($categories as $slug => $catData) {
             $processedItems = [];
@@ -163,10 +204,14 @@ try {
                         continue;
                     }
                 }
-                $primaryImageData = function_exists('getPrimaryImageBySku') ? getPrimaryImageBySku($sku) : null;
                 $resolvedStock = $restrictShopToActiveInventory
                     ? ($activeInventoryBySku[$sku] ?? 0)
                     : (int) ($item['stock'] ?? 0);
+
+                $imageUrl = $item['image_url'] ?? null;
+                if (($imageUrl === null || $imageUrl === '') && isset($primaryImagesBySku[$sku])) {
+                    $imageUrl = $primaryImagesBySku[$sku];
+                }
 
                 $processedItems[] = [
                     'sku' => $sku,
@@ -175,7 +220,7 @@ try {
                     'stock' => (int) $resolvedStock,
                     'description' => $item['description'] ?? 'No description available',
                     'custom_button_text' => $item['custom_button_text'] ?? getRandomCartButtonText(),
-                    'image_url' => $primaryImageData ? $primaryImageData['image_path'] : ($item['image_url'] ?? null)
+                    'image_url' => $imageUrl
                 ];
             }
             $processed_categories[$slug] = [

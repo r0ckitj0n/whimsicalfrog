@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useRoomCoordinates } from '../hooks/useRoomCoordinates.js';
 import { ApiClient } from '../core/ApiClient.js';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import logger from '../core/logger.js';
 import useRoomManager from '../hooks/use-room-manager.js';
 import { resolveBackgroundAssetUrl } from '../utils/background-url.js';
+import { showShopBootOverlay } from '../core/shop-boot-overlay.js';
+import { hrefNeedsShopLoader, shopNavigationHref } from '../utils/pageRoute.js';
 import type { IDoorDestination } from '../types/room.js';
 
 /**
@@ -13,6 +15,7 @@ import type { IDoorDestination } from '../types/room.js';
  */
 export const MainRoom: React.FC = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     const params = new URLSearchParams(location.search);
     const section = params.get('section');
     const roomIdParam = params.get('room_id');
@@ -98,6 +101,9 @@ export const MainRoom: React.FC = () => {
         } else if (target.startsWith('.') || target.startsWith('#')) {
             const el = document.querySelector(target) as HTMLElement;
             if (el) el.click();
+        } else if (hrefNeedsShopLoader(target)) {
+            showShopBootOverlay();
+            navigate(shopNavigationHref(target));
         } else {
             window.location.href = target;
         }

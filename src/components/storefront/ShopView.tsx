@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useShopUI } from '../../hooks/storefront/useShopUI.js';
 import { ShopHeader } from './shop/partials/ShopHeader.js';
 import { ProductGridArea } from './shop/partials/ProductGridArea.js';
 import { ShopLoadingScreen } from './shop/ShopLoadingScreen.js';
+import { hideShopBootOverlay } from '../../core/shop-boot-overlay.js';
 import { IShopCategory as Category, IShopItem as Item } from '../../types/index.js';
 import { categoryPathFromSlug } from '../../utils/product-url.js';
 
@@ -32,6 +33,10 @@ export const ShopView: React.FC<ShopViewProps> = ({ categories, current_page, on
 
     type HelpTopicKey = 'categories' | 'shipping' | 'custom';
     const [activeHelpTopic, setActiveHelpTopic] = React.useState<HelpTopicKey | null>(null);
+
+    useLayoutEffect(() => {
+        if (isVisible && isShopReady) hideShopBootOverlay();
+    }, [isVisible, isShopReady]);
 
     if (!isVisible) return null;
     if (!isShopReady) return <ShopLoadingScreen />;

@@ -39,9 +39,41 @@ body[data-bg-url] {
 
 body.wf-shop-loading,
 body.wf-shop-loading[data-bg-url],
-body.wf-shop-loading[data-bg-url][data-bg-applied="1"] {
+body.wf-shop-loading[data-bg-url][data-bg-applied="1"],
+html.wf-shop-boot,
+html.wf-shop-boot body {
   background-image: none !important;
   background-color: #000 !important;
+}
+
+/* Room photos must not paint over the shop boot overlay. */
+html.wf-shop-boot #landingPage-react,
+html.wf-shop-boot #mainRoomPage-react,
+html.wf-shop-boot #wf-startup-loader {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+#wf-shop-boot-overlay,
+.wf-shop-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--wf-z-modal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #000;
+  pointer-events: auto;
+}
+
+#wf-shop-boot-overlay {
+  display: none;
+}
+
+html.wf-shop-boot #wf-shop-boot-overlay {
+  display: flex !important;
 }
 
 #wf-root {

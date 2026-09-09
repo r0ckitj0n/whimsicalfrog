@@ -1,23 +1,17 @@
-import React from 'react';
-import { createPortal } from 'react-dom';
-import { SpinningFrogHead } from '../../ui/SpinningFrogHead.js';
+import React, { useLayoutEffect } from 'react';
+import { showShopBootOverlay } from '../../../core/shop-boot-overlay.js';
 
+/**
+ * Shop wait gate. The visible spinner lives in `#wf-shop-boot-overlay`
+ * (index.html + shop-boot-overlay.ts) so the previous room photo cannot
+ * stack above Tailwind classes that have not loaded yet.
+ */
 export const ShopLoadingScreen: React.FC = () => {
-    if (typeof document === 'undefined') return null;
+    useLayoutEffect(() => {
+        showShopBootOverlay();
+    }, []);
 
-    return createPortal(
-        <section
-            className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden bg-black z-modal"
-            role="status"
-            aria-live="polite"
-            aria-busy="true"
-            aria-label="Loading the shop"
-        >
-            <SpinningFrogHead />
-            <span className="sr-only">Loading the shop…</span>
-        </section>,
-        document.body
-    );
+    return null;
 };
 
 export default ShopLoadingScreen;

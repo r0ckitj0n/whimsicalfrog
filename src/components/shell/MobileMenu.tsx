@@ -1,6 +1,7 @@
+import { Link } from 'react-router-dom';
 import { useAuthModal } from '../../hooks/useAuthModal.js';
 import { useAuthContext } from '../../context/AuthContext.js';
-import { Link } from 'react-router-dom';
+import { showShopBootOverlay } from '../../core/shop-boot-overlay.js';
 
 interface MobileMenuProps {
     isOpen: boolean;
@@ -41,7 +42,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
                 <div className="mobile-nav-links">
                     <Link to="/" className="mobile-nav-link" onClick={onClose}>Home</Link>
                     <Link to="/room_main" className="mobile-nav-link" onClick={onClose}>Main Room</Link>
-                    <Link to="/shop" className="mobile-nav-link" onClick={onClose}>Shop</Link>
+                    <Link to="/shop" className="mobile-nav-link" onClick={() => { showShopBootOverlay(); onClose(); }}>Shop</Link>
                     <Link to="/about" className="mobile-nav-link" onClick={onClose}>About</Link>
                     <Link to="/contact" className="mobile-nav-link" onClick={onClose}>Contact</Link>
 
@@ -68,7 +69,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
                 </div>
 
                 <div className="mobile-search">
-                    <form action="/shop" method="GET" role="search">
+                    <form action="/shop" method="GET" role="search" onSubmit={() => showShopBootOverlay()}>
                         <input
                             type="search"
                             name="q"

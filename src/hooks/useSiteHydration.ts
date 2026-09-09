@@ -184,7 +184,7 @@ export const useSiteHydration = () => {
                 if (data.shop_data) setShopData(data.shop_data);
                 if (data.about_data) setAboutData(data.about_data);
                 if (data.contact_data) setContactData(data.contact_data);
-                if (data.background_url && !document.body.getAttribute('data-bg-url') && !is_bare) {
+                if (data.background_url && !document.body.getAttribute('data-bg-url') && !is_bare && !needsShop) {
                     document.body.setAttribute('data-bg-url', data.background_url);
                     document.body.setAttribute('data-bg-applied', '1');
                     document.body.style.setProperty('--wf-body-bg', `url("${data.background_url}")`);
@@ -194,6 +194,10 @@ export const useSiteHydration = () => {
                     document.body.style.backgroundPosition = 'center';
                     document.body.style.backgroundRepeat = 'no-repeat';
                     document.body.style.backgroundAttachment = 'fixed';
+                }
+                if (needsShop) {
+                    document.body.style.removeProperty('background-image');
+                    document.body.classList.add('wf-shop-loading');
                 }
 
                 // Nuclear option for the mysterious vignette
@@ -344,7 +348,10 @@ export const useSiteHydration = () => {
                 if (data.contact_data) setContactData(data.contact_data);
 
                 const isBare = new URLSearchParams(location.search).get('bare') === '1';
-                if (data.background_url && !isBare && !needsShop) {
+                if (needsShop) {
+                    document.body.style.removeProperty('background-image');
+                    document.body.classList.add('wf-shop-loading');
+                } else if (data.background_url && !isBare) {
                     document.body.setAttribute('data-bg-url', data.background_url);
                     document.body.setAttribute('data-bg-applied', '1');
                     document.body.style.setProperty('--wf-body-bg', `url("${data.background_url}")`);

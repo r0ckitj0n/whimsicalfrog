@@ -6,6 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <script>
         document.documentElement.classList.add('wf-js');
+        (function () {
+            var path = String(location.pathname || '').toLowerCase();
+            var search = location.search || '';
+            if (
+                path === '/shop' ||
+                path.indexOf('/shop/') === 0 ||
+                path.indexOf('/product/') !== -1 ||
+                /(?:\?|&)room_id=S(?:&|$)/.test(search)
+            ) {
+                document.documentElement.classList.add('wf-shop-boot');
+            }
+        })();
     </script>
     <title>Whimsical Frog | Handmade Decor & Gifts</title>
     <meta name="description"
@@ -96,6 +108,86 @@
                 radial-gradient(circle at 20% 20%, rgba(255, 140, 0, 0.2), transparent 40%),
                 radial-gradient(circle at 80% 80%, rgba(0, 165, 80, 0.25), transparent 45%),
                 #0a0a0a;
+        }
+
+        html.wf-shop-boot,
+        html.wf-shop-boot body {
+            background-color: #000 !important;
+            background-image: none !important;
+        }
+
+        html.wf-shop-boot #wf-startup-loader,
+        html.wf-shop-boot #landingPage-react,
+        html.wf-shop-boot #mainRoomPage-react {
+            display: none !important;
+        }
+
+        #wf-shop-boot-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: var(--wf-z-modal, 11010);
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: #000;
+        }
+
+        html.wf-shop-boot #wf-shop-boot-overlay {
+            display: flex !important;
+        }
+
+        #wf-shop-boot-overlay .wf-spinning-frog-head-wrap {
+            position: relative;
+            width: 12rem;
+            height: 12rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #wf-shop-boot-overlay .wf-spinning-frog-head__ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 9999px;
+            border: 3px solid rgba(135, 172, 58, 0.55);
+            animation: wf-frog-head-ripple 1.4s ease-out infinite;
+            pointer-events: none;
+        }
+
+        #wf-shop-boot-overlay .wf-spinning-frog-head {
+            display: block;
+            width: 10rem;
+            height: 10rem;
+            border-radius: 9999px;
+            object-fit: cover;
+            animation: wf-frog-head-spin 1.15s linear infinite;
+            transform-origin: center;
+        }
+
+        #wf-shop-boot-overlay .wf-sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+        }
+
+        @keyframes wf-frog-head-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes wf-frog-head-ripple {
+            0% { transform: scale(0.92); opacity: 0.7; }
+            100% { transform: scale(1.18); opacity: 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #wf-shop-boot-overlay .wf-spinning-frog-head,
+            #wf-shop-boot-overlay .wf-spinning-frog-head__ring {
+                animation: none;
+            }
         }
 
         .wf-loader-card {
@@ -353,6 +445,13 @@
                 </nav>
             </footer>
         </main>
+    </div>
+    <div id="wf-shop-boot-overlay" role="status" aria-live="polite" aria-busy="true" aria-label="Loading the shop">
+        <div class="wf-spinning-frog-head-wrap" aria-hidden="true">
+            <span class="wf-spinning-frog-head__ring"></span>
+            <img class="wf-spinning-frog-head" src="/images/logos/apple-touch-icon.png" alt="" width="160" height="160">
+        </div>
+        <span class="wf-sr-only">Loading the shop…</span>
     </div>
     <script>
         // Synchronously apply admin-view class before React loads

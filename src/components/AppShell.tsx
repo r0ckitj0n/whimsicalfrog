@@ -25,6 +25,7 @@ import { PageLoadingFallback } from './ui/PageLoadingFallback.js';
 import { detectPageFromLocation, locationNeedsShopData } from '../utils/pageRoute.js';
 import { SiteLoadingSplash } from './SiteLoadingSplash.js';
 import { ShopLoadingScreen } from './storefront/shop/ShopLoadingScreen.js';
+import { hideShopBootOverlay } from '../core/shop-boot-overlay.js';
 import { useAppEffects } from '../hooks/useAppEffects.js';
 import { GlobalModalWrapper } from './modals/GlobalModalWrapper.js';
 import { MainPageRenderer } from './MainPageRenderer.js';
@@ -154,9 +155,9 @@ export const AppShell: React.FC = () => {
         if (typeof document === 'undefined') return;
         const coverShopWait = locationNeedsShopData(location.pathname, location.search);
         document.body.classList.toggle('wf-shop-loading', coverShopWait);
-        return () => {
-            document.body.classList.remove('wf-shop-loading');
-        };
+        if (!coverShopWait) {
+            hideShopBootOverlay();
+        }
     }, [location.pathname, location.search]);
 
     const isContextModalOpen = Boolean(modal?.isOpen);

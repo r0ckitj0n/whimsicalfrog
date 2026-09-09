@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { showShopBootOverlay } from '../../core/shop-boot-overlay.js';
 
 export const SearchBar: React.FC = () => {
     const [query, setQuery] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
-        // For now, let it perform a standard GET to /shop?q=...
+    const handleSubmit = () => {
+        showShopBootOverlay();
     };
 
     return (

@@ -1,5 +1,6 @@
 import { ApiClient } from './ApiClient.js';
 import logger from './logger.js';
+import { locationNeedsShopData } from '../utils/pageRoute.js';
 
 /**
  * Body Background Utility
@@ -75,6 +76,10 @@ export async function initBodyBackground(): Promise<void> {
     try {
         const body = document.body;
         if (!body) return;
+        if (locationNeedsShopData(window.location.pathname, window.location.search)) {
+            body.style.removeProperty('background-image');
+            return;
+        }
 
         let url = body.dataset.bgUrl;
         if (!url) {

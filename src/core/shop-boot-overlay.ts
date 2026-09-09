@@ -8,7 +8,7 @@ const BG_LAYER_ID = 'wf-shop-boot-bg';
 const STYLE_ID = 'wf-shop-boot-overlay-style';
 const BOOT_CLASS = 'wf-shop-boot';
 const LOADING_CLASS = 'wf-shop-loading';
-const SHOP_BG_CACHE_KEY = 'wf_shop_bg_url_v2';
+const SHOP_BG_CACHE_KEY = 'wf_shop_bg_url_v3';
 const SHOP_DATA_CACHE_KEY = 'wf_shop_data_v2';
 
 /** Known-good on-disk shop wallpaper (DB "realistic" paths often 404 as HTML). */
@@ -25,27 +25,51 @@ let shopCatalogPromise: Promise<unknown> | null = null;
 let cachedShopBgUrl = '';
 let cachedShopDataMemory: unknown = null;
 
+/** Above every room/header stacking context (fixed layers inside #wf-root compete in the root context). */
+const OVERLAY_Z = '2147483646';
+
 const OVERLAY_CSS = `
 :root {
   --wf-z-modal: 11010;
   --wf-shop-boot-bg-image: url("${DEFAULT_SHOP_BG_URL}");
 }
+/* Hide the entire React tree so fixed MainRoom/Header cannot cover the frog. */
+html.wf-shop-boot #wf-root,
+html.wf-shop-boot #landingPage-react,
+html.wf-shop-boot #mainRoomPage-react,
+html.wf-shop-boot #wf-startup-loader {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
 html.wf-shop-boot #landingPage-react,
 html.wf-shop-boot #mainRoomPage-react,
 html.wf-shop-boot #wf-startup-loader {
   display: none !important;
-  pointer-events: none !important;
+}
+/* Belt-and-suspenders: paint shop wallpaper on body under the frog. */
+html.wf-shop-boot body,
+html.wf-shop-boot body.wf-shop-loading,
+html.wf-shop-boot body.wf-shop-loading[data-bg-url],
+html.wf-shop-boot body.wf-shop-loading[data-bg-url][data-bg-applied="1"] {
+  background-color: #000 !important;
+  background-image: var(--wf-shop-boot-bg-image) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
 }
 #wf-shop-boot-overlay {
   display: none;
-  position: fixed;
-  inset: 0;
-  z-index: var(--wf-z-modal);
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: ${OVERLAY_Z} !important;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   background: transparent;
   pointer-events: auto;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 html.wf-shop-boot #wf-shop-boot-overlay {
   display: flex !important;
@@ -55,10 +79,10 @@ html.wf-shop-boot #wf-shop-boot-overlay {
   inset: 0;
   z-index: 0;
   background-color: #000;
-  background-image: var(--wf-shop-boot-bg-image);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-image: var(--wf-shop-boot-bg-image) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
 }
 #wf-shop-boot-bg::after {
   content: '';
@@ -69,7 +93,7 @@ html.wf-shop-boot #wf-shop-boot-overlay {
 }
 #wf-shop-boot-overlay .wf-spinning-frog-head-wrap {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 #wf-shop-boot-overlay .wf-sr-only {
   position: absolute;
@@ -91,11 +115,27 @@ declare global {
     }
 }
 
+function isShopWallpaperUrl(url: string): boolean {
+    const u = String(url || '');
+    if (!u) return false;
+    // Shop room code is capital S — only accept background-roomS.* (not room0/A/5).
+    return /background-roomS\.(webp|png|jpe?g)(\?|#|$)/.test(u);
+}
+
 function readCachedShopBg(): string {
-    if (cachedShopBgUrl) return cachedShopBgUrl;
+    if (cachedShopBgUrl && isShopWallpaperUrl(cachedShopBgUrl)) return cachedShopBgUrl;
+    if (cachedShopBgUrl && !isShopWallpaperUrl(cachedShopBgUrl)) {
+        cachedShopBgUrl = '';
+    }
     if (typeof sessionStorage === 'undefined') return '';
     try {
-        cachedShopBgUrl = sessionStorage.getItem(SHOP_BG_CACHE_KEY) || '';
+        const raw = sessionStorage.getItem(SHOP_BG_CACHE_KEY) || '';
+        if (raw && !isShopWallpaperUrl(raw)) {
+            sessionStorage.removeItem(SHOP_BG_CACHE_KEY);
+            cachedShopBgUrl = '';
+            return '';
+        }
+        cachedShopBgUrl = raw;
     } catch {
         cachedShopBgUrl = '';
     }
@@ -103,6 +143,7 @@ function readCachedShopBg(): string {
 }
 
 function writeCachedShopBg(url: string): void {
+    if (!isShopWallpaperUrl(url)) return;
     cachedShopBgUrl = url;
     if (typeof sessionStorage === 'undefined') return;
     try {
@@ -114,26 +155,36 @@ function writeCachedShopBg(url: string): void {
 
 function ensureOverlayStyle(): void {
     if (typeof document === 'undefined') return;
-    if (document.getElementById(STYLE_ID)) return;
-    const style = document.createElement('style');
-    style.id = STYLE_ID;
+    let style = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
+    if (!style) {
+        style = document.createElement('style');
+        style.id = STYLE_ID;
+        document.head.appendChild(style);
+    }
+    // Always refresh so HMR / late module loads replace stale overlay CSS.
     style.textContent = OVERLAY_CSS;
-    document.head.appendChild(style);
 }
 
 function applyBgLayer(url: string): void {
     if (!url || typeof document === 'undefined') return;
     ensureOverlayElement();
     const layer = document.getElementById(BG_LAYER_ID) as HTMLElement | null;
-    if (!layer) return;
     const cssUrl = `url("${url}")`;
-    // Triple-write so the wallpaper sticks through SPA nav / stylesheet thrash.
-    layer.style.setProperty('background-image', cssUrl, 'important');
-    layer.style.setProperty('background-size', 'cover', 'important');
-    layer.style.setProperty('background-position', 'center', 'important');
-    layer.style.setProperty('background-repeat', 'no-repeat', 'important');
-    layer.setAttribute('data-bg', url);
     document.documentElement.style.setProperty('--wf-shop-boot-bg-image', cssUrl);
+    if (layer) {
+        layer.style.setProperty('background-image', cssUrl, 'important');
+        layer.style.setProperty('background-size', 'cover', 'important');
+        layer.style.setProperty('background-position', 'center', 'important');
+        layer.style.setProperty('background-repeat', 'no-repeat', 'important');
+        layer.setAttribute('data-bg', url);
+    }
+    // Paint body too — if a fixed MainRoom still stacks above the overlay, wallpaper is still shop.
+    document.body.style.setProperty('background-image', cssUrl, 'important');
+    document.body.style.setProperty('background-size', 'cover', 'important');
+    document.body.style.setProperty('background-position', 'center', 'important');
+    document.body.style.setProperty('background-repeat', 'no-repeat', 'important');
+    document.body.style.setProperty('background-attachment', 'fixed', 'important');
+    document.body.setAttribute('data-shop-boot-bg', url);
 }
 
 function ensureOverlayElement(): HTMLElement | null {
@@ -146,6 +197,12 @@ function ensureOverlayElement(): HTMLElement | null {
             bg.setAttribute('aria-hidden', 'true');
             overlay.insertBefore(bg, overlay.firstChild);
         }
+        if (overlay.parentElement !== document.body || document.body.lastElementChild !== overlay) {
+            document.body.appendChild(overlay);
+        }
+        overlay.style.setProperty('z-index', OVERLAY_Z, 'important');
+        overlay.style.setProperty('position', 'fixed', 'important');
+        overlay.style.setProperty('inset', '0', 'important');
         return overlay;
     }
 
@@ -155,6 +212,9 @@ function ensureOverlayElement(): HTMLElement | null {
     overlay.setAttribute('aria-live', 'polite');
     overlay.setAttribute('aria-busy', 'true');
     overlay.setAttribute('aria-label', 'Loading the shop');
+    overlay.style.setProperty('z-index', OVERLAY_Z, 'important');
+    overlay.style.setProperty('position', 'fixed', 'important');
+    overlay.style.setProperty('inset', '0', 'important');
 
     const bg = document.createElement('div');
     bg.id = BG_LAYER_ID;
@@ -267,8 +327,6 @@ export function showShopBootOverlay(): void {
     ensureOverlayElement();
     document.documentElement.classList.add(BOOT_CLASS);
     document.body.classList.add(LOADING_CLASS);
-    // Keep room photos off body; shop wallpaper lives on #wf-shop-boot-bg under the frog.
-    document.body.style.removeProperty('background-image');
     const cached = readCachedShopBg();
     const paintUrl = cached || SHOP_BG_FALLBACKS[0];
     applyBgLayer(paintUrl);
@@ -282,6 +340,15 @@ export function showShopBootOverlay(): void {
 export function hideShopBootOverlay(): void {
     if (typeof document === 'undefined') return;
     document.documentElement.classList.remove(BOOT_CLASS);
+    // Restore body background control to the normal room/page system.
+    if (document.body.getAttribute('data-shop-boot-bg')) {
+        document.body.style.removeProperty('background-image');
+        document.body.style.removeProperty('background-size');
+        document.body.style.removeProperty('background-position');
+        document.body.style.removeProperty('background-repeat');
+        document.body.style.removeProperty('background-attachment');
+        document.body.removeAttribute('data-shop-boot-bg');
+    }
 }
 
 export function readCachedShopData<T>(): T | null {

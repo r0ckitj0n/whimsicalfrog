@@ -38,26 +38,44 @@ body[data-bg-url] {
 }
 
 /* Keep prior room photos off the body during the shop wait.
-   The shop wallpaper is painted on #wf-shop-boot-bg under the frog. */
+   Shop wallpaper is painted via --wf-shop-boot-bg-image (overlay + body). */
 body.wf-shop-loading,
 body.wf-shop-loading[data-bg-url],
 body.wf-shop-loading[data-bg-url][data-bg-applied="1"] {
-  background-image: none !important;
   background-color: #000 !important;
+}
+
+html.wf-shop-boot body,
+html.wf-shop-boot body.wf-shop-loading,
+html.wf-shop-boot body.wf-shop-loading[data-bg-url],
+html.wf-shop-boot body.wf-shop-loading[data-bg-url][data-bg-applied="1"] {
+  background-image: var(--wf-shop-boot-bg-image, url("/images/backgrounds/background-roomS.webp")) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+
+/* Hide the React tree so fixed MainRoom/Header cannot cover the frog. */
+html.wf-shop-boot #wf-root,
+html.wf-shop-boot #landingPage-react,
+html.wf-shop-boot #mainRoomPage-react,
+html.wf-shop-boot #wf-startup-loader {
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 html.wf-shop-boot #landingPage-react,
 html.wf-shop-boot #mainRoomPage-react,
 html.wf-shop-boot #wf-startup-loader {
   display: none !important;
-  pointer-events: none !important;
 }
 
 #wf-shop-boot-overlay,
 .wf-shop-loading-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: var(--wf-z-modal);
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483646 !important;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -65,6 +83,8 @@ html.wf-shop-boot #wf-startup-loader {
   overflow: hidden;
   background: transparent;
   pointer-events: auto;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 #wf-shop-boot-overlay {
@@ -80,10 +100,10 @@ html.wf-shop-boot #wf-shop-boot-overlay {
   inset: 0;
   z-index: 0;
   background-color: #000;
-  background-image: var(--wf-shop-boot-bg-image, url("/images/backgrounds/background-roomS.webp"));
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-image: var(--wf-shop-boot-bg-image, url("/images/backgrounds/background-roomS.webp")) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
 }
 
 #wf-shop-boot-bg::after {
@@ -96,7 +116,7 @@ html.wf-shop-boot #wf-shop-boot-overlay {
 
 #wf-shop-boot-overlay .wf-spinning-frog-head-wrap {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 #wf-root {

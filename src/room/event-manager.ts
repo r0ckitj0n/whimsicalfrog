@@ -1,6 +1,7 @@
 // src/room/event-manager.ts
 // ES-module for room icon hover/click events and popup wiring.
 import logger from '../core/logger.js';
+import { CHRISTMAS_CATALOG_FIRST_ROOM } from '../core/constants/christmasCatalog.js';
 import { extractItemData, getPopupApi, ItemData } from './event-utils.js';
 
 interface WFRoomWindow {
@@ -174,7 +175,7 @@ export function attachDelegatedItemEvents(): void {
         action === 'open-christmas-wishbook' ||
         action === 'open-christmas-catalog'
       ) {
-        const wishBookRoom = '18';
+        const wishBookRoom = CHRISTMAS_CATALOG_FIRST_ROOM;
         if (window.roomModalManager?.show) {
           window.roomModalManager.show(wishBookRoom);
         } else if (typeof window.openRoom === 'function') {

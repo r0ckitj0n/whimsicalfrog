@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /**
- * Restore Christmas room (6) catalog background + Wish Book shortcut to room 18.
+ * Restore Christmas room (6) catalog background + Catalog shortcut to room 20 (page 1).
  *
  * Idempotent. Safe to re-run.
  *
@@ -16,7 +16,7 @@ require_once __DIR__ . '/../../includes/backgrounds/manager.php';
 require_once __DIR__ . '/../../includes/helpers/ImagePathNormalizer.php';
 
 const CHRISTMAS_ROOM = '6';
-const WISHBOOK_ROOM = '18';
+const WISHBOOK_ROOM = '20'; // Christmas Catalog page 1
 const CATALOG_BACKGROUND_ID = 116;
 const WISHBOOK_SIGN_URL = '/images/signs/realistic/realistic-sign-christmas-catalog.webp';
 const WISHBOOK_AREA = '.area-15';

@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from 'react';
+import { CHRISTMAS_CATALOG_FIRST_ROOM } from '../../core/constants/christmasCatalog.js';
 
 interface IItemPopupState {
     visible: boolean;
@@ -166,7 +167,7 @@ export const useRoomModalEffects = ({
                 case 'open-wishbook-overlay':
                 case 'open-christmas-wishbook':
                 case 'open-christmas-catalog': {
-                    const wishBookRoom = '18';
+                    const wishBookRoom = CHRISTMAS_CATALOG_FIRST_ROOM;
                     if (window.roomModalManager?.show) {
                         window.roomModalManager.show(wishBookRoom);
                     } else if (window.openRoom) {

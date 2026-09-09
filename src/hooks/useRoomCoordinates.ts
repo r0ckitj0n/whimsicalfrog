@@ -193,7 +193,7 @@ export const useRoomCoordinates = (roomType: string = '0') => {
             left: `${coord.left * scaleX}px`,
             width: `${coord.width * scaleX}px`,
             // Height is intentionally NOT set - allows images to extend beyond coordinate bottom
-            zIndex: 'var(--wf-z-elevated)',
+            // z-index left to CSS (.room-item-icon / :hover) so expanding signs can rise above siblings
             opacity: 1,
             visibility: 'visible' as const,
             display: 'block' as const,

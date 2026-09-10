@@ -13,6 +13,7 @@ import {
     locationIsSettingsPage,
     buildBootstrapQueryParams,
 } from '../utils/pageRoute.js';
+import { writeCachedSettingsBackgroundUrl } from '../utils/settingsBackgroundCache.js';
 
 /**
  * useSiteHydration Hook
@@ -229,6 +230,7 @@ export const useSiteHydration = () => {
                         // Settings CSS prefers --wf-bg-roomx-image so landing --wf-body-bg cannot stick.
                         document.body.style.setProperty('--wf-bg-roomx-image', `url("${url}")`);
                         document.documentElement.style.setProperty('--wf-bg-roomx-image', `url("${url}")`);
+                        writeCachedSettingsBackgroundUrl(url);
                     }
                 };
                 if (data.background_url && !is_bare && !needsShop) {
@@ -419,6 +421,7 @@ export const useSiteHydration = () => {
                     if (isSettings || data.background_url.includes('roomX') || data.background_url.includes('roomx')) {
                         document.body.style.setProperty('--wf-bg-roomx-image', `url("${data.background_url}")`);
                         document.documentElement.style.setProperty('--wf-bg-roomx-image', `url("${data.background_url}")`);
+                        writeCachedSettingsBackgroundUrl(data.background_url);
                     }
                 }
             } catch (e) {

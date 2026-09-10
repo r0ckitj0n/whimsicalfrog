@@ -12,8 +12,17 @@
             var path = String(location.pathname || '').toLowerCase();
             var search = location.search || '';
             var LANDING_BG = '/images/backgrounds/realistic/realistic-roomA-frogs.webp';
-            // Settings room wallpaper from ~1 week ago: Original whimsical Room X (not realistic cabin).
-            var SETTINGS_BG = '/images/backgrounds/background-roomX.webp';
+            // Settings (room X): Original whimsical vs realistic control-room — pick by last active theme.
+            var SETTINGS_ORIGINAL_BG = '/images/backgrounds/background-roomX.webp';
+            var SETTINGS_REALISTIC_BG = '/images/backgrounds/realistic/realistic-roomX.webp';
+            var SETTINGS_BG_CACHE_KEY = 'wf-settings-bg-url';
+            var SETTINGS_BG = SETTINGS_ORIGINAL_BG;
+            try {
+                var cachedSettingsBg = localStorage.getItem(SETTINGS_BG_CACHE_KEY);
+                if (cachedSettingsBg === SETTINGS_ORIGINAL_BG || cachedSettingsBg === SETTINGS_REALISTIC_BG) {
+                    SETTINGS_BG = cachedSettingsBg;
+                }
+            } catch (e) { /* private mode */ }
             var SHOP_BG = '/images/backgrounds/background-roomS.webp';
             var shopBoot = (
                 path === '/shop' ||
@@ -53,6 +62,38 @@
                     '--wf-bg-roomx-image',
                     'url("' + SETTINGS_BG + '")'
                 );
+                // Align early paint with the DB-active theme (Original vs Realistic).
+                window.__wfApplySettingsBootBg = function (url) {
+                    if (!url) return;
+                    var next = url;
+                    if (url.indexOf('/realistic/realistic-roomX.') !== -1) next = SETTINGS_REALISTIC_BG;
+                    else if (url.indexOf('/background-roomX.') !== -1) next = SETTINGS_ORIGINAL_BG;
+                    else if (url !== SETTINGS_ORIGINAL_BG && url !== SETTINGS_REALISTIC_BG) return;
+                    SETTINGS_BG = next;
+                    try { localStorage.setItem(SETTINGS_BG_CACHE_KEY, next); } catch (e) { /* ignore */ }
+                    document.documentElement.style.setProperty('--wf-bg-roomx-image', 'url("' + next + '")');
+                    if (document.body) {
+                        document.body.setAttribute('data-bg-url', next);
+                        document.body.style.setProperty('--wf-bg-roomx-image', 'url("' + next + '")');
+                        document.body.style.setProperty('--wf-body-bg', 'url("' + next + '")');
+                        document.body.style.backgroundImage = 'url("' + next + '")';
+                    }
+                };
+                fetch('/api/get_background.php?room=X&bust=1', { credentials: 'same-origin' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (payload) {
+                        var bg = payload && payload.background ? payload.background : null;
+                        var rel = bg && (bg.webp_filename || bg.png_filename || bg.image_filename);
+                        if (!rel) return;
+                        var href = String(rel);
+                        if (href.indexOf('/images/') !== 0) {
+                            href = href.indexOf('images/') === 0 ? ('/' + href) : ('/images/' + href.replace(/^\/+/, ''));
+                        }
+                        if (typeof window.__wfApplySettingsBootBg === 'function') {
+                            window.__wfApplySettingsBootBg(href);
+                        }
+                    })
+                    .catch(function () { /* keep cached/Original paint */ });
             }
             if (landingBoot) {
                 document.documentElement.classList.add('wf-landing-boot');
@@ -170,8 +211,7 @@
             set('--wf-bg-room3-png-image', 'url("/images/backgrounds/background-room3.png")');
             set('--wf-bg-room4-webp-image', 'url("/images/backgrounds/background-room4.webp")');
             set('--wf-bg-room4-png-image', 'url("/images/backgrounds/background-room4.png")');
-            /* Active Settings wallpaper (room X) — match DB realistic path for first paint. */
-            /* Original whimsical Room X — Settings wallpaper from ~1 week ago. */
+            /* Settings room X default (overridden by wf-settings-boot + active theme). */
             set('--wf-bg-roomx-image', 'url("/images/backgrounds/background-roomX.webp")');
             set('--wf-cloud-bg-webp-image', 'url("/images/backgrounds/cloud-bg.webp")');
             set('--wf-cloud-bg-png-image', 'url("/images/backgrounds/cloud-bg.png")');

@@ -164,44 +164,50 @@ export const ContactManager: React.FC<ContactManagerProps> = ({ businessData }) 
     })();
 
     return (
-        <div className="wf-contact-page-frame max-w-3xl px-4 py-0 space-y-2">
-            {publicDetails && (
-                <section className="wf-contact-trust rounded-xl border border-white/25 bg-black/35 p-4 text-white">
-                    <h2 className="text-lg font-bold mb-2">Business Contact Details</h2>
-                    <div className="grid gap-2 text-sm sm:grid-cols-2">
-                        {publicDetails.name && <p><strong>Business:</strong> {publicDetails.name}</p>}
-                        {publicDetails.owner && <p><strong>Owner:</strong> {publicDetails.owner}</p>}
-                        {publicDetails.email && (
-                            <p><strong>Email:</strong> <a className="underline" href={`mailto:${publicDetails.email}`}>{publicDetails.email}</a></p>
-                        )}
-                        {publicDetails.phone && (
-                            <p><strong>Phone:</strong> <a className="underline" href={`tel:${publicDetails.phone.replace(/[^\d+]/g, '')}`}>{publicDetails.phone}</a></p>
-                        )}
-                        {publicDetails.hours && <p><strong>Hours:</strong> {publicDetails.hours}</p>}
-                        {websiteUrl && (
-                            <p><strong>Website:</strong> <a className="underline" href={websiteUrl} target="_blank" rel="noopener noreferrer">{websiteUrl}</a></p>
-                        )}
-                    </div>
-                    {publicDetails.address && (
-                        <p className="mt-2 whitespace-pre-wrap text-sm"><strong>Address:</strong> {publicDetails.address}</p>
+        <div className="wf-contact-page-frame px-4 py-0">
+            <div className="wf-contact-columns grid grid-cols-1 gap-5 min-[900px]:grid-cols-[minmax(260px,360px)_minmax(0,1fr)] items-start">
+                <aside className="wf-contact-details-column flex flex-col gap-3 min-w-0">
+                    {publicDetails && (
+                        <section className="wf-contact-trust rounded-xl p-5 text-white shadow-lg bg-[var(--brand-primary)]">
+                            <h2 className="wf-contact-trust__title mb-3 text-lg font-bold text-white">Business Contact Details</h2>
+                            <div className="wf-contact-trust__body grid gap-2 text-sm leading-relaxed text-white">
+                                {publicDetails.name && <p className="text-white m-0"><strong>Business:</strong> {publicDetails.name}</p>}
+                                {publicDetails.owner && <p className="text-white m-0"><strong>Owner:</strong> {publicDetails.owner}</p>}
+                                {publicDetails.email && (
+                                    <p className="text-white m-0"><strong>Email:</strong> <a className="text-white underline" href={`mailto:${publicDetails.email}`}>{publicDetails.email}</a></p>
+                                )}
+                                {publicDetails.phone && (
+                                    <p className="text-white m-0"><strong>Phone:</strong> <a className="text-white underline" href={`tel:${publicDetails.phone.replace(/[^\d+]/g, '')}`}>{publicDetails.phone}</a></p>
+                                )}
+                                {publicDetails.hours && <p className="text-white m-0"><strong>Hours:</strong> {publicDetails.hours}</p>}
+                                {websiteUrl && (
+                                    <p className="text-white m-0"><strong>Website:</strong> <a className="text-white underline" href={websiteUrl} target="_blank" rel="noopener noreferrer">{websiteUrl}</a></p>
+                                )}
+                                {publicDetails.address && (
+                                    <p className="wf-contact-trust__address text-white m-0 whitespace-pre-wrap"><strong>Address:</strong> {publicDetails.address}</p>
+                                )}
+                            </div>
+                        </section>
                     )}
-                </section>
-            )}
 
-            <BusinessInfo
-                revealed={revealedDetails !== null}
-                onReveal={handleRevealClick}
-            />
+                    <BusinessInfo
+                        revealed={revealedDetails !== null}
+                        onReveal={handleRevealClick}
+                    />
+                </aside>
 
-            <ContactForm
-                formData={formData}
-                onInputChange={handleInputChange}
-                onSubmit={handleFormSubmit}
-                isSubmitting={isSubmitting}
-                status={status}
-                pageTitle={businessData?.page_title}
-                pageIntro={businessData?.page_intro}
-            />
+                <div className="wf-contact-form-column min-w-0">
+                    <ContactForm
+                        formData={formData}
+                        onInputChange={handleInputChange}
+                        onSubmit={handleFormSubmit}
+                        isSubmitting={isSubmitting}
+                        status={status}
+                        pageTitle={businessData?.page_title}
+                        pageIntro={businessData?.page_intro}
+                    />
+                </div>
+            </div>
 
             <CaptchaModal
                 isOpen={isCaptchaOpen}

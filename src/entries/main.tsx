@@ -4,6 +4,7 @@ import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { installShopBootOverlayGuards } from '../core/shop-boot-overlay.js';
+import '../styles/entries/public-core.css';
 import App from './App.js';
 
 /**

@@ -39,6 +39,10 @@ STRICT_VERIFY="${WF_STRICT_VERIFY:-0}"
 UPLOAD_VENDOR="${WF_UPLOAD_VENDOR:-0}"
 # Default safety: never delete anything under images/** on the remote.
 PRESERVE_IMAGES=1
+# Default: do NOT push local images to live. Git checkouts reset mtimes, so
+# --only-newer reverse mirrors can overwrite newer live media with older local
+# copies. Opt in with --push-images after syncing from live first.
+PUSH_IMAGES="${WF_PUSH_IMAGES:-0}"
 PURGE_IMAGES=0
 CODE_ONLY=0
 SECURITY_ONLY=0
@@ -51,6 +55,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --preserve-images|--no-delete-images)
       PRESERVE_IMAGES=1
+      shift
+      ;;
+    --push-images)
+      PUSH_IMAGES=1
       shift
       ;;
     --purge-images)
@@ -534,8 +542,12 @@ EOL
   if [ "${WF_FULL_REPLACE:-0}" != "1" ]; then
     if [ "$MODE" != "dist-only" ]; then
       # Preserve-images mode excludes images/** from the primary mirror so lftp --delete can never
-      # remove remote images. We still upload changed/new images via dedicated passes with no --delete.
-
+      # remove remote images. Image UPLOADS are opt-in (--push-images / WF_PUSH_IMAGES=1)
+      # because git checkouts refresh local mtimes and can clobber newer live media.
+      if [ "$PRESERVE_IMAGES" = "1" ] && [ "$PUSH_IMAGES" != "1" ]; then
+        echo -e "${GREEN}🖼️  Live image precedence: skipping image uploads (use --push-images to opt in)${NC}"
+        echo -e "${YELLOW}   Tip: bash scripts/cloud/sync_from_live.sh --images  # refresh local from live first${NC}"
+      else
       # 1) backgrounds (mtime-based, no delete)
       echo -e "${GREEN}🖼️  Ensuring background images are updated (mtime-based; no deletes)...${NC}"
       cat > deploy_backgrounds.txt << EOL
@@ -597,6 +609,7 @@ EOL
         echo -e "${YELLOW}⚠️  Image sync failed; continuing${NC}"
       fi
       rm -f deploy_images.txt
+      fi
     fi
     if [ "$MODE" != "dist-only" ]; then
       # Perform a dedicated sync for includes subdirectories
@@ -776,8 +789,10 @@ fi
 echo -e "\n${GREEN}📊 Fast Deployment Summary:${NC}"
 echo -e "  • Files: ✅ Deployed to server"
 echo -e "  • Database: ⏭️  Skipped (use deploy_full.sh for database updates)"
-if [ "$PRESERVE_IMAGES" = "1" ]; then
-  echo -e "  • Images: ✅ Synced (no deletes under images/**)"
+if [ "$PRESERVE_IMAGES" = "1" ] && [ "$PUSH_IMAGES" != "1" ]; then
+  echo -e "  • Images: 🛡️ Live precedence (uploads skipped; use --push-images to opt in)"
+elif [ "$PRESERVE_IMAGES" = "1" ]; then
+  echo -e "  • Images: ✅ Pushed with --only-newer (no deletes under images/**)"
 else
   echo -e "  • Images: ✅ Included in deployment"
 fi

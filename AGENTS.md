@@ -675,10 +675,19 @@ Cloud Agent `install` and `start` must call files that exist on the default bran
 
 Use these commands in the dashboard environment (or `.cursor/environment.json`):
 
-- **install:** `bash scripts/cloud/install.sh` — Composer, `npm ci`, local `.env`. Must terminate.
-- **start:** `bash scripts/cloud/start.sh` — MariaDB, PHP `:8080`, Vite `:5176` in the foreground.
+- **install:** `bash scripts/cloud/install.sh` — Composer, `npm ci`, local `.env`, optional live image prime. Must terminate.
+- **start:** `bash scripts/cloud/start.sh` — MariaDB, PHP `:8080`, live→local image sync, Vite `:5176` in the foreground.
 
-Do not save dashboard install/start paths until those scripts are on `main`. Local admin probe (dev only): `/api/auth_redirect_probe.php?token=wf_probe_2025_09&next=shop`.
+### Live → local sync (images / code precedence)
+
+Live uploads and hotfixes are often newer than a Cloud Agent checkout. To keep the local workspace current and prevent older local media from overwriting live:
+
+1. **Automatic (Cloud Agent):** `scripts/cloud/start.sh` runs `scripts/cloud/sync_from_live.sh --images --soft` on every boot (only-newer, no deletes). `install.sh` also primes images when deploy secrets exist.
+2. **Manual full refresh:** `bash scripts/cloud/sync_from_live.sh --all` (images + code trees) or `bash scripts/cloud/pull_live_backup.sh --files`.
+3. **Deploy safety:** Prefer `scripts/deploy_agent_safe.sh` (never touches `images/`). `scripts/deploy.sh` defaults to live image precedence and skips image uploads unless `--push-images` is set.
+4. **Skip sync:** set `WF_SKIP_LIVE_SYNC=1` when offline / no deploy secrets needed.
+
+Do not save dashboard install/start paths until those scripts are on `main`. Local admin auth probe (testing only): `/api/auth_redirect_probe.php?token=wf_probe_2025_09&next=shop`.
 
 ## Live Deploy Standing Process (Required for Agents)
 

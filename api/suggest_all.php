@@ -198,6 +198,31 @@ function wf_compose_ai_failure_details($aiProviders, $baseMessage, $exceptionMes
     ];
 }
 
+/**
+ * Respond to an AI image-analysis failure without blocking the caller.
+ *
+ * Vision analysis is a convenience (auto-filling name/description/category
+ * from a photo); the uploaded image itself is already saved by this point,
+ * independent of whether AI analysis succeeds. A hard HTTP 400 with a dense
+ * technical diagnostic string ("provider=... | model=... | fallback_attempted=...")
+ * reads as "everything is broken" to a non-technical user, even though the photo
+ * upload had already succeeded. Respond 200 instead, with a calm, actionable
+ * message and the technical diagnostics tucked into `details` for admins/logs,
+ * so the UI can offer manual entry instead of a blocking error.
+ */
+function wf_respond_ai_analysis_unavailable($aiProviders, $exceptionMessage = '')
+{
+    $failure = wf_compose_ai_failure_details($aiProviders, 'AI photo analysis unavailable', $exceptionMessage);
+    error_log('suggest_all.php [info step]: AI analysis unavailable - ' . $failure['message']);
+    Response::json([
+        'success' => true,
+        'info_suggestion' => null,
+        'ai_unavailable' => true,
+        'ai_message' => "AI auto-fill isn't available right now. Your photo is already saved -- just fill in the Name and Category yourself, then click Create.",
+        'diagnostics' => $failure['details'],
+    ]);
+}
+
 function wf_normalize_confidence_score($confidence)
 {
     if (is_numeric($confidence)) {
@@ -487,12 +512,7 @@ try {
             Response::error('Image analysis is required for Generate. Enable image-based generation and try again.', null, 400);
         }
         if (!$aiProviders->currentModelSupportsImages()) {
-            $unsupported = wf_compose_ai_failure_details(
-                $aiProviders,
-                'Selected AI model does not support image analysis',
-                'Switch to a vision-capable model in AI Settings and re-test the provider'
-            );
-            Response::error($unsupported['message'], $unsupported['details'], 400);
+            wf_respond_ai_analysis_unavailable($aiProviders, 'Switch to a vision-capable model in AI Settings and re-test the provider');
         }
         if (empty($images)) {
             Response::error('Image analysis is required, but no PNG image was found for this item. Upload at least one PNG image and try again.', null, 400);
@@ -632,17 +652,14 @@ try {
                     $category = $results['info_suggestion']['category'];
                 } else {
                     error_log("suggest_all.php [info step]: analyzeItemImage returned null/empty");
-                    $failure = wf_compose_ai_failure_details(
+                    wf_respond_ai_analysis_unavailable(
                         $aiProviders,
-                        'Image analysis failed',
                         !empty($analysisErrors) ? implode(' | ', $analysisErrors) : 'Provider returned incomplete analysis payload'
                     );
-                    Response::error($failure['message'], $failure['details'], 400);
                 }
             } catch (Exception $e) {
                 error_log("Info analysis failed in suggest_all: " . $e->getMessage());
-                $failure = wf_compose_ai_failure_details($aiProviders, 'Image analysis failed', $e->getMessage());
-                Response::error($failure['message'], $failure['details'], 400);
+                wf_respond_ai_analysis_unavailable($aiProviders, $e->getMessage());
             }
         } else if (!$imageFirstPriority && empty($name) && !empty($category)) {
             // Fallback: Generate info from category if name/images are missing

@@ -1,6 +1,7 @@
 // AI Settings Types
 export interface IAISettings {
     ai_provider: string;
+    ai_vision_provider?: string;
     openai_api_key?: string;
     openai_model?: string;
     anthropic_api_key?: string;

@@ -9,6 +9,7 @@ function getAiSettingsMetadata()
     return [
         'valid_settings' => [
             'ai_provider',
+            'ai_vision_provider',
             'openai_api_key',
             'openai_model',
             'anthropic_api_key',
@@ -46,6 +47,7 @@ function getAiSettingsMetadata()
         ],
         'descriptions' => [
             'ai_provider' => 'Selected AI provider (jons_ai, openai, anthropic, google)',
+            'ai_vision_provider' => 'Fallback vision-capable provider used for image analysis (e.g. Add Item Generate All) when the primary provider cannot run image analysis (missing/invalid key, unsupported model, etc.). Leave blank to disable.',
             'openai_api_key' => 'OpenAI API key for ChatGPT access',
             'openai_model' => 'OpenAI model to use (gpt-3.5-turbo, gpt-4, etc.)',
             'anthropic_api_key' => 'Anthropic API key for Claude access',
@@ -77,6 +79,7 @@ function getAiSettingsMetadata()
         ],
         'display_names' => [
             'ai_provider' => 'AI Provider',
+            'ai_vision_provider' => 'Vision Fallback Provider',
             'openai_api_key' => 'OpenAI API Key',
             'openai_model' => 'OpenAI Model',
             'anthropic_api_key' => 'Anthropic API Key',

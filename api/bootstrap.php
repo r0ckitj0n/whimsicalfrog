@@ -287,9 +287,33 @@ try {
         $bgRoomType = '0';
     } elseif ($roomIdParam === 'A' || $reqPath === '' || $reqPath === 'index.html' || strpos($reqPath, 'landing') !== false) {
         $bgRoomType = 'A';
+    } elseif ($roomIdParam !== null && $roomIdParam !== '') {
+        // Deep links like /rooms/t-shirts-apparel (?room_id=1) must not paint landing wallpaper.
+        $bgRoomType = $roomIdParam;
+    } elseif (preg_match('#^rooms/([^/]+)$#', $reqPath) === 1) {
+        // Resolve room slug → number when bootstrap is called with a room path.
+        require_once __DIR__ . '/../includes/helpers/SpaSeoHelper.php';
+        $resolved = SpaSeoHelper::resolveRoomNumberForPath('/' . $reqPath);
+        if (is_string($resolved) && $resolved !== '') {
+            $bgRoomType = $resolved;
+        }
     }
 
-    $backgroundUrl = function_exists('get_active_background') ? ('/' . ltrim(get_active_background($bgRoomType), '/')) : '/images/backgrounds/background-roomA.webp';
+    $backgroundUrl = '/images/backgrounds/background-roomA.webp';
+    require_once __DIR__ . '/../includes/functions/image_helpers.php';
+    if (function_exists('get_active_background')) {
+        $resolvedBg = trim((string) get_active_background($bgRoomType));
+        if ($resolvedBg !== '' && $resolvedBg !== '/') {
+            $backgroundUrl = '/' . ltrim($resolvedBg, '/');
+        } elseif (preg_match('/^[A-Za-z0-9]+$/', (string) $bgRoomType) === 1) {
+            // Disk convention fallback when DB active row points at a missing realistic asset.
+            $candidate = '/images/backgrounds/background-room' . $bgRoomType . '.webp';
+            $absCandidate = __DIR__ . '/..' . $candidate;
+            if (is_file($absCandidate)) {
+                $backgroundUrl = $candidate;
+            }
+        }
+    }
 
     // 6. Response
     wf_bootstrap_emit([

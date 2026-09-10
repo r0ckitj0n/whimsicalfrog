@@ -158,11 +158,8 @@ export const LandingPage: React.FC = () => {
             id="landingPage-react"
             className="fixed inset-0 w-full h-full overflow-hidden bg-black z-base transition-opacity duration-700"
         >
+            {/* Page SEO copy lives in #wf-seo-shell (index.html / router). Keep only a short a11y title here. */}
             <h1 className="sr-only">Whimsical Frog</h1>
-            <section className="sr-only" aria-label="Homepage highlights">
-                <h2>Custom gifts and handmade decor</h2>
-                <h3>Custom tumblers, personalized shirts, and resin decor</h3>
-            </section>
             <div
                 className="absolute inset-0 pointer-events-none overflow-hidden"
                 style={{
@@ -239,13 +236,6 @@ export const LandingPage: React.FC = () => {
                     );
                 })}
             </div>
-            <footer className="sr-only">
-                <nav aria-label="Support">
-                    <a href="/policy">Policy</a>
-                    <a href="/privacy">Privacy</a>
-                    <a href="/contact">Contact</a>
-                </nav>
-            </footer>
 
         </div>
     );

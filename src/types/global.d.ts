@@ -109,6 +109,7 @@ declare global {
     closeTopAdminModal: () => void;
     showToast: (typeOrMessage: string, messageOrType?: string | null, options?: GlobalNotificationOptions) => number;
     __WF_BACKEND_ORIGIN?: string;
+    __WF_LANDING_BG_URL?: string;
     __WF_DEBUG?: boolean;
     __WF_DEV_MODE?: boolean;
     __WF_LAST_MODAL_CONFIRM_AT?: number;

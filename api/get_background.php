@@ -36,6 +36,16 @@ function wf_cache_set($key, $val) {
     $f = sys_get_temp_dir() . '/wf_cache_' . md5($key) . '.json';
     @file_put_contents($f, json_encode($val));
 }
+function wf_cache_delete($key) {
+    if (function_exists('apcu_delete')) {
+        apcu_delete($key);
+    }
+    $f = sys_get_temp_dir() . '/wf_cache_' . md5($key) . '.json';
+    if (is_file($f)) {
+        @unlink($f);
+    }
+}
+
 
 /**
  * Generate dynamic fallback backgrounds based on room data
@@ -150,8 +160,11 @@ if (!preg_match('/^(0|[A-Za-z0-9]+)$/', $room_number)) {
 }
 
 try {
-    // Try microcache first
+    // Allow cache bust after background switches (e.g. Settings wallpaper restore).
     $ck = 'room_bg:' . $room_number;
+    if (isset($_GET['bust']) || isset($_GET['nocache'])) {
+        wf_cache_delete($ck);
+    }
     $cached = wf_cache_get($ck);
     if ($cached) { Response::json($cached); }
 

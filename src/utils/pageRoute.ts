@@ -24,6 +24,38 @@ export function detectPageFromLocation(pathname: string, search: string): string
     return pageSlug;
 }
 
+/** True when the current route is the admin Settings page (room X). */
+export function locationIsSettingsPage(pathname: string, search: string): boolean {
+    return detectPageFromLocation(pathname, search) === 'admin/settings';
+}
+
+/**
+ * Query params for /api/bootstrap.php so background resolution matches the SPA route.
+ * Always forwards room_id / section=settings — pathname alone is not enough for /?room_id=X.
+ */
+export function buildBootstrapQueryParams(
+    pathname: string,
+    search: string,
+    options?: { includeShop?: boolean }
+): Record<string, string> {
+    const searchParams = new URLSearchParams(search);
+    const params: Record<string, string> = {
+        path: pathname || '/',
+        include_shop: options?.includeShop ? '1' : '0',
+    };
+    const roomId = searchParams.get('room_id');
+    if (roomId) {
+        params.room_id = roomId;
+    } else if (locationIsSettingsPage(pathname, search)) {
+        params.room_id = 'X';
+    }
+    const section = searchParams.get('section');
+    if (section) {
+        params.section = section;
+    }
+    return params;
+}
+
 export function locationNeedsShopData(pathname: string, search: string): boolean {
     const path = pathname.toLowerCase();
     const roomId = new URLSearchParams(search).get('room_id');

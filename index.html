@@ -7,6 +7,7 @@
     <!-- Warm shop + landing wallpapers so first paint is never a wrong/black flash. -->
     <link rel="preload" as="image" href="/images/backgrounds/background-roomS.webp">
     <link rel="preload" as="image" href="/images/backgrounds/realistic/realistic-roomA-frogs.webp">
+    <link rel="preload" as="image" href="/images/backgrounds/realistic/realistic-roomX.webp">
     <link rel="preload" as="image" href="/images/logos/apple-touch-icon.png">
     <script>
         document.documentElement.classList.add('wf-js');
@@ -20,8 +21,16 @@
                 path.indexOf('/product/') !== -1 ||
                 /(?:\?|&)room_id=S(?:&|$)/.test(search)
             );
+            var settingsBoot = (
+                /(?:\?|&)room_id=X(?:&|$)/.test(search) ||
+                /(?:\?|&)section=settings(?:&|$)/.test(search) ||
+                path.indexOf('/admin') === 0 && /(?:\?|&)section=settings(?:&|$)/.test(search) ||
+                path.indexOf('/settings') === 0 ||
+                path.indexOf('/rooms/settings') === 0
+            );
             var landingBoot = (
-                !shopBoot && (
+                !shopBoot &&
+                !settingsBoot && (
                     path === '/' ||
                     path === '/index.html' ||
                     path.indexOf('/rooms/landing') === 0
@@ -29,6 +38,13 @@
             );
             if (shopBoot) {
                 document.documentElement.classList.add('wf-shop-boot');
+            }
+            if (settingsBoot) {
+                document.documentElement.classList.add('wf-settings-boot');
+                document.documentElement.style.setProperty(
+                    '--wf-bg-roomx-image',
+                    'url("/images/backgrounds/realistic/realistic-roomX.webp")'
+                );
             }
             if (landingBoot) {
                 document.documentElement.classList.add('wf-landing-boot');
@@ -52,6 +68,22 @@
                 // Run after the overlay node exists (end of body); also try now.
                 document.addEventListener('DOMContentLoaded', function () {
                     window.__wfPaintShopBootBg();
+                });
+            }
+            if (settingsBoot) {
+                document.addEventListener('DOMContentLoaded', function () {
+                    if (!document.body) return;
+                    var settingsBg = '/images/backgrounds/realistic/realistic-roomX.webp';
+                    document.body.setAttribute('data-page', 'admin/settings');
+                    document.body.setAttribute('data-bg-url', settingsBg);
+                    document.body.setAttribute('data-bg-applied', '1');
+                    document.body.style.setProperty('--wf-bg-roomx-image', 'url("' + settingsBg + '")');
+                    document.body.style.setProperty('--wf-body-bg', 'url("' + settingsBg + '")');
+                    document.body.style.backgroundImage = 'url("' + settingsBg + '")';
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                    document.body.style.backgroundRepeat = 'no-repeat';
+                    document.body.style.backgroundAttachment = 'fixed';
                 });
             }
             if (landingBoot) {
@@ -131,7 +163,8 @@
             set('--wf-bg-room3-png-image', 'url("/images/backgrounds/background-room3.png")');
             set('--wf-bg-room4-webp-image', 'url("/images/backgrounds/background-room4.webp")');
             set('--wf-bg-room4-png-image', 'url("/images/backgrounds/background-room4.png")');
-            set('--wf-bg-roomx-image', 'url("/images/backgrounds/background-roomX.webp")');
+            /* Active Settings wallpaper (room X) — match DB realistic path for first paint. */
+            set('--wf-bg-roomx-image', 'url("/images/backgrounds/realistic/realistic-roomX.webp")');
             set('--wf-cloud-bg-webp-image', 'url("/images/backgrounds/cloud-bg.webp")');
             set('--wf-cloud-bg-png-image', 'url("/images/backgrounds/cloud-bg.png")');
         })();

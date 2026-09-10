@@ -65,10 +65,9 @@ body[data-page='admin/settings'] .settings-page {
 body[data-page='admin/settings'] {
   height: 100% !important;
   overflow: hidden !important;
-  /* Background is now database-driven via useSiteHydration/bootstrap.php
-     The --wf-body-bg variable is set by JS from the API response.
-     Fallback to roomX background for pre-JS loading states only. */
-  background-image: var(--wf-body-bg, var(--wf-bg-roomx-image)) !important;
+  /* Prefer room-X wallpaper. Do NOT prefer --wf-body-bg first — landing early-paint
+     leaves that set to room A and would paint frogs over Settings. */
+  background-image: var(--wf-bg-roomx-image, var(--wf-body-bg)) !important;
   background-size: cover !important;
   background-position: center !important;
   background-repeat: no-repeat !important;

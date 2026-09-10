@@ -275,9 +275,13 @@ try {
     $bgRoomType = 'A'; // default to landing page
     // $reqPath / $roomIdParam already resolved above for include_shop
 
+    $sectionParam = strtolower(trim((string) ($_GET['section'] ?? '')));
+    // Settings may be reached as /?section=settings or /?room_id=X without /admin in the path.
+    $isSettingsSection = ($sectionParam === 'settings');
+
     if ($roomIdParam === 'S' || strpos($reqPath, 'shop') !== false) {
         $bgRoomType = 'S';
-    } elseif ($roomIdParam === 'X' || strpos($reqPath, 'admin') !== false) {
+    } elseif ($roomIdParam === 'X' || $isSettingsSection || strpos($reqPath, 'admin') !== false || strpos($reqPath, 'settings') !== false) {
         $bgRoomType = 'X';
     } elseif (strpos($reqPath, 'about') !== false) {
         $bgRoomType = 'about';

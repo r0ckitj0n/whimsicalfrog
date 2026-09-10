@@ -4,6 +4,9 @@
  * Secret Store with encryption-at-rest.
  * - Stores secrets in DB table `secrets` (auto-creates if missing)
  * - Encrypts values with libsodium (preferred) or OpenSSL using a filesystem key file
+ *
+ * CRITICAL: config/secret.key must never be silently regenerated when secrets already
+ * exist. Doing so permanently orphans ciphertext in the secrets table.
  */
 
 require_once __DIR__ . '/../api/config.php';
@@ -31,21 +34,54 @@ function secret_key_path()
     return __DIR__ . '/../config/secret.key';
 }
 
+/**
+ * Count rows in secrets table (0 if table missing / unavailable).
+ */
+function secret_row_count()
+{
+    try {
+        $pdo = secret_db();
+        secret_table_ensure($pdo);
+        $row = Database::queryOne('SELECT COUNT(*) AS c FROM secrets');
+        return (int) ($row['c'] ?? 0);
+    } catch (Exception $e) {
+        error_log('secret_row_count error: ' . $e->getMessage());
+        return 0;
+    }
+}
+
 function secret_load_key()
 {
     $path = secret_key_path();
     if (!is_file($path)) {
-        // Generate a new key securely
+        // Never mint a new key when encrypted secrets already exist — that makes
+        // every existing value permanently unreadable.
+        if (secret_row_count() > 0) {
+            $message = 'Secret encryption key is missing (config/secret.key) but the secrets table has rows. Restore the original key file; do not generate a new one.';
+            error_log('CRITICAL: ' . $message);
+            throw new RuntimeException($message);
+        }
+
+        // Fresh install only: generate a new key securely
         $dir = dirname($path);
         if (!is_dir($dir)) {
             @mkdir($dir, 0700, true);
         }
         $key = random_bytes(32);
-        file_put_contents($path, $key);
+        if (file_put_contents($path, $key) === false) {
+            throw new RuntimeException('Failed to write new secret encryption key');
+        }
         @chmod($path, 0600);
         return $key;
     }
-    return file_get_contents($path);
+
+    $key = file_get_contents($path);
+    if ($key === false || strlen($key) !== 32) {
+        $message = 'Secret encryption key file is unreadable or invalid (expected 32 bytes)';
+        error_log('CRITICAL: ' . $message);
+        throw new RuntimeException($message);
+    }
+    return $key;
 }
 
 function secret_encrypt($plaintext)
@@ -134,6 +170,65 @@ function secret_has($key)
         error_log('secret_has error: ' . $e->getMessage());
         return false;
     }
+}
+
+/**
+ * True when a secret row exists and decrypts to a non-null value.
+ */
+function secret_is_readable($key)
+{
+    if (!secret_has($key)) {
+        return false;
+    }
+    return secret_get($key) !== null;
+}
+
+/**
+ * Health report for admin diagnostics (never returns plaintext values).
+ *
+ * @return array{key_file_exists:bool,key_file_valid:bool,secret_rows:int,readable:string[],unreadable:string[],missing_key_with_rows:bool}
+ */
+function secret_health_report()
+{
+    $path = secret_key_path();
+    $keyExists = is_file($path);
+    $keyValid = false;
+    if ($keyExists) {
+        $raw = @file_get_contents($path);
+        $keyValid = is_string($raw) && strlen($raw) === 32;
+    }
+
+    $readable = [];
+    $unreadable = [];
+    $rows = 0;
+    try {
+        $pdo = secret_db();
+        secret_table_ensure($pdo);
+        $all = Database::queryAll('SELECT `key` FROM secrets ORDER BY `key` ASC');
+        $rows = count($all);
+        foreach ($all as $r) {
+            $k = (string) ($r['key'] ?? '');
+            if ($k === '') {
+                continue;
+            }
+            if (secret_get($k) !== null) {
+                $readable[] = $k;
+            } else {
+                $unreadable[] = $k;
+            }
+        }
+    } catch (Exception $e) {
+        error_log('secret_health_report error: ' . $e->getMessage());
+    }
+
+    return [
+        'key_file_exists' => $keyExists,
+        'key_file_valid' => $keyValid,
+        'secret_rows' => $rows,
+        'readable' => $readable,
+        'unreadable' => $unreadable,
+        'missing_key_with_rows' => (!$keyExists && $rows > 0),
+    ];
 }
 
 function secret_delete($key)

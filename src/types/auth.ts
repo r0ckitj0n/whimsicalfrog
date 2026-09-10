@@ -96,4 +96,7 @@ export interface ISecret {
     key: string;
     created_at?: string;
     updated_at?: string;
+    has_value?: boolean;
+    readable?: boolean;
+    unreadable?: boolean;
 }

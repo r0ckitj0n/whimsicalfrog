@@ -194,6 +194,21 @@ export const SquareSettings: React.FC<SquareSettingsProps> = ({ onClose, title }
                     <div className="p-8 space-y-12">
                         {error && <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg">{error}</div>}
 
+                        {editSettings?.access_token_secret_unreadable && (
+                            <div
+                                className="p-4 bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded-lg space-y-1"
+                                role="alert"
+                                data-help-id="square-token-unreadable"
+                            >
+                                <p className="font-bold">Access token secret is unreadable</p>
+                                <p>
+                                    The Square access token is stored encrypted, but the server encryption key no longer
+                                    matches. Checkout will fail until you paste a fresh Production Access Token from the
+                                    Square Developer Dashboard and save.
+                                </p>
+                            </div>
+                        )}
+
                         <form onSubmit={handleSave} className="space-y-10">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-1">
@@ -225,9 +240,18 @@ export const SquareSettings: React.FC<SquareSettingsProps> = ({ onClose, title }
                                     autoComplete="new-password"
                                     value={editSettings?.square_access_token || ''}
                                     onChange={e => handleChange('square_access_token', e.target.value)}
-                                    className="form-input w-full p-2.5 bg-gray-50 border-transparent rounded-lg text-sm font-mono"
-                                    placeholder="EAAA..."
+                                    className={`form-input w-full p-2.5 bg-gray-50 border-transparent rounded-lg text-sm font-mono ${
+                                        editSettings?.access_token_secret_unreadable ? 'ring-2 ring-amber-300' : ''
+                                    }`}
+                                    placeholder={
+                                        editSettings?.access_token_secret_unreadable
+                                            ? 'Re-enter access token from Square Dashboard'
+                                            : 'EAAA...'
+                                    }
                                 />
+                                {editSettings?.access_token_secret_present && !editSettings?.access_token_secret_unreadable && (
+                                    <p className="text-xs text-emerald-700 ml-1">Saved access token is present.</p>
+                                )}
                             </div>
 
                             <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">

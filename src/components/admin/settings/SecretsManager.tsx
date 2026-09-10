@@ -153,12 +153,23 @@ export const SecretsManager: React.FC<SecretsManagerProps> = ({ onClose, title }
                             </div>
                         )}
 
+                        {secrets.some((s) => s.unreadable) && (
+                            <div className="p-4 mb-6 bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl space-y-1" role="alert">
+                                <p className="font-black uppercase tracking-widest">Unreadable secrets detected</p>
+                                <p>
+                                    Ciphertext exists but cannot be decrypted with the current <code>config/secret.key</code>.
+                                    Re-enter each unreadable value (or restore the original key file). Do not rotate keys until all secrets are readable again.
+                                </p>
+                            </div>
+                        )}
+
                         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <div className="overflow-hidden border border-slate-100 rounded-[2rem] shadow-sm">
                                 <table className="min-w-full divide-y divide-slate-100">
                                     <thead className="bg-slate-50/50">
                                         <tr>
                                             <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Environment Key</th>
+                                            <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                                             <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Modified</th>
                                             <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Management</th>
                                         </tr>
@@ -170,6 +181,17 @@ export const SecretsManager: React.FC<SecretsManagerProps> = ({ onClose, title }
                                                     <div className="font-mono font-bold text-slate-700 text-sm tracking-tight break-all">
                                                         {secret.key}
                                                     </div>
+                                                </td>
+                                                <td className="px-8 py-5 whitespace-nowrap">
+                                                    {secret.unreadable ? (
+                                                        <span className="text-[10px] font-black uppercase tracking-tight text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded">
+                                                            Unreadable — re-enter
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[10px] font-black uppercase tracking-tight text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded">
+                                                            Readable
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td className="px-8 py-5 whitespace-nowrap">
                                                     <div className="text-[10px] font-black uppercase tracking-tight text-slate-400">
@@ -196,7 +218,7 @@ export const SecretsManager: React.FC<SecretsManagerProps> = ({ onClose, title }
                                         ))}
                                         {secrets.length === 0 && !isLoading && (
                                             <tr>
-                                                <td colSpan={3} className="px-8 py-20 text-center">
+                                                <td colSpan={4} className="px-8 py-20 text-center">
                                                     <div className="flex flex-col items-center gap-3">
                                                         <span className="text-3xl opacity-20">🕳️</span>
                                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-300 italic">No encrypted secrets found</p>

@@ -111,7 +111,7 @@ logc() { echo -e "$1$2${NC}" | tee -a "$REPORT"; }
 is_protected_path() {
   local rel="${1#./}"
   case "$rel" in
-    .env|.env.*|images|images/*|backups|backups/*|sessions|sessions/*|logs|logs/*|data|data/*|node_modules|node_modules/*|.git|.git/*|vendor|vendor/*)
+    .env|.env.*|images|images/*|backups|backups/*|sessions|sessions/*|logs|logs/*|data|data/*|node_modules|node_modules/*|.git|.git/*|vendor|vendor/*|config/secret.key|*/secret.key|secret.key)
       return 0
       ;;
   esac
@@ -260,6 +260,8 @@ upload_tree_no_delete() {
   run_lftp "mirror --reverse --verbose --no-perms --overwrite \
     --exclude-glob .env \
     --exclude-glob .env.* \
+    --exclude-glob config/secret.key \
+    --exclude-glob **/secret.key \
     --exclude-glob images/** \
     --exclude-glob backups/** \
     --exclude-glob sessions/** \
@@ -276,6 +278,10 @@ upload_file() {
   local dst="$2"
   if [[ ! -f "$src" ]]; then
     logc "$YELLOW" "Skip missing local file: $src"
+    return 0
+  fi
+  if is_protected_path "$dst" || is_protected_path "$src"; then
+    logc "$YELLOW" "Refusing to upload protected path: $dst"
     return 0
   fi
   log "Put: $src -> remote:$dst"

@@ -13,6 +13,13 @@ export interface ISquareSettings {
     square_production_application_id: string;
     square_production_access_token: string;
     square_production_location_id: string;
+    /** True when active-env access token ciphertext exists but cannot be decrypted. */
+    access_token_secret_present?: boolean;
+    access_token_secret_unreadable?: boolean;
+    square_production_access_token_present?: boolean;
+    square_production_access_token_unreadable?: boolean;
+    square_sandbox_access_token_present?: boolean;
+    square_sandbox_access_token_unreadable?: boolean;
 }
 
 export interface ISquareSettingsApiRecord {
@@ -29,6 +36,14 @@ export interface ISquareSettingsApiRecord {
     square_production_location_id?: string;
     auto_sync_enabled?: string | number | boolean;
     square_sync_enabled?: string | number | boolean;
+    access_token_secret_present?: boolean;
+    access_token_secret_unreadable?: boolean;
+    square_production_access_token_present?: boolean;
+    square_production_access_token_unreadable?: boolean;
+    square_sandbox_access_token_present?: boolean;
+    square_sandbox_access_token_unreadable?: boolean;
+    square_access_token_present?: boolean;
+    square_access_token_unreadable?: boolean;
 }
 
 // Re-export for convenience

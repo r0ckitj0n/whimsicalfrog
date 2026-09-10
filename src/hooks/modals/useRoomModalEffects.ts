@@ -95,6 +95,16 @@ export const useRoomModalEffects = ({
             e.stopPropagation();
             const targetRoom = roomTarget || hrefRoom || itemEl?.dataset.room || '';
             if (targetRoom) {
+                // Christmas catalog page turns: hard-navigate so paging cannot be
+                // swallowed by modal backdrop/stacking quirks.
+                const catalogRooms = new Set([
+                    '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'
+                ]);
+                if (catalogRooms.has(String(targetRoom))) {
+                    window.location.assign(`/?room=${encodeURIComponent(String(targetRoom))}`);
+                    return;
+                }
+
                 const fullPageRoomUrls: Record<string, string> = {
                     'A': '/',
                     '0': '/room_main',

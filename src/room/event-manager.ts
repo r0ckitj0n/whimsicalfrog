@@ -121,6 +121,11 @@ export function attachDelegatedItemEvents(): void {
       const room = roomTarget || icon.dataset?.room || '';
       if (!room) return;
       if (DEBUG_EVENTS) logger.debug('[eventManager] navigating to room:', room);
+      const catalogRooms = new Set(['20','21','22','23','24','25','26','27','28','29','30','31']);
+      if (catalogRooms.has(String(room))) {
+        window.location.assign(`/?room=${encodeURIComponent(String(room))}`);
+        return;
+      }
       if (window.roomModalManager?.show) {
         window.roomModalManager.show(room);
       } else {

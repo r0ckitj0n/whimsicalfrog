@@ -140,7 +140,9 @@ export const useRoomScaling = ({ bodyRef, originalWidth, originalHeight, content
                 el.style.setProperty('box-shadow', 'none', 'important');
                 el.style.setProperty('backdrop-filter', 'none', 'important');
                 el.style.setProperty('pointer-events', 'auto', 'important');
-                el.style.setProperty('z-index', '1000', 'important');
+                // Keep base stacking at elevated; :hover CSS raises above siblings.
+                // Do not pin every icon to the same high z-index or hover cannot win.
+                el.style.setProperty('z-index', 'var(--wf-z-elevated)', 'important');
                 el.classList.add('positioned');
             });
         };

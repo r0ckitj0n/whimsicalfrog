@@ -24,9 +24,10 @@
 .room-item-icon:hover,
 .room-item-icon:focus-within {
     /* Only filter effects - no transform or box-shadow to avoid showing rectangular bounds.
-       Raise above sibling signs so scale(2) shortcut images are never covered. */
+       Raise above sibling signs (including ones pinned at sticky/1000) so scale(2)
+       shortcut images are never covered. */
     filter: brightness(1.1);
-    z-index: var(--wf-z-sticky) !important;
+    z-index: calc(var(--wf-z-sticky) + 100) !important;
 }
 
 .room-item-icon .room-item-oos-badge {

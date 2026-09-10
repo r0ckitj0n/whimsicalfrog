@@ -85,10 +85,13 @@ export const RoomBody: React.FC<RoomBodyProps> = ({
                 dangerouslySetInnerHTML={{ __html: content }}
                 style={{
                     '--icon-panel-color': panelColor || 'transparent',
-                    '--icon-panel-overflow': isMiddleAligned ? 'hidden' : 'visible',
+                    // Always clip icons to their map rect. `visible` + height:auto
+                    // lets square shortcut images expand and steal clicks from
+                    // neighboring plaques (Christmas catalog Next/index).
+                    '--icon-panel-overflow': 'hidden',
                     '--icon-panel-align-items': panelAlignItems,
-                    '--icon-panel-image-height': isMiddleAligned ? '100%' : 'auto',
-                    '--icon-panel-image-fit': isMiddleAligned ? 'contain' : 'initial',
+                    '--icon-panel-image-height': '100%',
+                    '--icon-panel-image-fit': 'contain',
                     '--icon-panel-object-position': iconVerticalAlignment === 'top'
                         ? 'center top'
                         : iconVerticalAlignment === 'bottom'

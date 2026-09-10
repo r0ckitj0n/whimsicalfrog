@@ -144,6 +144,24 @@ export const useRoomScaling = ({ bodyRef, originalWidth, originalHeight, content
                 // page-turn hits are not stolen by overlapping TOC hitboxes.
                 const isNavPlaque = el.classList.contains('area-1') || el.classList.contains('area-2');
                 el.style.setProperty('z-index', isNavPlaque ? '1100' : '1000', 'important');
+
+                // Catalog shortcuts use wide/short hitboxes with square (or tall)
+                // images. If height is `auto`, width:100% makes the image a huge
+                // square that covers Next/Previous and steals clicks.
+                if (el.classList.contains('room-item-shortcut')) {
+                    el.style.setProperty('overflow', 'hidden', 'important');
+                    const img = el.querySelector('img');
+                    if (img) {
+                        img.style.setProperty('pointer-events', 'none', 'important');
+                        img.style.setProperty('width', '100%', 'important');
+                        img.style.setProperty('height', '100%', 'important');
+                        img.style.setProperty('object-fit', 'contain', 'important');
+                        img.style.setProperty('transform', 'none', 'important');
+                        img.style.setProperty('max-width', '100%', 'important');
+                        img.style.setProperty('max-height', '100%', 'important');
+                    }
+                }
+
                 el.classList.add('positioned');
             });
         };

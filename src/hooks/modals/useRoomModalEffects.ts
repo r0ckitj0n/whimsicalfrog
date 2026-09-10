@@ -270,6 +270,29 @@ export const useRoomModalEffects = ({
             window.setupImageErrorHandling?.(img as HTMLImageElement, sku);
         });
 
+        // Belt-and-suspenders: catalog page links hard-navigate even if a
+        // competing document listener calls openRoom without updating the URL.
+        const catalogRooms = new Set([
+            '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'
+        ]);
+        const catalogNavHandler = (e: Event) => {
+            const anchor = e.currentTarget as HTMLAnchorElement;
+            const room = anchor.dataset.room || '';
+            if (!catalogRooms.has(String(room))) return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof (e as MouseEvent).stopImmediatePropagation === 'function') {
+                (e as MouseEvent).stopImmediatePropagation();
+            }
+            window.location.href = `/?room=${encodeURIComponent(String(room))}`;
+        };
+        const catalogAnchors = body.querySelectorAll(
+            'a.room-item-shortcut[data-action="openRoom"][data-room]'
+        );
+        catalogAnchors.forEach(anchor => {
+            anchor.addEventListener('click', catalogNavHandler, true);
+        });
+
         body.addEventListener('mouseover', handleMouseOver);
         body.addEventListener('mouseout', handleMouseOut);
         // Capture phase so catalog plaques still navigate if a child/overlay
@@ -277,6 +300,9 @@ export const useRoomModalEffects = ({
         body.addEventListener('click', handleClick, true);
 
         return () => {
+            catalogAnchors.forEach(anchor => {
+                anchor.removeEventListener('click', catalogNavHandler, true);
+            });
             body.removeEventListener('mouseover', handleMouseOver);
             body.removeEventListener('mouseout', handleMouseOut);
             body.removeEventListener('click', handleClick, true);

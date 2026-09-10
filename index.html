@@ -323,6 +323,11 @@
                     viteClient.type = 'module';
                     viteClient.src = '/@vite/client';
                     document.head.appendChild(viteClient);
+                    // Ensure public storefront CSS loads in Vite DEV (mirrors production manifest extras).
+                    const publicCss = document.createElement('script');
+                    publicCss.type = 'module';
+                    publicCss.src = '/src/styles/entries/public-core.css';
+                    document.head.appendChild(publicCss);
                     const entry = document.createElement('script');
                     entry.type = 'module';
                     entry.src = '/src/entries/main.tsx';

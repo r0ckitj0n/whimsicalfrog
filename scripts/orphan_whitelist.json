@@ -124,6 +124,10 @@
         "reason": "Cloud Agent / local CLI helper that mirrors newer live images/code into the workspace; invoked by install/start and manually, not imported by app code."
     },
     {
+        "file": ".local/state/sync_from_live_last.json",
+        "reason": "Runtime state artifact written by scripts/cloud/sync_from_live.sh under .local/state per project convention."
+    },
+    {
         "file": "scripts/db/bootstrap_dev_db.php",
         "reason": "Cloud Agent / local CLI database bootstrap invoked by scripts/cloud/start.sh, not imported by app code."
     },

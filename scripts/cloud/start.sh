@@ -78,6 +78,18 @@ else
   log "Database already has ${TABLE_COUNT} tables; skipping fallback bootstrap"
 fi
 
+# --- Live → local asset sync (images; live precedence) ----------------------
+# Cloud Agent checkouts often lag live uploads. Pull newer images every boot
+# so local never serves or deploys from a stale media tree. Soft-fail when
+# deploy credentials are absent so start still succeeds.
+if [[ "${WF_SKIP_LIVE_SYNC:-0}" != "1" ]]; then
+  log "Syncing newer images from live (only-newer, no deletes)"
+  bash scripts/cloud/sync_from_live.sh --images --soft \
+    || log "Live image sync reported a warning (continuing)"
+else
+  log "Skipping live image sync (WF_SKIP_LIVE_SYNC=1)"
+fi
+
 # --- Enable Vite dev mode for the PHP backend -------------------------------
 # `.disable-vite-dev` is committed and forces the PHP router into production
 # mode (serving dist/). Cloud Agent boots should proxy to Vite.

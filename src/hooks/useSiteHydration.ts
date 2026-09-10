@@ -7,7 +7,7 @@ import { IShopData, IReceiptData, IAboutData, IContactData, ISiteSettings } from
 import { ApiClient } from '../core/ApiClient.js';
 import { readCachedShopData, writeCachedShopData, prefetchShopCatalog, prefetchShopBackground } from '../core/shop-boot-overlay.js';
 import { prefetchFeaturedProducts } from '../utils/featuredProductsPrefetch.js';
-import { detectPageFromLocation, locationNeedsShopData } from '../utils/pageRoute.js';
+import { detectPageFromLocation, locationIsLandingPage, locationNeedsShopData } from '../utils/pageRoute.js';
 
 /**
  * useSiteHydration Hook
@@ -150,15 +150,29 @@ export const useSiteHydration = () => {
         // Initial DOM load for specialized views (receipts, etc.)
         loadFromDOM();
 
-        // Warm the loading-splash featured product cache in parallel with bootstrap.
-        prefetchFeaturedProducts();
-        // Warm shop wallpaper + catalog so Shop clicks feel instant.
-        void prefetchShopBackground();
-        void prefetchShopCatalog().then((cached) => {
-            if (cached) {
-                setShopData((prev) => prev ?? (cached as IShopData));
+        // Warm splash/shop caches without competing with the landing cabin wallpaper.
+        const warmSecondaryCaches = () => {
+            prefetchFeaturedProducts();
+            void prefetchShopBackground();
+            void prefetchShopCatalog().then((cached) => {
+                if (cached) {
+                    setShopData((prev) => prev ?? (cached as IShopData));
+                }
+            });
+        };
+        const onLanding = locationIsLandingPage(window.location.pathname, window.location.search);
+        if (onLanding) {
+            const ric = (window as Window & {
+                requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+            }).requestIdleCallback;
+            if (typeof ric === 'function') {
+                ric(warmSecondaryCaches, { timeout: 3500 });
+            } else {
+                window.setTimeout(warmSecondaryCaches, 1500);
             }
-        });
+        } else {
+            warmSecondaryCaches();
+        }
 
         // Detect order_id from URL (for redirects from checkout or direct links)
         const orderIdFromUrl = searchParams.get('order_id');

@@ -22,7 +22,7 @@ import { GlobalProcessingOverlay } from './GlobalProcessingOverlay.js';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { SETTINGS_MODAL_SECTIONS } from '../core/constants.js';
 import { PageLoadingFallback } from './ui/PageLoadingFallback.js';
-import { detectPageFromLocation, locationNeedsShopData } from '../utils/pageRoute.js';
+import { detectPageFromLocation, locationIsLandingPage, locationNeedsShopData } from '../utils/pageRoute.js';
 import { SiteLoadingSplash } from './SiteLoadingSplash.js';
 import { ShopLoadingScreen } from './storefront/shop/ShopLoadingScreen.js';
 import { hideShopBootOverlay } from '../core/shop-boot-overlay.js';
@@ -183,11 +183,14 @@ export const AppShell: React.FC = () => {
 
     if (!site_settings) {
         // Storefront hydration gate — shop gets a spinning frog head while the catalog boots.
+        // Landing paints immediately (header is hidden for guests); a splash here was a white flash.
         // Other routes keep the whimsical splash (falls back if no featured items).
         if (locationNeedsShopData(location.pathname, location.search)) {
             return <ShopLoadingScreen />;
         }
-        return <SiteLoadingSplash />;
+        if (!locationIsLandingPage(location.pathname, location.search)) {
+            return <SiteLoadingSplash />;
+        }
     }
 
     const isLoginPath = location.pathname.includes('/login');

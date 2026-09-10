@@ -30,6 +30,20 @@ export function locationNeedsShopData(pathname: string, search: string): boolean
     return path.includes('/shop') || path.includes('/product/') || roomId === 'S';
 }
 
+/**
+ * True for the visual landing room (`/` or `?room_id=A`) — no site_settings gate.
+ * Guests hide the header here; blocking on bootstrap only flashes a white splash.
+ */
+export function locationIsLandingPage(pathname: string, search: string): boolean {
+    const path = pathname.toLowerCase();
+    const params = new URLSearchParams(search);
+    const roomId = params.get('room_id');
+    const section = params.get('section');
+    if (roomId === 'A') return true;
+    if (roomId || section) return false;
+    return path === '/' || path === '/index.html';
+}
+
 function isLegacyShopTarget(raw: string): boolean {
     const normalized = raw.replace(/^\//, '').toLowerCase();
     return normalized === 'shop' || normalized === 'shop.php';

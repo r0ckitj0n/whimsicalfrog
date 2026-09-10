@@ -6,7 +6,7 @@ export const CHRISTMAS_ROOM_NUMBER = '6';
 
 /** Ordered catalog pages: room number => page label */
 export const CHRISTMAS_CATALOG_PAGES: ReadonlyArray<{ room: string; page: number; title: string }> = [
-    { room: '20', page: 1, title: 'Christmas Catalog — Cover' },
+    { room: '20', page: 1, title: 'Christmas Catalog — Cover & Index' },
     { room: '21', page: 2, title: 'Christmas Catalog — Ornaments' },
     { room: '22', page: 3, title: 'Christmas Catalog — Tree Trimmings' },
     { room: '23', page: 4, title: 'Christmas Catalog — Lights & Sparkle' },

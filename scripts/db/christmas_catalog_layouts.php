@@ -5,21 +5,94 @@
  *
  * Content band: y ≈ 40–700. Bottom nav band: y ≈ 720–880 (intentional
  * clear space for previous/next plaques — display frames stay above it).
+ *
+ * Page 1 (cover) is an index of all catalog pages (clickable TOC rows).
+ * Pages 2–12 keep unique empty product frames.
  */
 
 declare(strict_types=1);
 
+/**
+ * Short TOC labels baked into the cover art and used for link labels.
+ *
+ * @return list<array{page:int,room:string,label:string}>
+ */
+function wf_christmas_catalog_index_entries(): array
+{
+    return [
+        ['page' => 1, 'room' => '20', 'label' => 'Cover & Index'],
+        ['page' => 2, 'room' => '21', 'label' => 'Ornaments'],
+        ['page' => 3, 'room' => '22', 'label' => 'Tree Trimmings'],
+        ['page' => 4, 'room' => '23', 'label' => 'Lights & Sparkle'],
+        ['page' => 5, 'room' => '24', 'label' => 'Mantel & Stockings'],
+        ['page' => 6, 'room' => '25', 'label' => 'Gifts Under the Tree'],
+        ['page' => 7, 'room' => '26', 'label' => 'Table & Centerpieces'],
+        ['page' => 8, 'room' => '27', 'label' => 'Kitchen Cheer'],
+        ['page' => 9, 'room' => '28', 'label' => 'Kids & Toys'],
+        ['page' => 10, 'room' => '29', 'label' => 'Cozy Apparel'],
+        ['page' => 11, 'room' => '30', 'label' => 'Outdoor Yard'],
+        ['page' => 12, 'room' => '31', 'label' => 'Wishlist Finale'],
+    ];
+}
+
+/**
+ * Cover index row rectangles (two columns of six). Selectors start at .area-3.
+ *
+ * @return list<array{id:string,top:int,left:int,width:int,height:int,selector:string,page:int,room:string,label:string}>
+ */
+function wf_christmas_catalog_index_slots(): array
+{
+    $entries = wf_christmas_catalog_index_entries();
+    $rowH = 78;
+    $rowGap = 6;
+    $startY = 168;
+    $colW = 540;
+    $leftX = 70;
+    $rightX = 670;
+
+    $rects = [];
+    foreach ($entries as $i => $entry) {
+        $col = $i < 6 ? 0 : 1;
+        $row = $i % 6;
+        $left = $col === 0 ? $leftX : $rightX;
+        $top = $startY + $row * ($rowH + $rowGap);
+        $areaIndex = 3 + $i;
+        $rects[] = [
+            'id' => 'index-p' . str_pad((string) $entry['page'], 2, '0', STR_PAD_LEFT),
+            'top' => $top,
+            'left' => $left,
+            'width' => $colW,
+            'height' => $rowH,
+            'selector' => '.area-' . $areaIndex,
+            'page' => $entry['page'],
+            'room' => $entry['room'],
+            'label' => $entry['label'],
+        ];
+    }
+    return $rects;
+}
+
 /** @return list<array{id:string,top:int,left:int,width:int,height:int,selector:string}> */
 function wf_christmas_catalog_item_slots(int $page): array
 {
+    // Cover: clickable index rows (not product frames).
+    if ($page === 1) {
+        $rects = [];
+        foreach (wf_christmas_catalog_index_slots() as $slot) {
+            $rects[] = [
+                'id' => $slot['id'],
+                'top' => $slot['top'],
+                'left' => $slot['left'],
+                'width' => $slot['width'],
+                'height' => $slot['height'],
+                'selector' => $slot['selector'],
+            ];
+        }
+        return $rects;
+    }
+
     // Item selectors start at .area-3 so .area-1/.area-2 stay reserved for nav.
     $layouts = [
-        // Cover: wide hero + two supporting frames
-        1 => [
-            ['id' => 'slot-hero', 'top' => 70, 'left' => 160, 'width' => 960, 'height' => 430],
-            ['id' => 'slot-a', 'top' => 520, 'left' => 80, 'width' => 520, 'height' => 170],
-            ['id' => 'slot-b', 'top' => 520, 'left' => 680, 'width' => 520, 'height' => 170],
-        ],
         // Ornaments: clean 2×4 grid
         2 => [
             ['id' => 'slot-1', 'top' => 60, 'left' => 50, 'width' => 280, 'height' => 300],
@@ -170,7 +243,7 @@ function wf_christmas_catalog_nav_rects(bool $hasPrev, bool $hasNext): array
 function wf_christmas_catalog_layout_prompt(int $page): string
 {
     $notes = [
-        1 => 'Cover layout: one wide horizontal hero empty product frame across the upper-middle, plus two wide supporting empty frames side-by-side below it.',
+        1 => 'Cover index layout: two columns of six clickable table-of-contents rows listing every catalog page; no product frames. Decorative holly, pine, ribbon, and ornaments in the margins outside the index panel.',
         2 => 'Ornaments layout: a neat 2-row by 4-column grid of eight equal empty rectangular product frames.',
         3 => 'Tree trimmings layout: one tall full-height empty product frame on the left half, and a 2-by-2 grid of four square empty frames on the right half.',
         4 => 'Lights layout: three staggered-height vertical columns of empty frames with mixed tall and short empty product frames creating a rhythm across the spread.',

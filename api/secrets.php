@@ -57,6 +57,11 @@ try {
             echo json_encode(array_merge(['success' => true], SecretsHelper::rotateKeys()));
             break;
 
+        case 'health':
+            Database::getInstance();
+            echo json_encode(['success' => true, 'health' => secret_health_report()]);
+            break;
+
         case 'export':
             Database::getInstance();
             $rows = Database::queryAll('SELECT `key` FROM secrets ORDER BY `key` ASC');
@@ -66,7 +71,20 @@ try {
         case 'list':
             Database::getInstance();
             $rows = Database::queryAll('SELECT `key`, created_at, updated_at FROM secrets ORDER BY `key` ASC');
-            echo json_encode(['success' => true, 'secrets' => array_map(fn($r) => array_merge($r, ['has_value' => true]), $rows ?: [])]);
+            $secrets = [];
+            foreach ($rows ?: [] as $r) {
+                $key = (string) ($r['key'] ?? '');
+                $readable = $key !== '' && secret_is_readable($key);
+                $secrets[] = [
+                    'key' => $key,
+                    'created_at' => $r['created_at'] ?? null,
+                    'updated_at' => $r['updated_at'] ?? null,
+                    'has_value' => true,
+                    'readable' => $readable,
+                    'unreadable' => !$readable,
+                ];
+            }
+            echo json_encode(['success' => true, 'secrets' => $secrets]);
             break;
 
         case 'set':

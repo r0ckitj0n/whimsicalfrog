@@ -50,6 +50,20 @@ export const useRoomManager = (): IRoomManagerHook => {
             targetAspectRatio: null
         }));
 
+        // Keep the address bar in sync so catalog next/prev/index clicks do not
+        // fight with URL-driven open effects still pointing at the prior room.
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const prev = params.get('room_id') || params.get('room');
+            if (prev !== key) {
+                params.delete('room_id');
+                params.set('room', key);
+                const newSearch = params.toString();
+                const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '') + window.location.hash;
+                window.history.replaceState({ ...window.history.state }, '', newUrl);
+            }
+        }
+
         // Track last room for receipt redirection
         if (key && key !== '0') {
             localStorage.setItem('wf_last_room', key);

@@ -88,11 +88,12 @@ export const useRoomModalEffects = ({
 
         const action = itemEl?.dataset.action || '';
         const roomTarget = itemEl?.dataset.room_number || itemEl?.dataset.room;
+        const hrefRoom = itemEl?.getAttribute?.('href')?.match(/[?&]room(?:_id)?=([^&]+)/)?.[1] || '';
 
-        if (roomTarget || action === 'openRoom') {
+        if (roomTarget || hrefRoom || action === 'openRoom') {
             e.preventDefault();
             e.stopPropagation();
-            const targetRoom = roomTarget || itemEl?.dataset.room || '';
+            const targetRoom = roomTarget || hrefRoom || itemEl?.dataset.room || '';
             if (targetRoom) {
                 const fullPageRoomUrls: Record<string, string> = {
                     'A': '/',

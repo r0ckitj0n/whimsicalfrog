@@ -4,10 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <!-- Warm shop + landing wallpapers so first paint is never a wrong/black flash. -->
-    <link rel="preload" as="image" href="/images/backgrounds/background-roomS.webp">
-    <link rel="preload" as="image" href="/images/backgrounds/realistic/realistic-roomA-frogs.webp">
-    <link rel="preload" as="image" href="/images/backgrounds/realistic/realistic-roomX.webp">
+    <!-- Route-specific wallpaper preloads are injected below (avoid painting shop art on landing). -->
     <link rel="preload" as="image" href="/images/logos/apple-touch-icon.png">
     <script>
         document.documentElement.classList.add('wf-js');
@@ -15,6 +12,9 @@
             var path = String(location.pathname || '').toLowerCase();
             var search = location.search || '';
             var LANDING_BG = '/images/backgrounds/realistic/realistic-roomA-frogs.webp';
+            // Settings room wallpaper from ~1 week ago: Original whimsical Room X (not realistic cabin).
+            var SETTINGS_BG = '/images/backgrounds/background-roomX.webp';
+            var SHOP_BG = '/images/backgrounds/background-roomS.webp';
             var shopBoot = (
                 path === '/shop' ||
                 path.indexOf('/shop/') === 0 ||
@@ -36,6 +36,14 @@
                     path.indexOf('/rooms/landing') === 0
                 )
             );
+            // Only preload the wallpaper for the route being painted.
+            var preloadHref = landingBoot ? LANDING_BG : (settingsBoot ? SETTINGS_BG : (shopBoot ? SHOP_BG : LANDING_BG));
+            var preloadLink = document.createElement('link');
+            preloadLink.rel = 'preload';
+            preloadLink.as = 'image';
+            preloadLink.href = preloadHref;
+            document.head.appendChild(preloadLink);
+
             if (shopBoot) {
                 document.documentElement.classList.add('wf-shop-boot');
             }
@@ -43,7 +51,7 @@
                 document.documentElement.classList.add('wf-settings-boot');
                 document.documentElement.style.setProperty(
                     '--wf-bg-roomx-image',
-                    'url("/images/backgrounds/realistic/realistic-roomX.webp")'
+                    'url("' + SETTINGS_BG + '")'
                 );
             }
             if (landingBoot) {
@@ -73,13 +81,12 @@
             if (settingsBoot) {
                 document.addEventListener('DOMContentLoaded', function () {
                     if (!document.body) return;
-                    var settingsBg = '/images/backgrounds/realistic/realistic-roomX.webp';
                     document.body.setAttribute('data-page', 'admin/settings');
-                    document.body.setAttribute('data-bg-url', settingsBg);
+                    document.body.setAttribute('data-bg-url', SETTINGS_BG);
                     document.body.setAttribute('data-bg-applied', '1');
-                    document.body.style.setProperty('--wf-bg-roomx-image', 'url("' + settingsBg + '")');
-                    document.body.style.setProperty('--wf-body-bg', 'url("' + settingsBg + '")');
-                    document.body.style.backgroundImage = 'url("' + settingsBg + '")';
+                    document.body.style.setProperty('--wf-bg-roomx-image', 'url("' + SETTINGS_BG + '")');
+                    document.body.style.setProperty('--wf-body-bg', 'url("' + SETTINGS_BG + '")');
+                    document.body.style.backgroundImage = 'url("' + SETTINGS_BG + '")';
                     document.body.style.backgroundSize = 'cover';
                     document.body.style.backgroundPosition = 'center';
                     document.body.style.backgroundRepeat = 'no-repeat';
@@ -164,7 +171,8 @@
             set('--wf-bg-room4-webp-image', 'url("/images/backgrounds/background-room4.webp")');
             set('--wf-bg-room4-png-image', 'url("/images/backgrounds/background-room4.png")');
             /* Active Settings wallpaper (room X) — match DB realistic path for first paint. */
-            set('--wf-bg-roomx-image', 'url("/images/backgrounds/realistic/realistic-roomX.webp")');
+            /* Original whimsical Room X — Settings wallpaper from ~1 week ago. */
+            set('--wf-bg-roomx-image', 'url("/images/backgrounds/background-roomX.webp")');
             set('--wf-cloud-bg-webp-image', 'url("/images/backgrounds/cloud-bg.webp")');
             set('--wf-cloud-bg-png-image', 'url("/images/backgrounds/cloud-bg.png")');
         })();
@@ -197,7 +205,14 @@
             display: none;
         }
 
-        /* Hide SEO shell as soon as JS marks the document; keep it for no-JS crawlers. */
+        /*
+         * Hide SEO marketing shell for JS users BEFORE first paint.
+         * Relying only on html.wf-js caused a flash of the SEO "another page" on landing.
+         * Noscript below re-enables it for crawlers without JS.
+         */
+        #wf-seo-shell {
+            display: none !important;
+        }
         html.wf-js #wf-seo-shell {
             display: none !important;
         }
@@ -513,7 +528,10 @@
                 </div>
             </div>
         </div>
-        <main id="wf-seo-shell" style="max-width: 64rem; margin: 0 auto; padding: 2.5rem 1.25rem; color: #fff;">
+        <noscript>
+            <style>#wf-seo-shell{display:block!important}</style>
+        </noscript>
+        <main id="wf-seo-shell" hidden style="display:none;max-width: 64rem; margin: 0 auto; padding: 2.5rem 1.25rem; color: #fff;">
             <header>
                 <h1 style="font-family: 'Merienda', cursive; font-size: 2rem; line-height: 1.1; margin: 0 0 1rem;">Whimsical Frog Handmade Decor And Gifts</h1>
                 <p style="margin: 0 0 1rem; opacity: 0.9;">

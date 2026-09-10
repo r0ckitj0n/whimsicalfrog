@@ -56,16 +56,25 @@ class SquareConfigHelper
             }
         }
 
-        // Mask secrets and report presence
+        // Mask secrets and report presence / readability
         $secrets = [
             'square_sandbox_access_token', 'square_sandbox_webhook_signature_key',
             'square_production_access_token', 'square_production_webhook_signature_key',
             'square_access_token', 'square_webhook_signature_key'
         ];
         foreach ($secrets as $key) {
-            $settings[$key . '_present'] = function_exists('secret_has') ? secret_has($key) : false;
+            $present = function_exists('secret_has') ? secret_has($key) : false;
+            $readable = $present && function_exists('secret_is_readable')
+                ? secret_is_readable($key)
+                : ($present && function_exists('secret_get') ? secret_get($key) !== null : false);
+            $settings[$key . '_present'] = $present;
+            $settings[$key . '_unreadable'] = $present && !$readable;
             $settings[$key] = '';
         }
+
+        $resolved = self::getResolvedCredentials();
+        $settings['access_token_secret_present'] = !empty($resolved['access_token_secret_present']);
+        $settings['access_token_secret_unreadable'] = !empty($resolved['access_token_secret_unreadable']);
 
         return $settings;
     }
@@ -181,30 +190,47 @@ class SquareConfigHelper
         $scopedWebhookSecret = function_exists('secret_get') ? secret_get($whKey) : null;
         $legacyWebhookSecret = function_exists('secret_get') ? secret_get('square_webhook_signature_key') : null;
 
-        $resolved = [
+        // Prefer scoped secret, then legacy secret, then plaintext DB fallback (legacy saves).
+        $accessToken = '';
+        if (is_string($scopedTokenSecret) && $scopedTokenSecret !== '') {
+            $accessToken = $scopedTokenSecret;
+        } elseif (is_string($legacyTokenSecret) && $legacyTokenSecret !== '') {
+            $accessToken = $legacyTokenSecret;
+        } else {
+            $accessToken = (string) ($settings[$tokenKey] ?? $settings['square_access_token'] ?? '');
+        }
+
+        // Unreadable only when ciphertext exists for the active env path but nothing usable resolved.
+        $tokenSecretPresent = $scopedTokenPresent || $legacyTokenPresent;
+        $scopedUnreadable = $scopedTokenPresent && $scopedTokenSecret === null;
+        $legacyUnreadable = $legacyTokenPresent && $legacyTokenSecret === null;
+        $accessTokenUnreadable = ($accessToken === '') && $tokenSecretPresent && (
+            ($scopedTokenPresent && $scopedUnreadable && (!$legacyTokenPresent || $legacyUnreadable))
+            || (!$scopedTokenPresent && $legacyUnreadable)
+        );
+
+        $webhookKey = '';
+        if (is_string($scopedWebhookSecret) && $scopedWebhookSecret !== '') {
+            $webhookKey = $scopedWebhookSecret;
+        } elseif (is_string($legacyWebhookSecret) && $legacyWebhookSecret !== '') {
+            $webhookKey = $legacyWebhookSecret;
+        } else {
+            $webhookKey = (string) ($settings[$whKey] ?? $settings['square_webhook_signature_key'] ?? '');
+        }
+
+        return [
             'enabled' => in_array(strtolower($settings['square_enabled'] ?? ''), ['true', '1'], true),
             'environment' => $env,
             'application_id' => $settings[$prefix . 'application_id'] ?? $settings['square_application_id'] ?? '',
             'location_id' => $settings[$prefix . 'location_id'] ?? $settings['square_location_id'] ?? '',
-            'access_token' => '',
-            'webhook_signature_key' => '',
-            'access_token_secret_present' => ($scopedTokenPresent || $legacyTokenPresent),
-            'access_token_secret_unreadable' => (($scopedTokenPresent && $scopedTokenSecret === null) || ($legacyTokenPresent && $legacyTokenSecret === null)),
+            'access_token' => $accessToken,
+            'webhook_signature_key' => $webhookKey,
+            'access_token_secret_present' => $tokenSecretPresent,
+            'access_token_secret_unreadable' => $accessTokenUnreadable,
             'inventory_sync_enabled' => in_array(strtolower($settings['inventory_sync_enabled'] ?? ''), ['true', '1'], true),
             'price_sync_enabled' => in_array(strtolower($settings['price_sync_enabled'] ?? ''), ['true', '1'], true),
             'sync_fields' => json_decode($settings['sync_fields'] ?? '[]', true) ?: []
         ];
-
-        // Resolve secrets (fallback to DB values for compatibility with older saves)
-        $resolved['access_token'] = $scopedTokenSecret
-            ?: $legacyTokenSecret
-            ?: ($settings[$tokenKey] ?? $settings['square_access_token'] ?? '');
-        
-        $resolved['webhook_signature_key'] = $scopedWebhookSecret
-            ?: $legacyWebhookSecret
-            ?: ($settings[$whKey] ?? $settings['square_webhook_signature_key'] ?? '');
-
-        return $resolved;
     }
 
     public static function getSettingDescription($key)

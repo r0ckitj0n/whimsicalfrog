@@ -21,6 +21,27 @@ final class ImagePathNormalizer
         return $filename;
     }
 
+    /**
+     * Preserve backgrounds/realistic/... instead of collapsing to basename-only
+     * paths that 404 and force cartoon disk fallbacks.
+     */
+    private static function backgroundRelativePath(string $raw): string
+    {
+        $path = parse_url($raw, PHP_URL_PATH);
+        if (!is_string($path) || $path === '') {
+            $path = $raw;
+        }
+        $normalized = str_replace('\\', '/', $path);
+        if (preg_match('#(?:^|/)(backgrounds/(?:realistic/)?[^/]+)$#i', $normalized, $m) === 1) {
+            return $m[1];
+        }
+        if (preg_match('#(?:^|/)(realistic/[^/]+)$#i', $normalized, $m) === 1) {
+            return 'backgrounds/' . $m[1];
+        }
+        $filename = self::extractFilename($raw);
+        return $filename === '' ? '' : ('backgrounds/' . $filename);
+    }
+
     public static function normalizeBackgroundDbRef(string $value): string
     {
         $raw = trim($value);
@@ -30,8 +51,7 @@ final class ImagePathNormalizer
         if (preg_match('/^https?:\/\//i', $raw)) {
             return $raw;
         }
-        $filename = self::extractFilename($raw);
-        return $filename === '' ? '' : ('backgrounds/' . $filename);
+        return self::backgroundRelativePath($raw);
     }
 
     public static function normalizeBackgroundUrl(string $value): string
@@ -43,8 +63,8 @@ final class ImagePathNormalizer
         if (preg_match('/^https?:\/\//i', $raw)) {
             return $raw;
         }
-        $filename = self::extractFilename($raw);
-        return $filename === '' ? '' : ('/images/backgrounds/' . $filename);
+        $relative = self::backgroundRelativePath($raw);
+        return $relative === '' ? '' : ('/images/' . ltrim($relative, '/'));
     }
 
     public static function normalizeSignUrl(string $value): string

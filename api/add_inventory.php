@@ -209,6 +209,58 @@ function wf_retarget_item_image_path(string $path, string $sourceSku, string $ta
     return $dir === '' ? $newBase : ($dir . '/' . $newBase);
 }
 
+/**
+ * Rename any sibling files sharing the same basename as $oldAbs (e.g. the .png
+ * copy generated alongside a .webp during upload, or the original upload
+ * extension left over from dual-format conversion) so they follow the DB-tracked
+ * file to its new SKU-based name. Without this, AI re-analysis after a SKU
+ * migration silently finds no .png next to the renamed .webp and can never
+ * regenerate a description again, even with a fully working provider key.
+ */
+function wf_migrate_sibling_image_files(string $oldAbs, string $newAbs): void
+{
+    $oldDir = dirname($oldAbs);
+    if (!is_dir($oldDir)) {
+        return;
+    }
+    $oldBase = pathinfo($oldAbs, PATHINFO_FILENAME);
+    $newBase = pathinfo($newAbs, PATHINFO_FILENAME);
+    if ($oldBase === '' || $newBase === '' || $oldBase === $newBase) {
+        return;
+    }
+    $newDir = dirname($newAbs);
+
+    $entries = @scandir($oldDir);
+    if ($entries === false) {
+        return;
+    }
+    foreach ($entries as $entry) {
+        if ($entry === '.' || $entry === '..') {
+            continue;
+        }
+        if (pathinfo($entry, PATHINFO_FILENAME) !== $oldBase) {
+            continue;
+        }
+        $siblingOld = $oldDir . '/' . $entry;
+        if (!is_file($siblingOld)) {
+            continue;
+        }
+        $ext = pathinfo($entry, PATHINFO_EXTENSION);
+        $siblingNew = $newDir . '/' . $newBase . ($ext !== '' ? '.' . $ext : '');
+        if ($siblingOld === $siblingNew) {
+            continue;
+        }
+        if (file_exists($siblingNew)) {
+            @unlink($siblingOld);
+            continue;
+        }
+        if (!is_dir($newDir)) {
+            @mkdir($newDir, 0755, true);
+        }
+        @rename($siblingOld, $siblingNew);
+    }
+}
+
 function wf_migrate_temp_sku_image_files(string $sourceSku, string $targetSku): void
 {
     if (!wf_table_exists('item_images')) {
@@ -263,6 +315,7 @@ function wf_migrate_temp_sku_image_files(string $sourceSku, string $targetSku): 
                 if (!rename($oldAbs, $newAbs)) {
                     throw new Exception('Failed to rename image file during SKU migration: ' . $oldAbs . ' -> ' . $newAbs);
                 }
+                wf_migrate_sibling_image_files($oldAbs, $newAbs);
             } elseif ($oldExists && $newExists) {
                 if (!unlink($oldAbs)) {
                     throw new Exception('Failed to remove duplicate temp image file during SKU migration: ' . $oldAbs);

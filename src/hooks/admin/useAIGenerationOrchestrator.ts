@@ -48,6 +48,10 @@ export interface GenerationStepResult {
     stepName: string;
     data: Partial<GenerationContext>;
     error?: string;
+    /** True when the step failed because AI is unavailable (e.g. no working vision
+     * provider), not because of a user input problem. The upload/save flow should
+     * continue -- this should be surfaced calmly (info toast), not as a blocking error. */
+    aiUnavailable?: boolean;
 }
 
 export type GenerationStep = 'info' | 'cost' | 'price' | 'marketing';
@@ -264,8 +268,10 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                 package_length_in?: number | string;
                 package_width_in?: number | string;
                 package_height_in?: number | string;
-            };
+            } | null;
             error?: string;
+            ai_unavailable?: boolean;
+            ai_message?: string;
         }): GenerationStepResult => {
             if (response && response.success && response.info_suggestion) {
                 return {
@@ -280,6 +286,15 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                         packageWidthIn: toNumber(response.info_suggestion.package_width_in),
                         packageHeightIn: toNumber(response.info_suggestion.package_height_in)
                     }
+                };
+            }
+            if (response && response.ai_unavailable) {
+                return {
+                    success: false,
+                    stepName: 'info',
+                    data: {},
+                    error: response.ai_message || "AI auto-fill isn't available right now. Please fill in the details manually.",
+                    aiUnavailable: true
                 };
             }
             return {
@@ -347,8 +362,10 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                     package_height_in?: number | string;
                     confidence?: string | number;
                     reasoning?: string;
-                };
+                } | null;
                 error?: string;
+                ai_unavailable?: boolean;
+                ai_message?: string;
             }>('/api/suggest_all.php', {
                 sku,
                 imageData: imagePayload,
@@ -742,6 +759,16 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                 context.packageHeightIn = infoResult.data.packageHeightIn ?? context.packageHeightIn;
                 toastSuccess('✅ Generated title, description, and category');
                 onStepComplete?.('info', { ...context }, []);
+            } else if (infoResult.aiUnavailable) {
+                // The photo is already saved at this point (upload happens before this
+                // step runs). AI auto-fill just isn't available right now -- let the
+                // seller continue and fill in the details by hand instead of blocking
+                // them with an error.
+                window.WFToast?.info?.(infoResult.error || "AI auto-fill isn't available right now. Please fill in the details manually.");
+                setIsGenerating(false);
+                setCurrentStep(null);
+                onStepComplete?.('info', { ...context }, []);
+                return null;
             } else {
                 const errorMessage = infoResult.error || 'Image analysis failed. Switch to a vision-capable model in AI Settings and run Test Provider.';
                 toastError(errorMessage);

@@ -84,6 +84,8 @@ try {
 
             $uploadedImages[] = ['filename' => $filename, 'path' => $finalPath, 'isPrimary' => $isThisPrimary == 1];
             if ($isThisPrimary) Database::execute("UPDATE items SET image_url = ? WHERE sku = ?", [$finalPath, $sku]);
+        } else {
+            $errors[] = "Failed to save uploaded file " . ($i + 1) . " (move_uploaded_file failed)";
         }
     }
 
@@ -95,7 +97,20 @@ try {
         }
     }
 
-    echo json_encode(['success' => true, 'uploadedImages' => $uploadedImages, 'warnings' => $errors]);
+    // Only report success when at least one image actually persisted. A batch
+    // that fails entirely (e.g. every file hit a conversion error) must not be
+    // reported as success:true -- the caller (and Jon) need to know the upload
+    // did not actually save anything, instead of silently showing no preview.
+    if (empty($uploadedImages) && !empty($errors)) {
+        echo json_encode([
+            'success' => false,
+            'error' => implode(' | ', $errors),
+            'uploadedImages' => [],
+            'warnings' => $errors
+        ]);
+    } else {
+        echo json_encode(['success' => true, 'uploadedImages' => $uploadedImages, 'warnings' => $errors]);
+    }
 } catch (Throwable $e) {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }

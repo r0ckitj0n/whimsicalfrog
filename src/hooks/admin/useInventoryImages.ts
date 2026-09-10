@@ -46,7 +46,7 @@ export const useInventoryImages = (sku: string) => {
         });
 
         try {
-            const result = await ApiClient.upload<{ success: boolean; error?: string } | null>('/functions/process_multi_image_upload.php', formData, {
+            const result = await ApiClient.upload<{ success: boolean; error?: string; warnings?: string[] } | null>('/functions/process_multi_image_upload.php', formData, {
                 onProgress: (e) => {
                     if (e.lengthComputable) {
                         const percent = Math.min(100, Math.round((e.loaded / e.total) * 100));
@@ -57,6 +57,12 @@ export const useInventoryImages = (sku: string) => {
 
             if (result?.success) {
                 await fetchImages();
+                if (result.warnings && result.warnings.length > 0) {
+                    // Partial success: some files uploaded, others didn't. Surface this
+                    // instead of silently dropping it -- the user should know not every
+                    // file they picked actually saved.
+                    window.WFToast?.info?.(`Some images did not upload: ${result.warnings.join(' | ')}`);
+                }
                 return result;
             } else {
                 throw new Error(result?.error || 'Upload failed');
@@ -65,6 +71,7 @@ export const useInventoryImages = (sku: string) => {
             const message = err instanceof Error ? err.message : 'Unknown error';
             logger.error('uploadImages failed', err);
             setError(message);
+            window.WFToast?.error?.(`Image upload failed: ${message}`);
             return null;
         } finally {
             setIsLoading(false);

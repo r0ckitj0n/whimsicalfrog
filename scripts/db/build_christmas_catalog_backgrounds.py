@@ -33,55 +33,56 @@ W, H = 1280, 896
 NAV_TOP = 720
 
 LAYOUTS: dict[int, list[tuple[int, int, int, int]]] = {
+    # Outer margin ~70px so realistic décor can sit outside frames.
     2: [
-        (50, 60, 280, 300), (350, 60, 280, 300), (650, 60, 280, 300), (950, 60, 280, 300),
-        (50, 380, 280, 300), (350, 380, 280, 300), (650, 380, 280, 300), (950, 380, 280, 300),
+        (70, 70, 260, 280), (350, 70, 260, 280), (630, 70, 260, 280), (910, 70, 260, 280),
+        (70, 390, 260, 280), (350, 390, 260, 280), (630, 390, 260, 280), (910, 390, 260, 280),
     ],
     3: [
-        (50, 60, 520, 620),
-        (600, 60, 300, 300), (930, 60, 300, 300),
-        (600, 380, 300, 300), (930, 380, 300, 300),
+        (70, 70, 480, 600),
+        (600, 70, 280, 280), (920, 70, 280, 280),
+        (600, 390, 280, 280), (920, 390, 280, 280),
     ],
     4: [
-        (60, 60, 360, 420), (460, 250, 360, 420), (860, 60, 360, 420),
-        (60, 500, 360, 180), (460, 60, 360, 170), (860, 500, 360, 180),
+        (70, 70, 340, 400), (470, 250, 340, 400), (870, 70, 340, 400),
+        (70, 500, 340, 170), (470, 70, 340, 160), (870, 500, 340, 170),
     ],
     5: [
-        (50, 60, 570, 300), (660, 60, 570, 300),
-        (50, 380, 570, 300), (660, 380, 570, 300),
+        (70, 70, 540, 280), (670, 70, 540, 280),
+        (70, 390, 540, 280), (670, 390, 540, 280),
     ],
     6: [
-        (50, 60, 380, 320), (450, 60, 380, 320), (850, 60, 380, 320),
-        (40, 410, 280, 270), (340, 410, 280, 270), (640, 410, 280, 270), (940, 410, 280, 270),
+        (70, 70, 360, 300), (460, 70, 360, 300), (850, 70, 360, 300),
+        (60, 410, 260, 260), (350, 410, 260, 260), (640, 410, 260, 260), (930, 410, 260, 260),
     ],
     7: [
-        (340, 180, 600, 360),
-        (50, 50, 260, 240), (970, 50, 260, 240),
-        (50, 440, 260, 240), (970, 440, 260, 240),
+        (350, 190, 580, 340),
+        (70, 60, 240, 220), (970, 60, 240, 220),
+        (70, 450, 240, 220), (970, 450, 240, 220),
     ],
     8: [
-        (50, 50, 380, 200), (450, 50, 380, 200), (850, 50, 380, 200),
-        (50, 270, 380, 200), (450, 270, 380, 200), (850, 270, 380, 200),
-        (50, 490, 380, 190), (450, 490, 380, 190), (850, 490, 380, 190),
+        (70, 60, 360, 190), (460, 60, 360, 190), (850, 60, 360, 190),
+        (70, 280, 360, 190), (460, 280, 360, 190), (850, 280, 360, 190),
+        (70, 500, 360, 180), (460, 500, 360, 180), (850, 500, 360, 180),
     ],
     9: [
-        (80, 50, 520, 200), (80, 270, 520, 200), (80, 490, 520, 190),
-        (680, 50, 520, 200), (680, 270, 520, 200), (680, 490, 520, 190),
+        (90, 60, 500, 190), (90, 280, 500, 190), (90, 500, 500, 180),
+        (690, 60, 500, 190), (690, 280, 500, 190), (690, 500, 500, 180),
     ],
     10: [
-        (50, 50, 480, 630),
-        (560, 50, 660, 200),
-        (560, 270, 320, 200), (900, 270, 320, 200),
-        (560, 490, 660, 190),
+        (70, 60, 460, 610),
+        (570, 60, 640, 190),
+        (570, 280, 300, 190), (910, 280, 300, 190),
+        (570, 500, 640, 180),
     ],
     11: [
-        (40, 50, 400, 280), (460, 50, 360, 200), (840, 50, 400, 280),
-        (460, 270, 360, 180),
-        (40, 350, 400, 330), (460, 470, 780, 210),
+        (60, 60, 380, 260), (470, 60, 340, 190), (850, 60, 370, 260),
+        (470, 280, 340, 170),
+        (60, 360, 380, 310), (470, 480, 750, 200),
     ],
     12: [
-        (180, 50, 920, 420),
-        (50, 490, 380, 190), (450, 490, 380, 190), (850, 490, 380, 190),
+        (200, 60, 880, 400),
+        (70, 500, 360, 180), (460, 500, 360, 180), (850, 500, 360, 180),
     ],
 }
 
@@ -342,9 +343,16 @@ def paste_decor(
 
     box = (left, top, right, bottom)
     if forbidden:
-        for fx, fy, fw, fh in forbidden:
-            fr = (fx + 4, fy + 4, fx + fw - 4, fy + fh - 4)
-            if rects_overlap(box, fr):
+        for i, (fx, fy, fw, fh) in enumerate(forbidden):
+            # Nav band (last entry): keep the full sprite clear.
+            if fy >= NAV_TOP - 10:
+                fr = (fx, fy, fx + fw, fy + fh)
+                if rects_overlap(box, fr):
+                    return False
+                continue
+            # Product/index frames: only reject when the décor CENTER sits inside
+            # the frame. Sprites may overhang into margins for a natural look.
+            if fx + 6 <= cx <= fx + fw - 6 and fy + 6 <= cy <= fy + fh - 6:
                 return False
 
     base.paste(sprite, (left, top), sprite)
@@ -387,47 +395,65 @@ def decorate_page(base: Image.Image, page: int, frames: list[tuple[int, int, int
     kinds = ["holly", "pine", "bow", "ornament", "candle", "garland"]
     candidates = gutter_points(frames)
     rng.shuffle(candidates)
-    count = 16 if page == 1 else 11 + (page % 4)
+    # Product pages need denser/larger décor in the thin margins outside frames.
+    count = 18 if page == 1 else 22 + (page % 3)
 
     placed = 0
     for cx, cy in candidates:
         if placed >= count:
             break
         inside = any(
-            fx + 4 <= cx <= fx + fw - 4 and fy + 4 <= cy <= fy + fh - 4
+            fx + 8 <= cx <= fx + fw - 8 and fy + 8 <= cy <= fy + fh - 8
             for fx, fy, fw, fh in frames
         )
         if inside:
             continue
         kind = kinds[(placed + page) % len(kinds)]
         scale_map = {
-            "holly": 0.17, "pine": 0.15, "bow": 0.14,
-            "ornament": 0.13, "candle": 0.16, "garland": 0.19,
+            # Sized to sit in ~70px outer margins without swallowing frames.
+            "holly": 0.11, "pine": 0.12, "bow": 0.10,
+            "ornament": 0.10, "candle": 0.12, "garland": 0.14,
         }
-        scale = scale_map[kind] * float(rng.uniform(0.85, 1.2))
+        if page > 1:
+            for k in scale_map:
+                scale_map[k] *= 1.05
+        scale = scale_map[kind] * float(rng.uniform(0.9, 1.25))
         angle = float(rng.uniform(-28, 28))
         flip = bool(rng.integers(0, 2))
-        opacity = float(rng.uniform(0.88, 0.98))
+        opacity = float(rng.uniform(0.9, 0.99))
         if paste_decor(
             base, kind, cx, cy,
             scale=scale, angle=angle, opacity=opacity, flip=flip, forbidden=forbidden,
         ):
             placed += 1
 
+    # Guaranteed margin / gutter anchors (larger on product pages).
+    s = 1.1 if page > 1 else 1.0
     anchors = [
-        ("garland", 110, 48, 0.22, -8, False),
-        ("garland", W - 110, 48, 0.22, 8, True),
-        ("holly", 58, 150, 0.18, -20, False),
-        ("holly", W - 58, 150, 0.18, 20, True),
-        ("bow", W // 2, 42, 0.13, 0, False),
-        ("pine", 70, NAV_TOP - 70, 0.16, 12, False),
-        ("ornament", W - 70, NAV_TOP - 70, 0.14, -10, False),
-        ("candle", 48, 320, 0.17, 0, False),
-        ("candle", W - 48, 320, 0.17, 0, True),
-        ("holly", 200, NAV_TOP - 55, 0.14, 15, False),
-        ("holly", W - 200, NAV_TOP - 55, 0.14, -15, True),
-        ("ornament", W // 2 - 80, NAV_TOP - 48, 0.11, 8, False),
-        ("bow", W // 2 + 90, NAV_TOP - 52, 0.11, -6, True),
+        ("garland", 120, 40, 0.16 * s, -8, False),
+        ("garland", W - 120, 40, 0.16 * s, 8, True),
+        ("holly", 36, 130, 0.13 * s, -20, False),
+        ("holly", W - 36, 130, 0.13 * s, 20, True),
+        ("bow", W // 2, 36, 0.11 * s, 0, False),
+        ("pine", 40, NAV_TOP - 55, 0.13 * s, 12, False),
+        ("ornament", W - 40, NAV_TOP - 55, 0.12 * s, -10, False),
+        ("candle", 34, 300, 0.14 * s, 0, False),
+        ("candle", W - 34, 300, 0.14 * s, 0, True),
+        ("holly", 200, NAV_TOP - 48, 0.11 * s, 15, False),
+        ("holly", W - 200, NAV_TOP - 48, 0.11 * s, -15, True),
+        ("ornament", W // 2 - 100, NAV_TOP - 42, 0.10 * s, 8, False),
+        ("bow", W // 2 + 110, NAV_TOP - 46, 0.10 * s, -6, True),
+        ("pine", W // 2, 48, 0.11 * s, 0, False),
+        ("garland", W // 2 - 220, NAV_TOP - 40, 0.13 * s, -4, False),
+        ("garland", W // 2 + 220, NAV_TOP - 40, 0.13 * s, 4, True),
+        ("ornament", 34, 500, 0.11 * s, 12, False),
+        ("ornament", W - 34, 500, 0.11 * s, -12, True),
+        ("holly", 34, 620, 0.12 * s, -10, False),
+        ("holly", W - 34, 620, 0.12 * s, 10, True),
+        ("bow", 34, 420, 0.10 * s, 18, False),
+        ("bow", W - 34, 420, 0.10 * s, -18, True),
+        ("pine", 200, 40, 0.10 * s, -12, False),
+        ("pine", W - 200, 40, 0.10 * s, 12, True),
     ]
     for kind, cx, cy, scale, angle, flip in anchors:
         blocked = any(fx <= cx <= fx + fw and fy <= cy <= fy + fh for fx, fy, fw, fh in frames)

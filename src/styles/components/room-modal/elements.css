@@ -108,6 +108,27 @@ body:not([data-page^='admin']) .room-overlay-wrapper .room-item-icon[data-mappin
     filter: brightness(1.1) drop-shadow(0 0 15px rgba(135, 172, 58, 0.5));
 }
 
+/* Large catalog plaques/index rows must stay within their hit targets.
+   A 2× scale paints outside overflow:hidden ancestors, so clicks hit the
+   modal backdrop and close the room (navigating to /). */
+body:not([data-page^='admin']) .room-modal-body .room-item-icon[data-mapping-type='content'][data-original-width="200"]:hover img,
+body:not([data-page^='admin']) .room-overlay-wrapper .room-item-icon[data-mapping-type='content'][data-original-width="200"]:hover img,
+body:not([data-page^='admin']) .room-modal-body .room-item-icon[data-mapping-type='content'][data-original-width="540"]:hover img,
+body:not([data-page^='admin']) .room-overlay-wrapper .room-item-icon[data-mapping-type='content'][data-original-width="540"]:hover img,
+body:not([data-page^='admin']) .room-modal-body .room-item-icon[data-mapping-type='content'][data-original-width="200"] img,
+body:not([data-page^='admin']) .room-overlay-wrapper .room-item-icon[data-mapping-type='content'][data-original-width="200"] img,
+body:not([data-page^='admin']) .room-modal-body .room-item-icon[data-mapping-type='content'][data-original-width="540"] img,
+body:not([data-page^='admin']) .room-overlay-wrapper .room-item-icon[data-mapping-type='content'][data-original-width="540"] img {
+    transform: none !important;
+    filter: brightness(1.05);
+}
+body:not([data-page^='admin']) .room-modal-body .room-item-icon[data-mapping-type='content'][data-original-width="200"]:hover img,
+body:not([data-page^='admin']) .room-overlay-wrapper .room-item-icon[data-mapping-type='content'][data-original-width="200"]:hover img,
+body:not([data-page^='admin']) .room-modal-body .room-item-icon[data-mapping-type='content'][data-original-width="540"]:hover img,
+body:not([data-page^='admin']) .room-overlay-wrapper .room-item-icon[data-mapping-type='content'][data-original-width="540"]:hover img {
+    filter: brightness(1.12) drop-shadow(0 0 10px rgba(135, 172, 58, 0.45));
+}
+
 .room-modal-body .room-item-icon:hover,
 .room-overlay-wrapper .room-item-icon:hover {
     /* Use filter instead of scale to avoid showing rectangular bounds */

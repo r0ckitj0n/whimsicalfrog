@@ -78,7 +78,7 @@ function wf_upsert_room_settings(string $room, string $title, string $bgUrl, int
                  show_search_bar = 0,
                  has_icons_white_background = 0,
                  icon_panel_color = 'transparent',
-                 icon_vertical_alignment = 'middle',
+                 icon_vertical_alignment = 'top',
                  room_role = 'room',
                  display_order = ?,
                  is_active = 1,
@@ -94,7 +94,7 @@ function wf_upsert_room_settings(string $room, string $title, string $bgUrl, int
             (room_number, room_name, door_label, description, background_url, target_aspect_ratio,
              render_context, background_display_type, show_search_bar, has_icons_white_background,
              icon_panel_color, icon_vertical_alignment, room_role, display_order, is_active)
-         VALUES (?, ?, ?, ?, ?, 1.42857, 'modal', 'fullscreen', 0, 0, 'transparent', 'middle', 'room', ?, 1)",
+         VALUES (?, ?, ?, ?, ?, 1.42857, 'modal', 'fullscreen', 0, 0, 'transparent', 'top', 'room', ?, 1)",
         [$room, ...$paramsCommon]
     );
 }
@@ -385,7 +385,7 @@ try {
         $room = $page['room'];
         $title = $page['title'];
         $file = $page['file'];
-        $bgUrl = ImagePathNormalizer::normalizeBackgroundUrl(wf_bg_db_ref($file, 'webp')) . '?v=1950index';
+        $bgUrl = ImagePathNormalizer::normalizeBackgroundUrl(wf_bg_db_ref($file, 'webp')) . '?v=1950decor2';
         $displayOrder = 70 + $page['page'];
 
         wf_upsert_room_settings($room, $title, $bgUrl, $displayOrder);

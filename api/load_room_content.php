@@ -296,10 +296,13 @@ try {
                 $imgClass = $isShortcutType ? ' class="room-item-shortcut-img"' : '';
                 if (preg_match('/^room:(\w+)$/', $target, $matches)) {
                     $roomNum = $matches[1];
+                    // Use a real link so navigation still works if modal click
+                    // handlers miss the hit target; JS openRoom preventDefaults.
                     $htmlContent .= sprintf(
-                        '<div class="room-item room-item-icon %s %s" data-mapping-type="%s" data-action="openRoom" data-room="%s" data-params=\'{"room":"%s"}\' %s %s>
+                        '<a href="/?room=%s" class="room-item room-item-icon %s %s" data-mapping-type="%s" data-action="openRoom" data-room="%s" data-params=\'{"room":"%s"}\' %s %s>
                         <img%s src="%s" alt="%s" loading="lazy">
-                    </div>',
+                    </a>',
+                        htmlspecialchars($roomNum),
                         $typeClass,
                         $selectorClass,
                         $escapedType,

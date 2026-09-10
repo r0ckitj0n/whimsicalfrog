@@ -70,6 +70,34 @@ body[data-page='landing'] .room-item-icon[data-mapping-type='content']:hover .ro
     filter: brightness(1.1) drop-shadow(0 0 15px rgba(135, 172, 58, 0.5));
 }
 
+/* Large catalog plaques/index rows must stay within their hit targets. */
+body[data-page='room_main'] .room-item-icon[data-mapping-type='content'][data-original-width="200"] .room-item-shortcut-img,
+body[data-page='landing'] .room-item-icon[data-mapping-type='content'][data-original-width="200"] .room-item-shortcut-img,
+#wf-root .room-item-icon[data-mapping-type='content'][data-original-width="200"] .room-item-shortcut-img,
+#landingPage-react .room-item-icon[data-mapping-type='content'][data-original-width="200"] .room-item-shortcut-img,
+#mainRoomPage-react .room-item-icon[data-mapping-type='content'][data-original-width="200"] .room-item-shortcut-img,
+body[data-page='room_main'] .room-item-icon[data-mapping-type='content'][data-original-width="540"] .room-item-shortcut-img,
+body[data-page='landing'] .room-item-icon[data-mapping-type='content'][data-original-width="540"] .room-item-shortcut-img,
+#wf-root .room-item-icon[data-mapping-type='content'][data-original-width="540"] .room-item-shortcut-img,
+#landingPage-react .room-item-icon[data-mapping-type='content'][data-original-width="540"] .room-item-shortcut-img,
+#mainRoomPage-react .room-item-icon[data-mapping-type='content'][data-original-width="540"] .room-item-shortcut-img {
+    transform: none !important;
+    filter: brightness(1.05);
+}
+body[data-page='room_main'] .room-item-icon[data-mapping-type='content'][data-original-width="200"]:hover .room-item-shortcut-img,
+body[data-page='landing'] .room-item-icon[data-mapping-type='content'][data-original-width="200"]:hover .room-item-shortcut-img,
+#wf-root .room-item-icon[data-mapping-type='content'][data-original-width="200"]:hover .room-item-shortcut-img,
+#landingPage-react .room-item-icon[data-mapping-type='content'][data-original-width="200"]:hover .room-item-shortcut-img,
+#mainRoomPage-react .room-item-icon[data-mapping-type='content'][data-original-width="200"]:hover .room-item-shortcut-img,
+body[data-page='room_main'] .room-item-icon[data-mapping-type='content'][data-original-width="540"]:hover .room-item-shortcut-img,
+body[data-page='landing'] .room-item-icon[data-mapping-type='content'][data-original-width="540"]:hover .room-item-shortcut-img,
+#wf-root .room-item-icon[data-mapping-type='content'][data-original-width="540"]:hover .room-item-shortcut-img,
+#landingPage-react .room-item-icon[data-mapping-type='content'][data-original-width="540"]:hover .room-item-shortcut-img,
+#mainRoomPage-react .room-item-icon[data-mapping-type='content'][data-original-width="540"]:hover .room-item-shortcut-img {
+    transform: none !important;
+    filter: brightness(1.12) drop-shadow(0 0 10px rgba(135, 172, 58, 0.45));
+}
+
 .room-title-overlay {
     position: absolute;
     top: 1rem;

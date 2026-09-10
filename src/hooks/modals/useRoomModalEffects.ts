@@ -258,12 +258,14 @@ export const useRoomModalEffects = ({
 
         body.addEventListener('mouseover', handleMouseOver);
         body.addEventListener('mouseout', handleMouseOut);
-        body.addEventListener('click', handleClick);
+        // Capture phase so catalog plaques still navigate if a child/overlay
+        // would otherwise swallow the bubble-phase click.
+        body.addEventListener('click', handleClick, true);
 
         return () => {
             body.removeEventListener('mouseover', handleMouseOver);
             body.removeEventListener('mouseout', handleMouseOut);
-            body.removeEventListener('click', handleClick);
+            body.removeEventListener('click', handleClick, true);
         };
     }, [isOpen, content, handleMouseOver, handleMouseOut, handleClick, bodyRef]);
 

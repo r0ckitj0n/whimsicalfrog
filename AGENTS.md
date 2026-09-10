@@ -14,6 +14,7 @@ Legacy source files were archived to `backups/guidelines-archive/2026-02-19/`.
 - **Database:** MySQL (Single Source of Truth). Do NOT use SQLite.
 - **Legacy Backup:** `/Volumes/Media/~Archives/Websites/WhimsicalFrog`
 - **Codex File Names:** Keep this file named `AGENTS.md` and the ignore file named `.codexignore` so Codex loads them.
+- **Human testing = live:** Jon tests on the production Live Site (see bullet above), not a local/dev or staging stack. Sites have low traffic, so live is the intended human QA surface. When an agent needs Jon to verify a change, deploy to live first (see **Human Live Testing Mandate** and **Live Deploy Standing Process**); do not ask him to spin up or use a local/dev environment.
 
 ## 2. Tech Stack (Strict)
 - **Frontend:** React 18, Vite ^7.0, TypeScript (Strict), Tailwind CSS (Primary).
@@ -601,6 +602,15 @@ When a section/card uses a brand color theme:
 - **No Unchecked Assertions:** Never claim a fix works without verifying it through logs, terminal output, or browser preview.
 - **Regression Testing:** Ensure that new fixes do not break existing functionality.
 
+### Human Live Testing Mandate (Standing Preference — Jon)
+
+> **Jon does human QA on live.** Low traffic makes a separate staging/local handoff impractical.
+
+- **Do:** When you want Jon to test or confirm a change, deploy it to live with `bash scripts/deploy_agent_safe.sh` (see Live Deploy Standing Process) and give him the live URL / what to check.
+- **Do not:** Ask him to test on a local Vite/dev stack, cloud preview alone, or “pull the branch and run it locally” as the primary human test path.
+- **Still required:** Agents keep doing their own local/curl/browser verification before deploy. Live deploy is for *human* confirmation, not a substitute for agent QA.
+- **Safety:** Use only the agent-safe deploy path (backup-first, no destructive mirrors). Prefer landing on `main` when policy allows; if human testing is blocked on an unmerged branch and deploy credentials are available, still publish via `deploy_agent_safe.sh` rather than leaving him without a live surface.
+
 ## Native React Project Architecture (Strict)
 
 - **UI Entry Point:** `index.html` in the root is the **only** valid UI entry point. It is built by Vite to `dist/index.html`.
@@ -682,14 +692,15 @@ Do not save dashboard install/start paths until those scripts are on `main`. Loc
 
 ## Live Deploy Standing Process (Required for Agents)
 
-When an agent ships changes that should go live, use the backup-first safe deploy — **do not** run destructive whole-tree mirrors.
+When an agent ships changes that should go live **or needs Jon to human-test a change**, use the backup-first safe deploy — **do not** run destructive whole-tree mirrors. Human testing happens on live (see **Human Live Testing Mandate**).
 
-1. Land the change on `main` (merge the PR).
-2. Run: `bash scripts/deploy_agent_safe.sh --frontend` (UI) or `--code` / `--paths ...` as appropriate.
+1. Prefer landing the change on `main` (merge the PR) when that is already approved / allowed.
+2. Run: `bash scripts/deploy_agent_safe.sh --frontend` (UI) or `--code` / `--paths ...` as appropriate — **before** asking Jon to test.
 3. That script **always**:
    - Snapshots the live files it is about to replace into `backups/pre-deploy/<timestamp>/`
    - Avoids deleting/overwriting live-owned data: `.env`, `images/`, `backups/`, `sessions/`, `logs/`, `data/`
    - Uploads only the intended code/build artifacts
-4. Full policy: `documentation/routines/agent-safe-deploy.md` and `documentation/routines/live-deploy.md`.
+4. Tell Jon the Live Site URL (see Active Ruleset) and the specific checks to perform.
+5. Full policy: `documentation/routines/agent-safe-deploy.md` and `documentation/routines/live-deploy.md`.
 
 **Never** use `deploy_full.sh`, `--purge*`, or root-level `mirror --delete` for routine agent publishes. Live content often newer than the agent workspace must win for data/media.

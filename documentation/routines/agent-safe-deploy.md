@@ -6,6 +6,18 @@ Live often has newer content than a cloud agent workspace (images, `.env`, custo
 
 Use this process for every agent-driven live publish.
 
+### Human testing on live (Jon)
+
+Jon QA’s on **live production** (Live Site URL in `AGENTS.md`), not a local/dev stack or staging. Traffic is low enough that this is intentional.
+
+When an agent wants Jon to test a change:
+
+1. Finish agent-side verification (build/lint/curl/browser as applicable).
+2. Deploy with this script (`--frontend`, `--code`, or `--paths`).
+3. Point him at the Live Site URL and what to check.
+
+Do **not** ask him to run a local stack as the primary human test path.
+
 ## Command
 
 ```bash

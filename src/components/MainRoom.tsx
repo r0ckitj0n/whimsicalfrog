@@ -23,6 +23,7 @@ export const MainRoom: React.FC = () => {
 
     const [destinations, setDestinations] = useState<IDoorDestination[]>([]);
     const [bgUrl, setBgUrl] = useState('');
+    const [hoveredSignIdx, setHoveredSignIdx] = useState<number | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const { openRoom } = useRoomManager();
 
@@ -163,8 +164,14 @@ export const MainRoom: React.FC = () => {
                                 overflow: (isMiddleAligned && !isShortcutType) ? 'hidden' : 'visible',
                                 display: 'flex',
                                 alignItems: flexAlignment,
-                                justifyContent: 'center'
+                                justifyContent: 'center',
+                                // Keep expanding signs above neighbors even if CSS hover loses a race
+                                zIndex: hoveredSignIdx === idx ? 'calc(var(--wf-z-sticky) + 100)' : undefined
                             }}
+                            onMouseEnter={() => setHoveredSignIdx(idx)}
+                            onMouseLeave={() => setHoveredSignIdx(null)}
+                            onFocus={() => setHoveredSignIdx(idx)}
+                            onBlur={() => setHoveredSignIdx(null)}
                             onClick={() => handleDoorClick(dest)}
                         >
                             <picture

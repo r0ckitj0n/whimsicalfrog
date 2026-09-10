@@ -110,9 +110,10 @@ body:not([data-page^='admin']) .room-overlay-wrapper .room-item-icon[data-mappin
 
 .room-modal-body .room-item-icon:hover,
 .room-overlay-wrapper .room-item-icon:hover {
-    /* Use filter instead of scale to avoid showing rectangular bounds */
+    /* Use filter instead of scale to avoid showing rectangular bounds.
+       Raise above sibling signs so scale(2) expansions stay on top. */
     filter: brightness(1.1);
-    z-index: var(--wf-z-sticky);
+    z-index: calc(var(--wf-z-sticky) + 100) !important;
 }
 
 .room-modal-body .room-item-icon .room-item-oos-badge,

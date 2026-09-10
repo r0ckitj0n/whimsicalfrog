@@ -24,6 +24,7 @@ export const LandingPage: React.FC = () => {
 
     const [destinations, setDestinations] = useState<IDoorDestination[]>([]);
     const [bgUrl, setBgUrl] = useState('');
+    const [hoveredSignIdx, setHoveredSignIdx] = useState<number | null>(null);
 
     const {
         coordinates,
@@ -208,8 +209,13 @@ export const LandingPage: React.FC = () => {
                                 overflow: (isMiddleAligned && !isShortcutType) ? 'hidden' : 'visible',
                                 display: 'flex',
                                 alignItems: flexAlignment,
-                                justifyContent: 'center'
+                                justifyContent: 'center',
+                                zIndex: hoveredSignIdx === idx ? 'calc(var(--wf-z-sticky) + 100)' : undefined
                             }}
+                            onMouseEnter={() => setHoveredSignIdx(idx)}
+                            onMouseLeave={() => setHoveredSignIdx(null)}
+                            onFocus={() => setHoveredSignIdx(idx)}
+                            onBlur={() => setHoveredSignIdx(null)}
                         >
                             <picture
                                 className="block w-full"

@@ -4,22 +4,100 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <!-- Warm the shop wallpaper + frog so SPA Shop clicks do not flash black. -->
-    <link rel="preload" as="image" href="/images/backgrounds/background-roomS.webp">
+    <!-- Route-specific wallpaper preloads are injected below (avoid painting shop art on landing). -->
     <link rel="preload" as="image" href="/images/logos/apple-touch-icon.png">
     <script>
         document.documentElement.classList.add('wf-js');
         (function () {
             var path = String(location.pathname || '').toLowerCase();
             var search = location.search || '';
+            var LANDING_BG = '/images/backgrounds/realistic/realistic-roomA-frogs.webp';
+            // Settings (room X): Original whimsical vs realistic control-room — pick by last active theme.
+            var SETTINGS_ORIGINAL_BG = '/images/backgrounds/background-roomX.webp';
+            var SETTINGS_REALISTIC_BG = '/images/backgrounds/realistic/realistic-roomX.webp';
+            var SETTINGS_BG_CACHE_KEY = 'wf-settings-bg-url';
+            var SETTINGS_BG = SETTINGS_ORIGINAL_BG;
+            try {
+                var cachedSettingsBg = localStorage.getItem(SETTINGS_BG_CACHE_KEY);
+                if (cachedSettingsBg === SETTINGS_ORIGINAL_BG || cachedSettingsBg === SETTINGS_REALISTIC_BG) {
+                    SETTINGS_BG = cachedSettingsBg;
+                }
+            } catch (e) { /* private mode */ }
+            var SHOP_BG = '/images/backgrounds/background-roomS.webp';
             var shopBoot = (
                 path === '/shop' ||
                 path.indexOf('/shop/') === 0 ||
                 path.indexOf('/product/') !== -1 ||
                 /(?:\?|&)room_id=S(?:&|$)/.test(search)
             );
+            var settingsBoot = (
+                /(?:\?|&)room_id=X(?:&|$)/.test(search) ||
+                /(?:\?|&)section=settings(?:&|$)/.test(search) ||
+                path.indexOf('/admin') === 0 && /(?:\?|&)section=settings(?:&|$)/.test(search) ||
+                path.indexOf('/settings') === 0 ||
+                path.indexOf('/rooms/settings') === 0
+            );
+            var landingBoot = (
+                !shopBoot &&
+                !settingsBoot && (
+                    path === '/' ||
+                    path === '/index.html' ||
+                    path.indexOf('/rooms/landing') === 0
+                )
+            );
+            // Only preload the wallpaper for the route being painted.
+            var preloadHref = landingBoot ? LANDING_BG : (settingsBoot ? SETTINGS_BG : (shopBoot ? SHOP_BG : LANDING_BG));
+            var preloadLink = document.createElement('link');
+            preloadLink.rel = 'preload';
+            preloadLink.as = 'image';
+            preloadLink.href = preloadHref;
+            document.head.appendChild(preloadLink);
+
             if (shopBoot) {
                 document.documentElement.classList.add('wf-shop-boot');
+            }
+            if (settingsBoot) {
+                document.documentElement.classList.add('wf-settings-boot');
+                document.documentElement.style.setProperty(
+                    '--wf-bg-roomx-image',
+                    'url("' + SETTINGS_BG + '")'
+                );
+                // Align early paint with the DB-active theme (Original vs Realistic).
+                window.__wfApplySettingsBootBg = function (url) {
+                    if (!url) return;
+                    var next = url;
+                    if (url.indexOf('/realistic/realistic-roomX.') !== -1) next = SETTINGS_REALISTIC_BG;
+                    else if (url.indexOf('/background-roomX.') !== -1) next = SETTINGS_ORIGINAL_BG;
+                    else if (url !== SETTINGS_ORIGINAL_BG && url !== SETTINGS_REALISTIC_BG) return;
+                    SETTINGS_BG = next;
+                    try { localStorage.setItem(SETTINGS_BG_CACHE_KEY, next); } catch (e) { /* ignore */ }
+                    document.documentElement.style.setProperty('--wf-bg-roomx-image', 'url("' + next + '")');
+                    if (document.body) {
+                        document.body.setAttribute('data-bg-url', next);
+                        document.body.style.setProperty('--wf-bg-roomx-image', 'url("' + next + '")');
+                        document.body.style.setProperty('--wf-body-bg', 'url("' + next + '")');
+                        document.body.style.backgroundImage = 'url("' + next + '")';
+                    }
+                };
+                fetch('/api/get_background.php?room=X&bust=1', { credentials: 'same-origin' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (payload) {
+                        var bg = payload && payload.background ? payload.background : null;
+                        var rel = bg && (bg.webp_filename || bg.png_filename || bg.image_filename);
+                        if (!rel) return;
+                        var href = String(rel);
+                        if (href.indexOf('/images/') !== 0) {
+                            href = href.indexOf('images/') === 0 ? ('/' + href) : ('/images/' + href.replace(/^\/+/, ''));
+                        }
+                        if (typeof window.__wfApplySettingsBootBg === 'function') {
+                            window.__wfApplySettingsBootBg(href);
+                        }
+                    })
+                    .catch(function () { /* keep cached/Original paint */ });
+            }
+            if (landingBoot) {
+                document.documentElement.classList.add('wf-landing-boot');
+                document.documentElement.style.setProperty('--wf-landing-boot-bg-image', 'url("' + LANDING_BG + '")');
             }
             // Shop wallpaper under the frog — paint before any JS modules load.
             window.__wfPaintShopBootBg = function (url) {
@@ -34,10 +112,38 @@
                     layer.setAttribute('data-bg', bgUrl);
                 }
             };
+            window.__WF_LANDING_BG_URL = LANDING_BG;
             if (shopBoot) {
                 // Run after the overlay node exists (end of body); also try now.
                 document.addEventListener('DOMContentLoaded', function () {
                     window.__wfPaintShopBootBg();
+                });
+            }
+            if (settingsBoot) {
+                document.addEventListener('DOMContentLoaded', function () {
+                    if (!document.body) return;
+                    document.body.setAttribute('data-page', 'admin/settings');
+                    document.body.setAttribute('data-bg-url', SETTINGS_BG);
+                    document.body.setAttribute('data-bg-applied', '1');
+                    document.body.style.setProperty('--wf-bg-roomx-image', 'url("' + SETTINGS_BG + '")');
+                    document.body.style.setProperty('--wf-body-bg', 'url("' + SETTINGS_BG + '")');
+                    document.body.style.backgroundImage = 'url("' + SETTINGS_BG + '")';
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                    document.body.style.backgroundRepeat = 'no-repeat';
+                    document.body.style.backgroundAttachment = 'fixed';
+                });
+            }
+            if (landingBoot) {
+                document.addEventListener('DOMContentLoaded', function () {
+                    if (!document.body) return;
+                    document.body.setAttribute('data-bg-url', LANDING_BG);
+                    document.body.setAttribute('data-bg-applied', '1');
+                    document.body.style.backgroundImage = 'url("' + LANDING_BG + '")';
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                    document.body.style.backgroundRepeat = 'no-repeat';
+                    document.body.style.backgroundAttachment = 'fixed';
                 });
             }
             // Hide the crawler SEO shell as early as possible (before React mounts).
@@ -105,6 +211,7 @@
             set('--wf-bg-room3-png-image', 'url("/images/backgrounds/background-room3.png")');
             set('--wf-bg-room4-webp-image', 'url("/images/backgrounds/background-room4.webp")');
             set('--wf-bg-room4-png-image', 'url("/images/backgrounds/background-room4.png")');
+            /* Settings room X default (overridden by wf-settings-boot + active theme). */
             set('--wf-bg-roomx-image', 'url("/images/backgrounds/background-roomX.webp")');
             set('--wf-cloud-bg-webp-image', 'url("/images/backgrounds/cloud-bg.webp")');
             set('--wf-cloud-bg-png-image', 'url("/images/backgrounds/cloud-bg.png")');
@@ -138,7 +245,14 @@
             display: none;
         }
 
-        /* Hide SEO shell as soon as JS marks the document; keep it for no-JS crawlers. */
+        /*
+         * Hide SEO marketing shell for JS users BEFORE first paint.
+         * Relying only on html.wf-js caused a flash of the SEO "another page" on landing.
+         * Noscript below re-enables it for crawlers without JS.
+         */
+        #wf-seo-shell {
+            display: none !important;
+        }
         html.wf-js #wf-seo-shell {
             display: none !important;
         }
@@ -173,6 +287,16 @@
         html.wf-shop-boot body {
             background-color: #000 !important;
             background-image: var(--wf-shop-boot-bg-image, url("/images/backgrounds/background-roomS.webp")) !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-attachment: fixed !important;
+        }
+
+        /* Landing: paint the realistic porch wallpaper before React/CSS modules load. */
+        html.wf-landing-boot body {
+            background-color: #000 !important;
+            background-image: var(--wf-landing-boot-bg-image, url("/images/backgrounds/realistic/realistic-roomA-frogs.webp")) !important;
             background-size: cover !important;
             background-position: center !important;
             background-repeat: no-repeat !important;
@@ -444,7 +568,10 @@
                 </div>
             </div>
         </div>
-        <main id="wf-seo-shell" style="max-width: 64rem; margin: 0 auto; padding: 2.5rem 1.25rem; color: #fff;">
+        <noscript>
+            <style>#wf-seo-shell{display:block!important}</style>
+        </noscript>
+        <main id="wf-seo-shell" hidden style="display:none;max-width: 64rem; margin: 0 auto; padding: 2.5rem 1.25rem; color: #fff;">
             <header>
                 <h1 style="font-family: 'Merienda', cursive; font-size: 2rem; line-height: 1.1; margin: 0 0 1rem;">Whimsical Frog Handmade Decor And Gifts</h1>
                 <p style="margin: 0 0 1rem; opacity: 0.9;">

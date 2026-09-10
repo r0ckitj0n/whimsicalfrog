@@ -7,7 +7,13 @@ import { IShopData, IReceiptData, IAboutData, IContactData, ISiteSettings } from
 import { ApiClient } from '../core/ApiClient.js';
 import { readCachedShopData, writeCachedShopData, prefetchShopCatalog, prefetchShopBackground } from '../core/shop-boot-overlay.js';
 import { prefetchFeaturedProducts } from '../utils/featuredProductsPrefetch.js';
-import { detectPageFromLocation, locationNeedsShopData } from '../utils/pageRoute.js';
+import {
+    detectPageFromLocation,
+    locationNeedsShopData,
+    locationIsSettingsPage,
+    buildBootstrapQueryParams,
+} from '../utils/pageRoute.js';
+import { writeCachedSettingsBackgroundUrl } from '../utils/settingsBackgroundCache.js';
 
 /**
  * useSiteHydration Hook
@@ -168,9 +174,11 @@ export const useSiteHydration = () => {
 
         const fetchBootstrap = async () => {
             try {
-                // Pass current path to API for correct background resolution
+                // Pass path + room_id/section so Settings (/?section=settings) resolves room X.
                 const currentPath = window.location.pathname;
-                const needsShop = locationNeedsShopData(currentPath, window.location.search);
+                const currentSearch = window.location.search;
+                const needsShop = locationNeedsShopData(currentPath, currentSearch);
+                const isSettings = locationIsSettingsPage(currentPath, currentSearch);
                 const data = await ApiClient.get<{
                     site_settings?: ISiteSettings;
                     shop_data?: IShopData;
@@ -179,10 +187,7 @@ export const useSiteHydration = () => {
                     background_url?: string;
                     branding?: { style?: string };
                     auth?: { isLoggedIn?: boolean; user_id?: string | number; userData?: { role?: string } };
-                }>('/api/bootstrap.php', {
-                    path: currentPath,
-                    include_shop: needsShop ? '1' : '0'
-                });
+                }>('/api/bootstrap.php', buildBootstrapQueryParams(currentPath, currentSearch, { includeShop: needsShop }));
 
                 if (data.site_settings) {
                     setSiteSettings(data.site_settings);
@@ -198,16 +203,47 @@ export const useSiteHydration = () => {
                 }
                 if (data.about_data) setAboutData(data.about_data);
                 if (data.contact_data) setContactData(data.contact_data);
-                if (data.background_url && !document.body.getAttribute('data-bg-url') && !is_bare && !needsShop) {
-                    document.body.setAttribute('data-bg-url', data.background_url);
+                // Keep body wallpaper continuous on landing/main room.
+                // Clearing it here caused a black flash (and any prior wrong bg
+                // briefly showing) before LandingPage finished its own fetch.
+                const pathName = (window.location.pathname || '/').toLowerCase();
+                const isLandingPath =
+                    !isSettings && (
+                        pathName === '/' ||
+                        pathName === '/index.html' ||
+                        pathName.startsWith('/rooms/landing')
+                    );
+                const isMainRoomPath =
+                    pathName.includes('/room_main') ||
+                    new URLSearchParams(window.location.search).get('room_id') === '0';
+                const applyBodyBg = (url: string) => {
+                    document.body.setAttribute('data-bg-url', url);
                     document.body.setAttribute('data-bg-applied', '1');
-                    document.body.style.setProperty('--wf-body-bg', `url("${data.background_url}")`);
-                    document.body.style.setProperty('--body-bg', `url("${data.background_url}")`);
-                    document.body.style.backgroundImage = `url("${data.background_url}")`;
+                    document.body.style.setProperty('--wf-body-bg', `url("${url}")`);
+                    document.body.style.setProperty('--body-bg', `url("${url}")`);
+                    document.body.style.backgroundImage = `url("${url}")`;
                     document.body.style.backgroundSize = 'cover';
                     document.body.style.backgroundPosition = 'center';
                     document.body.style.backgroundRepeat = 'no-repeat';
                     document.body.style.backgroundAttachment = 'fixed';
+                    if (isSettings || url.includes('roomX') || url.includes('roomx')) {
+                        // Settings CSS prefers --wf-bg-roomx-image so landing --wf-body-bg cannot stick.
+                        document.body.style.setProperty('--wf-bg-roomx-image', `url("${url}")`);
+                        document.documentElement.style.setProperty('--wf-bg-roomx-image', `url("${url}")`);
+                        writeCachedSettingsBackgroundUrl(url);
+                    }
+                };
+                if (data.background_url && !is_bare && !needsShop) {
+                    // Always apply on Settings / when no bg yet / on landing+main (DB-resolved URL).
+                    // Previously, landing early-paint set data-bg-url and blocked Settings room X.
+                    if (
+                        isSettings ||
+                        isLandingPath ||
+                        isMainRoomPath ||
+                        !document.body.getAttribute('data-bg-url')
+                    ) {
+                        applyBodyBg(data.background_url);
+                    }
                 }
                 if (needsShop) {
                     document.body.style.removeProperty('background-image');
@@ -352,15 +388,13 @@ export const useSiteHydration = () => {
 
         const syncRouteBootstrap = async () => {
             try {
+                const isSettings = page === 'admin/settings' || locationIsSettingsPage(location.pathname, location.search);
                 const data = await ApiClient.get<{
                     shop_data?: IShopData;
                     background_url?: string;
                     about_data?: IAboutData;
                     contact_data?: IContactData;
-                }>('/api/bootstrap.php', {
-                    path: location.pathname,
-                    include_shop: needsShop ? '1' : '0'
-                });
+                }>('/api/bootstrap.php', buildBootstrapQueryParams(location.pathname, location.search, { includeShop: needsShop }));
                 if (cancelled) return;
 
                 if (needsShop && data.shop_data) {
@@ -384,6 +418,11 @@ export const useSiteHydration = () => {
                     document.body.style.backgroundPosition = 'center';
                     document.body.style.backgroundRepeat = 'no-repeat';
                     document.body.style.backgroundAttachment = 'fixed';
+                    if (isSettings || data.background_url.includes('roomX') || data.background_url.includes('roomx')) {
+                        document.body.style.setProperty('--wf-bg-roomx-image', `url("${data.background_url}")`);
+                        document.documentElement.style.setProperty('--wf-bg-roomx-image', `url("${data.background_url}")`);
+                        writeCachedSettingsBackgroundUrl(data.background_url);
+                    }
                 }
             } catch (e) {
                 console.error('[SiteHydration] SPA route sync failed', e);

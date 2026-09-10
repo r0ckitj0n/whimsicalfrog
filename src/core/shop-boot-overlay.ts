@@ -11,11 +11,13 @@ const LOADING_CLASS = 'wf-shop-loading';
 const SHOP_BG_CACHE_KEY = 'wf_shop_bg_url_v3';
 const SHOP_DATA_CACHE_KEY = 'wf_shop_data_v2';
 
-/** Known-good on-disk shop wallpaper (DB "realistic" paths often 404 as HTML). */
-export const DEFAULT_SHOP_BG_URL = '/images/backgrounds/background-roomS.webp';
+/** Prefer realistic shop wallpaper; keep legacy cartoon as last-resort fallback. */
+export const DEFAULT_SHOP_BG_URL = '/images/backgrounds/realistic/realistic-roomS.webp';
 
 const SHOP_BG_FALLBACKS = [
     DEFAULT_SHOP_BG_URL,
+    '/images/backgrounds/realistic/realistic-roomS.png',
+    '/images/backgrounds/background-roomS.webp',
     '/images/backgrounds/background-roomS.png',
 ];
 
@@ -118,8 +120,9 @@ declare global {
 function isShopWallpaperUrl(url: string): boolean {
     const u = String(url || '');
     if (!u) return false;
-    // Shop room code is capital S — only accept background-roomS.* (not room0/A/5).
-    return /background-roomS\.(webp|png|jpe?g)(\?|#|$)/.test(u);
+    // Shop room code is capital S — accept realistic-roomS.* or legacy background-roomS.*
+    // (reject room0/A/1/etc so a wrong-room wallpaper cannot stick under the frog).
+    return /(?:^|\/)(?:realistic\/)?(?:realistic-roomS|background-roomS)\.(webp|png|jpe?g)(\?|#|$)/i.test(u);
 }
 
 function readCachedShopBg(): string {

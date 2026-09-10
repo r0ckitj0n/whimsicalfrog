@@ -3,6 +3,8 @@ import { ApiClient } from '../../core/ApiClient.js';
 import logger from '../../core/logger.js';
 import type { IBackground, IBackgroundRoomOption, IBackgroundsResponse } from '../../types/backgrounds.js';
 import type { IRoomImageGenerationRequest, IRoomImageGenerationResponse } from '../../types/room-generation.js';
+import { resolveBackgroundAssetUrl } from '../../utils/background-url.js';
+import { writeCachedSettingsBackgroundUrl } from '../../utils/settingsBackgroundCache.js';
 
 // Re-export for backward compatibility
 export type { IBackground, IBackgroundRoomOption as IRoomOption } from '../../types/backgrounds.js';
@@ -102,6 +104,22 @@ export const useBackgrounds = () => {
                 await fetchBackgroundsForRoom(room);
                 // Room modal HTML embeds background URL; invalidate so next open reflects the deployed background.
                 window.roomModalManager?.invalidateRoom?.(room);
+                if (String(room).toUpperCase() === 'X') {
+                    const activeRes = await ApiClient.get<IBackgroundsResponse>('/api/backgrounds.php', {
+                        room,
+                        active_only: 'true',
+                    });
+                    const applied = activeRes?.data?.background || activeRes?.background || null;
+                    const raw = applied?.webp_filename || applied?.image_filename || '';
+                    const url = resolveBackgroundAssetUrl(raw);
+                    if (url) {
+                        writeCachedSettingsBackgroundUrl(url);
+                        document.body.style.setProperty('--wf-bg-roomx-image', `url("${url}")`);
+                        document.documentElement.style.setProperty('--wf-bg-roomx-image', `url("${url}")`);
+                        document.body.style.backgroundImage = `url("${url}")`;
+                        document.body.setAttribute('data-bg-url', url);
+                    }
+                }
                 return true;
             } else {
                 throw new Error('Failed to apply background');

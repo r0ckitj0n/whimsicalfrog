@@ -23,7 +23,15 @@ export const LandingPage: React.FC = () => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const [destinations, setDestinations] = useState<IDoorDestination[]>([]);
-    const [bgUrl, setBgUrl] = useState('');
+    // Seed from the early-paint URL so the first React frame is never blank/black.
+    const [bgUrl, setBgUrl] = useState(() => {
+        if (typeof window === 'undefined') {
+            return '/images/backgrounds/realistic/realistic-roomA-frogs.webp';
+        }
+        const fromBody = document.body?.getAttribute('data-bg-url');
+        const fromBoot = (window as Window & { __WF_LANDING_BG_URL?: string }).__WF_LANDING_BG_URL;
+        return fromBody || fromBoot || '/images/backgrounds/realistic/realistic-roomA-frogs.webp';
+    });
 
     const {
         coordinates,

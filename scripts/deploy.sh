@@ -536,9 +536,12 @@ EOL
       # Preserve-images mode excludes images/** from the primary mirror so lftp --delete can never
       # remove remote images. We still upload changed/new images via dedicated passes with no --delete.
 
-      # 1) backgrounds (mtime-based, no delete)
-      echo -e "${GREEN}🖼️  Ensuring background images are updated (mtime-based; no deletes)...${NC}"
-      cat > deploy_backgrounds.txt << EOL
+      # 1) backgrounds — OPT-IN ONLY.
+      # Agent/cloud checkouts often have stale cartoon background-room*.webp with fresh mtimes.
+      # --only-newer then overwrites live realistic art. Never auto-push backgrounds.
+      if [ "${WF_ALLOW_BACKGROUND_PUSH:-0}" = "1" ]; then
+        echo -e "${GREEN}Backgrounds: WF_ALLOW_BACKGROUND_PUSH=1 — updating (mtime-based; no deletes)...${NC}"
+        cat > deploy_backgrounds.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
 set cmd:fail-exit yes
@@ -547,18 +550,22 @@ mirror --reverse --verbose --only-newer --no-perms \
   images/backgrounds images/backgrounds
 bye
 EOL
-      if [ "${WF_DRY_RUN:-0}" = "1" ]; then
-        echo -e "${YELLOW}DRY-RUN: Skipping backgrounds sync (mtime-based)${NC}"
-      elif lftp -f deploy_backgrounds.txt; then
-        echo -e "${GREEN}✅ Background images synced (mtime-based)${NC}"
+        if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+          echo -e "${YELLOW}DRY-RUN: Skipping backgrounds sync (mtime-based)${NC}"
+        elif lftp -f deploy_backgrounds.txt; then
+          echo -e "${GREEN}Background images synced (mtime-based)${NC}"
+        else
+          echo -e "${YELLOW}Background image sync failed; continuing${NC}"
+        fi
+        rm -f deploy_backgrounds.txt
       else
-        echo -e "${YELLOW}⚠️  Background image sync failed; continuing${NC}"
+        echo -e "${YELLOW}Skipping backgrounds push (set WF_ALLOW_BACKGROUND_PUSH=1; prefer scripts/push_live_backgrounds.sh)${NC}"
       fi
-      rm -f deploy_backgrounds.txt
 
-      # 2) signs (mtime-based, no delete). Live-edited signs keep precedence.
-      echo -e "${GREEN}🪧 Ensuring sign images are updated (mtime-based; no deletes)...${NC}"
-      cat > deploy_signs.txt << EOL
+      # 2) signs — OPT-IN ONLY (same stale-mtime overwrite risk as backgrounds).
+      if [ "${WF_ALLOW_BACKGROUND_PUSH:-0}" = "1" ] || [ "${WF_ALLOW_SIGN_PUSH:-0}" = "1" ]; then
+        echo -e "${GREEN}Signs: updating (mtime-based; no deletes)...${NC}"
+        cat > deploy_signs.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
 set cmd:fail-exit yes
@@ -567,14 +574,17 @@ mirror --reverse --verbose --only-newer --no-perms \
   images/signs images/signs
 bye
 EOL
-      if [ "${WF_DRY_RUN:-0}" = "1" ]; then
-        echo -e "${YELLOW}DRY-RUN: Skipping sign sync (mtime-based)${NC}"
-      elif lftp -f deploy_signs.txt; then
-        echo -e "${GREEN}✅ Sign images synced (mtime-based)${NC}"
+        if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+          echo -e "${YELLOW}DRY-RUN: Skipping sign sync (mtime-based)${NC}"
+        elif lftp -f deploy_signs.txt; then
+          echo -e "${GREEN}Sign images synced (mtime-based)${NC}"
+        else
+          echo -e "${YELLOW}Sign image sync failed; continuing${NC}"
+        fi
+        rm -f deploy_signs.txt
       else
-        echo -e "${YELLOW}⚠️  Sign image sync failed; continuing${NC}"
+        echo -e "${YELLOW}Skipping signs push (set WF_ALLOW_SIGN_PUSH=1 to opt in)${NC}"
       fi
-      rm -f deploy_signs.txt
 
       # 3) remaining images (items/logos/etc) without --delete
       echo -e "${GREEN}🖼️  Syncing other images (no deletes)...${NC}"

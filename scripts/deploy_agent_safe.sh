@@ -302,7 +302,14 @@ case "$MODE" in
       [[ -d "$d" ]] || continue
       upload_tree_no_delete "$d" "$d"
     done
-    upload_file "index.html" "index.html"
+    # Prefer built SPA shell so --code cannot clobber landing/settings boot fixes
+    # that only exist after vite rewrites preloads into dist/index.html.
+    if [[ -s dist/index.html ]]; then
+      upload_file "dist/index.html" "index.html"
+      upload_file "dist/index.html" "dist/index.html"
+    else
+      upload_file "index.html" "index.html"
+    fi
     upload_file "router.php" "router.php"
     ;;
   paths)

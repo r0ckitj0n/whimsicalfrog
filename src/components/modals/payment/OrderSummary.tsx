@@ -1,4 +1,5 @@
 import React from 'react';
+import { IPricingSummary, ShippingWaiverReason } from '../../../types/payment.js';
 
 interface CartItem {
     sku: string;
@@ -9,15 +10,16 @@ interface CartItem {
 
 interface OrderSummaryProps {
     items: CartItem[];
-    pricing: {
-        subtotal: number;
-        shipping: number;
-        tax: number;
-        discount: number;
-        total: number;
-    };
+    pricing: IPricingSummary;
     isLoading: boolean;
     error: string | null;
+}
+
+function shippingWaiverLabel(reason?: ShippingWaiverReason): string | null {
+    if (reason === 'pickup') return 'Pickup — no shipping charge';
+    if (reason === 'vip') return 'VIP free shipping';
+    if (reason === 'threshold') return 'Free USPS shipping ($50+)';
+    return null;
 }
 
 export const OrderSummary: React.FC<OrderSummaryProps> = ({
@@ -63,10 +65,30 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
                     <span className="text-gray-600">Subtotal</span>
                     <span className="font-semibold text-gray-900">${pricing.subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Shipping</span>
+                <div className="flex justify-between text-sm items-center gap-2">
+                    <span className="text-gray-600 flex items-center gap-2">
+                        Shipping
+                        {pricing.shipping === 0 && pricing.shipping_waiver_reason === 'vip' && (
+                            <span
+                                data-testid="order-summary-vip-badge"
+                                className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                                style={{
+                                    background: 'var(--brand-primary-bg)',
+                                    color: 'var(--brand-primary)',
+                                    border: '1px solid var(--brand-primary-border)'
+                                }}
+                            >
+                                VIP
+                            </span>
+                        )}
+                    </span>
                     <span className="font-semibold text-gray-900">${pricing.shipping.toFixed(2)}</span>
                 </div>
+                {pricing.shipping === 0 && shippingWaiverLabel(pricing.shipping_waiver_reason) && (
+                    <div className="text-xs text-gray-500 -mt-0.5">
+                        {shippingWaiverLabel(pricing.shipping_waiver_reason)}
+                    </div>
+                )}
                 <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Tax</span>
                     <span className="font-semibold text-gray-900">${pricing.tax.toFixed(2)}</span>

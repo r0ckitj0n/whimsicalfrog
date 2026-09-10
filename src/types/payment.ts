@@ -3,9 +3,13 @@ import { PAYMENT_METHOD, SHIPPING_METHOD, ENVIRONMENT } from '../core/constants.
 export type PaymentMethod = typeof PAYMENT_METHOD[keyof typeof PAYMENT_METHOD];
 export type ShippingMethod = typeof SHIPPING_METHOD[keyof typeof SHIPPING_METHOD];
 
+export type ShippingWaiverReason = 'pickup' | 'vip' | 'threshold' | null;
+
 export interface IPricingSummary {
     subtotal: number;
     shipping: number;
+    /** Why shipping is $0 when applicable: pickup, vip, or free-shipping threshold. */
+    shipping_waiver_reason?: ShippingWaiverReason;
     tax: number;
     discount: number;
     total: number;

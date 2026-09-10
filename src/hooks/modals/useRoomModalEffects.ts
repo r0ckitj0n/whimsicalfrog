@@ -77,7 +77,9 @@ export const useRoomModalEffects = ({
 
     const handleClick = useCallback((e: MouseEvent) => {
         const target = e.target as HTMLElement;
-        const itemEl = target.closest('.room-item') as HTMLElement;
+        const itemEl = target.closest(
+            '.room-item, .room-item-icon, [data-action="openRoom"], [data-room]'
+        ) as HTMLElement;
         const popupEl = target.closest('.item-hover-popup') as HTMLElement;
 
         if (!itemEl && !popupEl) return;
@@ -88,12 +90,24 @@ export const useRoomModalEffects = ({
 
         const action = itemEl?.dataset.action || '';
         const roomTarget = itemEl?.dataset.room_number || itemEl?.dataset.room;
+        const hrefRoom = itemEl?.getAttribute?.('href')?.match(/[?&]room(?:_id)?=([^&]+)/)?.[1] || '';
 
-        if (roomTarget || action === 'openRoom') {
+        if (roomTarget || hrefRoom || action === 'openRoom') {
             e.preventDefault();
             e.stopPropagation();
-            const targetRoom = roomTarget || itemEl?.dataset.room || '';
+            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+            const targetRoom = roomTarget || hrefRoom || itemEl?.dataset.room || '';
             if (targetRoom) {
+                // Christmas catalog page turns: hard-navigate so paging cannot be
+                // swallowed by modal backdrop/stacking quirks.
+                const catalogRooms = new Set([
+                    '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'
+                ]);
+                if (catalogRooms.has(String(targetRoom))) {
+                    window.location.href = `/?room=${encodeURIComponent(String(targetRoom))}`;
+                    return;
+                }
+
                 const fullPageRoomUrls: Record<string, string> = {
                     'A': '/',
                     '0': '/room_main',
@@ -256,14 +270,42 @@ export const useRoomModalEffects = ({
             window.setupImageErrorHandling?.(img as HTMLImageElement, sku);
         });
 
+        // Belt-and-suspenders: catalog page links hard-navigate even if a
+        // competing document listener calls openRoom without updating the URL.
+        const catalogRooms = new Set([
+            '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'
+        ]);
+        const catalogNavHandler = (e: Event) => {
+            const anchor = e.currentTarget as HTMLAnchorElement;
+            const room = anchor.dataset.room || '';
+            if (!catalogRooms.has(String(room))) return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof (e as MouseEvent).stopImmediatePropagation === 'function') {
+                (e as MouseEvent).stopImmediatePropagation();
+            }
+            window.location.href = `/?room=${encodeURIComponent(String(room))}`;
+        };
+        const catalogAnchors = body.querySelectorAll(
+            'a.room-item-shortcut[data-action="openRoom"][data-room]'
+        );
+        catalogAnchors.forEach(anchor => {
+            anchor.addEventListener('click', catalogNavHandler, true);
+        });
+
         body.addEventListener('mouseover', handleMouseOver);
         body.addEventListener('mouseout', handleMouseOut);
-        body.addEventListener('click', handleClick);
+        // Capture phase so catalog plaques still navigate if a child/overlay
+        // would otherwise swallow the bubble-phase click.
+        body.addEventListener('click', handleClick, true);
 
         return () => {
+            catalogAnchors.forEach(anchor => {
+                anchor.removeEventListener('click', catalogNavHandler, true);
+            });
             body.removeEventListener('mouseover', handleMouseOver);
             body.removeEventListener('mouseout', handleMouseOut);
-            body.removeEventListener('click', handleClick);
+            body.removeEventListener('click', handleClick, true);
         };
     }, [isOpen, content, handleMouseOver, handleMouseOut, handleClick, bodyRef]);
 

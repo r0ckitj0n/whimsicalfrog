@@ -91,8 +91,8 @@
     background: transparent !important;
 }
 
-body:not([data-page^='admin']) .room-modal-body .room-item-icon[data-mapping-type='content'],
-body:not([data-page^='admin']) .room-overlay-wrapper .room-item-icon[data-mapping-type='content'] {
+body:not([data-page^='admin']) .room-modal-body .room-item-icon[data-mapping-type='content']:not(.room-item-shortcut),
+body:not([data-page^='admin']) .room-overlay-wrapper .room-item-icon[data-mapping-type='content']:not(.room-item-shortcut) {
     overflow: visible !important;
 }
 
@@ -106,6 +106,31 @@ body:not([data-page^='admin']) .room-modal-body .room-item-icon[data-mapping-typ
 body:not([data-page^='admin']) .room-overlay-wrapper .room-item-icon[data-mapping-type='content']:hover img {
     transform: scale(2);
     filter: brightness(1.1) drop-shadow(0 0 15px rgba(135, 172, 58, 0.5));
+}
+
+/* Catalog nav plaques + index rows: never 2×-scale. A scaled index row
+   overlaps Next/Previous and steals clicks (backdrop close → /). */
+body:not([data-page^='admin']) .room-modal-body .room-item-shortcut,
+body:not([data-page^='admin']) .room-overlay-wrapper .room-item-shortcut {
+    overflow: hidden !important;
+    z-index: var(--wf-z-elevated);
+}
+body:not([data-page^='admin']) .room-modal-body .room-item-shortcut.area-1,
+body:not([data-page^='admin']) .room-modal-body .room-item-shortcut.area-2,
+body:not([data-page^='admin']) .room-overlay-wrapper .room-item-shortcut.area-1,
+body:not([data-page^='admin']) .room-overlay-wrapper .room-item-shortcut.area-2 {
+    z-index: var(--wf-z-sticky);
+}
+body:not([data-page^='admin']) .room-modal-body .room-item-shortcut img,
+body:not([data-page^='admin']) .room-overlay-wrapper .room-item-shortcut img {
+    pointer-events: none !important;
+    transform: none !important;
+    filter: brightness(1.05);
+}
+body:not([data-page^='admin']) .room-modal-body .room-item-shortcut:hover img,
+body:not([data-page^='admin']) .room-overlay-wrapper .room-item-shortcut:hover img {
+    transform: none !important;
+    filter: brightness(1.12) drop-shadow(0 0 10px rgba(135, 172, 58, 0.45));
 }
 
 .room-modal-body .room-item-icon:hover,

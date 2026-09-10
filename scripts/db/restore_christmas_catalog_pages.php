@@ -27,10 +27,11 @@ const PREV_SIGN_URL = '/images/signs/realistic/realistic-sign-catalog-previous-p
 const NEXT_SIGN_URL = '/images/signs/realistic/realistic-sign-catalog-next-page-v2.webp';
 const PREV_AREA = '.area-1';
 const NEXT_AREA = '.area-2';
+const INDEX_HIT_URL = '/images/signs/realistic/realistic-sign-catalog-index-hit.webp';
 
 /** @var list<array{room:string,page:int,title:string,file:string}> */
 const CATALOG_PAGES = [
-    ['room' => '20', 'page' => 1, 'title' => 'Christmas Catalog — Cover', 'file' => 'realistic-room20-christmas-catalog-p01'],
+    ['room' => '20', 'page' => 1, 'title' => 'Christmas Catalog — Cover & Index', 'file' => 'realistic-room20-christmas-catalog-p01'],
     ['room' => '21', 'page' => 2, 'title' => 'Christmas Catalog — Ornaments', 'file' => 'realistic-room21-christmas-catalog-p02'],
     ['room' => '22', 'page' => 3, 'title' => 'Christmas Catalog — Tree Trimmings', 'file' => 'realistic-room22-christmas-catalog-p03'],
     ['room' => '23', 'page' => 4, 'title' => 'Christmas Catalog — Lights & Sparkle', 'file' => 'realistic-room23-christmas-catalog-p04'],
@@ -77,7 +78,7 @@ function wf_upsert_room_settings(string $room, string $title, string $bgUrl, int
                  show_search_bar = 0,
                  has_icons_white_background = 0,
                  icon_panel_color = 'transparent',
-                 icon_vertical_alignment = 'middle',
+                 icon_vertical_alignment = 'top',
                  room_role = 'room',
                  display_order = ?,
                  is_active = 1,
@@ -93,7 +94,7 @@ function wf_upsert_room_settings(string $room, string $title, string $bgUrl, int
             (room_number, room_name, door_label, description, background_url, target_aspect_ratio,
              render_context, background_display_type, show_search_bar, has_icons_white_background,
              icon_panel_color, icon_vertical_alignment, room_role, display_order, is_active)
-         VALUES (?, ?, ?, ?, ?, 1.42857, 'modal', 'fullscreen', 0, 0, 'transparent', 'middle', 'room', ?, 1)",
+         VALUES (?, ?, ?, ?, ?, 1.42857, 'modal', 'fullscreen', 0, 0, 'transparent', 'top', 'room', ?, 1)",
         [$room, ...$paramsCommon]
     );
 }
@@ -384,11 +385,16 @@ try {
         $room = $page['room'];
         $title = $page['title'];
         $file = $page['file'];
-        $bgUrl = ImagePathNormalizer::normalizeBackgroundUrl(wf_bg_db_ref($file, 'webp')) . '?v=1950clean';
+        $bgUrl = ImagePathNormalizer::normalizeBackgroundUrl(wf_bg_db_ref($file, 'webp')) . '?v=1950decor2';
         $displayOrder = 70 + $page['page'];
 
         wf_upsert_room_settings($room, $title, $bgUrl, $displayOrder);
         $bgId = wf_upsert_background($room, $file);
+        // Re-apply cache-busted URL after applyBackground overwrites room_settings.
+        Database::execute(
+            'UPDATE room_settings SET background_url = ?, updated_at = CURRENT_TIMESTAMP WHERE room_number = ?',
+            [$bgUrl, $room]
+        );
 
         $hasPrev = $index > 0;
         $hasNext = $index < ($pageCount - 1);
@@ -430,6 +436,36 @@ try {
             wf_ensure_connection($room, $nextRoom);
         } else {
             wf_clear_nav_mapping($room, NEXT_AREA);
+        }
+
+
+        // Cover page: map each index row to its catalog room (transparent hit target).
+        if ((int) $page['page'] === 1) {
+            $activeIndexSelectors = [];
+            foreach (wf_christmas_catalog_index_slots() as $i => $slot) {
+                $activeIndexSelectors[] = $slot['selector'];
+                wf_upsert_content_mapping(
+                    $room,
+                    $slot['selector'],
+                    $slot['room'],
+                    'Page ' . $slot['page'] . ' — ' . $slot['label'],
+                    INDEX_HIT_URL,
+                    30 + $i
+                );
+                wf_ensure_connection($room, $slot['room']);
+            }
+
+            // Deactivate leftover content mappings on cover that are not nav/index.
+            $keep = array_merge([PREV_AREA, NEXT_AREA], $activeIndexSelectors);
+            $placeholders = implode(',', array_fill(0, count($keep), '?'));
+            Database::execute(
+                "UPDATE area_mappings
+                 SET is_active = 0, updated_at = CURRENT_TIMESTAMP
+                 WHERE room_number = ?
+                   AND mapping_type = 'content'
+                   AND area_selector NOT IN ($placeholders)",
+                [$room, ...$keep]
+            );
         }
 
         echo "OK room {$room} (page {$page['page']}) bg#{$bgId} — {$title}\n";

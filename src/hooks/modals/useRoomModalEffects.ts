@@ -77,7 +77,9 @@ export const useRoomModalEffects = ({
 
     const handleClick = useCallback((e: MouseEvent) => {
         const target = e.target as HTMLElement;
-        const itemEl = target.closest('.room-item') as HTMLElement;
+        const itemEl = target.closest(
+            '.room-item, .room-item-icon, [data-action="openRoom"], [data-room]'
+        ) as HTMLElement;
         const popupEl = target.closest('.item-hover-popup') as HTMLElement;
 
         if (!itemEl && !popupEl) return;
@@ -93,6 +95,7 @@ export const useRoomModalEffects = ({
         if (roomTarget || hrefRoom || action === 'openRoom') {
             e.preventDefault();
             e.stopPropagation();
+            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
             const targetRoom = roomTarget || hrefRoom || itemEl?.dataset.room || '';
             if (targetRoom) {
                 // Christmas catalog page turns: hard-navigate so paging cannot be
@@ -101,7 +104,7 @@ export const useRoomModalEffects = ({
                     '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'
                 ]);
                 if (catalogRooms.has(String(targetRoom))) {
-                    window.location.assign(`/?room=${encodeURIComponent(String(targetRoom))}`);
+                    window.location.href = `/?room=${encodeURIComponent(String(targetRoom))}`;
                     return;
                 }
 

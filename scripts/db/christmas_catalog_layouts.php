@@ -216,23 +216,25 @@ function wf_christmas_catalog_item_slots(int $page): array
 function wf_christmas_catalog_nav_rects(bool $hasPrev, bool $hasNext): array
 {
     $rects = [];
+    // Keep nav plaques below the cover index (last row ends ~y=666) with a
+    // comfortable gap so hitboxes cannot collide with TOC rows.
     if ($hasPrev) {
         $rects[] = [
             'id' => 'catalog-prev-page',
-            'top' => 700,
+            'top' => 740,
             'left' => 50,
             'width' => 200,
-            'height' => 130,
+            'height' => 120,
             'selector' => '.area-1',
         ];
     }
     if ($hasNext) {
         $rects[] = [
             'id' => 'catalog-next-page',
-            'top' => 700,
+            'top' => 740,
             'left' => 1030,
             'width' => 200,
-            'height' => 130,
+            'height' => 120,
             'selector' => '.area-2',
         ];
     }

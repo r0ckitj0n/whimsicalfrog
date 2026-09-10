@@ -140,7 +140,10 @@ export const useRoomScaling = ({ bodyRef, originalWidth, originalHeight, content
                 el.style.setProperty('box-shadow', 'none', 'important');
                 el.style.setProperty('backdrop-filter', 'none', 'important');
                 el.style.setProperty('pointer-events', 'auto', 'important');
-                el.style.setProperty('z-index', '1000', 'important');
+                // Nav plaques (area-1 / area-2) must stack above wide index rows so
+                // page-turn hits are not stolen by overlapping TOC hitboxes.
+                const isNavPlaque = el.classList.contains('area-1') || el.classList.contains('area-2');
+                el.style.setProperty('z-index', isNavPlaque ? '1100' : '1000', 'important');
                 el.classList.add('positioned');
             });
         };

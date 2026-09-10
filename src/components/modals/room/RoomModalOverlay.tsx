@@ -3,6 +3,7 @@ import { RoomHeader } from './RoomHeader.js';
 import { RoomBody } from './RoomBody.js';
 import { ItemHoverPopup } from './ItemHoverPopup.js';
 import type { IRoomMetadata } from '../../../types/room.js';
+import { isChristmasCatalogRoom } from '../../../core/constants/christmasCatalog.js';
 
 interface IItemPopupState {
     visible: boolean;
@@ -56,6 +57,10 @@ export const RoomModalOverlay: React.FC<RoomModalOverlayProps> = ({
 }) => {
     if (!isOpen) return null;
 
+    // Catalog pages use edge plaques; ignore backdrop clicks so a near-edge
+    // next/prev tap does not dismiss the whole catalog to `/`.
+    const allowBackdropClose = !isChristmasCatalogRoom(room_number);
+
     return (
         <div
             id="wfReactRoomModalOverlay"
@@ -75,7 +80,10 @@ export const RoomModalOverlay: React.FC<RoomModalOverlayProps> = ({
                 boxSizing: 'border-box',
                 overflow: 'hidden'
             }}
-            onClick={(e) => e.target === e.currentTarget && onClose()}
+            onClick={(e) => {
+                if (!allowBackdropClose) return;
+                if (e.target === e.currentTarget) onClose();
+            }}
         >
             <style>{`
                 .room-item.sold-out img {

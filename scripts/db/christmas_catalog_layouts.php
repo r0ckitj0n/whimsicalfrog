@@ -219,8 +219,8 @@ function wf_christmas_catalog_nav_rects(bool $hasPrev, bool $hasNext): array
     if ($hasPrev) {
         $rects[] = [
             'id' => 'catalog-prev-page',
-            'top' => 720,
-            'left' => 30,
+            'top' => 700,
+            'left' => 50,
             'width' => 200,
             'height' => 130,
             'selector' => '.area-1',
@@ -229,8 +229,8 @@ function wf_christmas_catalog_nav_rects(bool $hasPrev, bool $hasNext): array
     if ($hasNext) {
         $rects[] = [
             'id' => 'catalog-next-page',
-            'top' => 720,
-            'left' => 1050,
+            'top' => 700,
+            'left' => 1030,
             'width' => 200,
             'height' => 130,
             'selector' => '.area-2',

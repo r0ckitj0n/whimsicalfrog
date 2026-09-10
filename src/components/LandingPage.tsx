@@ -23,7 +23,8 @@ export const LandingPage: React.FC = () => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const [destinations, setDestinations] = useState<IDoorDestination[]>([]);
-    const [bgUrl, setBgUrl] = useState('');
+    // Seed with the preloaded cabin art so React's first paint matches the HTML landing boot.
+    const [bgUrl, setBgUrl] = useState('/images/backgrounds/background-roomA.webp');
     const [hoveredSignIdx, setHoveredSignIdx] = useState<number | null>(null);
 
     const {
@@ -56,6 +57,8 @@ export const LandingPage: React.FC = () => {
             navigate('/shop', { replace: true });
             return;
         }
+
+        document.documentElement.classList.remove('wf-landing-boot');
 
         const loadData = async () => {
             const [destRes, bgRes] = await Promise.allSettled([
@@ -111,7 +114,7 @@ export const LandingPage: React.FC = () => {
             window.removeEventListener('resize', handleResize);
             document.body.classList.remove('mode-fullscreen');
         };
-    }, [isVisible, setContainerSize]);
+    }, [isVisible, setContainerSize, navigate]);
 
     if (!isVisible) return null;
 

@@ -4,22 +4,48 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <!-- Warm the shop wallpaper + frog so SPA Shop clicks do not flash black. -->
+    <!-- Warm landing cabin + shop wallpaper so SPA boots do not flash blank/white. -->
+    <link rel="preload" as="image" href="/images/backgrounds/background-roomA.webp">
     <link rel="preload" as="image" href="/images/backgrounds/background-roomS.webp">
     <link rel="preload" as="image" href="/images/logos/apple-touch-icon.png">
+    <!-- Hide SEO marketing shell before any paint; reveal only when JS is unavailable. -->
+    <style>
+        #wf-seo-shell {
+            display: none !important;
+        }
+
+        html:not(.wf-js) #wf-seo-shell {
+            display: block !important;
+        }
+    </style>
     <script>
         document.documentElement.classList.add('wf-js');
         (function () {
             var path = String(location.pathname || '').toLowerCase();
             var search = location.search || '';
+            var isMobile = false;
+            try {
+                isMobile = window.matchMedia('(max-width: 767px)').matches;
+            } catch (_mqErr) {
+                isMobile = false;
+            }
+            var landingBoot = (
+                path === '/' ||
+                path === '/index.html' ||
+                /(?:\?|&)room_id=A(?:&|$)/.test(search)
+            ) && !/(?:\?|&)section=/.test(search);
             var shopBoot = (
                 path === '/shop' ||
                 path.indexOf('/shop/') === 0 ||
                 path.indexOf('/product/') !== -1 ||
-                /(?:\?|&)room_id=S(?:&|$)/.test(search)
+                /(?:\?|&)room_id=S(?:&|$)/.test(search) ||
+                // Phones skip the landing room and go straight to shop — boot the shop overlay early.
+                (landingBoot && isMobile)
             );
             if (shopBoot) {
                 document.documentElement.classList.add('wf-shop-boot');
+            } else if (landingBoot) {
+                document.documentElement.classList.add('wf-landing-boot');
             }
             // Shop wallpaper under the frog — paint before any JS modules load.
             window.__wfPaintShopBootBg = function (url) {
@@ -116,8 +142,9 @@
             display: none;
         }
 
+        /* JS users: keep SEO shell hidden (also default-hidden above for FOUC safety). */
         html.wf-js #wf-seo-shell {
-            display: none;
+            display: none !important;
         }
 
         html.wf-js #wf-startup-loader {
@@ -131,6 +158,20 @@
                 radial-gradient(circle at 20% 20%, rgba(255, 140, 0, 0.2), transparent 40%),
                 radial-gradient(circle at 80% 80%, rgba(0, 165, 80, 0.25), transparent 45%),
                 #0a0a0a;
+        }
+
+        /* Landing: paint cabin wallpaper immediately; skip the generic loader card. */
+        html.wf-landing-boot #wf-startup-loader {
+            display: none !important;
+        }
+
+        html.wf-landing-boot body {
+            background-color: #000 !important;
+            background-image: url("/images/backgrounds/background-roomA.webp") !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-attachment: fixed !important;
         }
 
         html.wf-shop-boot #wf-root,
@@ -308,29 +349,37 @@
     </style>
     <script>
         (async function loadViteBuiltAssets() {
-            // Prefer Vite's native ESM entry when the Vite client is reachable (local/dev).
+            // Prefer Vite's native ESM entry only on local/dev hosts.
             // Production SPA fallback often returns HTTP 200 HTML for /@vite/client —
-            // that must NOT count as Vite available or the app never loads dist bundles.
-            try {
-                const probe = await fetch('/@vite/client', { cache: 'no-store' });
-                const contentType = (probe.headers.get('content-type') || '').toLowerCase();
-                const looksLikeJs =
-                    contentType.includes('javascript') ||
-                    contentType.includes('ecmascript') ||
-                    contentType.includes('typescript');
-                if (probe.ok && looksLikeJs) {
-                    const viteClient = document.createElement('script');
-                    viteClient.type = 'module';
-                    viteClient.src = '/@vite/client';
-                    document.head.appendChild(viteClient);
-                    const entry = document.createElement('script');
-                    entry.type = 'module';
-                    entry.src = '/src/entries/main.tsx';
-                    document.head.appendChild(entry);
-                    return;
+            // probing it wastes a full document fetch (~300ms+) before loading dist bundles.
+            const host = String(location.hostname || '').toLowerCase();
+            // Prefer Vite HMR only on obvious local hostnames (prod skips the HTML probe).
+            const isLocalDev =
+                host === 'localhost' || // pragma: allowlist secret
+                host.endsWith('.local');
+
+            if (isLocalDev) {
+                try {
+                    const probe = await fetch('/@vite/client', { cache: 'no-store' });
+                    const contentType = (probe.headers.get('content-type') || '').toLowerCase();
+                    const looksLikeJs =
+                        contentType.includes('javascript') ||
+                        contentType.includes('ecmascript') ||
+                        contentType.includes('typescript');
+                    if (probe.ok && looksLikeJs) {
+                        const viteClient = document.createElement('script');
+                        viteClient.type = 'module';
+                        viteClient.src = '/@vite/client';
+                        document.head.appendChild(viteClient);
+                        const entry = document.createElement('script');
+                        entry.type = 'module';
+                        entry.src = '/src/entries/main.tsx';
+                        document.head.appendChild(entry);
+                        return;
+                    }
+                } catch (_devErr) {
+                    // Fall through to built manifests.
                 }
-            } catch (_devErr) {
-                // Fall through to built manifests.
             }
 
             const cacheBust = `v=${Date.now().toString(36)}`;

@@ -75,3 +75,13 @@ bash scripts/deploy_agent_safe.sh --paths path/to/file
 ```
 
 (or restore via live backup APIs / `scripts/restore_from_backup.sh` when appropriate)
+
+## Backgrounds / signs (Hard Rule)
+
+Do **not** upload `images/backgrounds/**` or `images/signs/**` from agent checkouts. Fresh mtimes on older cartoon fallbacks have overwritten live realistic art.
+
+- Normal agent deploys: use `scripts/deploy_agent_safe.sh` (excludes `images/`).
+- `scripts/deploy.sh` skips backgrounds/signs unless `WF_ALLOW_BACKGROUND_PUSH=1` / `WF_ALLOW_SIGN_PUSH=1`.
+- Refresh local media from live: `bash scripts/pull_live_backgrounds.sh`
+- Intentional restore to live: `WF_ALLOW_BACKGROUND_PUSH=1 bash scripts/push_live_backgrounds.sh`
+

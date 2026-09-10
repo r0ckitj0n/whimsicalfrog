@@ -198,16 +198,38 @@ export const useSiteHydration = () => {
                 }
                 if (data.about_data) setAboutData(data.about_data);
                 if (data.contact_data) setContactData(data.contact_data);
-                if (data.background_url && !document.body.getAttribute('data-bg-url') && !is_bare && !needsShop) {
-                    document.body.setAttribute('data-bg-url', data.background_url);
+                // Keep body wallpaper continuous on landing/main room.
+                // Clearing it here caused a black flash (and any prior wrong bg
+                // briefly showing) before LandingPage finished its own fetch.
+                const pathName = (window.location.pathname || '/').toLowerCase();
+                const isLandingPath =
+                    pathName === '/' ||
+                    pathName === '/index.html' ||
+                    pathName.startsWith('/rooms/landing');
+                const isMainRoomPath =
+                    pathName.includes('/room_main') ||
+                    new URLSearchParams(window.location.search).get('room_id') === '0';
+                const applyBodyBg = (url: string) => {
+                    document.body.setAttribute('data-bg-url', url);
                     document.body.setAttribute('data-bg-applied', '1');
-                    document.body.style.setProperty('--wf-body-bg', `url("${data.background_url}")`);
-                    document.body.style.setProperty('--body-bg', `url("${data.background_url}")`);
-                    document.body.style.backgroundImage = `url("${data.background_url}")`;
+                    document.body.style.setProperty('--wf-body-bg', `url("${url}")`);
+                    document.body.style.setProperty('--body-bg', `url("${url}")`);
+                    document.body.style.backgroundImage = `url("${url}")`;
                     document.body.style.backgroundSize = 'cover';
                     document.body.style.backgroundPosition = 'center';
                     document.body.style.backgroundRepeat = 'no-repeat';
                     document.body.style.backgroundAttachment = 'fixed';
+                };
+                if (data.background_url && !is_bare && !needsShop) {
+                    // Prefer bootstrap's resolved URL (realistic DB path) over any
+                    // early default, including on landing/main room.
+                    if (
+                        isLandingPath ||
+                        isMainRoomPath ||
+                        !document.body.getAttribute('data-bg-url')
+                    ) {
+                        applyBodyBg(data.background_url);
+                    }
                 }
                 if (needsShop) {
                     document.body.style.removeProperty('background-image');

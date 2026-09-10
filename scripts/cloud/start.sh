@@ -68,6 +68,15 @@ FLUSH PRIVILEGES;
 SQL
 
 # Only seed the minimal fallback schema when the database is empty. If a full
+# Prefer live realistic room backgrounds over stale cartoon fallbacks in the snapshot.
+# Non-fatal: agents can still boot offline / without deploy credentials.
+if [[ -n "${WF_DEPLOY_HOST:-}" && -n "${WF_DEPLOY_USER:-}" && -n "${WF_DEPLOY_PASS:-}" ]]; then
+  log "Syncing live room backgrounds into the workspace (only-newer)"
+  bash scripts/pull_live_backgrounds.sh || log "Background pull skipped/failed (continuing)"
+else
+  log "Skipping live background pull (WF_DEPLOY_* not set)"
+fi
+
 # live backup has been restored (see scripts/cloud/pull_live_backup.sh), leave
 # it untouched.
 TABLE_COUNT=$(sudo mariadb -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${LOCAL_DB_NAME}';" 2>/dev/null || echo 0)

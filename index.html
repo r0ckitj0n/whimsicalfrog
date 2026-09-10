@@ -4,22 +4,35 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <!-- Warm the shop wallpaper + frog so SPA Shop clicks do not flash black. -->
+    <!-- Warm shop + landing wallpapers so first paint is never a wrong/black flash. -->
     <link rel="preload" as="image" href="/images/backgrounds/background-roomS.webp">
+    <link rel="preload" as="image" href="/images/backgrounds/realistic/realistic-roomA-frogs.webp">
     <link rel="preload" as="image" href="/images/logos/apple-touch-icon.png">
     <script>
         document.documentElement.classList.add('wf-js');
         (function () {
             var path = String(location.pathname || '').toLowerCase();
             var search = location.search || '';
+            var LANDING_BG = '/images/backgrounds/realistic/realistic-roomA-frogs.webp';
             var shopBoot = (
                 path === '/shop' ||
                 path.indexOf('/shop/') === 0 ||
                 path.indexOf('/product/') !== -1 ||
                 /(?:\?|&)room_id=S(?:&|$)/.test(search)
             );
+            var landingBoot = (
+                !shopBoot && (
+                    path === '/' ||
+                    path === '/index.html' ||
+                    path.indexOf('/rooms/landing') === 0
+                )
+            );
             if (shopBoot) {
                 document.documentElement.classList.add('wf-shop-boot');
+            }
+            if (landingBoot) {
+                document.documentElement.classList.add('wf-landing-boot');
+                document.documentElement.style.setProperty('--wf-landing-boot-bg-image', 'url("' + LANDING_BG + '")');
             }
             // Shop wallpaper under the frog — paint before any JS modules load.
             window.__wfPaintShopBootBg = function (url) {
@@ -34,10 +47,23 @@
                     layer.setAttribute('data-bg', bgUrl);
                 }
             };
+            window.__WF_LANDING_BG_URL = LANDING_BG;
             if (shopBoot) {
                 // Run after the overlay node exists (end of body); also try now.
                 document.addEventListener('DOMContentLoaded', function () {
                     window.__wfPaintShopBootBg();
+                });
+            }
+            if (landingBoot) {
+                document.addEventListener('DOMContentLoaded', function () {
+                    if (!document.body) return;
+                    document.body.setAttribute('data-bg-url', LANDING_BG);
+                    document.body.setAttribute('data-bg-applied', '1');
+                    document.body.style.backgroundImage = 'url("' + LANDING_BG + '")';
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                    document.body.style.backgroundRepeat = 'no-repeat';
+                    document.body.style.backgroundAttachment = 'fixed';
                 });
             }
             // Hide the crawler SEO shell as early as possible (before React mounts).
@@ -173,6 +199,16 @@
         html.wf-shop-boot body {
             background-color: #000 !important;
             background-image: var(--wf-shop-boot-bg-image, url("/images/backgrounds/background-roomS.webp")) !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-attachment: fixed !important;
+        }
+
+        /* Landing: paint the realistic porch wallpaper before React/CSS modules load. */
+        html.wf-landing-boot body {
+            background-color: #000 !important;
+            background-image: var(--wf-landing-boot-bg-image, url("/images/backgrounds/realistic/realistic-roomA-frogs.webp")) !important;
             background-size: cover !important;
             background-position: center !important;
             background-repeat: no-repeat !important;

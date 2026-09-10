@@ -693,3 +693,15 @@ When an agent ships changes that should go live, use the backup-first safe deplo
 4. Full policy: `documentation/routines/agent-safe-deploy.md` and `documentation/routines/live-deploy.md`.
 
 **Never** use `deploy_full.sh`, `--purge*`, or root-level `mirror --delete` for routine agent publishes. Live content often newer than the agent workspace must win for data/media.
+
+### Room backgrounds / realistic media (Hard Rule)
+
+Live `images/backgrounds/` (especially `realistic/`) is **live-owned media**. Agent VMs frequently have older cartoon `background-room*.webp` fallbacks with fresh checkout mtimes. Pushing those with `--only-newer` has repeatedly overwritten the realistic art on production.
+
+- **Never** upload `images/backgrounds/**` or `images/signs/**` during normal agent deploys.
+- `scripts/deploy.sh` skips background/sign pushes unless `WF_ALLOW_BACKGROUND_PUSH=1` (signs: `WF_ALLOW_SIGN_PUSH=1`).
+- Prefer `bash scripts/deploy_agent_safe.sh` which excludes all of `images/`.
+- To refresh a stale agent checkout from live: `bash scripts/pull_live_backgrounds.sh`
+- To intentionally restore realistic backgrounds to live (after verifying local files match realistic sources):  
+  `WF_ALLOW_BACKGROUND_PUSH=1 bash scripts/push_live_backgrounds.sh`
+- If a task needs new background art, generate/upload via the admin room tools or an explicit user-approved media push — do not “fix” backgrounds by redeploying the git checkout copies.

@@ -363,5 +363,12 @@ try {
     error_log('[router] SEO injection failed: ' . $e->getMessage());
 }
 
+// SPA shell must never be cached: hashed vendor chunks rotate on each deploy, and a
+// stale index keeps calling missing /api/*.php paths that IONOS answers with Sedo HTML.
+header('Content-Type: text/html; charset=UTF-8');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 echo $html;
 exit;

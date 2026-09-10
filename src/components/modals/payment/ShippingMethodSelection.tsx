@@ -1,15 +1,17 @@
 import React from 'react';
 import { SHIPPING_METHOD } from '../../../core/constants.js';
-import { ShippingMethod } from '../../../types/payment.js';
+import { ShippingMethod, ShippingWaiverReason } from '../../../types/payment.js';
 
 interface ShippingMethodSelectionProps {
     selectedMethod: ShippingMethod;
     onSelect: (method: ShippingMethod) => void;
+    shippingWaiverReason?: ShippingWaiverReason;
 }
 
 export const ShippingMethodSelection: React.FC<ShippingMethodSelectionProps> = ({
     selectedMethod,
-    onSelect
+    onSelect,
+    shippingWaiverReason = null
 }) => {
     const methods = [
         { value: SHIPPING_METHOD.PICKUP, label: 'Customer Pickup', fee: 0, badge: 'PICKUP\nNO FEE' },
@@ -19,11 +21,12 @@ export const ShippingMethodSelection: React.FC<ShippingMethodSelectionProps> = (
         { value: SHIPPING_METHOD.UPS, label: 'UPS', fee: 14.99 }
     ];
 
-    const selectedMethodData = methods.find(m => m.value === selectedMethod);
+    const showVipBadge = shippingWaiverReason === 'vip' && selectedMethod !== SHIPPING_METHOD.PICKUP;
+    const showPickupBadge = selectedMethod === SHIPPING_METHOD.PICKUP;
 
     return (
         <section className="bg-white rounded-2xl p-4 border border-gray-200">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-3 gap-3">
                 <h3 style={{
                     margin: 0,
                     color: 'var(--brand-secondary)',
@@ -32,21 +35,39 @@ export const ShippingMethodSelection: React.FC<ShippingMethodSelectionProps> = (
                     fontWeight: 700,
                     fontStyle: 'italic'
                 }}>
-                    Shipping method
+                    {showVipBadge ? 'Shipping method (VIP)' : 'Shipping method'}
                 </h3>
 
-                {/* Badge for pickup */}
-                {selectedMethod === SHIPPING_METHOD.PICKUP && (
+                {showPickupBadge && (
                     <div style={{
                         padding: '8px 12px',
                         background: 'var(--brand-primary-bg)',
                         border: '1px solid var(--brand-primary-border)',
                         borderRadius: '8px',
                         textAlign: 'center',
-                        lineHeight: 1.2
+                        lineHeight: 1.2,
+                        flexShrink: 0
                     }}>
                         <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--brand-primary)' }}>PICKUP</div>
                         <div style={{ fontSize: '0.625rem', fontWeight: 600, color: 'var(--brand-primary)' }}>NO FEE</div>
+                    </div>
+                )}
+
+                {showVipBadge && (
+                    <div
+                        data-testid="shipping-vip-badge"
+                        style={{
+                            padding: '8px 12px',
+                            background: 'var(--brand-primary-bg)',
+                            border: '1px solid var(--brand-primary-border)',
+                            borderRadius: '8px',
+                            textAlign: 'center',
+                            lineHeight: 1.2,
+                            flexShrink: 0
+                        }}
+                    >
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--brand-primary)' }}>VIP</div>
+                        <div style={{ fontSize: '0.625rem', fontWeight: 600, color: 'var(--brand-primary)' }}>FREE SHIPPING</div>
                     </div>
                 )}
             </div>
@@ -81,7 +102,11 @@ export const ShippingMethodSelection: React.FC<ShippingMethodSelectionProps> = (
             </select>
 
             <div className="text-sm text-gray-600">
-                <div>Free USPS shipping on orders $50+.</div>
+                {showVipBadge ? (
+                    <div>VIP account — shipping is free on this order.</div>
+                ) : (
+                    <div>Free USPS shipping on orders $50+.</div>
+                )}
                 <div className="text-gray-400 text-xs mt-1">Select a method. Address is required for delivery and carriers.</div>
             </div>
         </section>

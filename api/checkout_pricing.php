@@ -41,6 +41,7 @@ try {
         'pricing' => [
             'subtotal' => (float) ($pricing['subtotal'] ?? 0),
             'shipping' => (float) ($pricing['shipping'] ?? 0),
+            'shipping_waiver_reason' => $pricing['shipping_waiver_reason'] ?? null,
             'tax' => (float) ($pricing['tax'] ?? 0),
             'discount' => (float) ($pricing['discount'] ?? 0),
             'coupon' => !empty($pricing['coupon']) ? ['code' => (string) $pricing['coupon']] : null,

@@ -26,21 +26,7 @@ function calculate_item_prices($item_ids, $quantities)
 
 function calculate_shipping($subtotal, $method, $weightOz = 0, $isVip = false)
 {
-    if ($isVip)
-        return 0.0;
-    $cfg = BusinessSettings::getShippingConfig(false);
-    if ($method === WF_Constants::SHIPPING_METHOD_PICKUP)
-        return 0.0;
-    if ($method === WF_Constants::SHIPPING_METHOD_LOCAL)
-        return 75.0;
-    if ($method === WF_Constants::SHIPPING_METHOD_USPS && $subtotal >= $cfg['free_shipping_threshold'])
-        return 0.0;
-
-    $base = $cfg['shipping_rate_usps'];
-    if ($method === WF_Constants::SHIPPING_METHOD_FEDEX)
-        $base = $cfg['shipping_rate_fedex'];
-    if ($method === WF_Constants::SHIPPING_METHOD_UPS)
-        $base = $cfg['shipping_rate_ups'];
-
-    return $base; // Simplified for brevity
+    // Keep legacy helper aligned with OrderPricingHelper (USPS-only free threshold).
+    require_once __DIR__ . '/../orders/helpers/OrderPricingHelper.php';
+    return OrderPricingHelper::calculateShipping($subtotal, $method, $isVip);
 }

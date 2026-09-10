@@ -47,6 +47,7 @@ function getAISettings()
 
     $defaults = [
         'ai_provider' => 'jons_ai',
+        'ai_vision_provider' => '',
         'openai_api_key' => '',
         'openai_model' => 'gpt-3.5-turbo',
         'anthropic_api_key' => '',
@@ -202,6 +203,7 @@ function initializeAISettings($pdo)
 
     $defaultSettings = [
         'ai_provider' => ['jons_ai', $descriptions['ai_provider'], 'text', $displayNames['ai_provider']],
+        'ai_vision_provider' => ['', $descriptions['ai_vision_provider'], 'text', $displayNames['ai_vision_provider']],
         'openai_api_key' => ['', $descriptions['openai_api_key'], 'text', $displayNames['openai_api_key']],
         'openai_model' => ['gpt-3.5-turbo', $descriptions['openai_model'], 'text', $displayNames['openai_model']],
         'anthropic_api_key' => ['', $descriptions['anthropic_api_key'], 'text', $displayNames['anthropic_api_key']],

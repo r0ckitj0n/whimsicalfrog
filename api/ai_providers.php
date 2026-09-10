@@ -53,7 +53,7 @@ class AIProviders
         ];
     }
 
-    private function loadSettingsDirectly()
+    protected function loadSettingsDirectly()
     {
         $defaults = [
             'ai_provider' => 'jons_ai',
@@ -87,24 +87,7 @@ class AIProviders
     private function initProvider()
     {
         $type = $this->settings['ai_provider'] ?? WF_Constants::AI_PROVIDER_JONS_AI;
-        switch ($type) {
-            case WF_Constants::AI_PROVIDER_OPENAI:
-                $this->provider = new OpenAIProvider($this->settings);
-                break;
-            case WF_Constants::AI_PROVIDER_ANTHROPIC:
-                $this->provider = new AnthropicProvider($this->settings);
-                break;
-            case WF_Constants::AI_PROVIDER_GOOGLE:
-                $this->provider = new GoogleProvider($this->settings);
-                break;
-            case WF_Constants::AI_PROVIDER_META:
-                $this->provider = new MetaProvider($this->settings);
-                break;
-            case WF_Constants::AI_PROVIDER_JONS_AI:
-            default:
-                $this->provider = $this->localProvider;
-                break;
-        }
+        $this->provider = $this->getProviderInstance($type);
     }
 
     public function getSettings()
@@ -180,11 +163,49 @@ class AIProviders
         return $this->provider;
     }
 
+    /**
+     * Resolve a dedicated vision-capable provider instance, if one is configured
+     * (business_settings.ai_vision_provider) and actually supports images. Returns
+     * null when no override should apply (same as primary, not configured, fails to
+     * instantiate, or doesn't support images).
+     */
+    private function getVisionProviderOverride()
+    {
+        $visionProviderType = trim((string) ($this->settings['ai_vision_provider'] ?? ''));
+        if ($visionProviderType === '') {
+            return null;
+        }
+        $primaryType = $this->settings['ai_provider'] ?? WF_Constants::AI_PROVIDER_JONS_AI;
+        if ($visionProviderType === $primaryType) {
+            // Already using this provider as primary; no separate override needed.
+            return null;
+        }
+
+        try {
+            $candidate = $this->getProviderInstance($visionProviderType);
+        } catch (\Throwable $e) {
+            error_log("AI vision provider override failed to instantiate ({$visionProviderType}): " . $e->getMessage());
+            return null;
+        }
+
+        if (!$candidate || $candidate === $this->localProvider || !$candidate->supportsImages()) {
+            return null;
+        }
+        return $candidate;
+    }
+
     private function runWithFallback($method, ...$args)
     {
+        // Image analysis gets its own resilient provider chain (primary -> configured
+        // vision override) instead of the generic local-fallback handling below, since
+        // Jon's AI (LocalProvider) has no real vision analysis to fall back to.
+        if ($method === 'analyzeItemImage') {
+            return $this->runVisionAnalysisWithFallback($method, ...$args);
+        }
+
         $providerName = $this->settings['ai_provider'] ?? WF_Constants::AI_PROVIDER_JONS_AI;
         $modelName = $this->resolveActiveModelForDiagnostics();
-        $fallbackAllowed = !in_array($method, ['analyzeItemImage', 'detectObjectBoundaries'], true);
+        $fallbackAllowed = !in_array($method, ['detectObjectBoundaries'], true);
         $this->lastRunDiagnostics = [
             'method' => $method,
             'provider' => $providerName,
@@ -225,6 +246,82 @@ class AIProviders
             }
             throw new Exception("Primary provider '{$providerName}' failed: {$e->getMessage()}", 0, $e);
         }
+    }
+
+    /**
+     * Image analysis provider chain: try the primary provider (ai_provider) first,
+     * then fall back to the configured ai_vision_provider (if it's distinct and
+     * actually supports images) before giving up. This covers the case where the
+     * primary provider supports images in principle (e.g. gpt-4o-mini) but can't
+     * actually run -- most commonly a missing/invalid API key -- while a different,
+     * working vision provider is configured. Local (Jon's AI) is never attempted
+     * here; suggest_all.php is responsible for degrading gracefully if every
+     * provider in the chain fails.
+     */
+    private function runVisionAnalysisWithFallback($method, ...$args)
+    {
+        $primaryName = $this->settings['ai_provider'] ?? WF_Constants::AI_PROVIDER_JONS_AI;
+        $primaryModel = $this->resolveActiveModelForDiagnostics();
+
+        $this->lastRunDiagnostics = [
+            'method' => $method,
+            'provider' => $primaryName,
+            'model' => $primaryModel,
+            'fallback_attempted' => false,
+            'fallback_used' => false,
+            'provider_error' => null,
+            'fallback_error' => null,
+        ];
+
+        // [name, provider instance, model] tuples to try in order.
+        $chain = [[$primaryName, $this->provider, $primaryModel]];
+
+        $visionOverrideName = trim((string) ($this->settings['ai_vision_provider'] ?? ''));
+        if ($visionOverrideName !== '' && $visionOverrideName !== $primaryName) {
+            $visionOverride = $this->getVisionProviderOverride();
+            if ($visionOverride) {
+                $chain[] = [$visionOverrideName, $visionOverride, $this->settings[$visionOverrideName . '_model'] ?? null];
+            }
+        }
+
+        $errors = [];
+        foreach ($chain as $index => $attempt) {
+            [$name, $providerInstance, $model] = $attempt;
+            $isFallback = $index > 0;
+            if ($isFallback) {
+                $this->lastRunDiagnostics['fallback_attempted'] = true;
+            }
+            try {
+                if (!method_exists($providerInstance, $method)) {
+                    throw new Exception("Method $method not implemented by provider");
+                }
+                $result = call_user_func_array([$providerInstance, $method], $args);
+                $this->markUsageSuccess($name);
+                if ($isFallback) {
+                    $this->lastRunDiagnostics['fallback_used'] = true;
+                    $this->lastRunDiagnostics['provider'] = $name;
+                    $this->lastRunDiagnostics['model'] = $model;
+                }
+                return $result;
+            } catch (Throwable $e) {
+                $errors[$name] = $e->getMessage();
+                if ($isFallback) {
+                    $this->lastRunDiagnostics['fallback_error'] = $e->getMessage();
+                } else {
+                    $this->lastRunDiagnostics['provider_error'] = $e->getMessage();
+                }
+                error_log("AI Provider Error [{$name}/{$method}]: " . $e->getMessage());
+            }
+        }
+
+        $names = array_keys($errors);
+        if (count($names) <= 1) {
+            $only = $names[0] ?? $primaryName;
+            throw new Exception("Primary provider '{$only}' failed: " . ($errors[$only] ?? 'unknown error'));
+        }
+        throw new Exception(
+            "Primary provider '{$names[0]}' failed: {$errors[$names[0]]}; vision fallback '{$names[1]}' failed: {$errors[$names[1]]}"
+        );
     }
 
     public function getLastRunDiagnostics()
@@ -281,7 +378,10 @@ class AIProviders
 
     public function currentModelSupportsImages()
     {
-        return $this->provider->supportsImages();
+        if ($this->provider->supportsImages()) {
+            return true;
+        }
+        return $this->getVisionProviderOverride() !== null;
     }
 
     public function generateMarketingContentWithImages($name, $description, $category, $images = [], $brandVoice = '', $contentTone = '')
@@ -329,7 +429,7 @@ class AIProviders
         return method_exists($p, 'getModels') ? $p->getModels() : [];
     }
 
-    private function getProviderInstance($type)
+    protected function getProviderInstance($type)
     {
         switch ($type) {
             case WF_Constants::AI_PROVIDER_OPENAI:

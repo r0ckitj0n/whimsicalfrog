@@ -109,6 +109,9 @@ declare global {
     closeTopAdminModal: () => void;
     showToast: (typeOrMessage: string, messageOrType?: string | null, options?: GlobalNotificationOptions) => number;
     __WF_BACKEND_ORIGIN?: string;
+    /** Active Room A wallpaper URL for HTML/React landing boot (no cartoon flash). */
+    __WF_LANDING_BOOT_BG?: string;
+    __wfPaintLandingBootBg?: (url?: string) => void;
     __WF_DEBUG?: boolean;
     __WF_DEV_MODE?: boolean;
     __WF_LAST_MODAL_CONFIRM_AT?: number;

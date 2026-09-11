@@ -319,6 +319,66 @@ if ($html === false) {
     exit;
 }
 
+// Inject the active Room A wallpaper BEFORE the early landing-boot script so first
+// paint matches the live DB art (never a stale Vite-hashed cartoon cabin).
+try {
+    $landingBootBg = '';
+    $isLandingPath = ($requestedPath === '/' || $requestedPath === '/index.html' || $requestedPath === '/index.php');
+    if (!$isLandingPath && isset($_GET['room_id']) && (string) $_GET['room_id'] === 'A') {
+        $isLandingPath = true;
+    }
+    if ($isLandingPath) {
+        require_once __DIR__ . '/includes/database.php';
+        require_once __DIR__ . '/includes/functions.php';
+        if (function_exists('get_active_background')) {
+            $landingBootBg = (string) get_active_background('A');
+        }
+        if ($landingBootBg === '') {
+            $landingBootBg = '/images/backgrounds/realistic/realistic-roomA-frogs.webp';
+        } else {
+            $landingBootBg = '/' . ltrim($landingBootBg, '/');
+        }
+
+        $cssUrl = 'url(' . json_encode($landingBootBg, JSON_UNESCAPED_SLASHES) . ')';
+        // Inline override beats any stale dist CSS that still points at a hashed cartoon /assets/ copy.
+        $bootBgScript = '<script>window.__WF_LANDING_BOOT_BG=' . json_encode($landingBootBg, JSON_UNESCAPED_SLASHES) . ';</script>'
+            . '<style id="wf-landing-boot-bg-override">'
+            . 'html.wf-landing-boot body{'
+            . 'background-color:#000!important;'
+            . 'background-image:' . $cssUrl . '!important;'
+            . 'background-size:cover!important;'
+            . 'background-position:center center!important;'
+            . 'background-repeat:no-repeat!important;'
+            . 'background-attachment:scroll!important;'
+            . '}'
+            . '</style>';
+        if (preg_match('/<head[^>]*>/i', $html)) {
+            $html = preg_replace('/<head[^>]*>/i', '$0' . "\n    " . $bootBgScript, $html, 1) ?? $html;
+        }
+
+        // Point any hashed/stale room-A preload at the live active wallpaper.
+        $html = preg_replace(
+            '/(<link\b[^>]*\bid=["\']wf-landing-boot-preload["\'][^>]*\bhref=["\'])[^"\']*(["\'])/i',
+            '$1' . htmlspecialchars($landingBootBg, ENT_QUOTES, 'UTF-8') . '$2',
+            $html,
+            1
+        ) ?? $html;
+        $html = preg_replace(
+            '#(<link\b[^>]*\bhref=["\'])/assets/background-roomA-[^"\']+\.webp(["\'])#i',
+            '$1' . htmlspecialchars($landingBootBg, ENT_QUOTES, 'UTF-8') . '$2',
+            $html,
+            1
+        ) ?? $html;
+        $html = preg_replace(
+            '#url\(["\']/assets/background-roomA-[^"\']+\.webp["\']\)#i',
+            $cssUrl,
+            $html
+        ) ?? $html;
+    }
+} catch (Throwable $e) {
+    error_log('[router] Landing boot background injection failed: ' . $e->getMessage());
+}
+
 // Inject crawlable SEO tags server-side so bots can index marketing metadata
 // without relying on client-side JavaScript execution.
 try {

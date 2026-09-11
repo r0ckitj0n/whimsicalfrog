@@ -23,8 +23,17 @@ export const LandingPage: React.FC = () => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const [destinations, setDestinations] = useState<IDoorDestination[]>([]);
-    // Seed with the preloaded cabin art so React's first paint matches the HTML landing boot.
-    const [bgUrl, setBgUrl] = useState('/images/backgrounds/background-roomA.webp');
+    // Seed from the HTML boot wallpaper (injected active Room A art) so React never
+    // paints the stale cartoon cabin that Vite previously hashed into /assets/.
+    const [bgUrl, setBgUrl] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const bootBg = window.__WF_LANDING_BOOT_BG;
+            if (typeof bootBg === 'string' && bootBg.trim() !== '') {
+                return bootBg.trim();
+            }
+        }
+        return '/images/backgrounds/realistic/realistic-roomA-frogs.webp';
+    });
     const [hoveredSignIdx, setHoveredSignIdx] = useState<number | null>(null);
 
     const {

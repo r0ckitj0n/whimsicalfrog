@@ -3,6 +3,7 @@
 // Include the configuration file
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/helpers/InventoryManagerHelper.php';
 
 // Only allow GET requests
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
@@ -50,11 +51,27 @@ try {
         Response::notFound('Order not found');
     }
 
-    // Get order items
-    $items = Database::queryAll("SELECT oi.*, COALESCE(i.name, oi.sku) as name, oi.unit_price as price 
-                          FROM order_items oi 
-                          LEFT JOIN items i ON oi.sku COLLATE utf8mb4_unicode_ci = i.sku COLLATE utf8mb4_unicode_ci 
-                          WHERE oi.order_id = ?", [$order_id]);
+    // Get order items with primary product images for fulfillment thumbnails
+    $items = Database::queryAll(
+        "SELECT oi.*,
+                COALESCE(i.name, oi.sku) as name,
+                oi.unit_price as price,
+                COALESCE(img.image_path, i.image_url) as image_path
+         FROM order_items oi
+         LEFT JOIN items i
+           ON oi.sku COLLATE utf8mb4_unicode_ci = i.sku COLLATE utf8mb4_unicode_ci
+         LEFT JOIN item_images img
+           ON i.sku COLLATE utf8mb4_unicode_ci = img.sku COLLATE utf8mb4_unicode_ci
+          AND img.is_primary = 1
+         WHERE oi.order_id = ?",
+        [$order_id]
+    );
+
+    foreach ($items as &$item) {
+        $item['image_url'] = InventoryManagerHelper::buildImageUrl($item['image_path'] ?? null);
+        unset($item['image_path']);
+    }
+    unset($item);
 
     // Get order notes
     $notes = Database::queryAll("SELECT * FROM order_notes WHERE order_id = ? ORDER BY created_at DESC", [$order_id]);

@@ -22,12 +22,16 @@ export const LandingPage: React.FC = () => {
     const isVisible = (roomIdParam === 'A') || (!roomIdParam && (location.pathname === '/' || location.pathname === '/index.html') && !section);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const [destinations, setDestinations] = useState<IDoorDestination[]>([]);
-    // Seed from the HTML boot wallpaper (injected active Room A art) so React never
-    // paints the stale cartoon cabin that Vite previously hashed into /assets/.
+    // Seed doors + wallpaper from router-injected HTML boot so the room is interactive
+    // as soon as React mounts (no waiting on door_sign_destinations / get_background).
+    const [destinations, setDestinations] = useState<IDoorDestination[]>(() => {
+        if (typeof window === 'undefined') return [];
+        const bootDest = window.__WF_LANDING_BOOT?.destinations;
+        return Array.isArray(bootDest) ? (bootDest as IDoorDestination[]) : [];
+    });
     const [bgUrl, setBgUrl] = useState(() => {
         if (typeof window !== 'undefined') {
-            const bootBg = window.__WF_LANDING_BOOT_BG;
+            const bootBg = window.__WF_LANDING_BOOT?.bg || window.__WF_LANDING_BOOT_BG;
             if (typeof bootBg === 'string' && bootBg.trim() !== '') {
                 return bootBg.trim();
             }
@@ -35,7 +39,6 @@ export const LandingPage: React.FC = () => {
         return '/images/backgrounds/realistic/realistic-roomA-frogs.webp';
     });
     const [hoveredSignIdx, setHoveredSignIdx] = useState<number | null>(null);
-
     const {
         coordinates,
         isLoading,
@@ -43,6 +46,8 @@ export const LandingPage: React.FC = () => {
         getScaledStyles,
         roomSettings
     } = useRoomCoordinates('A');
+
+    const doorsCanReveal = destinations.length > 0 && coordinates.length > 0;
 
     // Get icon panel color from database settings
     const iconPanelColor = roomSettings?.icon_panel_color || 'transparent';
@@ -67,42 +72,84 @@ export const LandingPage: React.FC = () => {
             return;
         }
 
-        document.documentElement.classList.remove('wf-landing-boot');
-
-        const loadData = async () => {
-            const [destRes, bgRes] = await Promise.allSettled([
-                ApiClient.get<{ destinations: IDoorDestination[] }>(
-                    '/api/area_mappings.php',
-                    { action: 'door_sign_destinations', room: 'A' }
-                ),
-                ApiClient.get<{ background: { webp_filename?: string; png_filename?: string; image_filename?: string } }>(
-                    '/api/get_background.php',
-                    { room: 'A' }
-                )
-            ]);
-
-            if (destRes.status === 'fulfilled') {
-                if (destRes.value?.destinations) {
-                    setDestinations(destRes.value.destinations);
-                }
+        // Keep the HTML cabin wallpaper until the React background image is decoded,
+        // so we never flash black (or show doors on an empty void) during handoff.
+        let cancelled = false;
+        const clearLandingBoot = () => {
+            if (cancelled) return;
+            document.documentElement.classList.remove('wf-landing-boot');
+        };
+        if (bgUrl) {
+            const img = new Image();
+            img.decoding = 'async';
+            img.onload = () => clearLandingBoot();
+            img.onerror = () => clearLandingBoot();
+            img.src = bgUrl;
+            if (img.complete) {
+                clearLandingBoot();
             } else {
-                console.error('[LandingPage] Failed to load door sign destinations', destRes.reason);
+                // Safety: never leave the boot class forever if decode stalls.
+                window.setTimeout(clearLandingBoot, 2500);
+            }
+        } else {
+            requestAnimationFrame(clearLandingBoot);
+        }
+
+        const hasBootDestinations = destinations.length > 0;
+        const hasBootBg = Boolean(bgUrl);
+
+        const softRevalidate = async () => {
+            const tasks: Array<Promise<void>> = [];
+
+            tasks.push((async () => {
+                try {
+                    const destRes = await ApiClient.get<{ destinations: IDoorDestination[] }>(
+                        '/api/area_mappings.php',
+                        { action: 'door_sign_destinations', room: 'A' }
+                    );
+                    if (destRes?.destinations) {
+                        setDestinations(destRes.destinations);
+                    }
+                } catch (err) {
+                    console.error('[LandingPage] Door sign load/revalidate failed', err);
+                }
+            })());
+
+            // Skip background XHR when HTML boot already provided the live wallpaper.
+            if (!hasBootBg) {
+                tasks.push((async () => {
+                    try {
+                        const bgRes = await ApiClient.get<{ background: { webp_filename?: string; png_filename?: string; image_filename?: string } }>(
+                            '/api/get_background.php',
+                            { room: 'A' }
+                        );
+                        const fetchedBg = bgRes?.background?.webp_filename
+                            || bgRes?.background?.png_filename
+                            || bgRes?.background?.image_filename;
+                        if (fetchedBg) {
+                            setBgUrl(resolveBackgroundAssetUrl(fetchedBg));
+                        }
+                    } catch (err) {
+                        console.error('[LandingPage] Failed to load background', err);
+                    }
+                })());
             }
 
-            if (bgRes.status === 'fulfilled') {
-                const fetchedBg = bgRes.value?.background?.webp_filename
-                    || bgRes.value?.background?.png_filename
-                    || bgRes.value?.background?.image_filename;
-
-                if (fetchedBg) {
-                    setBgUrl(resolveBackgroundAssetUrl(fetchedBg));
-                }
-            } else {
-                console.error('[LandingPage] Failed to load background', bgRes.reason);
-            }
+            await Promise.allSettled(tasks);
         };
 
-        loadData();
+        if (hasBootDestinations) {
+            const ric = (window as Window & {
+                requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+            }).requestIdleCallback;
+            if (typeof ric === 'function') {
+                ric(() => { void softRevalidate(); }, { timeout: 2500 });
+            } else {
+                window.setTimeout(() => { void softRevalidate(); }, 1200);
+            }
+        } else {
+            void softRevalidate();
+        }
 
         // Fullscreen mode ensures the background covers the viewport without scrollbars
         document.body.classList.add('mode-fullscreen');
@@ -120,9 +167,13 @@ export const LandingPage: React.FC = () => {
         handleResize();
 
         return () => {
+            cancelled = true;
             window.removeEventListener('resize', handleResize);
             document.body.classList.remove('mode-fullscreen');
         };
+        // Intentionally mount-once for this visibility cycle: soft-revalidate reads initial boot
+        // values and must not re-fire when destinations/bgUrl update from that revalidate.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isVisible, setContainerSize, navigate]);
 
     if (!isVisible) return null;
@@ -208,7 +259,7 @@ export const LandingPage: React.FC = () => {
                             key={idx}
                             href={resolveHref(dest.target)}
                             onClick={(event) => handleDestinationClick(event, resolveHref(dest.target))}
-                            className={`room-item-icon absolute group transition-opacity duration-300 overflow-visible ${isShortcutType ? 'room-item-shortcut' : ''} ${!isLoading && coordinates.length > 0 ? 'opacity-100' : 'opacity-0'}`}
+                            className={`room-item-icon absolute group transition-opacity duration-300 overflow-visible ${isShortcutType ? 'room-item-shortcut' : ''} ${(doorsCanReveal || (!isLoading && coordinates.length > 0)) ? 'opacity-100' : 'opacity-0'}`}
                             data-mapping-type={mappingType || undefined}
                             aria-label={dest.label || 'Explore'}
                             style={{
@@ -245,6 +296,8 @@ export const LandingPage: React.FC = () => {
                                         willChange: 'filter, transform'
                                     }}
                                     loading="eager"
+                                    fetchPriority="high"
+                                    decoding="async"
                                 />
                             </picture>
                         </a>

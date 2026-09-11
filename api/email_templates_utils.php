@@ -4,6 +4,8 @@
  * Handles template previews, test emails, and string conversions.
  */
 
+require_once __DIR__ . '/../includes/helpers/BusinessDateTimeHelper.php';
+
 function handlePreviewTemplate($pdo)
 {
     $templateId = $_GET['template_id'] ?? '';
@@ -22,7 +24,7 @@ function handlePreviewTemplate($pdo)
     $sampleVars = [
         'customer_name' => 'John Doe',
         'order_id' => 'WF-2024-001',
-        'order_date' => date('F j, Y'),
+        'order_date' => BusinessDateTimeHelper::formatForDisplay(BusinessDateTimeHelper::nowUtcString(), 'F j, Y'),
         'order_total' => '$45.99',
         'customer_email' => 'john.doe@example.com',
         'user_name' => 'John Doe',
@@ -132,7 +134,7 @@ function handleSendTestEmail($pdo)
         'customer_name' => 'John Doe',
         'customer_email' => $testEmail,
         'order_id' => 'TEST-001',
-        'order.created_at' => date('F j, Y g:i A'),
+        'order.created_at' => BusinessDateTimeHelper::formatForDisplay(BusinessDateTimeHelper::nowUtcString(), 'F j, Y g:i A'),
         'order_total' => '$45.99',
         'items' => '<li>Sample T-Shirt - $25.00</li><li>Custom Tumbler - $20.99</li>',
         'items_text' => "- Sample T-Shirt - $25.00\n- Custom Tumbler - $20.99",

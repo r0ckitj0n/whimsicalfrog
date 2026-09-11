@@ -16,14 +16,15 @@ function formatPrice($price, $currency = '$')
 }
 
 /**
- * Format.created_at for display
+ * Format a datetime for display in the configured business timezone.
  * @param string $date
  * @param string $format
  * @return string
  */
 function formatDate($date, $format = 'M j, Y')
 {
-    returndate($format, strtotime($date));
+    require_once __DIR__ . '/../helpers/BusinessDateTimeHelper.php';
+    return BusinessDateTimeHelper::formatForDisplay((string) $date, $format);
 }
 
 /**

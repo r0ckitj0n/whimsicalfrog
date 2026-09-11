@@ -28,6 +28,8 @@ export interface IOrderItem {
 
 export interface IReceiptData {
     order_id: string;
+    /** ISO/MySQL UTC timestamp when available; prefer for client-side reformatting. */
+    created_at?: string;
     date: string;
     payment_status: string;
     items: Array<{

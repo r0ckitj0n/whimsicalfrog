@@ -381,35 +381,85 @@ img.is_primary = 1 WHERE $where ORDER BY FIELD(i.category_id, $categoryOrderExpr
             $combined[] = $em;
         }
 
-        // 2. Add derived mappings for slots not taken by explicit ones
-        $nextAreaIndex = 1;
-        foreach ($items as $i => $it) {
-            while (isset($occupiedSelectors['.area-' . $nextAreaIndex])) {
-                $nextAreaIndex++;
+        // Christmas Catalog pages: slice category items across rooms by map slot capacity.
+        $catalogItemSelectors = [];
+        $isCatalogRoom = false;
+        $catalogHelper = __DIR__ . '/../../christmas_catalog.php';
+        if (is_file($catalogHelper)) {
+            require_once $catalogHelper;
+            if (function_exists('wf_is_christmas_catalog_room') && wf_is_christmas_catalog_room($canonical)) {
+                $isCatalogRoom = true;
+                $catalogItemSelectors = wf_christmas_catalog_item_selectors_for_room($canonical);
+                $offset = wf_christmas_catalog_item_offset($canonical);
+                $limit = function_exists('wf_christmas_catalog_item_limit')
+                    ? wf_christmas_catalog_item_limit($canonical)
+                    : count($catalogItemSelectors);
+                $items = array_slice($items, $offset, $limit);
             }
-            $selector = '.area-' . $nextAreaIndex;
-            $occupiedSelectors[$selector] = true;
-            $nextAreaIndex++;
+        }
 
-            $sku = $it['sku'] ?? null;
-            $imgPath = $it['image_path'] ?? '';
-            $imgUrl = $imgPath ? self::normalizeItemImageUrl($imgPath) : '/images/items/placeholder.webp';
+        // 2. Add derived mappings for slots not taken by explicit ones
+        if ($isCatalogRoom && !empty($catalogItemSelectors)) {
+            foreach ($items as $i => $it) {
+                if (!isset($catalogItemSelectors[$i])) {
+                    break;
+                }
+                $selector = $catalogItemSelectors[$i];
+                if (isset($occupiedSelectors[$selector])) {
+                    continue;
+                }
+                $occupiedSelectors[$selector] = true;
 
-            $combined[] = [
-                'id' => null,
-                'room_number' => $canonical,
-                'area_selector' => $selector,
-                'mapping_type' => 'item',
-                'sku' => $sku,
-                'name' => $it['name'] ?? '',
-                'price' => $it['retail_price'] ?? 0,
-                'stock_quantity' => $it['stock_quantity'] ?? 0,
-                'category_id' => null,
-                'display_order' => $i + 1,
-                'derived' => true,
-                'image_url' => $imgUrl,
-                'coords' => $coordsMap[$selector] ?? null
-            ];
+                $sku = $it['sku'] ?? null;
+                $imgPath = $it['image_path'] ?? '';
+                $imgUrl = $imgPath ? self::normalizeItemImageUrl($imgPath) : '/images/items/placeholder.webp';
+
+                $combined[] = [
+                    'id' => null,
+                    'room_number' => $canonical,
+                    'area_selector' => $selector,
+                    'mapping_type' => 'item',
+                    'sku' => $sku,
+                    'name' => $it['name'] ?? '',
+                    'price' => $it['retail_price'] ?? 0,
+                    'stock_quantity' => $it['stock_quantity'] ?? 0,
+                    'category_id' => null,
+                    'display_order' => $i + 1,
+                    'derived' => true,
+                    'image_url' => $imgUrl,
+                    'coords' => $coordsMap[$selector] ?? null,
+                ];
+            }
+        } else {
+            $nextAreaIndex = 1;
+            foreach ($items as $i => $it) {
+                while (isset($occupiedSelectors['.area-' . $nextAreaIndex])) {
+                    $nextAreaIndex++;
+                }
+                $selector = '.area-' . $nextAreaIndex;
+                $occupiedSelectors[$selector] = true;
+                $nextAreaIndex++;
+
+                $sku = $it['sku'] ?? null;
+                $imgPath = $it['image_path'] ?? '';
+                $imgUrl = $imgPath ? self::normalizeItemImageUrl($imgPath) : '/images/items/placeholder.webp';
+
+                $combined[] = [
+                    'id' => null,
+                    'room_number' => $canonical,
+                    'area_selector' => $selector,
+                    'mapping_type' => 'item',
+                    'sku' => $sku,
+                    'name' => $it['name'] ?? '',
+                    'price' => $it['retail_price'] ?? 0,
+                    'stock_quantity' => $it['stock_quantity'] ?? 0,
+                    'category_id' => null,
+                    'display_order' => $i + 1,
+                    'derived' => true,
+                    'image_url' => $imgUrl,
+                    'coords' => $coordsMap[$selector] ?? null,
+                ];
+            }
         }
 
         self::enrichItemData($combined);

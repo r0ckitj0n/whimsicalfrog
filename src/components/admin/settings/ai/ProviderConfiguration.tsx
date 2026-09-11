@@ -14,6 +14,36 @@ interface ProviderConfigurationProps {
     onChange: (field: keyof IAISettings, value: unknown) => void;
 }
 
+const VISION_FALLBACK_OPTIONS = [
+    { id: '', label: 'None (fail if primary lacks image support)' },
+    { id: 'openai', label: 'OpenAI' },
+    { id: 'anthropic', label: 'Anthropic' },
+    { id: 'google', label: 'Google' },
+    { id: 'meta', label: 'Meta' }
+];
+
+const VisionFallbackSelector: React.FC<{
+    settings: IAISettings;
+    onChange: (field: keyof IAISettings, value: unknown) => void;
+}> = ({ settings, onChange }) => (
+    <div className="space-y-1.5 mt-5 pt-5 border-t border-slate-100">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Vision Fallback Provider</label>
+        <select
+            value={settings.ai_vision_provider || ''}
+            onChange={e => onChange('ai_vision_provider', e.target.value)}
+            className="w-full p-3 px-4 bg-white border-2 border-white rounded-xl text-xs font-black focus:border-brand-primary/30 outline-none transition-all shadow-sm appearance-none"
+            data-help-id="ai-vision-fallback-provider"
+        >
+            {VISION_FALLBACK_OPTIONS.filter(o => o.id !== settings.ai_provider).map(o => (
+                <option key={o.id} value={o.id}>{o.label}</option>
+            ))}
+        </select>
+        <p className="text-[10px] text-gray-400 font-bold px-1 leading-relaxed">
+            Used only for image analysis (e.g. Add Item &rsquo;Generate All&rsquo;) when the primary provider above can&rsquo;t run it -- missing/invalid key, unsupported model, etc. Requires its own API key below.
+        </p>
+    </div>
+);
+
 export const ProviderConfiguration: React.FC<ProviderConfigurationProps> = ({
     settings,
     models,
@@ -26,6 +56,7 @@ export const ProviderConfiguration: React.FC<ProviderConfigurationProps> = ({
                 <label className="block text-xs font-black text-gray-400 uppercase tracking-widest leading-none mb-1.5 ml-1">2. Configuration</label>
                 <div className="p-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-100 text-center">
                     <p className="text-xs text-slate-400 font-bold italic">No configuration required for Local AI.</p>
+                    <VisionFallbackSelector settings={settings} onChange={onChange} />
                 </div>
             </div>
         );
@@ -108,6 +139,7 @@ export const ProviderConfiguration: React.FC<ProviderConfigurationProps> = ({
                         )}
                     </div>
                 </div>
+                <VisionFallbackSelector settings={settings} onChange={onChange} />
             </div>
         </div>
     );

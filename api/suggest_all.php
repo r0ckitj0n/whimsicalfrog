@@ -198,6 +198,41 @@ function wf_compose_ai_failure_details($aiProviders, $baseMessage, $exceptionMes
     ];
 }
 
+/**
+ * Respond to an AI image-analysis failure without blocking the caller.
+ *
+ * Vision analysis is a convenience (auto-filling name/description/category
+ * from a photo); the uploaded image itself is already saved by this point,
+ * independent of whether AI analysis succeeds. A hard HTTP 400 with a dense
+ * technical diagnostic string ("provider=... | model=... | fallback_attempted=...")
+ * reads as "everything is broken" to a non-technical user, even though the photo
+ * upload had already succeeded. Respond 200 instead, with a calm, actionable
+ * message and the technical diagnostics tucked into `details` for admins/logs,
+ * so the UI can offer manual entry instead of a blocking error.
+ *
+ * @param bool $photoConfirmedSaved Whether we actually have a resolved image
+ *   reference for this request (i.e. the caller supplied image data/paths).
+ *   The message must never claim the photo is saved when this is false --
+ *   that would be misleading if the upload itself failed or nothing was ever
+ *   uploaded.
+ */
+function wf_respond_ai_analysis_unavailable($aiProviders, $exceptionMessage = '', $photoConfirmedSaved = true)
+{
+    $failure = wf_compose_ai_failure_details($aiProviders, 'AI photo analysis unavailable', $exceptionMessage);
+    error_log('suggest_all.php [info step]: AI analysis unavailable - ' . $failure['message']);
+    $message = $photoConfirmedSaved
+        ? "AI auto-fill isn't available right now. Your photo is already saved -- just fill in the Name and Category yourself, then click Create."
+        : "AI auto-fill isn't available right now, and I couldn't confirm your photo was saved either. Please check that the upload finished (look for it in the image gallery) before filling in the rest manually.";
+    Response::json([
+        'success' => true,
+        'info_suggestion' => null,
+        'ai_unavailable' => true,
+        'ai_message' => $message,
+        'photo_confirmed_saved' => (bool) $photoConfirmedSaved,
+        'diagnostics' => $failure['details'],
+    ]);
+}
+
 function wf_normalize_confidence_score($confidence)
 {
     if (is_numeric($confidence)) {
@@ -395,6 +430,10 @@ function wf_apply_theme_word_to_description($description, $themeWords): string
 try {
     $aiProviders = getAIProviders();
     $images = [];
+    // Tracks whether we actually found a saved image file on disk for this
+    // request, independent of whether a PNG sibling exists for AI analysis --
+    // used so failure messages never falsely claim the photo was saved.
+    $photoConfirmedSaved = false;
 
     // Prioritize passed imageData (string or array of image paths)
     if ($imageData) {
@@ -413,6 +452,9 @@ try {
             // If imageData is a relative web path (starts with /), convert to absolute filesystem path
             if (strpos($rawImage, '/') === 0 && strpos($rawImage, 'data:') !== 0) {
                 $absolutePath = $basePath . $rawImage;
+                if (file_exists($absolutePath)) {
+                    $photoConfirmedSaved = true;
+                }
                 $pngPath = wf_resolve_png_analysis_image($absolutePath);
                 if ($pngPath !== null) {
                     $images[] = $pngPath;
@@ -422,6 +464,9 @@ try {
                 }
             } else {
                 // It's either a data URI, pre-resolved path, or other supported format.
+                if (strpos($rawImage, 'data:') === 0 || file_exists($rawImage)) {
+                    $photoConfirmedSaved = true;
+                }
                 $pngPath = wf_resolve_png_analysis_image($rawImage);
                 if ($pngPath !== null) {
                     $images[] = $pngPath;
@@ -430,6 +475,10 @@ try {
         }
     } else if ($useImages && !empty($sku)) {
         $storedImages = AIProviders::getItemImages($sku, 3);
+        if (!empty($storedImages)) {
+            // getItemImages() already verified these paths exist on disk.
+            $photoConfirmedSaved = true;
+        }
         foreach ($storedImages as $storedImage) {
             $pngPath = wf_resolve_png_analysis_image($storedImage);
             if ($pngPath !== null) {
@@ -487,15 +536,19 @@ try {
             Response::error('Image analysis is required for Generate. Enable image-based generation and try again.', null, 400);
         }
         if (!$aiProviders->currentModelSupportsImages()) {
-            $unsupported = wf_compose_ai_failure_details(
-                $aiProviders,
-                'Selected AI model does not support image analysis',
-                'Switch to a vision-capable model in AI Settings and re-test the provider'
-            );
-            Response::error($unsupported['message'], $unsupported['details'], 400);
+            wf_respond_ai_analysis_unavailable($aiProviders, 'Switch to a vision-capable model in AI Settings and re-test the provider', $photoConfirmedSaved);
         }
         if (empty($images)) {
-            Response::error('Image analysis is required, but no PNG image was found for this item. Upload at least one PNG image and try again.', null, 400);
+            // The photo itself may well be saved (webp exists) even though no
+            // PNG sibling was found for analysis (e.g. a SKU rename left the
+            // PNG under its old filename) -- never hard-block Create over this.
+            wf_respond_ai_analysis_unavailable(
+                $aiProviders,
+                $photoConfirmedSaved
+                    ? 'No analyzable image file (PNG) found for this item -- the saved photo may be in an unsupported format for AI analysis'
+                    : 'No saved image file could be found for this item',
+                $photoConfirmedSaved
+            );
         }
 
         // Debug logging for info step
@@ -632,17 +685,15 @@ try {
                     $category = $results['info_suggestion']['category'];
                 } else {
                     error_log("suggest_all.php [info step]: analyzeItemImage returned null/empty");
-                    $failure = wf_compose_ai_failure_details(
+                    wf_respond_ai_analysis_unavailable(
                         $aiProviders,
-                        'Image analysis failed',
-                        !empty($analysisErrors) ? implode(' | ', $analysisErrors) : 'Provider returned incomplete analysis payload'
+                        !empty($analysisErrors) ? implode(' | ', $analysisErrors) : 'Provider returned incomplete analysis payload',
+                        $photoConfirmedSaved
                     );
-                    Response::error($failure['message'], $failure['details'], 400);
                 }
             } catch (Exception $e) {
                 error_log("Info analysis failed in suggest_all: " . $e->getMessage());
-                $failure = wf_compose_ai_failure_details($aiProviders, 'Image analysis failed', $e->getMessage());
-                Response::error($failure['message'], $failure['details'], 400);
+                wf_respond_ai_analysis_unavailable($aiProviders, $e->getMessage(), $photoConfirmedSaved);
             }
         } else if (!$imageFirstPriority && empty($name) && !empty($category)) {
             // Fallback: Generate info from category if name/images are missing

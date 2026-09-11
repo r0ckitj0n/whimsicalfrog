@@ -4,10 +4,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <!-- Warm landing cabin + shop wallpaper so SPA boots do not flash blank/white. -->
-    <link rel="preload" as="image" href="/images/backgrounds/background-roomA.webp">
+    <!-- Warm shop wallpaper. Landing cabin URL is applied via JS/PHP so Vite cannot
+         hash-bundle a stale workspace copy of background-roomA.webp into /assets/. -->
     <link rel="preload" as="image" href="/images/backgrounds/background-roomS.webp">
     <link rel="preload" as="image" href="/images/logos/apple-touch-icon.png">
+    <link id="wf-landing-boot-preload" rel="preload" as="image" href="">
     <!-- Hide SEO marketing shell before any paint; reveal only when JS is unavailable. -->
     <style>
         #wf-seo-shell {
@@ -56,10 +57,30 @@
                 // Phones skip the landing room and go straight to shop — boot the shop overlay early.
                 (landingBoot && isMobile)
             );
+            // Keep this path split so the HTML bundler cannot rewrite it to a hashed /assets/ copy.
+            // Live DB active Room A art is the realistic cabin; PHP may override via __WF_LANDING_BOOT_BG.
+            var defaultLandingBg = '/images/backgrounds/' + 'realistic/realistic-roomA-frogs.webp';
+            var landingBg = (typeof window.__WF_LANDING_BOOT_BG === 'string' && window.__WF_LANDING_BOOT_BG)
+                ? window.__WF_LANDING_BOOT_BG
+                : defaultLandingBg;
+            window.__WF_LANDING_BOOT_BG = landingBg;
+
+            window.__wfPaintLandingBootBg = function (url) {
+                var bgUrl = url || window.__WF_LANDING_BOOT_BG || defaultLandingBg;
+                window.__WF_LANDING_BOOT_BG = bgUrl;
+                var cssUrl = 'url("' + bgUrl + '")';
+                document.documentElement.style.setProperty('--wf-landing-boot-bg-image', cssUrl);
+                var preload = document.getElementById('wf-landing-boot-preload');
+                if (preload) {
+                    preload.setAttribute('href', bgUrl);
+                }
+            };
+
             if (shopBoot) {
                 document.documentElement.classList.add('wf-shop-boot');
             } else if (landingBoot) {
                 document.documentElement.classList.add('wf-landing-boot');
+                window.__wfPaintLandingBootBg(landingBg);
             }
             // Shop wallpaper under the frog — paint before any JS modules load.
             window.__wfPaintShopBootBg = function (url) {
@@ -181,7 +202,8 @@
 
         html.wf-landing-boot body {
             background-color: #000 !important;
-            background-image: url("/images/backgrounds/background-roomA.webp") !important;
+            /* URL comes from --wf-landing-boot-bg-image (JS/PHP), never a hashed /assets/ copy. */
+            background-image: var(--wf-landing-boot-bg-image, none) !important;
             background-size: cover !important;
             background-position: center center !important;
             background-repeat: no-repeat !important;

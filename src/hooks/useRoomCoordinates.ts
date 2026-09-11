@@ -14,16 +14,57 @@ interface IRoomSettings {
     icon_vertical_alignment?: 'top' | 'middle' | 'bottom';
 }
 
+const readLandingBoot = () => {
+    if (typeof window === 'undefined') return null;
+    const boot = window.__WF_LANDING_BOOT;
+    if (!boot || typeof boot !== 'object') return null;
+    return boot;
+};
+
+const normalizeBootCoordinates = (raw: unknown): IDoorCoordinate[] => {
+    if (!Array.isArray(raw)) return [];
+    return raw
+        .map((entry, idx) => {
+            if (!entry || typeof entry !== 'object') return null;
+            const coord = entry as Partial<IDoorCoordinate> & { id?: string | number };
+            const rawSelector = coord.selector || coord.id || `area-${idx + 1}`;
+            const cleanSelector = String(rawSelector).replace(/^\.+/, '');
+            return {
+                ...coord,
+                selector: `.${cleanSelector}`
+            } as IDoorCoordinate;
+        })
+        .filter((coord): coord is IDoorCoordinate => !!coord);
+};
+
 export const useRoomCoordinates = (roomType: string = '0') => {
-    const [coordinates, setCoordinates] = useState<IDoorCoordinate[]>([]);
+    const boot = roomType === 'A' ? readLandingBoot() : null;
+    const bootCoords = roomType === 'A' ? normalizeBootCoordinates(boot?.coordinates) : [];
+
+    const [coordinates, setCoordinates] = useState<IDoorCoordinate[]>(() => bootCoords);
     const [isLoading, setIsLoading] = useState(false);
     const [containerSize, setContainerSize] = useState({
         width: typeof window !== 'undefined' ? window.innerWidth : 0,
         height: typeof window !== 'undefined' ? window.innerHeight : 0
     });
     const defaultContext = (roomType === 'A' || roomType === '0' || roomType === 'main') ? 'fullscreen' : 'modal';
-    const [renderContext, setRenderContext] = useState<string>(defaultContext);
-    const [roomSettings, setRoomSettings] = useState<IRoomSettings>({});
+    const [renderContext, setRenderContext] = useState<string>(() => {
+        if (boot?.roomSettings?.render_context) {
+            return String(boot.roomSettings.render_context);
+        }
+        return defaultContext;
+    });
+    const [roomSettings, setRoomSettings] = useState<IRoomSettings>(() => {
+        if (boot?.roomSettings) {
+            return {
+                render_context: boot.roomSettings.render_context || defaultContext,
+                target_aspect_ratio: boot.roomSettings.target_aspect_ratio ?? null,
+                icon_panel_color: boot.roomSettings.icon_panel_color,
+                icon_vertical_alignment: boot.roomSettings.icon_vertical_alignment
+            };
+        }
+        return {};
+    });
 
     const normalizeApiCoordinates = useCallback((raw: unknown): IDoorCoordinate[] => {
         let parsed = raw;
@@ -73,29 +114,23 @@ export const useRoomCoordinates = (roomType: string = '0') => {
         const context = renderContext;
         const targetRatio = roomSettings.target_aspect_ratio;
 
-        // Parse target_aspect_ratio if available
         const ratio = typeof targetRatio === 'number'
             ? targetRatio
             : (parseFloat(String(targetRatio)) || null);
 
         if (context === 'fixed' && ratio) {
-            // For fixed mode, derive dimensions from aspect ratio
-            // Use 1024 as base width for consistency with Room Manager
             const baseWidth = 1024;
             const height = Math.round(baseWidth / ratio);
             return { width: baseWidth, height };
         }
 
         if (context === 'fullscreen') {
-            // Fullscreen mode - use high-res dimensions
-            // If ratio is provided, use it; otherwise default 1280x896
             if (ratio) {
                 return { width: 1280, height: Math.round(1280 / ratio) };
             }
             return { width: 1280, height: 896 };
         }
 
-        // Modal mode - standard dimensions
         if (ratio) {
             return { width: 1024, height: Math.round(1024 / ratio) };
         }
@@ -106,32 +141,10 @@ export const useRoomCoordinates = (roomType: string = '0') => {
         let apiRoom = roomType;
         if (roomType === PAGE.ROOM_MAIN || roomType === 'main') apiRoom = '0';
 
-        // 1. Fetch Room Settings to get render_context, target_aspect_ratio, icon_panel_color
-        try {
-            const settingsRes = await ApiClient.get<{ success: boolean; room: Record<string, any> }>('/api/room_settings.php', {
-                action: 'get_room',
-                room_number: apiRoom
-            });
-            if (settingsRes?.success && settingsRes.room) {
-                const room = settingsRes.room;
-                setRenderContext(room.render_context || 'modal');
-                setRoomSettings({
-                    render_context: room.render_context || 'modal',
-                    target_aspect_ratio: room.target_aspect_ratio,
-                    icon_panel_color: room.icon_panel_color,
-                    icon_vertical_alignment: room.icon_vertical_alignment
-                });
-            } else {
-                // Fallback for known high-res rooms if settings not found
-                if (['A', '0', 'X', 'S'].includes(apiRoom)) setRenderContext('fullscreen');
-            }
-        } catch (e) {
-            console.error('[useRoomCoordinates] Failed to fetch room settings', e);
-        }
-
-        // 1. Try to hydrate from DOM first (Parity with PHP shell)
+        // Try to hydrate from DOM first (parity with PHP shell)
         const shellId = roomType === 'A' ? 'landingPage' : 'mainRoomPage';
         const shellEl = document.getElementById(shellId);
+        let hasImmediateCoords = bootCoords.length > 0;
         if (shellEl) {
             const rawCoords = shellEl.getAttribute('data-coords');
             if (rawCoords) {
@@ -139,7 +152,6 @@ export const useRoomCoordinates = (roomType: string = '0') => {
                     const parsed = JSON.parse(rawCoords);
                     if (Array.isArray(parsed) && parsed.length > 0) {
                         setCoordinates(parsed.map((coord: IDoorCoordinate, idx: number) => {
-                            // Handle missing selector - fallback to id or generate one
                             const rawSelector = coord.selector || coord.id || `area-${idx + 1}`;
                             const selectorStr = String(rawSelector);
                             return {
@@ -147,8 +159,7 @@ export const useRoomCoordinates = (roomType: string = '0') => {
                                 selector: selectorStr.startsWith('.') ? selectorStr : `.${selectorStr}`
                             };
                         }));
-                        // We still want to fetch fresh ones from API to be safe, 
-                        // but we have immediate data now.
+                        hasImmediateCoords = true;
                     }
                 } catch (e) {
                     console.warn('[useRoomCoordinates] Failed to parse data-coords from shell', e);
@@ -156,22 +167,48 @@ export const useRoomCoordinates = (roomType: string = '0') => {
             }
         }
 
-        setIsLoading(true);
+        // Keep already-painted Room A doors visible while soft-revalidating.
+        if (!hasImmediateCoords) {
+            setIsLoading(true);
+        }
+
         try {
-            const data = await ApiClient.get<ICoordinatesResponse>('/api/area_mappings.php', {
-                action: 'get_room_coordinates',
-                room: apiRoom
+            const settingsPromise = ApiClient.get<{ success: boolean; room: Record<string, any> }>('/api/room_settings.php', {
+                action: 'get_room',
+                room_number: apiRoom
+            }).then((settingsRes) => {
+                if (settingsRes?.success && settingsRes.room) {
+                    const room = settingsRes.room;
+                    setRenderContext(room.render_context || 'modal');
+                    setRoomSettings({
+                        render_context: room.render_context || 'modal',
+                        target_aspect_ratio: room.target_aspect_ratio,
+                        icon_panel_color: room.icon_panel_color,
+                        icon_vertical_alignment: room.icon_vertical_alignment
+                    });
+                } else if (['A', '0', 'X', 'S'].includes(apiRoom)) {
+                    setRenderContext('fullscreen');
+                }
+            }).catch((e) => {
+                console.error('[useRoomCoordinates] Failed to fetch room settings', e);
             });
 
-            const coords = normalizeApiCoordinates(data.coordinates ?? data.data?.coordinates ?? []);
-            setCoordinates(coords);
-        } catch (err) {
-            console.error('[useRoomCoordinates] Failed to fetch coordinates', err);
-            logger.error('[useRoomCoordinates] Failed to fetch coordinates', err);
+            const coordsPromise = ApiClient.get<ICoordinatesResponse>('/api/area_mappings.php', {
+                action: 'get_room_coordinates',
+                room: apiRoom
+            }).then((data) => {
+                const coords = normalizeApiCoordinates(data.coordinates ?? data.data?.coordinates ?? []);
+                setCoordinates(coords);
+            }).catch((err) => {
+                console.error('[useRoomCoordinates] Failed to fetch coordinates', err);
+                logger.error('[useRoomCoordinates] Failed to fetch coordinates', err);
+            });
+
+            await Promise.allSettled([settingsPromise, coordsPromise]);
         } finally {
             setIsLoading(false);
         }
-    }, [roomType, normalizeApiCoordinates]);
+    }, [roomType, normalizeApiCoordinates, bootCoords.length]);
 
     useEffect(() => {
         fetchCoordinates();

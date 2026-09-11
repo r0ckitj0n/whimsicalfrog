@@ -166,9 +166,9 @@ export const useSiteHydration = () => {
                 requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
             }).requestIdleCallback;
             if (typeof ric === 'function') {
-                ric(warmSecondaryCaches, { timeout: 3500 });
+                ric(warmSecondaryCaches, { timeout: 8000 });
             } else {
-                window.setTimeout(warmSecondaryCaches, 1500);
+                window.setTimeout(warmSecondaryCaches, 4000);
             }
         } else {
             warmSecondaryCaches();

@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- Warm shop wallpaper. Landing cabin URL is applied via JS/PHP so Vite cannot
          hash-bundle a stale workspace copy of background-roomA.webp into /assets/. -->
-    <link rel="preload" as="image" href="/images/backgrounds/background-roomS.webp">
     <link rel="preload" as="image" href="/images/logos/apple-touch-icon.png">
     <link id="wf-landing-boot-preload" rel="preload" as="image" href="">
     <!-- Hide SEO marketing shell before any paint; reveal only when JS is unavailable. -->
@@ -78,6 +77,11 @@
 
             if (shopBoot) {
                 document.documentElement.classList.add('wf-shop-boot');
+                var shopPreload = document.createElement('link');
+                shopPreload.rel = 'preload';
+                shopPreload.as = 'image';
+                shopPreload.href = '/images/backgrounds/background-roomS.webp';
+                document.head.appendChild(shopPreload);
             } else if (landingBoot) {
                 document.documentElement.classList.add('wf-landing-boot');
                 window.__wfPaintLandingBootBg(landingBg);

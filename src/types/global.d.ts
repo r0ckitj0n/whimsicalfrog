@@ -111,6 +111,34 @@ declare global {
     __WF_BACKEND_ORIGIN?: string;
     /** Active Room A wallpaper URL for HTML/React landing boot (no cartoon flash). */
     __WF_LANDING_BOOT_BG?: string;
+    /**
+     * Critical landing-room payload injected by router.php so doors/coords can paint
+     * before area_mappings / room_settings XHRs finish.
+     */
+    __WF_LANDING_BOOT?: {
+      bg?: string;
+      destinations?: Array<{
+        area_selector: string;
+        mapping_type?: string | null;
+        label: string;
+        target: string;
+        image: string;
+      }>;
+      coordinates?: Array<{
+        selector: string;
+        top: number;
+        left: number;
+        width: number;
+        height: number;
+        id?: string | number;
+      }>;
+      roomSettings?: {
+        render_context?: string;
+        target_aspect_ratio?: number | string | null;
+        icon_panel_color?: string;
+        icon_vertical_alignment?: 'top' | 'middle' | 'bottom';
+      };
+    };
     __wfPaintLandingBootBg?: (url?: string) => void;
     __WF_DEBUG?: boolean;
     __WF_DEV_MODE?: boolean;

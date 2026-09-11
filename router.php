@@ -319,8 +319,8 @@ if ($html === false) {
     exit;
 }
 
-// Inject the active Room A wallpaper BEFORE the early landing-boot script so first
-// paint matches the live DB art (never a stale Vite-hashed cartoon cabin).
+// Inject Room A wallpaper + door/coord boot payload BEFORE the early landing-boot
+// script so first paint matches live DB art and doors can appear without XHR waits.
 try {
     $landingBootBg = '';
     $isLandingPath = ($requestedPath === '/' || $requestedPath === '/index.html' || $requestedPath === '/index.php');
@@ -330,21 +330,39 @@ try {
     if ($isLandingPath) {
         require_once __DIR__ . '/includes/database.php';
         require_once __DIR__ . '/includes/functions.php';
-        if (function_exists('get_active_background')) {
-            $landingBootBg = (string) get_active_background('A');
-        }
+        require_once __DIR__ . '/includes/helpers/LandingBootHelper.php';
+
+        $bootBundle = LandingBootHelper::buildForRoomA();
+        $landingBootPayload = is_array($bootBundle['payload'] ?? null) ? $bootBundle['payload'] : [];
+        $landingBootBg = (string) ($landingBootPayload['bg'] ?? '');
         if ($landingBootBg === '') {
-            $landingBootBg = '/images/backgrounds/realistic/realistic-roomA-frogs.webp';
-        } else {
-            $landingBootBg = '/' . ltrim($landingBootBg, '/');
+            $landingBootBg = LandingBootHelper::DEFAULT_BG;
+            $landingBootPayload['bg'] = $landingBootBg;
         }
 
         $cssUrl = 'url(' . json_encode($landingBootBg, JSON_UNESCAPED_SLASHES) . ')';
         $bootHref = htmlspecialchars($landingBootBg, ENT_QUOTES, 'UTF-8');
-        // Preload first so the realistic cabin starts downloading before any other head work.
-        // Inline override beats any stale dist CSS that still points at a hashed cartoon /assets/ copy.
-        $bootBgScript = '<link rel="preload" as="image" href="' . $bootHref . '">'
-            . '<script>window.__WF_LANDING_BOOT_BG=' . json_encode($landingBootBg, JSON_UNESCAPED_SLASHES) . ';</script>'
+        $preloadHrefs = [];
+        if (!empty($bootBundle['preload_hrefs']) && is_array($bootBundle['preload_hrefs'])) {
+            $preloadHrefs = $bootBundle['preload_hrefs'];
+        }
+        if (!in_array($landingBootBg, $preloadHrefs, true)) {
+            array_unshift($preloadHrefs, $landingBootBg);
+        }
+
+        $preloadTags = '';
+        foreach ($preloadHrefs as $href) {
+            $safeHref = htmlspecialchars((string) $href, ENT_QUOTES, 'UTF-8');
+            if ($safeHref === '') {
+                continue;
+            }
+            $preloadTags .= '<link rel="preload" as="image" href="' . $safeHref . '">';
+        }
+
+        // Keep legacy __WF_LANDING_BOOT_BG for older clients; __WF_LANDING_BOOT carries the full payload.
+        $bootBgScript = $preloadTags
+            . '<script>window.__WF_LANDING_BOOT_BG=' . json_encode($landingBootBg, JSON_UNESCAPED_SLASHES)
+            . ';window.__WF_LANDING_BOOT=' . json_encode($landingBootPayload, JSON_UNESCAPED_SLASHES) . ';</script>'
             . '<style id="wf-landing-boot-bg-override">'
             . 'html.wf-landing-boot body{'
             . 'background-color:#000!important;'
@@ -358,6 +376,20 @@ try {
         if (preg_match('/<head[^>]*>/i', $html)) {
             $html = preg_replace('/<head[^>]*>/i', '$0' . "\n    " . $bootBgScript, $html, 1) ?? $html;
         }
+
+        // Desktop landing: drop competing shop wallpaper preload so cabin + doors win bandwidth.
+        $html = preg_replace(
+            '#<link\b[^>]*\brel=["\']preload["\'][^>]*\bhref=["\'][^"\']*background-roomS[^"\']*["\'][^>]*>\s*#i',
+            '',
+            $html,
+            1
+        ) ?? $html;
+        $html = preg_replace(
+            '#<link\b[^>]*\bhref=["\'][^"\']*background-roomS[^"\']*["\'][^>]*\brel=["\']preload["\'][^>]*>\s*#i',
+            '',
+            $html,
+            1
+        ) ?? $html;
 
         // Point any hashed/stale room-A preload at the live active wallpaper.
         $html = preg_replace(

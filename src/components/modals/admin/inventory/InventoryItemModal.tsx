@@ -85,6 +85,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
         cached_cost_suggestion,
         cached_price_suggestion,
         setLocalSku,
+        sourceTempSku,
         handleFieldChange,
         generateSku,
         regenerateSku,
@@ -132,6 +133,9 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
     });
 
     const activeSku = isAdding ? localSku : sku;
+    // Keep uploads bound to the original temp SKU while adding so category SKU
+    // assignment does not orphan images under a different key before Create.
+    const imageSku = isAdding ? (sourceTempSku || localSku) : sku;
     const resolvedPrimaryImage = isAdding
         ? (workingImages.find(img => img.is_primary)?.image_path
             ? `/${(workingImages.find(img => img.is_primary)?.image_path || '').replace(/^\/+/, '')}`
@@ -503,13 +507,13 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                                     </p>
                                 </div>
                                 <div className="p-4">
-                                    {!activeSku ? (
+                                    {!imageSku ? (
                                         <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
                                             Preparing SKU for upload...
                                         </div>
                                     ) : (
                                         <ImageGallery
-                                            sku={activeSku}
+                                            sku={imageSku}
                                             isEdit
                                             isReadOnly={isReadOnly}
                                             onImagesChanged={handleWorkingImagesChanged}

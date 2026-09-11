@@ -50,10 +50,14 @@ try {
         Response::error('Invalid quality_tier', null, 422);
     }
 
+    // Ensure confidence is numeric - AI may return 'N/A' which breaks decimal columns
+    $confidenceRaw = $suggestion['confidence'] ?? null;
+    $confidence = is_numeric($confidenceRaw) ? (float) $confidenceRaw : 0.0;
+
     // Build dynamic SET clause to only update cost-specific tier if provided
     $setClauses = ['ai_cost_confidence = ?', 'ai_cost_at = ?'];
     $params = [
-        $suggestion['confidence'] ?? 0,
+        $confidence,
         $suggestion['created_at'] ?? date('Y-m-d H:i:s')
     ];
     

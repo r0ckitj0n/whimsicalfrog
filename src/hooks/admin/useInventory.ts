@@ -107,7 +107,12 @@ export const useInventory = (initialFilters: IInventoryFilters = { search: '', c
             const res = await ApiClient.post<IAddInventoryResponse>('/api/add_inventory.php', itemData);
             if (res && res.success) {
                 await fetchInventory();
-                return { success: true, sku: res?.data?.sku || res?.data?.id };
+                // ApiClient/JsonResponseParser unwraps `data`, so sku is usually top-level.
+                // Keep nested fallbacks for any caller that still returns the wrapped shape.
+                const finalizedSku = String(
+                    res.sku || res.id || res.data?.sku || res.data?.id || ''
+                ).trim();
+                return { success: true, sku: finalizedSku || undefined };
             }
             const detailMessage = typeof res?.details === 'string' ? res.details : '';
             return { success: false, error: detailMessage || res?.error || 'Add failed' };

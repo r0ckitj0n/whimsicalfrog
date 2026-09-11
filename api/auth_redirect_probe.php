@@ -59,6 +59,34 @@ try {
     $dom = $isLocal ? '' : ('.' . $bd);
     $sec = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
 
+    // Establish a real PHP session for local probe use. WF_AUTH alone is no longer
+    // enough for requireAdmin() after logout was made authoritative (no auto-reconstruct).
+    require_once __DIR__ . '/../includes/session.php';
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_init([
+            'name' => 'PHPSESSID',
+            'lifetime' => 0,
+            'path' => '/',
+            'domain' => $dom,
+            'secure' => $sec,
+            'httponly' => true,
+            'samesite' => $sec ? 'None' : 'Lax',
+        ]);
+    }
+    $full = Database::queryOne(
+        'SELECT id, username, email, role, first_name, last_name, phone_number FROM users WHERE id = ? LIMIT 1',
+        [$uid]
+    ) ?: $row;
+    $_SESSION['user'] = [
+        'user_id' => $full['id'],
+        'username' => $full['username'] ?? null,
+        'email' => $full['email'] ?? null,
+        'role' => $full['role'] ?? 'admin',
+        'first_name' => $full['first_name'] ?? null,
+        'last_name' => $full['last_name'] ?? null,
+        'phone_number' => $full['phone_number'] ?? null,
+    ];
+
     // Some proxy layers preserve only one Set-Cookie header; set hint first, auth last.
     wf_auth_set_client_hint($uid, $row['role'] ?? null, $dom, $sec);
     wf_auth_set_cookie($uid, $dom, $sec);

@@ -145,6 +145,22 @@ export const useInventoryItemForm = ({
         isSavingRef.current = isSaving;
     }, [isSaving]);
 
+    const setLocalSkuPreservingTemp = useCallback((nextSku: string) => {
+        setLocalSku((prior) => {
+            const priorSku = String(prior || '').trim();
+            const generatedSku = String(nextSku || '').trim();
+            if (
+                /^WF-TMP-/i.test(priorSku) &&
+                generatedSku !== '' &&
+                !/^WF-TMP-/i.test(generatedSku) &&
+                priorSku !== generatedSku
+            ) {
+                setSourceTempSku((existing) => existing || priorSku);
+            }
+            return generatedSku;
+        });
+    }, []);
+
     useEffect(() => {
         if (sku) setLocalSku(sku);
     }, [sku]);
@@ -635,9 +651,20 @@ export const useInventoryItemForm = ({
                     stock_quantity: formData.stock_level
                 });
                 if (res.success) {
+                    // Prefer the server-finalized SKU. Falling back to a client WF-TMP-*
+                    // after migration writes AI cost/price factors onto an orphaned temp SKU.
                     const finalizedSku = String(res.sku || '').trim();
-                    const skuForBreakdowns = finalizedSku || skuToSave;
-                    const breakdownsSaved = await persistAiBreakdowns(skuForBreakdowns);
+                    if (!finalizedSku) {
+                        console.error('[useInventoryItemForm] addItem succeeded without finalized SKU; refusing temp-SKU breakdown persist', {
+                            skuToSave,
+                            sourceTempSku: inferredSourceTempSku
+                        });
+                    }
+                    const skuForBreakdowns = finalizedSku
+                        || (!/^WF-TMP-/i.test(skuToSave) ? skuToSave : '');
+                    const breakdownsSaved = skuForBreakdowns
+                        ? await persistAiBreakdowns(skuForBreakdowns)
+                        : false;
                     if (window.WFToast) {
                         if (!breakdownsSaved && (cached_cost_suggestion || cached_price_suggestion)) {
                             window.WFToast.info?.('Item created, but some AI breakdown details did not persist.');
@@ -856,7 +883,7 @@ export const useInventoryItemForm = ({
         cached_cost_suggestion,
         cached_price_suggestion,
         localSku,
-        setLocalSku,
+        setLocalSku: setLocalSkuPreservingTemp,
         handleFieldChange,
         generateSku,
         handleGenerateAll,

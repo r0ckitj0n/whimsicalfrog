@@ -1,5 +1,6 @@
 import React from 'react';
 import { PAYMENT_STATUS, PAGE } from '../../core/constants.js';
+import { formatDate } from '../../core/date-utils.js';
 import { ReceiptHeader } from './receipt/ReceiptHeader.js';
 import { ReceiptTable } from './receipt/ReceiptTable.js';
 import { ReceiptStatus } from './receipt/ReceiptStatus.js';
@@ -14,6 +15,7 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ data }) => {
     const page = document.body.getAttribute('data-page');
     const {
         order_id,
+        created_at,
         date,
         payment_status,
         items,
@@ -33,6 +35,8 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ data }) => {
 
     const isPending = payment_status === PAYMENT_STATUS.PENDING;
     const remitName = business_info.owner || business_info.name;
+    // Prefer API-formatted business-timezone date; fall back to client formatDate.
+    const displayDate = date || (created_at ? formatDate(created_at) : 'N/A');
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -43,7 +47,7 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ data }) => {
                 <div className="text-center receipt-message-center mb-8 border-b pb-4">
                     <h2 className="text-brand-primary wf-brand-font text-2xl font-semibold">Order Receipt</h2>
                     <p className="text-sm text-brand-secondary">Order ID: <strong>{order_id}</strong></p>
-                    <p className="text-sm text-brand-secondary">Date: {date}</p>
+                    <p className="text-sm text-brand-secondary">Date: {displayDate}</p>
                 </div>
 
                 <ReceiptTable

@@ -10,6 +10,7 @@ try {
     require_once __DIR__ . '/../includes/response.php';
     require_once __DIR__ . '/../includes/database.php';
     require_once __DIR__ . '/../includes/business_settings_helper.php';
+    require_once __DIR__ . '/../includes/helpers/BusinessDateTimeHelper.php';
     require_once __DIR__ . '/../includes/receipt_helper.php';
 
     Response::validateMethod('GET');
@@ -103,9 +104,16 @@ try {
     }
 
     // 10. Receipt Data Assembly
+    // Display dates in configured business timezone (not UTC) so evening US orders
+    // do not appear as the next calendar day on the receipt.
+    $createdAt = (string) ($order['created_at'] ?? '');
     $receipt_data = [
         'order_id' => (string) $order_id,
-        'date' => date('M d, Y', strtotime($order['created_at'] ?? 'now')),
+        'created_at' => $createdAt,
+        'date' => BusinessDateTimeHelper::formatForDisplay(
+            $createdAt !== '' ? $createdAt : BusinessDateTimeHelper::nowUtcString(),
+            'M j, Y'
+        ),
         'payment_status' => (string) ($order['payment_status'] ?? 'pending'),
         'items' => $itemsData,
         'subtotal' => number_format($itemsSubtotal, 2),

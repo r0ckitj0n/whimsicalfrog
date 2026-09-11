@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/../Constants.php';
+require_once __DIR__ . '/BusinessDateTimeHelper.php';
 
 class EmailNotificationHelper {
     /**
@@ -17,8 +18,10 @@ class EmailNotificationHelper {
         }
 
         $orderCreatedRaw = (string) ($order['created_at'] ?? '');
-        $orderTs = $orderCreatedRaw !== '' ? strtotime($orderCreatedRaw . ' UTC') : false;
-        $orderDate = $orderTs ? date('F j, Y g:i A', $orderTs) : date('F j, Y g:i A');
+        $orderDate = BusinessDateTimeHelper::formatForDisplay(
+            $orderCreatedRaw !== '' ? $orderCreatedRaw : BusinessDateTimeHelper::nowUtcString(),
+            'F j, Y g:i A'
+        );
         $orderTotal = '$' . number_format((float) ($order['total_amount'] ?? 0), 2);
 
         $shipping_address = 'Not specified';

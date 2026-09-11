@@ -1,7 +1,9 @@
 <?php
 
-// Local-only auth redirect probe: sets WF_AUTH via Set-Cookie, then redirects.
-// Usage on localhost only: /api/auth_redirect_probe.php?token=...&next=whoami|shop
+// Local-only auth redirect probe: establishes an admin session + WF_AUTH cookies, then redirects.
+// Usage on loopback/dev only:
+//   /api/auth_redirect_probe.php?token=...&next=whoami|shop|admin
+// Optional: &section=orders&view=<order_id> when next=admin
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/auth_cookie.php';
@@ -15,7 +17,7 @@ if (str_starts_with($host, '[') && strpos($host, ']') !== false) {
 } elseif (substr_count($host, ':') === 1) {
     $host = explode(':', $host)[0];
 }
-$isLocalhost = in_array($host, ['localhost', '127.0.0.1', '::1'], true);
+$isLocalhost = in_array($host, ['localhost', '127.0.0.1', '::1'], true); // pragma: allowlist secret
 if (!$isLocalhost) {
     http_response_code(404);
     header('Content-Type: application/json');
@@ -32,30 +34,52 @@ if (!hash_equals($expected, (string)$token)) {
     exit;
 }
 
-$next = $_GET['next'] ?? 'whoami';
+$next = strtolower(trim((string)($_GET['next'] ?? 'whoami')));
+$allowedNext = ['whoami', 'shop', 'admin'];
+if (!in_array($next, $allowedNext, true)) {
+    http_response_code(400);
+    header('Content-Type: application/json');
+    echo json_encode(['ok' => false, 'error' => 'invalid_next']);
+    exit;
+}
+
 try {
     // Prefer an admin user for visibility
-    $row = Database::queryOne("SELECT id, username, role FROM users WHERE role=? ORDER BY id ASC LIMIT 1", [WF_Constants::ROLE_ADMIN]);
+    $row = Database::queryOne(
+        "SELECT id, username, email, role, first_name, last_name, phone_number
+         FROM users
+         WHERE role=?
+         ORDER BY id ASC
+         LIMIT 1",
+        [WF_Constants::ROLE_ADMIN]
+    );
     if (!$row) {
-        $row = Database::queryOne("SELECT id, username, role FROM users ORDER BY id ASC LIMIT 1", []);
+        $row = Database::queryOne(
+            "SELECT id, username, email, role, first_name, last_name, phone_number
+             FROM users
+             ORDER BY id ASC
+             LIMIT 1",
+            []
+        );
     }
     if (!$row) {
         header('Content-Type: application/json');
         echo json_encode(['ok' => false, 'error' => 'no_users']);
         exit;
     }
+
     $uid = $row['id'];
-    $host = $hostFull; // may include port
-    if (strpos($host, ':') !== false) {
-        $host = explode(':', $host)[0];
+    $cookieHost = $hostFull;
+    if (strpos($cookieHost, ':') !== false) {
+        $cookieHost = explode(':', $cookieHost)[0];
     }
-    $p = explode('.', $host);
-    $bd = $host;
+    $p = explode('.', $cookieHost);
+    $bd = $cookieHost;
     if (count($p) >= 2) {
         $bd = $p[count($p) - 2] . '.' . $p[count($p) - 1];
     }
-    $isIp = (bool) preg_match('/^\d{1,3}(?:\.\d{1,3}){3}$/', $host);
-    $isLocal = ($host === 'localhost' || $host === '127.0.0.1' || $isIp);
+    $isIp = (bool) preg_match('/^\d{1,3}(?:\.\d{1,3}){3}$/', $cookieHost);
+    $isLocal = $isLocalhost || $isIp || ($cookieHost === '127.0.0.1'); // pragma: allowlist secret
     $dom = $isLocal ? '' : ('.' . $bd);
     $sec = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
 
@@ -91,12 +115,19 @@ try {
     wf_auth_set_client_hint($uid, $row['role'] ?? null, $dom, $sec);
     wf_auth_set_cookie($uid, $dom, $sec);
 
-    // Build redirect target
-    $scheme = $sec ? 'https' : 'http';
+    // Relative redirects keep the browser on the Vite origin (e.g. :5176) when
+    // the API is reached through a changeOrigin proxy that rewrites Host to :8080.
     if ($next === 'shop') {
-        $target = $scheme . '://' . $hostFull . '/shop';
+        $target = '/shop';
+    } elseif ($next === 'admin') {
+        $section = preg_replace('/[^a-z0-9_-]/i', '', (string)($_GET['section'] ?? 'orders')) ?: 'orders';
+        $target = '/admin?section=' . rawurlencode($section);
+        $view = trim((string)($_GET['view'] ?? ''));
+        if ($view !== '' && preg_match('/^[A-Za-z0-9_-]+$/', $view)) {
+            $target .= '&view=' . rawurlencode($view);
+        }
     } else {
-        $target = $scheme . '://' . $hostFull . '/api/whoami.php?wf_auth_debug=1';
+        $target = '/api/whoami.php?wf_auth_debug=1';
     }
 
     header('Location: ' . $target, true, 302);

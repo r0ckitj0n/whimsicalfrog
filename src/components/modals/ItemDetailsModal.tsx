@@ -11,13 +11,15 @@ interface ItemDetailsModalProps {
     sku: string;
     isOpen: boolean;
     onClose: () => void;
+    /** Open above an already-elevated admin modal (e.g. order editor). */
+    nested?: boolean;
 }
 
 /**
  * ItemDetailsModal v1.3.0
  * Refactored into sub-components to satisfy the <250 line rule.
  */
-export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ sku, isOpen, onClose }) => {
+export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ sku, isOpen, onClose, nested = false }) => {
     const { item, options, effectiveLists, images, isLoading, addToCart } = useItemDetails(sku);
     const {
         selectedGender, setSelectedGender,
@@ -100,12 +102,15 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ sku, isOpen,
 
     if (!isOpen) return null;
 
+    const overlayZIndex = nested ? 'var(--wf-z-modal-nested)' : 'var(--wf-z-modal)';
+    const nestedOverlayClass = nested ? 'wf-modal-child-overlay' : '';
+
     const modalContent = (
         <div
             className={isMobileLayout
-                ? 'wf-modal-overlay show detailed-item-modal fixed inset-0 z-[var(--wf-z-modal)] box-border flex items-end justify-center bg-black/80 p-0 font-[Nunito,sans-serif] backdrop-blur-md sm:items-center sm:p-4 lg:p-8'
-                : 'wf-modal-overlay show detailed-item-modal'}
-            style={isMobileLayout ? undefined : {
+                ? `wf-modal-overlay show detailed-item-modal ${nestedOverlayClass} fixed inset-0 box-border flex items-end justify-center bg-black/80 p-0 font-[Nunito,sans-serif] backdrop-blur-md sm:items-center sm:p-4 lg:p-8`.trim()
+                : `wf-modal-overlay show detailed-item-modal ${nestedOverlayClass}`.trim()}
+            style={isMobileLayout ? { zIndex: overlayZIndex } : {
                 position: 'fixed',
                 inset: 0,
                 width: '100vw',
@@ -116,7 +121,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ sku, isOpen,
                 justifyContent: 'center',
                 backgroundColor: 'rgba(0, 0, 0, 0.85)',
                 backdropFilter: 'blur(15px)',
-                zIndex: 'var(--wf-z-modal)',
+                zIndex: overlayZIndex,
                 fontFamily: "'Nunito', sans-serif",
                 boxSizing: 'border-box'
             }}

@@ -53,27 +53,35 @@ class LandingBootHelper
 
     public static function resolveBackgroundUrl(): string
     {
-        $bg = '';
+        $candidates = [];
         if (function_exists('get_active_background')) {
-            $bg = (string) get_active_background('A');
-        }
-        if ($bg === '') {
-            try {
-                $row = Database::queryOne(
-                    "SELECT background_url FROM room_settings WHERE room_number = ? LIMIT 1",
-                    ['A']
-                );
-                if (!empty($row['background_url'])) {
-                    $bg = (string) $row['background_url'];
-                }
-            } catch (Throwable $e) {
-                $bg = '';
+            $active = (string) get_active_background('A');
+            if ($active !== '') {
+                $candidates[] = $active;
             }
         }
-        if ($bg === '') {
-            return self::DEFAULT_BG;
+        try {
+            $row = Database::queryOne(
+                "SELECT background_url FROM room_settings WHERE room_number = ? LIMIT 1",
+                ['A']
+            );
+            if (!empty($row['background_url'])) {
+                $candidates[] = (string) $row['background_url'];
+            }
+        } catch (Throwable $e) {
+            // ignore and continue through fallbacks
         }
-        return '/' . ltrim($bg, '/');
+        $candidates[] = self::DEFAULT_BG;
+        $candidates[] = '/images/backgrounds/background-roomA.webp';
+
+        foreach ($candidates as $candidate) {
+            $url = '/' . ltrim((string) $candidate, '/');
+            if (self::publicFileExists($url)) {
+                return $url;
+            }
+        }
+
+        return self::DEFAULT_BG;
     }
 
     /**

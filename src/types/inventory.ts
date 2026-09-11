@@ -234,6 +234,15 @@ export interface ICommonApiResponse {
 }
 
 export interface IAddInventoryResponse extends ICommonApiResponse {
+    /**
+     * JsonResponseParser unwraps `{ success, data: { sku } }` into top-level
+     * fields. Support both shapes so callers never lose the finalized SKU.
+     */
+    sku?: string;
+    id?: string;
+    created?: boolean;
+    updated?: boolean;
+    message?: string;
     data?: {
         id?: string;
         sku?: string;

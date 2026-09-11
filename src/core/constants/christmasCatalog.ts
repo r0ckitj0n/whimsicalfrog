@@ -9,19 +9,22 @@ export const CHRISTMAS_ROOM_NUMBER = '6';
 export const CHRISTMAS_CATALOG_CATEGORY_ID = 1012;
 export const CHRISTMAS_CATALOG_CATEGORY_NAME = '3D Christmas Ornaments';
 
-/** Ordered catalog pages: room number => page label (matches renamed live pages). */
+/**
+ * Ordered catalog pages keyed by room number.
+ * Interior pages 21–30 intentionally share the same display title.
+ */
 export const CHRISTMAS_CATALOG_PAGES: ReadonlyArray<{ room: string; page: number; title: string }> = [
     { room: '20', page: 1, title: 'Christmas Catalog — 3D Ornaments Cover' },
-    { room: '21', page: 2, title: 'Christmas Catalog — 3D Ornaments 01' },
-    { room: '22', page: 3, title: 'Christmas Catalog — 3D Ornaments 02' },
-    { room: '23', page: 4, title: 'Christmas Catalog — 3D Ornaments 03' },
-    { room: '24', page: 5, title: 'Christmas Catalog — 3D Ornaments 04' },
-    { room: '25', page: 6, title: 'Christmas Catalog — 3D Ornaments 05' },
-    { room: '26', page: 7, title: 'Christmas Catalog — 3D Ornaments 06' },
-    { room: '27', page: 8, title: 'Christmas Catalog — 3D Ornaments 07' },
-    { room: '28', page: 9, title: 'Christmas Catalog — 3D Ornaments 08' },
-    { room: '29', page: 10, title: 'Christmas Catalog — 3D Ornaments 09' },
-    { room: '30', page: 11, title: 'Christmas Catalog — 3D Ornaments 10' },
+    { room: '21', page: 2, title: 'Christmas Catalog — 3D Ornaments' },
+    { room: '22', page: 3, title: 'Christmas Catalog — 3D Ornaments' },
+    { room: '23', page: 4, title: 'Christmas Catalog — 3D Ornaments' },
+    { room: '24', page: 5, title: 'Christmas Catalog — 3D Ornaments' },
+    { room: '25', page: 6, title: 'Christmas Catalog — 3D Ornaments' },
+    { room: '26', page: 7, title: 'Christmas Catalog — 3D Ornaments' },
+    { room: '27', page: 8, title: 'Christmas Catalog — 3D Ornaments' },
+    { room: '28', page: 9, title: 'Christmas Catalog — 3D Ornaments' },
+    { room: '29', page: 10, title: 'Christmas Catalog — 3D Ornaments' },
+    { room: '30', page: 11, title: 'Christmas Catalog — 3D Ornaments' },
     { room: '31', page: 12, title: 'Christmas Catalog — 3D Ornaments Wishlist Finale' },
 ];
 

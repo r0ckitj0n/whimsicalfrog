@@ -13,18 +13,19 @@ const WF_CHRISTMAS_CATALOG_CATEGORY_ID = 1012;
  */
 function wf_christmas_catalog_pages(): array
 {
+    // Pages 01–10 share one display title on purpose (looked up by room number, not name).
     return [
         ['room' => '20', 'page' => 1, 'title' => 'Christmas Catalog — 3D Ornaments Cover', 'file' => 'realistic-room20-christmas-catalog-p01'],
-        ['room' => '21', 'page' => 2, 'title' => 'Christmas Catalog — 3D Ornaments 01', 'file' => 'realistic-room21-christmas-catalog-p02'],
-        ['room' => '22', 'page' => 3, 'title' => 'Christmas Catalog — 3D Ornaments 02', 'file' => 'realistic-room22-christmas-catalog-p03'],
-        ['room' => '23', 'page' => 4, 'title' => 'Christmas Catalog — 3D Ornaments 03', 'file' => 'realistic-room23-christmas-catalog-p04'],
-        ['room' => '24', 'page' => 5, 'title' => 'Christmas Catalog — 3D Ornaments 04', 'file' => 'realistic-room24-christmas-catalog-p05'],
-        ['room' => '25', 'page' => 6, 'title' => 'Christmas Catalog — 3D Ornaments 05', 'file' => 'realistic-room25-christmas-catalog-p06'],
-        ['room' => '26', 'page' => 7, 'title' => 'Christmas Catalog — 3D Ornaments 06', 'file' => 'realistic-room26-christmas-catalog-p07'],
-        ['room' => '27', 'page' => 8, 'title' => 'Christmas Catalog — 3D Ornaments 07', 'file' => 'realistic-room27-christmas-catalog-p08'],
-        ['room' => '28', 'page' => 9, 'title' => 'Christmas Catalog — 3D Ornaments 08', 'file' => 'realistic-room28-christmas-catalog-p09'],
-        ['room' => '29', 'page' => 10, 'title' => 'Christmas Catalog — 3D Ornaments 09', 'file' => 'realistic-room29-christmas-catalog-p10'],
-        ['room' => '30', 'page' => 11, 'title' => 'Christmas Catalog — 3D Ornaments 10', 'file' => 'realistic-room30-christmas-catalog-p11'],
+        ['room' => '21', 'page' => 2, 'title' => 'Christmas Catalog — 3D Ornaments', 'file' => 'realistic-room21-christmas-catalog-p02'],
+        ['room' => '22', 'page' => 3, 'title' => 'Christmas Catalog — 3D Ornaments', 'file' => 'realistic-room22-christmas-catalog-p03'],
+        ['room' => '23', 'page' => 4, 'title' => 'Christmas Catalog — 3D Ornaments', 'file' => 'realistic-room23-christmas-catalog-p04'],
+        ['room' => '24', 'page' => 5, 'title' => 'Christmas Catalog — 3D Ornaments', 'file' => 'realistic-room24-christmas-catalog-p05'],
+        ['room' => '25', 'page' => 6, 'title' => 'Christmas Catalog — 3D Ornaments', 'file' => 'realistic-room25-christmas-catalog-p06'],
+        ['room' => '26', 'page' => 7, 'title' => 'Christmas Catalog — 3D Ornaments', 'file' => 'realistic-room26-christmas-catalog-p07'],
+        ['room' => '27', 'page' => 8, 'title' => 'Christmas Catalog — 3D Ornaments', 'file' => 'realistic-room27-christmas-catalog-p08'],
+        ['room' => '28', 'page' => 9, 'title' => 'Christmas Catalog — 3D Ornaments', 'file' => 'realistic-room28-christmas-catalog-p09'],
+        ['room' => '29', 'page' => 10, 'title' => 'Christmas Catalog — 3D Ornaments', 'file' => 'realistic-room29-christmas-catalog-p10'],
+        ['room' => '30', 'page' => 11, 'title' => 'Christmas Catalog — 3D Ornaments', 'file' => 'realistic-room30-christmas-catalog-p11'],
         ['room' => '31', 'page' => 12, 'title' => 'Christmas Catalog — 3D Ornaments Wishlist Finale', 'file' => 'realistic-room31-christmas-catalog-p12'],
     ];
 }

@@ -99,10 +99,11 @@ export const useAreaMappings = (): IAreaMappingsHook => {
             if (doors?.success) setDoorDestinations(doors.destinations || []);
 
             const roomList = roomsRes?.data?.rooms || roomsRes?.rooms || [];
+            // Include room number so duplicate catalog titles stay distinguishable.
             setRoomOptions(roomList.map((r) => ({
                 val: String(r.room_number),
-                label: r.room_name || r.door_label || `Room ${r.room_number}`
-            })).sort((a, b) => a.label.localeCompare(b.label)));
+                label: `${r.room_name || r.door_label || 'Room'} (${r.room_number})`
+            })).sort((a, b) => Number(a.val) - Number(b.val)));
         } catch (err) {
             logger.error('fetchLookupData failed', err);
         }

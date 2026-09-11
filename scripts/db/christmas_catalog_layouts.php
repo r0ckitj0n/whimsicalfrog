@@ -6,10 +6,18 @@
  * .area-1 / .area-2 reserved for previous / next nav plaques (bottom band).
  * Item selectors start at .area-3.
  *
- * Content band: y ≈ 36–700. Bottom nav band: y ≈ 720–880.
+ * Header clearance: leave room for absolute title bar + "Back to Main Room".
+ * Content band: y ≈ 112–720. Bottom nav band: y ≈ 745–875.
  */
 
 declare(strict_types=1);
+
+/** Top inset so items clear the room title bar + Back button overlay. */
+const WF_CATALOG_HEADER_CLEARANCE = 112;
+/** Bottom of the item content band (above prev/next plaques). */
+const WF_CATALOG_CONTENT_BOTTOM = 720;
+const WF_CATALOG_CANVAS_W = 1280;
+const WF_CATALOG_CANVAS_H = 896;
 
 /**
  * @return list<array{id:string,top:int,left:int,width:int,height:int,selector:string}>
@@ -20,9 +28,9 @@ function wf_christmas_catalog_item_slots(int $page): array
         // Page 1 Cover — featured top row + dense grid beneath (~40)
         1 => wf_catalog_layout_cover_feature_grid(),
         // Page 2 — classic 8×5 catalog grid
-        2 => wf_catalog_layout_grid(8, 5, 36, 36, 1210, 660, 6, false),
+        2 => wf_catalog_layout_grid(8, 5, WF_CATALOG_HEADER_CLEARANCE, 36, 1210, WF_CATALOG_CONTENT_BOTTOM - WF_CATALOG_HEADER_CLEARANCE, 6, false),
         // Page 3 — 8×5 dense magazine grid (no stagger keeps 40)
-        3 => wf_catalog_layout_grid(8, 5, 32, 36, 1210, 660, 6, false),
+        3 => wf_catalog_layout_grid(8, 5, WF_CATALOG_HEADER_CLEARANCE + 4, 36, 1210, WF_CATALOG_CONTENT_BOTTOM - WF_CATALOG_HEADER_CLEARANCE - 4, 6, false),
         // Page 4 — center diamond / cross with surrounding ring
         4 => wf_catalog_layout_center_cross(),
         // Page 5 — two vertical panels of 4×5
@@ -43,7 +51,16 @@ function wf_christmas_catalog_item_slots(int $page): array
         12 => wf_catalog_layout_finale(),
     ];
 
-    $slots = $layouts[$page] ?? wf_catalog_layout_grid(8, 5, 36, 40, 1220, 650, 8, false);
+    $slots = $layouts[$page] ?? wf_catalog_layout_grid(
+        8,
+        5,
+        WF_CATALOG_HEADER_CLEARANCE,
+        40,
+        1220,
+        WF_CATALOG_CONTENT_BOTTOM - WF_CATALOG_HEADER_CLEARANCE,
+        8,
+        false
+    );
     $out = [];
     $i = 0;
     foreach ($slots as $slot) {
@@ -101,45 +118,47 @@ function wf_catalog_layout_grid(
 function wf_catalog_layout_cover_feature_grid(): array
 {
     $slots = [];
+    $top0 = WF_CATALOG_HEADER_CLEARANCE;
     // Top featured row of 4 larger tiles
     $fw = 280;
-    $fh = 140;
+    $fh = 120;
     $gap = 12;
     $left0 = 48;
     for ($i = 0; $i < 4; $i++) {
         $slots[] = [
             'id' => 'feat-' . ($i + 1),
-            'top' => 36,
+            'top' => $top0,
             'left' => $left0 + $i * ($fw + $gap),
             'width' => $fw,
             'height' => $fh,
         ];
     }
     // Dense 9×4 beneath (=36) → 40 total
-    $slots = array_merge($slots, wf_catalog_layout_grid(9, 4, 192, 36, 1210, 500, 6, false));
+    $gridTop = $top0 + $fh + 14;
+    $bandH = WF_CATALOG_CONTENT_BOTTOM - $gridTop;
+    $slots = array_merge($slots, wf_catalog_layout_grid(9, 4, $gridTop, 36, 1210, $bandH, 6, false));
     return array_slice($slots, 0, 40);
 }
 
 /** @return list<array{id:string,top:int,left:int,width:int,height:int}> */
 function wf_catalog_layout_center_cross(): array
 {
-    // Large center piece + 3 surrounding rings of small ornaments (~40).
     $slots = [];
-    $slots[] = ['id' => 'cross-c', 'top' => 300, 'left' => 560, 'width' => 160, 'height' => 160];
+    $cy = (int) round((WF_CATALOG_HEADER_CLEARANCE + WF_CATALOG_CONTENT_BOTTOM) / 2);
+    $slots[] = ['id' => 'cross-c', 'top' => $cy - 70, 'left' => 560, 'width' => 160, 'height' => 160];
 
     $rings = [
-        // radius, count, size
-        [150, 8, 100],
-        [260, 14, 95],
-        [370, 18, 90],
+        [140, 8, 96],
+        [250, 14, 90],
+        [350, 18, 86],
     ];
     $n = 0;
     foreach ($rings as [$radius, $count, $size]) {
         for ($i = 0; $i < $count; $i++) {
             $angle = deg2rad(($i / $count) * 360 - 90);
             $left = (int) round(640 + cos($angle) * $radius - $size / 2);
-            $top = (int) round(380 + sin($angle) * $radius - $size / 2);
-            if ($top < 28 || $top + $size > 700 || $left < 20 || $left + $size > 1260) {
+            $top = (int) round($cy + sin($angle) * $radius - $size / 2);
+            if ($top < WF_CATALOG_HEADER_CLEARANCE || $top + $size > WF_CATALOG_CONTENT_BOTTOM || $left < 20 || $left + $size > 1260) {
                 continue;
             }
             $n++;
@@ -155,13 +174,12 @@ function wf_catalog_layout_center_cross(): array
             }
         }
     }
-    // Pad with bottom strip if needed
     $pad = 0;
     while (count($slots) < 40) {
         $pad++;
         $slots[] = [
             'id' => "cross-pad-{$pad}",
-            'top' => 620,
+            'top' => WF_CATALOG_CONTENT_BOTTOM - 80,
             'left' => 40 + (($pad - 1) % 10) * 120,
             'width' => 110,
             'height' => 70,
@@ -173,8 +191,9 @@ function wf_catalog_layout_center_cross(): array
 /** @return list<array{id:string,top:int,left:int,width:int,height:int}> */
 function wf_catalog_layout_twin_panels(): array
 {
-    $left = wf_catalog_layout_grid(4, 5, 40, 40, 560, 640, 8, false);
-    $right = wf_catalog_layout_grid(4, 5, 40, 680, 560, 640, 8, false);
+    $bandH = WF_CATALOG_CONTENT_BOTTOM - WF_CATALOG_HEADER_CLEARANCE;
+    $left = wf_catalog_layout_grid(4, 5, WF_CATALOG_HEADER_CLEARANCE, 40, 560, $bandH, 8, false);
+    $right = wf_catalog_layout_grid(4, 5, WF_CATALOG_HEADER_CLEARANCE, 680, 560, $bandH, 8, false);
     $i = 0;
     $out = [];
     foreach (array_merge($left, $right) as $s) {
@@ -188,11 +207,10 @@ function wf_catalog_layout_twin_panels(): array
 /** @return list<array{id:string,top:int,left:int,width:int,height:int}> */
 function wf_catalog_layout_masonry_rows(): array
 {
-    // Slight horizontal offsets alternate for a masonry feel while keeping 8 per row (40).
     $pattern = [8, 8, 8, 8, 8];
     $slots = [];
-    $top = 36;
-    $bandH = 640;
+    $top = WF_CATALOG_HEADER_CLEARANCE;
+    $bandH = WF_CATALOG_CONTENT_BOTTOM - WF_CATALOG_HEADER_CLEARANCE;
     $rowH = (int) floor(($bandH - 4 * 8) / 5);
     $n = 0;
     foreach ($pattern as $ri => $cols) {
@@ -221,18 +239,17 @@ function wf_catalog_layout_radial(): array
 {
     $slots = [];
     $cx = 640;
-    $cy = 360;
-    $size = 100;
-    // center
-    $slots[] = ['id' => 'rad-0', 'top' => $cy - 55, 'left' => $cx - 55, 'width' => 110, 'height' => 110];
+    $cy = (int) round((WF_CATALOG_HEADER_CLEARANCE + WF_CATALOG_CONTENT_BOTTOM) / 2);
+    $size = 96;
+    $slots[] = ['id' => 'rad-0', 'top' => $cy - 52, 'left' => $cx - 52, 'width' => 104, 'height' => 104];
     $n = 1;
-    foreach ([160, 260, 360] as $radius) {
-        $count = $radius === 160 ? 8 : ($radius === 260 ? 12 : 16);
+    foreach ([150, 245, 340] as $radius) {
+        $count = $radius === 150 ? 8 : ($radius === 245 ? 12 : 16);
         for ($i = 0; $i < $count; $i++) {
             $angle = deg2rad(($i / $count) * 360 - 90);
             $left = (int) round($cx + cos($angle) * $radius - $size / 2);
             $top = (int) round($cy + sin($angle) * $radius - $size / 2);
-            if ($top < 30 || $top + $size > 700 || $left < 20 || $left + $size > 1260) {
+            if ($top < WF_CATALOG_HEADER_CLEARANCE || $top + $size > WF_CATALOG_CONTENT_BOTTOM || $left < 20 || $left + $size > 1260) {
                 continue;
             }
             $n++;
@@ -248,12 +265,11 @@ function wf_catalog_layout_radial(): array
             }
         }
     }
-    // fill remainder with bottom row
     while (count($slots) < 40) {
         $i = count($slots);
         $slots[] = [
             'id' => "rad-fill-{$i}",
-            'top' => 620,
+            'top' => WF_CATALOG_CONTENT_BOTTOM - 80,
             'left' => 40 + ($i % 10) * 120,
             'width' => 110,
             'height' => 70,
@@ -267,8 +283,9 @@ function wf_catalog_layout_pyramid(): array
 {
     $rows = [4, 6, 8, 10, 12];
     $slots = [];
-    $top = 40;
-    $rowH = 118;
+    $top = WF_CATALOG_HEADER_CLEARANCE;
+    $available = WF_CATALOG_CONTENT_BOTTOM - WF_CATALOG_HEADER_CLEARANCE;
+    $rowH = (int) floor(($available - 4 * 10) / 5);
     $gap = 8;
     $n = 0;
     foreach ($rows as $cols) {
@@ -301,19 +318,20 @@ function wf_catalog_layout_diagonal_bands(): array
 {
     $slots = [];
     $n = 0;
-    $cell = 115;
+    $cell = 108;
     $gap = 8;
+    $bandH = (int) floor((WF_CATALOG_CONTENT_BOTTOM - WF_CATALOG_HEADER_CLEARANCE - 4 * 8) / 5);
     for ($band = 0; $band < 5; $band++) {
-        $baseTop = 40 + $band * 128;
-        $shift = $band * 24;
+        $baseTop = WF_CATALOG_HEADER_CLEARANCE + $band * ($bandH + 8);
+        $shift = $band * 20;
         for ($c = 0; $c < 8; $c++) {
             $n++;
             $slots[] = [
                 'id' => "diag-{$n}",
-                'top' => $baseTop + (($c % 2) * 12),
+                'top' => $baseTop + (($c % 2) * 10),
                 'left' => 30 + $shift + $c * ($cell + $gap),
                 'width' => $cell,
-                'height' => $cell,
+                'height' => min($cell, $bandH),
             ];
             if ($n >= 40) {
                 return $slots;
@@ -328,27 +346,29 @@ function wf_catalog_layout_frame_border(): array
 {
     $slots = [];
     $n = 0;
-    $s = 108;
+    $s = 100;
     $gap = 8;
-    // Outer ring positions along edges
-    for ($i = 0; $i < 10; $i++) { // top
+    $topEdge = WF_CATALOG_HEADER_CLEARANCE;
+    $bottomEdge = WF_CATALOG_CONTENT_BOTTOM - $s;
+    for ($i = 0; $i < 10; $i++) {
         $n++;
-        $slots[] = ['id' => "fr-t{$i}", 'top' => 36, 'left' => 36 + $i * ($s + $gap), 'width' => $s, 'height' => $s];
+        $slots[] = ['id' => "fr-t{$i}", 'top' => $topEdge, 'left' => 36 + $i * ($s + $gap), 'width' => $s, 'height' => $s];
     }
-    for ($i = 0; $i < 4; $i++) { // left (skip corners)
+    for ($i = 0; $i < 4; $i++) {
         $n++;
-        $slots[] = ['id' => "fr-l{$i}", 'top' => 152 + $i * ($s + $gap), 'left' => 36, 'width' => $s, 'height' => $s];
+        $slots[] = ['id' => "fr-l{$i}", 'top' => $topEdge + $s + $gap + $i * ($s + $gap), 'left' => 36, 'width' => $s, 'height' => $s];
     }
-    for ($i = 0; $i < 4; $i++) { // right
+    for ($i = 0; $i < 4; $i++) {
         $n++;
-        $slots[] = ['id' => "fr-r{$i}", 'top' => 152 + $i * ($s + $gap), 'left' => 1136, 'width' => $s, 'height' => $s];
+        $slots[] = ['id' => "fr-r{$i}", 'top' => $topEdge + $s + $gap + $i * ($s + $gap), 'left' => 1136, 'width' => $s, 'height' => $s];
     }
-    for ($i = 0; $i < 10; $i++) { // bottom of content
+    for ($i = 0; $i < 10; $i++) {
         $n++;
-        $slots[] = ['id' => "fr-b{$i}", 'top' => 580, 'left' => 36 + $i * ($s + $gap), 'width' => $s, 'height' => $s];
+        $slots[] = ['id' => "fr-b{$i}", 'top' => $bottomEdge, 'left' => 36 + $i * ($s + $gap), 'width' => $s, 'height' => $s];
     }
-    // Inner 4×3
-    $inner = wf_catalog_layout_grid(4, 3, 160, 170, 940, 400, 10, false);
+    $innerTop = $topEdge + $s + $gap + 8;
+    $innerH = max(180, $bottomEdge - $innerTop - 8);
+    $inner = wf_catalog_layout_grid(4, 3, $innerTop, 170, 940, $innerH, 10, false);
     foreach ($inner as $sLot) {
         $n++;
         $sLot['id'] = "fr-in-{$n}";
@@ -364,10 +384,9 @@ function wf_catalog_layout_frame_border(): array
 function wf_catalog_layout_asymmetric_l(): array
 {
     $slots = [];
-    // Tall left column featured 2×6
-    $leftCol = wf_catalog_layout_grid(2, 6, 40, 36, 320, 640, 8, false);
-    // Right dense 6×5
-    $right = wf_catalog_layout_grid(6, 5, 40, 380, 860, 640, 8, false);
+    $bandH = WF_CATALOG_CONTENT_BOTTOM - WF_CATALOG_HEADER_CLEARANCE;
+    $leftCol = wf_catalog_layout_grid(2, 6, WF_CATALOG_HEADER_CLEARANCE, 36, 320, $bandH, 8, false);
+    $right = wf_catalog_layout_grid(6, 5, WF_CATALOG_HEADER_CLEARANCE, 380, 860, $bandH, 8, false);
     $n = 0;
     foreach (array_merge($leftCol, $right) as $s) {
         $n++;
@@ -384,23 +403,24 @@ function wf_catalog_layout_asymmetric_l(): array
 function wf_catalog_layout_finale(): array
 {
     $slots = [];
-    // Top showcase row of 5 medium
+    $top0 = WF_CATALOG_HEADER_CLEARANCE;
     for ($i = 0; $i < 5; $i++) {
         $slots[] = [
             'id' => 'fin-show-' . ($i + 1),
-            'top' => 36,
+            'top' => $top0,
             'left' => 40 + $i * 240,
             'width' => 224,
-            'height' => 130,
+            'height' => 118,
         ];
     }
-    // Dense closer grid 7×5 (=35) → 40 total
-    $grid = wf_catalog_layout_grid(7, 5, 184, 40, 1200, 510, 6, false);
+    $gridTop = $top0 + 130;
+    $bandH = WF_CATALOG_CONTENT_BOTTOM - $gridTop;
+    $grid = wf_catalog_layout_grid(7, 5, $gridTop, 40, 1200, $bandH, 6, false);
     return array_slice(array_merge($slots, $grid), 0, 40);
 }
 
 /**
- * Previous / next nav plaques in bottom band.
+ * Previous / next nav plaques in bottom band (below item content).
  *
  * @return list<array{id:string,top:int,left:int,width:int,height:int,selector:string}>
  */

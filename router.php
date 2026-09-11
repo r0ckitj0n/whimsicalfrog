@@ -340,8 +340,11 @@ try {
         }
 
         $cssUrl = 'url(' . json_encode($landingBootBg, JSON_UNESCAPED_SLASHES) . ')';
+        $bootHref = htmlspecialchars($landingBootBg, ENT_QUOTES, 'UTF-8');
+        // Preload first so the realistic cabin starts downloading before any other head work.
         // Inline override beats any stale dist CSS that still points at a hashed cartoon /assets/ copy.
-        $bootBgScript = '<script>window.__WF_LANDING_BOOT_BG=' . json_encode($landingBootBg, JSON_UNESCAPED_SLASHES) . ';</script>'
+        $bootBgScript = '<link rel="preload" as="image" href="' . $bootHref . '">'
+            . '<script>window.__WF_LANDING_BOOT_BG=' . json_encode($landingBootBg, JSON_UNESCAPED_SLASHES) . ';</script>'
             . '<style id="wf-landing-boot-bg-override">'
             . 'html.wf-landing-boot body{'
             . 'background-color:#000!important;'
@@ -359,13 +362,13 @@ try {
         // Point any hashed/stale room-A preload at the live active wallpaper.
         $html = preg_replace(
             '/(<link\b[^>]*\bid=["\']wf-landing-boot-preload["\'][^>]*\bhref=["\'])[^"\']*(["\'])/i',
-            '$1' . htmlspecialchars($landingBootBg, ENT_QUOTES, 'UTF-8') . '$2',
+            '$1' . $bootHref . '$2',
             $html,
             1
         ) ?? $html;
         $html = preg_replace(
             '#(<link\b[^>]*\bhref=["\'])/assets/background-roomA-[^"\']+\.webp(["\'])#i',
-            '$1' . htmlspecialchars($landingBootBg, ENT_QUOTES, 'UTF-8') . '$2',
+            '$1' . $bootHref . '$2',
             $html,
             1
         ) ?? $html;

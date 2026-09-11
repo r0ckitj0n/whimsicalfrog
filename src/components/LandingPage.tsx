@@ -72,10 +72,28 @@ export const LandingPage: React.FC = () => {
             return;
         }
 
-        // Keep the HTML cabin wallpaper until React paints the same layer.
-        requestAnimationFrame(() => {
+        // Keep the HTML cabin wallpaper until the React background image is decoded,
+        // so we never flash black (or show doors on an empty void) during handoff.
+        let cancelled = false;
+        const clearLandingBoot = () => {
+            if (cancelled) return;
             document.documentElement.classList.remove('wf-landing-boot');
-        });
+        };
+        if (bgUrl) {
+            const img = new Image();
+            img.decoding = 'async';
+            img.onload = () => clearLandingBoot();
+            img.onerror = () => clearLandingBoot();
+            img.src = bgUrl;
+            if (img.complete) {
+                clearLandingBoot();
+            } else {
+                // Safety: never leave the boot class forever if decode stalls.
+                window.setTimeout(clearLandingBoot, 2500);
+            }
+        } else {
+            requestAnimationFrame(clearLandingBoot);
+        }
 
         const hasBootDestinations = destinations.length > 0;
         const hasBootBg = Boolean(bgUrl);
@@ -149,9 +167,13 @@ export const LandingPage: React.FC = () => {
         handleResize();
 
         return () => {
+            cancelled = true;
             window.removeEventListener('resize', handleResize);
             document.body.classList.remove('mode-fullscreen');
         };
+        // Intentionally mount-once for this visibility cycle: soft-revalidate reads initial boot
+        // values and must not re-fire when destinations/bgUrl update from that revalidate.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isVisible, setContainerSize, navigate]);
 
     if (!isVisible) return null;

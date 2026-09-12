@@ -56,6 +56,19 @@ final class ImagePathNormalizer
         if (preg_match('/^https?:\/\//i', $raw)) {
             return $raw;
         }
+        $path = parse_url($raw, PHP_URL_PATH);
+        if (!is_string($path) || $path === '') {
+            $path = str_replace('\\', '/', $raw);
+        } else {
+            $path = str_replace('\\', '/', $path);
+        }
+        // Preserve a single theme subdirectory (e.g. realistic/) under /images/signs/.
+        if (preg_match('#(?:^|/)images/signs/([^/]+/[^/]+)$#i', $path, $m)) {
+            return '/images/signs/' . $m[1];
+        }
+        if (preg_match('#(?:^|/)signs/([^/]+/[^/]+)$#i', $path, $m)) {
+            return '/images/signs/' . $m[1];
+        }
         $filename = self::extractFilename($raw);
         return $filename === '' ? '' : ('/images/signs/' . $filename);
     }

@@ -20,47 +20,43 @@ const WF_CATALOG_CANVAS_W = 1280;
 const WF_CATALOG_CANVAS_H = 896;
 
 /**
+ * Prefer layouts fitted to empty paper regions of each background image.
+ * Falls back to procedural layouts if the generated map is missing.
+ *
  * @return list<array{id:string,top:int,left:int,width:int,height:int,selector:string}>
  */
 function wf_christmas_catalog_item_slots(int $page): array
 {
-    $layouts = [
-        // Page 1 Cover — featured top row + dense grid beneath (~40)
-        1 => wf_catalog_layout_cover_feature_grid(),
-        // Page 2 — classic 8×5 catalog grid
-        2 => wf_catalog_layout_grid(8, 5, WF_CATALOG_HEADER_CLEARANCE, 36, 1210, WF_CATALOG_CONTENT_BOTTOM - WF_CATALOG_HEADER_CLEARANCE, 6, false),
-        // Page 3 — 8×5 dense magazine grid (no stagger keeps 40)
-        3 => wf_catalog_layout_grid(8, 5, WF_CATALOG_HEADER_CLEARANCE + 4, 36, 1210, WF_CATALOG_CONTENT_BOTTOM - WF_CATALOG_HEADER_CLEARANCE - 4, 6, false),
-        // Page 4 — center diamond / cross with surrounding ring
-        4 => wf_catalog_layout_center_cross(),
-        // Page 5 — two vertical panels of 4×5
-        5 => wf_catalog_layout_twin_panels(),
-        // Page 6 — masonry staggered rows (8-7-8-7-8)
-        6 => wf_catalog_layout_masonry_rows(),
-        // Page 7 — circular / radial approx around center
-        7 => wf_catalog_layout_radial(),
-        // Page 8 — Christmas-tree pyramid (rows 3,5,7,9,11 truncated to ~40)
-        8 => wf_catalog_layout_pyramid(),
-        // Page 9 — diagonal cascade bands
-        9 => wf_catalog_layout_diagonal_bands(),
-        // Page 10 — frame border + dense inner 6×5
-        10 => wf_catalog_layout_frame_border(),
-        // Page 11 — asymmetric L + dense fill
-        11 => wf_catalog_layout_asymmetric_l(),
-        // Page 12 Finale — showcase strip + dense closer grid
-        12 => wf_catalog_layout_finale(),
-    ];
-
-    $slots = $layouts[$page] ?? wf_catalog_layout_grid(
-        8,
-        5,
-        WF_CATALOG_HEADER_CLEARANCE,
-        40,
-        1220,
-        WF_CATALOG_CONTENT_BOTTOM - WF_CATALOG_HEADER_CLEARANCE,
-        8,
-        false
-    );
+    require_once __DIR__ . '/christmas_catalog_layouts_generated.php';
+    $safe = wf_christmas_catalog_safe_area_layouts();
+    if (isset($safe[$page]) && count($safe[$page]) >= 24) {
+        $slots = $safe[$page];
+    } else {
+        $layouts = [
+            1 => wf_catalog_layout_cover_feature_grid(),
+            2 => wf_catalog_layout_grid(8, 5, WF_CATALOG_HEADER_CLEARANCE, 36, 1210, WF_CATALOG_CONTENT_BOTTOM - WF_CATALOG_HEADER_CLEARANCE, 6, false),
+            3 => wf_catalog_layout_grid(8, 5, WF_CATALOG_HEADER_CLEARANCE + 4, 36, 1210, WF_CATALOG_CONTENT_BOTTOM - WF_CATALOG_HEADER_CLEARANCE - 4, 6, false),
+            4 => wf_catalog_layout_center_cross(),
+            5 => wf_catalog_layout_twin_panels(),
+            6 => wf_catalog_layout_masonry_rows(),
+            7 => wf_catalog_layout_radial(),
+            8 => wf_catalog_layout_pyramid(),
+            9 => wf_catalog_layout_diagonal_bands(),
+            10 => wf_catalog_layout_frame_border(),
+            11 => wf_catalog_layout_asymmetric_l(),
+            12 => wf_catalog_layout_finale(),
+        ];
+        $slots = $layouts[$page] ?? wf_catalog_layout_grid(
+            8,
+            5,
+            WF_CATALOG_HEADER_CLEARANCE,
+            40,
+            1220,
+            WF_CATALOG_CONTENT_BOTTOM - WF_CATALOG_HEADER_CLEARANCE,
+            8,
+            false
+        );
+    }
     $out = [];
     $i = 0;
     foreach ($slots as $slot) {

@@ -6,14 +6,14 @@
  * .area-1 / .area-2 reserved for previous / next nav plaques (bottom band).
  * Item selectors start at .area-3.
  *
- * Header clearance: leave room for absolute title bar + "Back to Main Room".
- * Content band: y ≈ 112–720. Bottom nav band: y ≈ 745–875.
+ * Header clearance: leave ~100px for absolute title bar + "Back to Main Room".
+ * Content band: y ≈ 100–720. Bottom nav band: y ≈ 745–875.
  */
 
 declare(strict_types=1);
 
-/** Top inset so items clear the room title bar + Back button overlay. */
-const WF_CATALOG_HEADER_CLEARANCE = 112;
+/** Top inset so items clear the room title bar + Back button overlay (~100px). */
+const WF_CATALOG_HEADER_CLEARANCE = 100;
 /** Bottom of the item content band (above prev/next plaques). */
 const WF_CATALOG_CONTENT_BOTTOM = 720;
 const WF_CATALOG_CANVAS_W = 1280;

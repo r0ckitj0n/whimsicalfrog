@@ -103,6 +103,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                             <ShippingMethodSelection
                                 selectedMethod={shipping_method}
                                 onSelect={(m) => setShippingMethod(m)}
+                                shippingWaiverReason={pricing.shipping_waiver_reason ?? null}
                             />
                         </div>
 

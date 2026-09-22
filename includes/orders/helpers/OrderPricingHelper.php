@@ -66,7 +66,8 @@ class OrderPricingHelper
             $isVip = ($meta['vip'] ?? '0') === '1';
         }
 
-        $shipping = self::calculateShipping($subtotal, $shipping_method, $isVip);
+        $shippingInfo = self::calculateShippingDetailed($subtotal, $shipping_method, $isVip);
+        $shipping = (float) $shippingInfo['amount'];
         $coupon = self::calculateCoupon($subtotal, $coupon_code);
         $tax = self::calculateTax($subtotal, $coupon['discount'], $shipping, $shipping_address);
 
@@ -75,6 +76,7 @@ class OrderPricingHelper
         $result = [
             'subtotal' => round($subtotal, 2),
             'shipping' => round($shipping, 2),
+            'shipping_waiver_reason' => $shippingInfo['waiver_reason'],
             'discount' => round($coupon['discount'], 2),
             'coupon' => $coupon['code'],
             'tax' => $tax['amount'],
@@ -166,19 +168,35 @@ class OrderPricingHelper
         return self::$salePctCache[$sku] = $pct;
     }
 
-    public static function calculateShipping($subtotal, $method, $isVip = false)
+    /**
+     * @return array{amount: float, waiver_reason: string|null}
+     */
+    public static function calculateShippingDetailed($subtotal, $method, $isVip = false)
     {
-        if ($isVip)
-            return 0.0;
         $cfg = BusinessSettings::getShippingConfig(false);
         $freeThreshold = (float) $cfg['free_shipping_threshold'];
+        $localFee = isset($cfg['local_delivery_fee']) ? (float) $cfg['local_delivery_fee'] : 5.95;
 
-        if ($method === WF_Constants::SHIPPING_METHOD_PICKUP)
-            return 0.0;
-        if ($method === WF_Constants::SHIPPING_METHOD_LOCAL)
-            return 75.00;
-        if ($freeThreshold > 0 && $subtotal >= $freeThreshold)
-            return 0.0;
+        if ($method === WF_Constants::SHIPPING_METHOD_PICKUP) {
+            return ['amount' => 0.0, 'waiver_reason' => 'pickup'];
+        }
+
+        if ($isVip) {
+            return ['amount' => 0.0, 'waiver_reason' => 'vip'];
+        }
+
+        if ($method === WF_Constants::SHIPPING_METHOD_LOCAL) {
+            return ['amount' => $localFee, 'waiver_reason' => null];
+        }
+
+        // Free-shipping threshold applies to USPS only (matches storefront copy).
+        if (
+            $method === WF_Constants::SHIPPING_METHOD_USPS
+            && $freeThreshold > 0
+            && (float) $subtotal >= $freeThreshold
+        ) {
+            return ['amount' => 0.0, 'waiver_reason' => 'threshold'];
+        }
 
         $rates = [
             WF_Constants::SHIPPING_METHOD_USPS => (float) $cfg['shipping_rate_usps'],
@@ -186,7 +204,15 @@ class OrderPricingHelper
             WF_Constants::SHIPPING_METHOD_UPS => (float) $cfg['shipping_rate_ups']
         ];
 
-        return $rates[$method] ?? $rates[WF_Constants::SHIPPING_METHOD_USPS];
+        return [
+            'amount' => $rates[$method] ?? $rates[WF_Constants::SHIPPING_METHOD_USPS],
+            'waiver_reason' => null
+        ];
+    }
+
+    public static function calculateShipping($subtotal, $method, $isVip = false)
+    {
+        return self::calculateShippingDetailed($subtotal, $method, $isVip)['amount'];
     }
 
     public static function calculateCoupon($subtotal, $code)

@@ -17,3 +17,4 @@ includes/session.php
 includes/session_bootstrap.php
 includes/helpers/AuthSessionHelper.php
 includes/helpers/SessionHelper.php
+api/session_diagnostics.php

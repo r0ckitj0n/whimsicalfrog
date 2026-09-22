@@ -2,6 +2,7 @@
 // API endpoint for session diagnostics - admin only
 require_once __DIR__ . '/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/helpers/SessionHelper.php';
 
 header('Content-Type: application/json');
 
@@ -150,6 +151,30 @@ switch ($action) {
             }
         }
 
+        $cookieSessionName = session_name();
+        $currentSessionId = session_id();
+        if ($currentSessionId === '' && $cookieSessionName !== '' && isset($_COOKIE[$cookieSessionName])) {
+            $currentSessionId = (string) $_COOKIE[$cookieSessionName];
+        }
+
+        if (!$isAdminUser) {
+            // Non-admin fallback: current session only. Never scan or return
+            // other PHP session IDs / file paths — that is a hijack primitive.
+            $safeSession = [];
+            if (!empty($_SESSION['user']) && is_array($_SESSION['user'])) {
+                $safeSession['user'] = [
+                    'user_id' => $_SESSION['user']['user_id'] ?? null,
+                    'role' => $_SESSION['user']['role'] ?? null,
+                    'username' => $_SESSION['user']['username'] ?? null,
+                ];
+            }
+            echo json_encode([
+                'success' => true,
+                'data' => SessionHelper::unprivilegedDiagnosticsData($currentSessionId, $safeSession),
+            ]);
+            break;
+        }
+
         $recentSessions = [];
         $analyticsQueryError = null;
         try {
@@ -164,11 +189,6 @@ switch ($action) {
             $recentSessions = [];
         }
 
-        $cookieSessionName = session_name();
-        $currentSessionId = session_id();
-        if ($currentSessionId === '' && $cookieSessionName !== '' && isset($_COOKIE[$cookieSessionName])) {
-            $currentSessionId = (string) $_COOKIE[$cookieSessionName];
-        }
         $phpSessionScanError = null;
         $phpSessions = wf_list_php_sessions($currentSessionId, 100, $phpSessionScanError);
         {
@@ -197,35 +217,6 @@ switch ($action) {
             if (isset($serverData[$key])) {
                 $serverData[$key] = '***MASKED***';
             }
-        }
-
-        if (!$isAdminUser) {
-            // Non-admin fallback: return safe current-session diagnostics only.
-            $safeSession = [];
-            if (!empty($_SESSION['user']) && is_array($_SESSION['user'])) {
-                $safeSession['user'] = [
-                    'user_id' => $_SESSION['user']['user_id'] ?? null,
-                    'role' => $_SESSION['user']['role'] ?? null,
-                    'username' => $_SESSION['user']['username'] ?? null,
-                ];
-            }
-            echo json_encode([
-                'success' => true,
-                'data' => [
-                    'session' => $safeSession,
-                    'cookies' => [],
-                    'server' => [],
-                    'session_id' => $currentSessionId,
-                    'session_status' => session_status(),
-                    'php_version' => PHP_VERSION,
-                    'recent_sessions' => [],
-                    'php_sessions' => $phpSessions,
-                    'php_session_save_path' => wf_resolve_session_save_dir((string) ini_get('session.save_path')),
-                    'php_session_scan_error' => $phpSessionScanError,
-                    'analytics_query_error' => 'Admin access required for analytics session list',
-                ],
-            ]);
-            break;
         }
 
         echo json_encode([

@@ -128,6 +128,11 @@ putenv('WF_AUTH_SECRET');
 $legacyFallbackSecret = implode('', ['wf_auth_', 'fallback_', 'secret_', '2025_', '09']);
 $forgedFallbackCookie = wf_make_test_auth_cookie('7', $legacyFallbackSecret);
 wf_assert(wf_auth_parse_cookie($forgedFallbackCookie) === null, 'Fallback-signed WF_AUTH cookie must be rejected when WF_AUTH_SECRET is unset.');
+try {
+    wf_auth_set_cookie('7', '', false);
+} catch (Throwable $e) {
+    throw new RuntimeException('wf_auth_set_cookie must not throw when WF_AUTH_SECRET is unset: ' . $e->getMessage());
+}
 
 putenv('WF_AUTH_SECRET=critical-regression-test-secret');
 $validCookie = wf_make_test_auth_cookie('7', 'critical-regression-test-secret');

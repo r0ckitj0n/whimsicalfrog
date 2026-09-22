@@ -7,21 +7,10 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/../includes/importers/sanmar_colors_importer.php';
 
-// Decode JSON body once so it can be reused by auth and action handlers
-$json = [];
+AuthHelper::requireAdmin();
 
-// Enforce admin auth with dev admin_token fallback for iframe usage
-try {
-    $rawBody = file_get_contents('php://input');
-    if ($rawBody !== false && $rawBody !== '') {
-        $json = json_decode($rawBody, true) ?: [];
-    }
-    $token = $_GET['admin_token'] ?? $_POST['admin_token'] ?? ($json['admin_token'] ?? null);
-    if (!$token || $token !== (AuthHelper::ADMIN_TOKEN ?? 'whimsical_admin_2024')) {
-        AuthHelper::requireAdmin();
-    }
-} catch (Throwable $____) {
-    AuthHelper::requireAdmin();
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+    Response::error('Method not allowed', null, 405);
 }
 
 try {

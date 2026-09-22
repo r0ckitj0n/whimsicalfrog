@@ -177,6 +177,52 @@ wf_assert(count(Database::$priceFactors) === 1, 'Existing price factors should n
 wf_assert_money((float) Database::$items['WF-TEST-001']['cost_price'], 15.00, 'Existing factors must not resync over a submitted cost price during item save.');
 wf_assert_money((float) Database::$items['WF-TEST-001']['retail_price'], 30.00, 'Existing factors must not resync over a submitted retail price during item save.');
 
+$repoRoot = dirname(__DIR__, 2);
+$publicTokenGateFiles = [
+    'api/color_templates.php',
+    'api/size_templates.php',
+    'api/gender_templates.php',
+    'api/sanmar_import.php',
+];
+$securityAllowlist = file_get_contents($repoRoot . '/scripts/deploy/security_allowlist.txt');
+wf_assert(is_string($securityAllowlist) && $securityAllowlist !== '', 'Unable to read security allowlist.');
+foreach (array_merge($publicTokenGateFiles, ['api/maintenance.php']) as $rel) {
+    wf_assert(
+        preg_match('/^' . preg_quote($rel, '/') . '$/m', $securityAllowlist) === 1,
+        "{$rel} must be on the security-only deploy allowlist so the auth fix reaches live."
+    );
+}
+foreach ($publicTokenGateFiles as $rel) {
+    $src = file_get_contents($repoRoot . '/' . $rel);
+    wf_assert(is_string($src) && $src !== '', "Unable to read {$rel}.");
+    wf_assert(
+        str_contains($src, 'AuthHelper::requireAdmin()'),
+        "{$rel} must require an admin session."
+    );
+    wf_assert(
+        !preg_match('/\$token\s*!==\s*\(\s*AuthHelper::ADMIN_TOKEN/', $src),
+        "{$rel} must not treat the public AuthHelper::ADMIN_TOKEN as sufficient auth."
+    );
+}
+
+$sanmarSrc = file_get_contents($repoRoot . '/api/sanmar_import.php');
+wf_assert(is_string($sanmarSrc) && $sanmarSrc !== '', 'Unable to read api/sanmar_import.php.');
+wf_assert(
+    str_contains($sanmarSrc, "REQUEST_METHOD") && str_contains($sanmarSrc, '405'),
+    'api/sanmar_import.php must reject non-POST mutating requests.'
+);
+
+$maintenanceSrc = file_get_contents($repoRoot . '/api/maintenance.php');
+wf_assert(is_string($maintenanceSrc) && $maintenanceSrc !== '', 'Unable to read api/maintenance.php.');
+wf_assert(
+    !preg_match('/hash_equals\(\s*\$legacy/', $maintenanceSrc),
+    'api/maintenance.php must not accept the public legacy admin token.'
+);
+wf_assert(
+    !preg_match("/legacy\s*=\s*'whimsical_admin_2024'/", $maintenanceSrc),
+    'api/maintenance.php must not define the public legacy admin token as an accepted secret.'
+);
+
 $authDebugLog = __DIR__ . '/../../logs/auth_debug.log';
 if (is_file($authDebugLog)) {
     @unlink($authDebugLog);

@@ -2,7 +2,7 @@
 
 // Secure maintenance endpoint(s) for routine tasks like pruning old sessions.
 // Usage (example):
-//   GET /api/maintenance.php?action=prune_sessions&days=2&admin_token=whimsical_admin_2024
+//   POST /api/maintenance.php?action=prune_sessions&days=2&admin_token=<maintenance_admin_token>
 // Response: {"success":true,"action":"prune_sessions","deleted":N}
 
 declare(strict_types=1);
@@ -53,20 +53,13 @@ function maintenance_log($event, array $data = []): void
 
 $provided = $_REQUEST['admin_token'] ?? ($_SERVER['HTTP_X_MAINTENANCE_TOKEN'] ?? '');
 $expected = maintenance_get_token();
-$legacy = 'whimsical_admin_2024'; // temporary backward-compatibility
 if (!hash_equals($expected, (string)$provided)) {
-    if ($provided !== '' && hash_equals($legacy, (string)$provided)) {
-        header('X-Legacy-Token-Used: 1');
-        maintenance_log('auth.legacy_token_used');
-        // allow but encourage rotation; log handled above
-    } else {
-        http_response_code(403);
-        echo json_encode([
-            'success' => false,
-            'error' => 'Forbidden',
-        ]);
-        exit;
-    }
+    http_response_code(403);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Forbidden',
+    ]);
+    exit;
 }
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';

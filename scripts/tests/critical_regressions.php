@@ -128,11 +128,23 @@ putenv('WF_AUTH_SECRET');
 $legacyFallbackSecret = implode('', ['wf_auth_', 'fallback_', 'secret_', '2025_', '09']);
 $forgedFallbackCookie = wf_make_test_auth_cookie('7', $legacyFallbackSecret);
 wf_assert(wf_auth_parse_cookie($forgedFallbackCookie) === null, 'Fallback-signed WF_AUTH cookie must be rejected when WF_AUTH_SECRET is unset.');
+wf_assert(wf_auth_secret_configured() === false, 'wf_auth_secret_configured() must be false when WF_AUTH_SECRET is unset.');
+try {
+    wf_auth_set_cookie('7', '', false);
+} catch (Throwable $e) {
+    throw new RuntimeException('wf_auth_set_cookie must not throw when WF_AUTH_SECRET is unset: ' . $e->getMessage());
+}
 
 putenv('WF_AUTH_SECRET=critical-regression-test-secret');
+wf_assert(wf_auth_secret_configured() === true, 'wf_auth_secret_configured() must be true when WF_AUTH_SECRET is set.');
 $validCookie = wf_make_test_auth_cookie('7', 'critical-regression-test-secret');
 $parsed = wf_auth_parse_cookie($validCookie);
 wf_assert(is_array($parsed) && $parsed['user_id'] === '7', 'Valid WF_AUTH cookie should parse when WF_AUTH_SECRET is configured.');
+try {
+    wf_auth_set_cookie('7', '', false);
+} catch (Throwable $e) {
+    throw new RuntimeException('wf_auth_set_cookie must not throw when WF_AUTH_SECRET is configured: ' . $e->getMessage());
+}
 
 Database::reset();
 $_SESSION = [];

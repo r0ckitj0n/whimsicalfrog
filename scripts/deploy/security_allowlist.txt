@@ -10,6 +10,9 @@ api/whoami.php
 api/logout.php
 api/seal_login.php
 api/auth_redirect_probe.php
+api/restore_db_from_backup.php
+api/backup_website.php
+api/backup_database.php
 includes/auth.php
 includes/auth_cookie.php
 includes/auth_helper.php
@@ -17,3 +20,4 @@ includes/session.php
 includes/session_bootstrap.php
 includes/helpers/AuthSessionHelper.php
 includes/helpers/SessionHelper.php
+includes/helpers/AutomationAdminTokenHelper.php

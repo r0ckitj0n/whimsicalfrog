@@ -2,16 +2,20 @@
 
 // api/restore_db_from_backup.php
 // Securely restore a SQL dump (located under backups/sql/) into the current environment DB.
-// Usage (GET or POST):
-//   /api/restore_db_from_backup.php?file=backups/sql/local_db_dump_2025-09-10_15-50-00.sql.gz&admin_token=whimsical_admin_2024
+// Usage (POST):
+//   /api/restore_db_from_backup.php with file=backups/sql/<dump>.sql.gz
+//   and either an admin session or admin_token=<WF_ADMIN_TOKEN>
 // Notes:
-// - Requires admin token and only accepts files under backups/sql/.
+// - Requires a logged-in admin or the environment WF_ADMIN_TOKEN.
+// - The public AuthHelper::ADMIN_TOKEN value is not accepted.
+// - Only accepts files under backups/sql/.
 // - Streams SQL via db_import_sql.php which batches statements.
 
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
+require_once __DIR__ . '/../includes/helpers/AutomationAdminTokenHelper.php';
 require_once __DIR__ . '/config.php';
 
 function wf_restore_has_valid_token(): bool
@@ -24,19 +28,7 @@ function wf_restore_has_valid_token(): bool
         }
     }
 
-    if ($provided === '') {
-        return false;
-    }
-
-    $expected = getenv('WF_ADMIN_TOKEN') ?: '';
-    if ($expected === '' && defined('WF_ADMIN_TOKEN') && WF_ADMIN_TOKEN) {
-        $expected = WF_ADMIN_TOKEN;
-    }
-    if ($expected === '' && defined('AuthHelper::ADMIN_TOKEN')) {
-        $expected = AuthHelper::ADMIN_TOKEN;
-    }
-
-    return $expected !== '' && hash_equals($expected, $provided);
+    return wf_automation_admin_token_valid((string) $provided);
 }
 
 // Require admin via session unless a valid admin token is supplied

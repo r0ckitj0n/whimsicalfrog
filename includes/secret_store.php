@@ -31,21 +31,60 @@ function secret_key_path()
     return __DIR__ . '/../config/secret.key';
 }
 
+function secret_ciphertext_exists()
+{
+    try {
+        if (!class_exists('Database')) {
+            return false;
+        }
+        $row = Database::queryOne('SELECT 1 AS c FROM secrets LIMIT 1');
+        return (bool) $row;
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
 function secret_load_key()
 {
     $path = secret_key_path();
-    if (!is_file($path)) {
-        // Generate a new key securely
-        $dir = dirname($path);
-        if (!is_dir($dir)) {
-            @mkdir($dir, 0700, true);
+    if (is_file($path)) {
+        $key = file_get_contents($path);
+        if ($key === false || strlen($key) < 16) {
+            throw new Exception('config/secret.key is unreadable. Restore the original key file. Do not generate a new one while encrypted secrets exist.');
         }
-        $key = random_bytes(32);
-        file_put_contents($path, $key);
-        @chmod($path, 0600);
         return $key;
     }
-    return file_get_contents($path);
+
+    // A missing key file used to mint a brand-new key. That orphans every
+    // ciphertext already stored in `secrets` (OpenAI, Google, and the rest).
+    if (secret_ciphertext_exists()) {
+        throw new Exception('config/secret.key is missing, but encrypted secrets already exist. Restore the original key file. Generating a new key would make every saved API key unreadable.');
+    }
+
+    $dir = dirname($path);
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0700, true);
+    }
+    $key = random_bytes(32);
+    file_put_contents($path, $key);
+    @chmod($path, 0600);
+    return $key;
+}
+
+function secret_unavailable_message($label, $secretKey)
+{
+    $stored = false;
+    try {
+        $stored = secret_has($secretKey);
+    } catch (Throwable $e) {
+        $stored = false;
+    }
+
+    if ($stored) {
+        return "The saved {$label} API key is stored but cannot be decrypted. Open Admin → AI Settings, paste the {$label} API key again, and save. Do not generate a new encryption key.";
+    }
+
+    return "The {$label} API key is not saved. Add it in Admin → AI Settings.";
 }
 
 function secret_encrypt($plaintext)

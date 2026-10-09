@@ -549,6 +549,11 @@ export const useInventoryItemForm = ({
             includeMarketingRefinement: true
         });
 
+        if (result?.aiUnavailable) {
+            window.WFToast?.info?.(result.aiMessage || "AI auto-fill isn't available right now. Fill in the Name and Category, then click Create.");
+            return;
+        }
+
         if (!result) {
             window.WFToast?.error?.('Failed to generate item information');
             return;

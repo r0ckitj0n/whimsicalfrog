@@ -7,9 +7,7 @@ class AnthropicProvider extends BaseProvider
 {
     public function generateMarketing($name, $description, $category, $brandVoice, $contentTone)
     {
-        $apiKey = $this->settings['anthropic_api_key'];
-        if (empty($apiKey))
-            throw new Exception("Anthropic API key missing");
+        $apiKey = $this->requireSecret('anthropic_api_key', 'Anthropic', 'anthropic_api_key');
 
         $prompt = $this->buildMarketingPrompt($name, $description, $category, $brandVoice, $contentTone);
         $data = [
@@ -30,9 +28,7 @@ class AnthropicProvider extends BaseProvider
 
     public function generateEnhancedMarketing($name, $description, $category, $imageInsights, $brandVoice, $contentTone, $existingMarketingData = null)
     {
-        $apiKey = $this->settings['anthropic_api_key'];
-        if (empty($apiKey))
-            throw new Exception("Anthropic API key missing");
+        $apiKey = $this->requireSecret('anthropic_api_key', 'Anthropic', 'anthropic_api_key');
 
         $prompt = "Item: {$name}\nDescription: {$description}\nCategory: {$category}\nImage Analysis: {$imageInsights}\nVoice: {$brandVoice}\nTone: {$contentTone}\n\nReturn JSON with: title, description, keywords, selling_points.";
 
@@ -54,9 +50,7 @@ class AnthropicProvider extends BaseProvider
 
     public function generateCost($name, $description, $category)
     {
-        $apiKey = $this->settings['anthropic_api_key'];
-        if (empty($apiKey))
-            throw new Exception("Anthropic API key missing");
+        $apiKey = $this->requireSecret('anthropic_api_key', 'Anthropic', 'anthropic_api_key');
 
         $prompt = "Estimate production cost for: {$name} ({$category}). Description: {$description}. Return JSON: {\"cost\": <number>, \"reasoning\": \"string\"}";
 
@@ -77,9 +71,7 @@ class AnthropicProvider extends BaseProvider
 
     public function generatePricing($name, $description, $category, $cost_price)
     {
-        $apiKey = $this->settings['anthropic_api_key'];
-        if (empty($apiKey))
-            throw new Exception("Anthropic API key missing");
+        $apiKey = $this->requireSecret('anthropic_api_key', 'Anthropic', 'anthropic_api_key');
 
         $prompt = $this->buildPricingPrompt($name, $description, $category, $cost_price);
         $data = [
@@ -99,9 +91,7 @@ class AnthropicProvider extends BaseProvider
 
     public function generateDimensions($name, $description, $category)
     {
-        $apiKey = $this->settings['anthropic_api_key'];
-        if (empty($apiKey))
-            throw new Exception("Anthropic API key missing");
+        $apiKey = $this->requireSecret('anthropic_api_key', 'Anthropic', 'anthropic_api_key');
 
         $prompt = $this->buildDimensionsPrompt($name, $description, $category);
         $data = [
@@ -121,9 +111,7 @@ class AnthropicProvider extends BaseProvider
 
     public function analyzeItemImage($imagePath, $existingCategories = [])
     {
-        $apiKey = $this->settings['anthropic_api_key'];
-        if (empty($apiKey))
-            throw new Exception("Anthropic API key missing");
+        $apiKey = $this->requireSecret('anthropic_api_key', 'Anthropic', 'anthropic_api_key');
 
         $img = $this->imageToBase64($imagePath);
         $cats = implode(', ', $existingCategories);
@@ -183,9 +171,7 @@ class AnthropicProvider extends BaseProvider
 
     public function generateReceipt($prompt)
     {
-        $apiKey = $this->settings['anthropic_api_key'];
-        if (empty($apiKey))
-            throw new Exception("Anthropic API key missing");
+        $apiKey = $this->requireSecret('anthropic_api_key', 'Anthropic', 'anthropic_api_key');
 
         $data = [
             'model' => $this->settings['anthropic_model'],
@@ -205,9 +191,7 @@ class AnthropicProvider extends BaseProvider
 
     public function generateMarketingWithImages($name, $description, $category, $images, $brandVoice, $contentTone)
     {
-        $apiKey = $this->settings['anthropic_api_key'];
-        if (empty($apiKey))
-            throw new Exception("Anthropic API key missing");
+        $apiKey = $this->requireSecret('anthropic_api_key', 'Anthropic', 'anthropic_api_key');
 
         $prompt = $this->buildMarketingPrompt($name, $description, $category, $brandVoice, $contentTone);
         $content = [['type' => 'text', 'text' => $prompt]];
@@ -246,9 +230,7 @@ class AnthropicProvider extends BaseProvider
 
     public function generatePricingWithImages($name, $description, $category, $cost_price, $images)
     {
-        $apiKey = $this->settings['anthropic_api_key'];
-        if (empty($apiKey))
-            throw new Exception("Anthropic API key missing");
+        $apiKey = $this->requireSecret('anthropic_api_key', 'Anthropic', 'anthropic_api_key');
 
         $prompt = $this->buildPricingPrompt($name, $description, $category, $cost_price);
         $content = [['type' => 'text', 'text' => $prompt]];
@@ -287,9 +269,7 @@ class AnthropicProvider extends BaseProvider
 
     public function detectObjectBoundaries($imagePath)
     {
-        $apiKey = $this->settings['anthropic_api_key'];
-        if (empty($apiKey))
-            throw new Exception("Anthropic API key missing");
+        $apiKey = $this->requireSecret('anthropic_api_key', 'Anthropic', 'anthropic_api_key');
 
         $img = $this->imageToBase64($imagePath);
         $prompt = "Analyze this image and determine the optimal crop boundaries to show only the main object(s) with minimal background. Return ONLY JSON: {\"crop_left_percent\": <number>, \"crop_top_percent\": <number>, \"crop_right_percent\": <number>, \"crop_bottom_percent\": <number>, \"confidence\": <number>, \"description\": \"string\"}. Percentages are 0.0 to 1.0.";
@@ -343,9 +323,7 @@ class AnthropicProvider extends BaseProvider
     }
     public function generateCostWithImages($name, $description, $category, $images)
     {
-        $apiKey = $this->settings['anthropic_api_key'];
-        if (empty($apiKey))
-            throw new Exception("Anthropic API key missing");
+        $apiKey = $this->requireSecret('anthropic_api_key', 'Anthropic', 'anthropic_api_key');
 
         $prompt = "Estimate production cost for: {$name} ({$category}). Description: {$description}. Analyze the provided images for materials, complexity, and quality. Return JSON: {\"cost\": <number>, \"reasoning\": \"string\", \"confidence\": \"string\", \"breakdown\": {\"Materials\": <number>, \"Labor\": <number>, \"Equipment\": <number>, \"Energy\": <number>}, \"analysis\": {\"detected_materials\": [], \"detected_features\": [], \"complexity_score\": <number>, \"skill_level_required\": \"string\"}}";
         $content = [['type' => 'text', 'text' => $prompt]];

@@ -48,6 +48,10 @@ class SecretsHelper {
             $reenc++;
         }
 
+        if ($reenc === 0) {
+            throw new Exception('Refusing to replace config/secret.key because no stored secret could be decrypted with the current key. Re-enter the API keys in Admin → AI Settings instead of rotating the encryption key.');
+        }
+
         $keyPath = secret_key_path();
         $tmp = $keyPath . '.new';
         file_put_contents($tmp, $newKey);

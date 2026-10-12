@@ -97,6 +97,14 @@ for rel in "${ALLOWED_FILES[@]}"; do
     MISSING=1
     continue
   fi
+  # Never allowlist live-owned / secret paths (even if someone edits the list).
+  case "$rel" in
+    .env|.env.*|config/secret.key|config/my.cnf|private/*|*/private/*|images/*|uploads/*|sessions/*|backups/*|logs/*|vendor/*|node_modules/*|.git/*)
+      echo -e "${RED}Refusing protected path in security allowlist: $rel${NC}" >&2
+      MISSING=1
+      continue
+      ;;
+  esac
   if [[ ! -f "$ROOT_DIR/$rel" ]]; then
     echo -e "${RED}Missing local file from allowlist: $rel${NC}" >&2
     MISSING=1
@@ -110,9 +118,29 @@ echo -e "${GREEN}🔒 Security-only deploy (live precedence for everything else)
 echo -e "  • Allowlist: ${ALLOWLIST_FILE}"
 echo -e "  • Files: ${#ALLOWED_FILES[@]}"
 echo -e "  • Target: ${HOST}"
+echo -e "  • Never touches: images/, uploads/, .env, config/secret.key, private/, sessions/, backups/, dist/"
 if [[ "$DRY_RUN" = "1" ]]; then
   echo -e "${YELLOW}DRY-RUN: no SFTP uploads will be performed${NC}"
 fi
+
+# Unique parent dirs for allowlisted files (relative to SFTP chroot / site root).
+PARENT_DIRS=()
+for rel in "${ALLOWED_FILES[@]}"; do
+  remote_dir="$(dirname "$rel")"
+  if [[ "$remote_dir" == "." ]]; then
+    continue
+  fi
+  skip=0
+  for existing in "${PARENT_DIRS[@]:-}"; do
+    if [[ "$existing" == "$remote_dir" ]]; then
+      skip=1
+      break
+    fi
+  done
+  if [[ "$skip" -eq 0 ]]; then
+    PARENT_DIRS+=("$remote_dir")
+  fi
+done
 
 LFTP_FILE="$(mktemp -t wf-security-deploy.XXXXXX)"
 cleanup() { rm -f "$LFTP_FILE"; }
@@ -121,13 +149,16 @@ trap cleanup EXIT
 {
   echo "set sftp:auto-confirm yes"
   echo "set ssl:verify-certificate no"
-  echo "set cmd:fail-exit yes"
+  # IONOS/1&1 SFTP returns "mkdir: Access failed: Failure" when the directory
+  # already exists. That is normal for api/ and includes/ — do not abort.
+  echo "set cmd:fail-exit no"
   echo "open sftp://${USER}:${PASS}@${HOST}"
+  for remote_dir in "${PARENT_DIRS[@]:-}"; do
+    echo "mkdir -p ${remote_dir}"
+  done
+  # Puts must still fail the job if an upload fails.
+  echo "set cmd:fail-exit yes"
   for rel in "${ALLOWED_FILES[@]}"; do
-    remote_dir="$(dirname "$rel")"
-    if [[ "$remote_dir" != "." ]]; then
-      echo "mkdir -p ${remote_dir}"
-    fi
     echo "put ${rel} -o ${rel}"
   done
   echo "bye"

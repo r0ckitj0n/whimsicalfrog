@@ -71,6 +71,8 @@ try {
                 WF_Constants::AI_PROVIDER_ANTHROPIC,
                 WF_Constants::AI_PROVIDER_GOOGLE,
                 WF_Constants::AI_PROVIDER_META,
+                WF_Constants::AI_PROVIDER_ZAI,
+                WF_Constants::AI_PROVIDER_DEEPSEEK,
                 WF_Constants::AI_PROVIDER_JONS_AI
             ];
             if (empty($provider)) {
@@ -94,7 +96,9 @@ try {
                 WF_Constants::AI_PROVIDER_OPENAI,
                 WF_Constants::AI_PROVIDER_ANTHROPIC,
                 WF_Constants::AI_PROVIDER_GOOGLE,
-                WF_Constants::AI_PROVIDER_META
+                WF_Constants::AI_PROVIDER_META,
+                WF_Constants::AI_PROVIDER_ZAI,
+                WF_Constants::AI_PROVIDER_DEEPSEEK
             ];
             if (!$provider) {
                 Response::error('Provider not specified', null, 400);

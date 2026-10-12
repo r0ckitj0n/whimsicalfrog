@@ -50,6 +50,10 @@ function ai_list_models(string $provider, bool $force = false): array
         $models = ai_fetch_openrouter_models('meta');
     } elseif ($provider === 'anthropic') {
         $models = ai_fallback_anthropic_models();
+    } elseif ($provider === 'zai') {
+        $models = ai_fetch_zai_models();
+    } elseif ($provider === 'deepseek') {
+        $models = ai_fetch_deepseek_models();
     }
 
     try {
@@ -160,6 +164,36 @@ function ai_fallback_anthropic_models(): array
         ['id' => 'claude-3-5-haiku-20241022', 'name' => 'Claude 3.5 Haiku', 'description' => 'Fastest model (text only)', 'supportsVision' => false],
         ['id' => 'claude-3-opus-20240229', 'name' => 'Claude 3 Opus (Legacy)', 'description' => 'Legacy - may be deprecated', 'supportsVision' => true],
         ['id' => 'claude-3-haiku-20240307', 'name' => 'Claude 3 Haiku', 'description' => 'Fast and affordable (text only)', 'supportsVision' => false],
+    ];
+}
+
+/**
+ * Z.AI (GLM) models — all vision-capable.
+ */
+function ai_fetch_zai_models(): array
+{
+    return [
+        ['id' => 'glm-4.6', 'name' => 'GLM-4.6', 'description' => 'Balanced flagship', 'supportsVision' => true],
+        ['id' => 'glm-4.5', 'name' => 'GLM-4.5', 'description' => 'Capable multimodal', 'supportsVision' => true],
+        ['id' => 'glm-4.5-air', 'name' => 'GLM-4.5 Air', 'description' => 'Fast and affordable', 'supportsVision' => true],
+        ['id' => 'glm-4.7', 'name' => 'GLM-4.7', 'description' => 'Newer release', 'supportsVision' => true],
+        ['id' => 'glm-5', 'name' => 'GLM-5', 'description' => 'Latest generation flagship', 'supportsVision' => true],
+        ['id' => 'glm-5-turbo', 'name' => 'GLM-5 Turbo', 'description' => 'Fast latest-gen', 'supportsVision' => true],
+        ['id' => 'glm-5.1', 'name' => 'GLM-5.1', 'description' => 'Advanced latest-gen', 'supportsVision' => true],
+        ['id' => 'glm-5.2', 'name' => 'GLM-5.2', 'description' => 'Top-tier latest-gen', 'supportsVision' => true],
+    ];
+}
+
+/**
+ * Deepseek models — all text-only (no vision).
+ */
+function ai_fetch_deepseek_models(): array
+{
+    return [
+        ['id' => 'deepseek-chat', 'name' => 'Deepseek Chat', 'description' => 'General chat (maps to v4-flash)', 'supportsVision' => false],
+        ['id' => 'deepseek-v4-flash', 'name' => 'Deepseek V4 Flash', 'description' => 'Fast and capable', 'supportsVision' => false],
+        ['id' => 'deepseek-v4-pro', 'name' => 'Deepseek V4 Pro', 'description' => 'Higher quality reasoning', 'supportsVision' => false],
+        ['id' => 'deepseek-reasoner', 'name' => 'Deepseek Reasoner', 'description' => 'Chain-of-thought reasoning', 'supportsVision' => false],
     ];
 }
 

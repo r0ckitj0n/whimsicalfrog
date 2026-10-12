@@ -108,7 +108,9 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, t
         { id: 'openai', label: 'OpenAI' },
         { id: 'anthropic', label: 'Anthropic' },
         { id: 'google', label: 'Google' },
-        { id: 'meta', label: 'Meta' }
+        { id: 'meta', label: 'Meta' },
+        { id: 'zai', label: 'Z.AI (GLM)' },
+        { id: 'deepseek', label: 'Deepseek (V4 Flash)' }
     ];
 
     const isDirty = !!localSettings && !!initialState && isDraftDirty(localSettings, initialState);

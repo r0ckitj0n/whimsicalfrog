@@ -215,6 +215,8 @@ class WF_Constants
     const AI_PROVIDER_ANTHROPIC = 'anthropic';
     const AI_PROVIDER_GOOGLE = 'google';
     const AI_PROVIDER_META = 'meta';
+    const AI_PROVIDER_ZAI = 'zai';
+    const AI_PROVIDER_DEEPSEEK = 'deepseek';
 
     // Newsletter Campaign Statuses
     const NEWSLETTER_STATUS_DRAFT = 'draft';

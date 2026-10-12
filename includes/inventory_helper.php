@@ -274,8 +274,15 @@ class InventoryHelper
         $queryParams = [];
 
         if (!empty($filters['search'])) {
-            $where_conditions[] = "(i.name LIKE :search OR i.sku LIKE :search OR i.description LIKE :search)";
-            $queryParams[':search'] = '%' . $filters['search'] . '%';
+            // PDO does not allow the same named placeholder to be bound more than
+            // once in a single prepared statement -- reusing :search three times
+            // here threw "SQLSTATE[HY093]: Invalid parameter number" on every
+            // non-empty search, breaking the inventory list search entirely.
+            $where_conditions[] = "(i.name LIKE :search_name OR i.sku LIKE :search_sku OR i.description LIKE :search_description)";
+            $searchTerm = '%' . $filters['search'] . '%';
+            $queryParams[':search_name'] = $searchTerm;
+            $queryParams[':search_sku'] = $searchTerm;
+            $queryParams[':search_description'] = $searchTerm;
         }
         if (!empty($filters['category'])) {
             $where_conditions[] = "i.category = :category";

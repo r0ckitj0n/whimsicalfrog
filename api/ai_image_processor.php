@@ -248,13 +248,28 @@ class AIImageProcessor
             return $result;
         }
 
+        $cleanupTemp = null;
         try {
-            $imageInfo = getimagesize($imagePath);
+            require_once dirname(__DIR__) . '/includes/helpers/HeicImageHelper.php';
+            $workPath = $imagePath;
+            if (HeicImageHelper::isHeicPath($imagePath) || !@getimagesize($imagePath)) {
+                $ext = strtolower(pathinfo($imagePath, PATHINFO_EXTENSION));
+                if (in_array($ext, ['heic', 'heif'], true) || HeicImageHelper::isHeicPath($imagePath)) {
+                    $jpeg = HeicImageHelper::convertToJpeg($imagePath);
+                    if ($jpeg === null) {
+                        throw new Exception('HEIC/HEIF conversion failed (Imagick required)');
+                    }
+                    $workPath = $jpeg;
+                    $cleanupTemp = $jpeg;
+                }
+            }
+
+            $imageInfo = getimagesize($workPath);
             if (!$imageInfo) {
                 throw new Exception('Invalid image for conversion');
             }
 
-            $sourceImage = GDImageHelper::createImageResource($imagePath, $imageInfo[2]);
+            $sourceImage = GDImageHelper::createImageResource($workPath, $imageInfo[2]);
             if (!$sourceImage) {
                 throw new Exception('Failed to open source image for conversion');
             }
@@ -268,12 +283,22 @@ class AIImageProcessor
                 imagedestroy($sourceImage);
                 throw new Exception('Failed to generate WebP output');
             }
+            if (!is_file($webpPath) || (int) filesize($webpPath) <= 0) {
+                imagedestroy($sourceImage);
+                @unlink($webpPath);
+                throw new Exception('WebP output was empty');
+            }
             $result['webp_path'] = $webpPath;
 
             if (!empty($opts['force_png'])) {
                 if (!GDImageHelper::saveToPNG($sourceImage, $pngPath, (int)$opts['png_compression'])) {
                     imagedestroy($sourceImage);
                     throw new Exception('Failed to generate PNG output');
+                }
+                if (!is_file($pngPath) || (int) filesize($pngPath) <= 0) {
+                    imagedestroy($sourceImage);
+                    @unlink($pngPath);
+                    throw new Exception('PNG output was empty');
                 }
                 $result['png_path'] = $pngPath;
             }
@@ -282,6 +307,10 @@ class AIImageProcessor
             $result['success'] = true;
         } catch (Throwable $e) {
             error_log('convertToDualFormat failed: ' . $e->getMessage());
+        } finally {
+            if (is_string($cleanupTemp) && $cleanupTemp !== $imagePath && is_file($cleanupTemp)) {
+                @unlink($cleanupTemp);
+            }
         }
 
         return $result;

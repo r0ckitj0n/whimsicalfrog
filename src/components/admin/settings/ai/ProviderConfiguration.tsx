@@ -31,7 +31,7 @@ export const ProviderConfiguration: React.FC<ProviderConfigurationProps> = ({
         );
     }
 
-    const provider = settings.ai_provider as 'openai' | 'anthropic' | 'google' | 'meta';
+    const provider = settings.ai_provider as 'openai' | 'anthropic' | 'google' | 'meta' | 'zai' | 'deepseek';
     const apiKeyField = `${provider}_api_key` as keyof IAISettings;
     const modelField = `${provider}_model` as keyof IAISettings;
     const keyPresentField = `${provider}_key_present` as keyof IAISettings;

@@ -59,11 +59,12 @@ if (empty($name) && empty($category) && (!$useImages || (empty($sku) && empty($i
     Response::error('At least Name, Category, or Image analysis is required for AI generation.', 400);
 }
 
-if ($imageFirstPriority && ($step === '' || $step === 'info')) {
-    $name = '';
-    $description = '';
-    $category = '';
-}
+// Preserve originals until we know a vision-capable provider is available.
+// Image-first clearing happens after $aiProviders is initialized (below).
+$originalName = $name;
+$originalDescription = $description;
+$originalCategory = $category;
+$visionProviderUsed = null;
 
 function wf_parse_locked_tokens($value)
 {
@@ -394,6 +395,31 @@ function wf_apply_theme_word_to_description($description, $themeWords): string
 
 try {
     $aiProviders = getAIProviders();
+
+    // Auto-promote to a vision-capable provider when image-first mode needs it
+    // but the active provider (e.g. deepseek) cannot analyze images.
+    $visionCapable = method_exists($aiProviders, 'currentModelSupportsImages')
+        ? $aiProviders->currentModelSupportsImages()
+        : false;
+    if (!$visionCapable && $imageFirstPriority && ($step === '' || $step === 'info')
+        && method_exists($aiProviders, 'promoteToVisionProviderForImageAnalysis')) {
+        $promoted = $aiProviders->promoteToVisionProviderForImageAnalysis();
+        if ($promoted !== null) {
+            $visionCapable = true;
+            $visionProviderUsed = $promoted;
+            error_log("suggest_all.php: Auto-promoted to vision-capable provider '{$promoted}' for image-first generation.");
+        }
+    }
+    if ($imageFirstPriority && $visionCapable && ($step === '' || $step === 'info')) {
+        $name = '';
+        $description = '';
+        $category = '';
+    } else {
+        // Keep original text inputs when vision is unavailable.
+        $name = $originalName;
+        $description = $originalDescription;
+        $category = $originalCategory;
+    }
     $images = [];
 
     // Prioritize passed imageData (string or array of image paths)

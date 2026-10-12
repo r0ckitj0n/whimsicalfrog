@@ -9,6 +9,10 @@ export interface IAISettings {
     google_model?: string;
     meta_api_key?: string;
     meta_model?: string;
+    zai_api_key?: string;
+    zai_model?: string;
+    deepseek_api_key?: string;
+    deepseek_model?: string;
     ai_temperature: number;
     ai_max_tokens: number;
     ai_timeout: number;
@@ -37,6 +41,10 @@ export interface IAISettings {
     google_key_suffix?: string;
     meta_key_present?: boolean;
     meta_key_suffix?: string;
+    zai_key_present?: boolean;
+    zai_key_suffix?: string;
+    deepseek_key_present?: boolean;
+    deepseek_key_suffix?: string;
 }
 
 export interface IAISettingsResponse {

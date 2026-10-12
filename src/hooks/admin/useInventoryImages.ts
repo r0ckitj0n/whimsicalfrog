@@ -56,7 +56,16 @@ export const useInventoryImages = (sku: string) => {
             });
 
             if (result?.success) {
+                const uploaded = Array.isArray((result as { uploadedImages?: unknown[] }).uploadedImages)
+                    ? (result as { uploadedImages?: unknown[] }).uploadedImages!.length
+                    : 0;
                 await fetchImages();
+                if (uploaded === 0) {
+                    window.WFToast?.error?.('Upload reported success but no image files were saved. Try again or use a smaller JPG/PNG.');
+                    setError('No image files were saved');
+                    return null;
+                }
+                window.WFToast?.success?.(`${uploaded} image${uploaded === 1 ? '' : 's'} saved`);
                 if (result.warnings && result.warnings.length > 0) {
                     window.WFToast?.info?.(`Some images did not upload: ${result.warnings.join(' | ')}`);
                 }

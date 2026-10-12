@@ -227,7 +227,6 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
                             className="hidden"
                             onChange={handleFileChange}
                         />
-                        <div className="text-2xl mb-1" aria-hidden="true">🖼️</div>
                         <p className="text-xs text-slate-600 mb-2">
                             {isDragActive ? 'Drop image to upload' : 'Drag & drop a product image here'}
                         </p>

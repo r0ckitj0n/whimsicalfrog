@@ -1,8 +1,9 @@
-import React, { useLayoutEffect, useMemo } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import type { IShopCategory, IShopItem } from '../../types/index.js';
 import { categoryPathFromSlug, productPathFromItem, productSlugFromItem } from '../../utils/product-url.js';
 import { hideShopBootOverlay } from '../../core/shop-boot-overlay.js';
+import ApiClient from '../../core/ApiClient.js';
 
 interface ProductDetailViewProps {
     categories: Record<string, IShopCategory>;
@@ -14,8 +15,26 @@ const slugify = (value: string): string => value
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
 
+/** Extract trailing SKU from canonical slug `name--wf-xx-001` or bare SKU. */
+const skuFromIdentifier = (identifier: string): string | null => {
+    const raw = identifier.trim();
+    if (!raw) return null;
+    const dashParts = raw.split('--');
+    if (dashParts.length >= 2) {
+        const tail = dashParts[dashParts.length - 1].trim();
+        if (tail) return tail.toUpperCase();
+    }
+    if (/^[a-z0-9]+(?:-[a-z0-9]+)+$/i.test(raw) || /^[A-Z]{2,}-/i.test(raw)) {
+        return raw.toUpperCase();
+    }
+    return null;
+};
+
 export const ProductDetailView: React.FC<ProductDetailViewProps> = ({ categories, onOpenItem }) => {
     const location = useLocation();
+    const [fetched, setFetched] = useState<{ item: IShopItem; categorySlug: string; categoryLabel: string } | null>(null);
+    const [fetchFailed, setFetchFailed] = useState(false);
+
     useLayoutEffect(() => {
         hideShopBootOverlay();
     }, []);
@@ -32,23 +51,93 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({ categories
         return rows;
     }, [categories]);
 
-    const product = useMemo(() => {
+    const catalogProduct = useMemo(() => {
         if (!identifier) return null;
         const normalized = identifier.toLowerCase();
         const normalizedSlug = slugify(identifier);
+        const skuHint = skuFromIdentifier(identifier)?.toLowerCase() || null;
         return catalog.find(({ item }) => {
             const sku = item.sku.toLowerCase();
             const skuSlug = slugify(item.sku);
             const canonicalSlug = productSlugFromItem(item);
-            return sku === normalized || skuSlug === normalizedSlug || canonicalSlug === normalizedSlug;
+            return sku === normalized
+                || skuSlug === normalizedSlug
+                || canonicalSlug === normalizedSlug
+                || (skuHint !== null && sku === skuHint);
         }) || null;
     }, [catalog, identifier]);
+
+    useEffect(() => {
+        setFetched(null);
+        setFetchFailed(false);
+        if (!identifier || catalogProduct) return;
+
+        const sku = skuFromIdentifier(identifier);
+        if (!sku) {
+            setFetchFailed(true);
+            return;
+        }
+
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await ApiClient.get<{
+                    success?: boolean;
+                    item?: {
+                        sku?: string;
+                        name?: string;
+                        description?: string;
+                        retail_price?: string | number;
+                        stock_quantity?: number;
+                        image_url?: string;
+                        category?: string;
+                        status?: string;
+                    };
+                }>('/api/get_item_details.php', { sku });
+
+                const row = res?.item;
+                if (cancelled) return;
+                if (!row?.sku || String(row.status || 'live').toLowerCase() === 'draft') {
+                    setFetchFailed(true);
+                    return;
+                }
+
+                const categoryLabel = String(row.category || 'Shop');
+                const categorySlug = slugify(categoryLabel) || 'shop';
+                const item: IShopItem = {
+                    sku: String(row.sku),
+                    item_name: String(row.name || row.sku),
+                    price: String(row.retail_price ?? '0'),
+                    stock: Number(row.stock_quantity ?? 0),
+                    description: String(row.description || ''),
+                    image_url: row.image_url ? (String(row.image_url).startsWith('/') ? String(row.image_url) : `/${String(row.image_url).replace(/^\//, '')}`) : '',
+                };
+
+                setFetched({ item, categorySlug, categoryLabel });
+            } catch {
+                if (!cancelled) setFetchFailed(true);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [identifier, catalogProduct]);
 
     if (!identifier || !location.pathname.toLowerCase().startsWith('/product/')) {
         return null;
     }
 
+    const product = catalogProduct || fetched;
+
     if (!product) {
+        if (!fetchFailed && !catalogProduct) {
+            return (
+                <section className="container mx-auto px-4 py-28 text-white">
+                    <h1 className="text-4xl font-merienda mb-4">Loading product…</h1>
+                </section>
+            );
+        }
         return (
             <section className="container mx-auto px-4 py-28 text-white">
                 <h1 className="text-4xl font-merienda mb-4">Product not found</h1>
@@ -60,6 +149,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({ categories
     const { item, categorySlug, categoryLabel } = product;
     const inStock = Number(item.stock) > 0;
     const related = catalog.filter((entry) => entry.categorySlug === categorySlug && entry.item.sku !== item.sku).slice(0, 4);
+    const imageSrc = item.image_url
+        ? (item.image_url.startsWith('/') || item.image_url.startsWith('http') ? item.image_url : `/${item.image_url}`)
+        : '';
 
     return (
         <section className="container mx-auto px-4 pt-28 pb-20 text-white">
@@ -71,8 +163,8 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({ categories
 
             <div className="grid gap-8 lg:grid-cols-2">
                 <div className="rounded-2xl bg-white p-4">
-                    {item.image_url ? (
-                        <img src={item.image_url} alt={item.item_name} className="w-full h-auto object-contain rounded-xl" loading="eager" decoding="async" />
+                    {imageSrc ? (
+                        <img src={imageSrc} alt={item.item_name} className="w-full h-auto object-contain rounded-xl" loading="eager" decoding="async" />
                     ) : (
                         <div className="aspect-square rounded-xl bg-gray-100" />
                     )}

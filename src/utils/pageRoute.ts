@@ -16,6 +16,7 @@ export function detectPageFromLocation(pathname: string, search: string): string
         return `admin/${section}`;
     }
     if (searchParams.get('room_id') === 'X') {
+        // Legacy Settings door URL — keep detecting as admin settings.
         return 'admin/settings';
     }
     if (path.includes('/product/')) {

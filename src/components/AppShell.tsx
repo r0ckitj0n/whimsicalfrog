@@ -151,6 +151,14 @@ export const AppShell: React.FC = () => {
     const section = searchParams.get('section') || '';
     const roomIdParam = searchParams.get('room_id');
 
+    // Legacy Settings door (?room_id=X) → modern admin Settings (avoids stale room-chrome "old look").
+    useLayoutEffect(() => {
+        if (typeof window === 'undefined') return;
+        if (searchParams.get('room_id') !== 'X') return;
+        if (location.pathname.toLowerCase().startsWith('/admin')) return;
+        window.location.replace('/admin?section=settings');
+    }, [location.pathname, searchParams]);
+
     useLayoutEffect(() => {
         if (typeof document === 'undefined') return;
         const coverShopWait = locationNeedsShopData(location.pathname, location.search);

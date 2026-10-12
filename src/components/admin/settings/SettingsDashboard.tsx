@@ -182,6 +182,14 @@ export const SettingsDashboard: React.FC = () => {
                 </button>
                 <button
                     type="button"
+                    id="backupRestoreBtn"
+                    className="admin-settings-button"
+                    onClick={() => setSection(ADMIN_SECTION.SITE_MAINTENANCE)}
+                >
+                    Backup / Restore
+                </button>
+                <button
+                    type="button"
                     id="aiSettingsBtn"
                     className="admin-settings-button"
                     onClick={() => setSection(ADMIN_SECTION.AI_SETTINGS)}

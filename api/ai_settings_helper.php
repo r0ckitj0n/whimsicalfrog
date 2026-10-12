@@ -55,6 +55,10 @@ function getAISettings()
         'google_model' => 'gemini-pro',
         'meta_api_key' => '',
         'meta_model' => 'meta-llama-3.1-8b-instruct',
+        'zai_api_key' => '',
+        'zai_model' => 'glm-4.6',
+        'deepseek_api_key' => '',
+        'deepseek_model' => 'deepseek-chat',
         'openai_last_success_at' => '',
         'openai_last_test_success_at' => '',
         'anthropic_last_success_at' => '',
@@ -122,12 +126,16 @@ function getAISettings()
     $defaults['anthropic_key_present'] = secret_has('anthropic_api_key');
     $defaults['google_key_present'] = secret_has('google_api_key');
     $defaults['meta_key_present'] = secret_has('meta_api_key');
+    $defaults['zai_key_present'] = secret_has('zai_api_key');
+    $defaults['deepseek_key_present'] = secret_has('deepseek_api_key');
 
     // Provide short, non-sensitive suffixes to help visually confirm which key is in use
     $defaults['openai_key_suffix'] = ai_get_key_suffix('openai_api_key');
     $defaults['anthropic_key_suffix'] = ai_get_key_suffix('anthropic_api_key');
     $defaults['google_key_suffix'] = ai_get_key_suffix('google_api_key');
     $defaults['meta_key_suffix'] = ai_get_key_suffix('meta_api_key');
+    $defaults['zai_key_suffix'] = ai_get_key_suffix('zai_api_key');
+    $defaults['deepseek_key_suffix'] = ai_get_key_suffix('deepseek_api_key');
 
     $defaults['openai_api_key'] = '';
     $defaults['anthropic_api_key'] = '';
@@ -138,6 +146,8 @@ function getAISettings()
     } else {
         $defaults['meta_api_key'] = '';
     }
+    $defaults['zai_api_key'] = '';
+    $defaults['deepseek_api_key'] = '';
 
     return $defaults;
 }
@@ -210,6 +220,10 @@ function initializeAISettings($pdo)
         'google_model' => ['gemini-pro', $descriptions['google_model'], 'text', $displayNames['google_model']],
         'meta_api_key' => ['', $descriptions['meta_api_key'], 'text', $displayNames['meta_api_key']],
         'meta_model' => ['meta-llama-3.1-8b-instruct', $descriptions['meta_model'], 'text', $displayNames['meta_model']],
+        'zai_api_key' => ['', $descriptions['zai_api_key'], 'text', $displayNames['zai_api_key']],
+        'zai_model' => ['glm-4.6', $descriptions['zai_model'], 'text', $displayNames['zai_model']],
+        'deepseek_api_key' => ['', $descriptions['deepseek_api_key'], 'text', $displayNames['deepseek_api_key']],
+        'deepseek_model' => ['deepseek-chat', $descriptions['deepseek_model'], 'text', $displayNames['deepseek_model']],
         'ai_temperature' => ['0.7', $descriptions['ai_temperature'], 'number', $displayNames['ai_temperature']],
         'ai_max_tokens' => ['1000', $descriptions['ai_max_tokens'], 'number', $displayNames['ai_max_tokens']],
         'ai_timeout' => ['30', $descriptions['ai_timeout'], 'number', $displayNames['ai_timeout']],

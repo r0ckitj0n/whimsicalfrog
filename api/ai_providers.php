@@ -13,6 +13,8 @@ require_once __DIR__ . '/../includes/ai/OpenAIProvider.php';
 require_once __DIR__ . '/../includes/ai/AnthropicProvider.php';
 require_once __DIR__ . '/../includes/ai/GoogleProvider.php';
 require_once __DIR__ . '/../includes/ai/MetaProvider.php';
+require_once __DIR__ . '/../includes/ai/ZaiProvider.php';
+require_once __DIR__ . '/../includes/ai/DeepseekProvider.php';
 require_once __DIR__ . '/../includes/ai/LocalProvider.php';
 
 class AIProviders
@@ -74,7 +76,7 @@ class AIProviders
         }
 
         require_once __DIR__ . '/../includes/secret_store.php';
-        $secretKeys = ['openai_api_key', 'anthropic_api_key', 'google_api_key', 'meta_api_key'];
+        $secretKeys = ['openai_api_key', 'anthropic_api_key', 'google_api_key', 'meta_api_key', 'zai_api_key', 'deepseek_api_key'];
         foreach ($secretKeys as $k) {
             $v = secret_get($k);
             if ($v !== null && $v !== '')
@@ -99,6 +101,12 @@ class AIProviders
                 break;
             case WF_Constants::AI_PROVIDER_META:
                 $this->provider = new MetaProvider($this->settings);
+                break;
+            case WF_Constants::AI_PROVIDER_ZAI:
+                $this->provider = new ZaiProvider($this->settings);
+                break;
+            case WF_Constants::AI_PROVIDER_DEEPSEEK:
+                $this->provider = new DeepseekProvider($this->settings);
                 break;
             case WF_Constants::AI_PROVIDER_JONS_AI:
             default:
@@ -162,6 +170,10 @@ class AIProviders
                 return $this->settings['google_model'] ?? null;
             case WF_Constants::AI_PROVIDER_META:
                 return $this->settings['meta_model'] ?? null;
+            case WF_Constants::AI_PROVIDER_ZAI:
+                return $this->settings['zai_model'] ?? null;
+            case WF_Constants::AI_PROVIDER_DEEPSEEK:
+                return $this->settings['deepseek_model'] ?? null;
             case WF_Constants::AI_PROVIDER_JONS_AI:
             default:
                 return 'jons-ai';
@@ -271,7 +283,84 @@ class AIProviders
 
     public function analyzeItemImage($imagePath, $existingCategories = [])
     {
-        return $this->runWithFallback('analyzeItemImage', $imagePath, $existingCategories);
+        // Image analysis is special: the active provider may not support vision
+        // (e.g. jons_ai returns null), and even vision-capable providers can fail
+        // (quota, rate limits, etc.). When the primary attempt fails or returns
+        // nothing usable, try every other configured vision-capable provider
+        // before giving up. This makes "Generate" resilient for end users.
+        $primaryResult = null;
+        $primaryError = null;
+        try {
+            $primaryResult = $this->runWithFallback('analyzeItemImage', $imagePath, $existingCategories);
+        } catch (Throwable $e) {
+            $primaryError = $e;
+        }
+
+        // If the primary provider returned a usable result, we're done.
+        if ($primaryResult !== null && !empty($primaryResult) && empty($primaryResult['error'])) {
+            return $primaryResult;
+        }
+
+        // Primary failed or returned nothing — try fallback vision providers.
+        $candidates = $this->getVisionCapableProvidersWithKeys();
+        $activeType = $this->settings['ai_provider'] ?? WF_Constants::AI_PROVIDER_JONS_AI;
+        foreach ($candidates as $type) {
+            if ($type === $activeType) {
+                continue; // already tried
+            }
+            $instance = $this->getProviderInstance($type);
+            if (!$instance || !$instance->supportsImages()) {
+                continue;
+            }
+            try {
+                $result = $instance->analyzeItemImage($imagePath, $existingCategories);
+                if ($result !== null && !empty($result) && empty($result['error'])) {
+                    // Success with a fallback vision provider — record it.
+                    $this->provider = $instance;
+                    $this->lastRunDiagnostics['provider'] = $type;
+                    $this->lastRunDiagnostics['model'] = $this->resolveActiveModelForDiagnostics();
+                    $this->lastRunDiagnostics['fallback_used'] = true;
+                    if ($primaryError !== null) {
+                        $this->lastRunDiagnostics['provider_error'] = $primaryError->getMessage();
+                    }
+                    $this->markUsageSuccess($type);
+                    error_log("analyzeItemImage: primary returned nothing, succeeded with fallback provider '{$type}'.");
+                    return $result;
+                }
+            } catch (Throwable $fallbackError) {
+                error_log("analyzeItemImage: fallback provider '{$type}' also failed: " . $fallbackError->getMessage());
+                continue;
+            }
+        }
+
+        // All providers exhausted — rethrow the original error if we had one,
+        // otherwise return null so callers handle "no analysis available".
+        if ($primaryError !== null) {
+            throw $primaryError;
+        }
+        return $primaryResult; // null
+    }
+
+    /**
+     * Returns the list of provider constants that (a) support image analysis and
+     * (b) have an API key present in settings. Used to find fallback candidates.
+     */
+    private function getVisionCapableProvidersWithKeys()
+    {
+        $candidates = [];
+        $check = [
+            WF_Constants::AI_PROVIDER_OPENAI,
+            WF_Constants::AI_PROVIDER_ANTHROPIC,
+            WF_Constants::AI_PROVIDER_GOOGLE,
+            WF_Constants::AI_PROVIDER_ZAI,
+        ];
+        foreach ($check as $type) {
+            $keyName = $type . '_api_key';
+            if (isset($this->settings[$keyName]) && $this->settings[$keyName] !== '') {
+                $candidates[] = $type;
+            }
+        }
+        return $candidates;
     }
 
     public function detectObjectBoundaries($imagePath)
@@ -282,6 +371,52 @@ class AIProviders
     public function currentModelSupportsImages()
     {
         return $this->provider->supportsImages();
+    }
+
+    /**
+     * Auto-promote to a vision-capable provider for image analysis.
+     *
+     * When the active provider cannot analyze images (e.g. jons_ai), this checks
+     * whether a configured alternative provider (OpenAI, Anthropic, Google) has an
+     * API key present and swaps $this->provider to it for the remainder of the
+     * request. This makes the Generate button work in image-first mode without
+     * requiring the user to change their global AI settings.
+     *
+     * Returns the provider constant that was promoted to, or null if no
+     * vision-capable provider with a key was available.
+     */
+    public function promoteToVisionProviderForImageAnalysis()
+    {
+        // Don't promote if the active provider already supports images.
+        if ($this->provider->supportsImages()) {
+            return null;
+        }
+
+        // Candidate providers in preference order. Each must have an API key
+        // present in the secret store and report supportsImages() === true.
+        $candidates = [
+            WF_Constants::AI_PROVIDER_OPENAI,
+            WF_Constants::AI_PROVIDER_ANTHROPIC,
+            WF_Constants::AI_PROVIDER_GOOGLE,
+            WF_Constants::AI_PROVIDER_ZAI,
+        ];
+
+        foreach ($candidates as $type) {
+            $keyName = $type . '_api_key';
+            if (!isset($this->settings[$keyName]) || $this->settings[$keyName] === '') {
+                continue;
+            }
+            $instance = $this->getProviderInstance($type);
+            if ($instance && $instance->supportsImages()) {
+                $this->provider = $instance;
+                // Keep diagnostics honest about which provider actually ran.
+                $this->lastRunDiagnostics['provider'] = $type;
+                $this->lastRunDiagnostics['model'] = $this->resolveActiveModelForDiagnostics();
+                return $type;
+            }
+        }
+
+        return null;
     }
 
     public function generateMarketingContentWithImages($name, $description, $category, $images = [], $brandVoice = '', $contentTone = '')
@@ -340,6 +475,10 @@ class AIProviders
                 return new GoogleProvider($this->settings);
             case WF_Constants::AI_PROVIDER_META:
                 return new MetaProvider($this->settings);
+            case WF_Constants::AI_PROVIDER_ZAI:
+                return new ZaiProvider($this->settings);
+            case WF_Constants::AI_PROVIDER_DEEPSEEK:
+                return new DeepseekProvider($this->settings);
             case WF_Constants::AI_PROVIDER_JONS_AI:
             default:
                 return $this->localProvider;
@@ -467,7 +606,9 @@ class AIProviders
             WF_Constants::AI_PROVIDER_OPENAI => ['name' => 'OpenAI (ChatGPT)', 'requires_api_key' => true],
             WF_Constants::AI_PROVIDER_ANTHROPIC => ['name' => 'Anthropic (Claude)', 'requires_api_key' => true],
             WF_Constants::AI_PROVIDER_GOOGLE => ['name' => 'Google AI (Gemini)', 'requires_api_key' => true],
-            WF_Constants::AI_PROVIDER_META => ['name' => 'Meta AI (Llama)', 'requires_api_key' => true]
+            WF_Constants::AI_PROVIDER_META => ['name' => 'Meta AI (Llama)', 'requires_api_key' => true],
+            WF_Constants::AI_PROVIDER_ZAI => ['name' => 'Z.AI (GLM)', 'requires_api_key' => true],
+            WF_Constants::AI_PROVIDER_DEEPSEEK => ['name' => 'Deepseek (V4 Flash)', 'requires_api_key' => true]
         ];
     }
 

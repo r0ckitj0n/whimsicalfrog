@@ -44,9 +44,11 @@ export const OrderEditorHeader: React.FC<OrderEditorHeaderProps> = ({
                 {mode === 'edit' && (
                     <button
                         onClick={handleSave}
-                        disabled={isSaving}
-                        className={`admin-action-btn btn-icon--save ${isDirty ? 'is-dirty' : ''}`}
+                        disabled={isSaving || !isDirty}
+                        className={`admin-action-btn btn-icon--save dirty-only ${isDirty ? 'is-dirty' : ''}`}
                         data-help-id="orders-action-save"
+                        aria-hidden={!isDirty}
+                        tabIndex={isDirty ? 0 : -1}
                     />
                 )}
                 <button

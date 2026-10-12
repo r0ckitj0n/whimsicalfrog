@@ -26,7 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: ${{ secrets.WF_DEPLOY_BASE_URL }}
+      # environment.url cannot reference secrets (workflow parse fails with 0 jobs).
+      url: https://whimsicalfrog.us
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -100,12 +101,14 @@ jobs:
           fi
 
           HOME_HTML="$(curl -sS "$BASE_URL/")"
-          if echo "$HOME_HTML" | grep -q "/src/"; then
-            echo "[kill-switch] ERROR: homepage still references /src/"
+          # index.html keeps a local-dev fallback string "/src/entries/main.tsx" in JS.
+          # Only fail if a real script tag loads /src/ (broken production boot).
+          if echo "$HOME_HTML" | grep -Eiq '<script[^>]+src=["'\'']/src/'; then
+            echo "[kill-switch] ERROR: homepage loads a /src/ script tag"
             exit 1
           fi
 
-          echo "[kill-switch] OK: manifest is 200 and homepage has no /src/ references."
+          echo "[kill-switch] OK: manifest is 200 and homepage does not load /src/ scripts."
 
       - name: Verify security endpoints
         if: steps.mode.outputs.mode == 'security-only'

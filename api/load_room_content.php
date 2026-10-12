@@ -61,12 +61,14 @@ try {
         [$room_number]
     ) ?: null;
 
-    // Use manually set background_url from room_settings if present, but only when resolvable.
+    // Use manually set background_url from room_settings when resolvable.
+    // Library paths (/images/backgrounds/...) must also populate $bgMeta — otherwise rooms
+    // with only room_settings.background_url (no backgrounds-table row) render a white panel.
     $manualBackgroundUrl = trim((string) ($metadata['background_url'] ?? ''));
-    $isLibraryManagedPath = (bool) preg_match('/^(\/?images\/backgrounds\/|backgrounds\/)/i', $manualBackgroundUrl);
-    if ($manualBackgroundUrl !== '' && !$isLibraryManagedPath) {
+    if ($manualBackgroundUrl !== '') {
         $manualResolvedUrl = $manualBackgroundUrl;
         $manualIsUsable = true;
+        $projectRoot = realpath(__DIR__ . '/..') ?: (__DIR__ . '/..');
 
         if (!preg_match('/^https?:\/\//i', $manualBackgroundUrl)) {
             $parsedPath = parse_url($manualBackgroundUrl, PHP_URL_PATH);
@@ -75,12 +77,14 @@ try {
             }
 
             $normalizedPath = '/' . ltrim(str_replace('\\', '/', $parsedPath), '/');
-            $projectRoot = realpath(__DIR__ . '/..') ?: (__DIR__ . '/..');
             $candidate = '';
 
             if (str_starts_with($normalizedPath, '/images/')) {
                 $candidate = rtrim($projectRoot, '/') . $normalizedPath;
                 $manualResolvedUrl = $normalizedPath;
+            } elseif (preg_match('/^backgrounds\//i', ltrim($normalizedPath, '/'))) {
+                $manualResolvedUrl = '/images/' . ltrim($normalizedPath, '/');
+                $candidate = rtrim($projectRoot, '/') . $manualResolvedUrl;
             } else {
                 $filename = basename($normalizedPath);
                 if ($filename === '' || $filename === '.' || $filename === '..') {
@@ -91,23 +95,44 @@ try {
                 }
             }
 
-            if ($manualIsUsable && !is_file($candidate)) {
+            if ($manualIsUsable && $candidate !== '' && !is_file($candidate)) {
                 $manualIsUsable = false;
             }
         }
 
         if ($manualIsUsable) {
             $metadata['background_url'] = $manualResolvedUrl;
+            // Prefer webp sibling when present for library-managed files.
+            $webpCandidate = null;
+            if (preg_match('/\.(png|jpe?g)$/i', $manualResolvedUrl)) {
+                $webpTry = preg_replace('/\.(png|jpe?g)$/i', '.webp', $manualResolvedUrl);
+                if (is_string($webpTry) && is_file(rtrim($projectRoot, '/') . $webpTry)) {
+                    $webpCandidate = $webpTry;
+                }
+            } elseif (preg_match('/\.webp$/i', $manualResolvedUrl)) {
+                $webpCandidate = $manualResolvedUrl;
+            }
+
+            // Store relative backgrounds/ paths when possible (matches backgrounds table convention).
+            $imageFilename = $manualResolvedUrl;
+            $webpFilename = $webpCandidate;
+            if (str_starts_with($manualResolvedUrl, '/images/backgrounds/')) {
+                $imageFilename = substr($manualResolvedUrl, strlen('/images/'));
+            }
+            if (is_string($webpFilename) && str_starts_with($webpFilename, '/images/backgrounds/')) {
+                $webpFilename = substr($webpFilename, strlen('/images/'));
+            }
+
             if (!$bgMeta) {
                 $bgMeta = [
-                    'name' => 'Custom Background',
-                    'image_filename' => $manualResolvedUrl,
-                    'webp_filename' => null
+                    'name' => 'Room Settings Background',
+                    'image_filename' => $imageFilename,
+                    'webp_filename' => $webpFilename,
                 ];
             } else {
-                // Override the filename with the custom URL
-                $bgMeta['image_filename'] = $manualResolvedUrl;
-                $bgMeta['webp_filename'] = null;
+                // room_settings.background_url wins when it points at a real file.
+                $bgMeta['image_filename'] = $imageFilename;
+                $bgMeta['webp_filename'] = $webpFilename;
             }
         } else {
             // Invalid override should not mask a valid active background.

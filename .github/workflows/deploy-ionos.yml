@@ -1,5 +1,11 @@
 name: Deploy to IONOS
 
+# Default push-to-main mode is security-only: force-upload a short auth/session
+# allowlist only. Never mirrors, never deletes, never touches images/, uploads/,
+# .env, config/secret.key, private/, sessions/, backups/, or dist/.
+# IONOS SFTP "mkdir: Access failed" on existing dirs is handled in
+# scripts/deploy_security_only.sh (fail-exit off around mkdir only).
+
 on:
   push:
     branches:

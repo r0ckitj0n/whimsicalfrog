@@ -330,6 +330,9 @@ mirror $MIRROR_FLAGS \
   --exclude-glob "sessions/**" \
   --exclude-glob .env \
   --exclude-glob ".env.*" \
+  --exclude-glob "private/**" \
+  --exclude-glob "**/secret.key" \
+  --exclude-glob "config/secret.key" \
   --exclude-glob "backups/**" \
   --exclude-glob "logs/**" \
   --exclude-glob "reports/**" \

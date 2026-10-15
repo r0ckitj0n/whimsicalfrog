@@ -79,4 +79,45 @@ Path(".env").write_text("\n".join(lines), encoding="utf-8")
 PY
 fi
 
+# Persist deploy secrets into .env when the Cloud Agent process environment
+# provides them, so start.sh / sync_from_live.sh can refresh images from live.
+python3 - <<'PY'
+import os
+from pathlib import Path
+
+env_path = Path(".env")
+text = env_path.read_text(encoding="utf-8") if env_path.exists() else ""
+keys = (
+    "WF_ADMIN_TOKEN",
+    "WF_DEPLOY_HOST",
+    "WF_DEPLOY_USER",
+    "WF_DEPLOY_PASS",
+    "WF_DEPLOY_BASE_URL",
+    "WF_DEPLOY_PATH",
+)
+changed = False
+for key in keys:
+    value = os.environ.get(key)
+    if not value:
+        continue
+    line = f"{key}={value}"
+    if f"{key}=" in text:
+        # Keep existing file values; secrets may already be present.
+        continue
+    text = text.rstrip() + "\n" + line + "\n"
+    changed = True
+if changed:
+    env_path.write_text(text, encoding="utf-8")
+    print("[install] Appended deploy sync keys to .env")
+PY
+
+# Prime local images from live during install when credentials exist.
+# start.sh also refreshes on every boot (only-newer). Soft-fail so missing
+# secrets never break environment builds.
+if [[ "${WF_SKIP_LIVE_SYNC:-0}" != "1" ]]; then
+  log "Priming images from live (only-newer, soft)"
+  bash scripts/cloud/sync_from_live.sh --images --soft \
+    || log "Live image sync reported a warning (continuing)"
+fi
+
 log "Done."

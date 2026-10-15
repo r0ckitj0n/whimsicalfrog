@@ -118,19 +118,8 @@ fi
 
 if [[ "$DO_FILES" -eq 1 ]]; then
   require WF_DEPLOY_HOST; require WF_DEPLOY_USER; require WF_DEPLOY_PASS
-  log "Mirroring newer live files (live precedence, --only-newer)"
-  lftp -u "${WF_DEPLOY_USER},${WF_DEPLOY_PASS}" "sftp://${WF_DEPLOY_HOST}" <<LFTP
-set sftp:auto-confirm yes
-set ssl:verify-certificate no
-set net:timeout 30
-set net:max-retries 2
-mirror --only-newer --no-perms --verbose \
-  --exclude-glob .git/ --exclude-glob node_modules/ --exclude-glob dist/ \
-  --exclude-glob vendor/ --exclude-glob backups/ --exclude-glob logs/ \
-  --exclude-glob .env --exclude-glob hot \
-  / "$ROOT_DIR"
-bye
-LFTP
+  log "Mirroring newer live files via sync_from_live.sh (images + code, only-newer)"
+  bash "$ROOT_DIR/scripts/cloud/sync_from_live.sh" --all
   log "File mirror complete. Review with 'git status' before committing."
 fi
 

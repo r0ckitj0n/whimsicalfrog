@@ -54,15 +54,28 @@ Required secrets / `.env` keys: `WF_DEPLOY_HOST`, `WF_DEPLOY_USER`, `WF_DEPLOY_P
 
 See also: `documentation/routines/agent-safe-deploy.md`.
 
-## Pulling live content back into local
+## Pulling live content back into local / Cloud Agent
 
-If live has newer content you want in git:
+Live is the source of truth for uploaded images and any on-server hotfixes. Prefer live-newer mirrors over pushing stale checkout trees.
 
 ```bash
+# Images only (default; Cloud Agent start.sh does this every boot)
+bash scripts/cloud/sync_from_live.sh --images
+
+# Images + code trees (api/includes/src/…)
+bash scripts/cloud/sync_from_live.sh --all
+
+# DB restore + file sync helper
 bash scripts/cloud/pull_live_backup.sh --files
 ```
 
-That mirrors live → local with `--only-newer` and no deletes.
+These mirrors use `--only-newer` and never delete local files. Soft-skip with `--soft` when deploy credentials are missing.
+
+## Image upload policy on deploy
+
+- `deploy_agent_safe.sh` never uploads or deletes `images/`.
+- `deploy.sh` defaults to **live image precedence**: image uploads are skipped unless you pass `--push-images` (or set `WF_PUSH_IMAGES=1`).
+- Before an intentional image push, refresh local from live first so you do not overwrite newer live files with older git-checkout copies (git refresh resets mtimes).
 
 ## Important note about Aug 2026 merges
 

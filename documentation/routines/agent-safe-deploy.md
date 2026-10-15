@@ -48,7 +48,16 @@ Useful flags:
 - `WF_DEPLOY_PASS`
 - Optional: `WF_DEPLOY_PATH`, `WF_DEPLOY_BASE_URL`, `WF_ADMIN_TOKEN`
 
-## What NOT to run for routine agent deploys
+## Related: keep local media current
+
+Before inspecting or comparing images locally, refresh from live:
+
+```bash
+bash scripts/cloud/sync_from_live.sh --images
+```
+
+Cloud Agent `start.sh` runs that automatically (soft-fail if deploy secrets are missing). See `documentation/routines/live-deploy.md`.
+
 
 - `scripts/deploy.sh --full` / `--purge*` — destructive
 - `scripts/deploy_full.sh` — can restore DB onto live

@@ -130,4 +130,22 @@ Return ONLY valid JSON: {\"weight_oz\": <number>, \"dimensions_in\": {\"length\"
     {
         return false;
     }
+
+    protected function requireSecret($settingKey, $label, $secretKey)
+    {
+        $value = $this->settings[$settingKey] ?? '';
+        if (is_string($value) && $value !== '') {
+            return $value;
+        }
+
+        $store = __DIR__ . '/../secret_store.php';
+        if (!function_exists('secret_unavailable_message') && is_file($store)) {
+            require_once $store;
+        }
+
+        $message = function_exists('secret_unavailable_message')
+            ? secret_unavailable_message($label, $secretKey)
+            : "{$label} API key missing";
+        throw new Exception($message);
+    }
 }

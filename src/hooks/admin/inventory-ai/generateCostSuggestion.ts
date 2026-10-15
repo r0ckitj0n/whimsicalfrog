@@ -4,7 +4,7 @@ import { ApiClient } from '../../../core/ApiClient.js';
 import type { CostSuggestion } from './useCostSuggestions.js';
 import type { PriceSuggestion } from './usePriceSuggestions.js';
 import { getPriceTierMultiplier } from './usePriceSuggestions.js';
-import type { GenerationContext } from '../useAIGenerationOrchestrator.js';
+import type { InfoOnlyResult } from '../useAIGenerationOrchestrator.js';
 import type { MarketingData } from './useMarketingManager.js';
 import type { IRecentSoldPriceResponse } from '../../../types/pricing-history.js';
 
@@ -26,7 +26,7 @@ interface SharedGenerationParams<TSuggestion> {
         lockedFields?: Record<string, boolean>;
         lockedWords?: Record<string, string>;
         includeMarketingRefinement?: boolean;
-    }) => Promise<Partial<GenerationContext> | null>;
+    }) => Promise<InfoOnlyResult | null>;
     runSuggestion: (params: {
         sku: string;
         name: string;
@@ -273,6 +273,11 @@ const runImageFirstSuggestion = async <TSuggestion>({
                 previousName: name,
                 includeMarketingRefinement: false
             });
+
+            if (infoResult?.aiUnavailable) {
+                window.WFToast?.info?.(infoResult.aiMessage || "AI auto-fill isn't available right now. You can still save the item without it.");
+                return null;
+            }
 
             if (!infoResult) {
                 toastError('Image-first analysis failed. Generation aborted.');

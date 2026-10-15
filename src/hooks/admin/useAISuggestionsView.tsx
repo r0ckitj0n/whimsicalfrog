@@ -477,7 +477,9 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
                 includeMarketingRefinement: true
             });
 
-            if (infoResult) {
+            if (infoResult?.aiUnavailable) {
+                if (window.WFToast) window.WFToast.info(infoResult.aiMessage || "AI auto-fill isn't available right now. Fill in the details yourself, then save.");
+            } else if (infoResult) {
                 setLocalFormData(prev => ({
                     ...prev,
                     name: infoResult.name || prev.name,

@@ -48,7 +48,14 @@ export interface GenerationStepResult {
     stepName: string;
     data: Partial<GenerationContext>;
     error?: string;
+    /** True when the step failed because AI is unavailable, not because of a user input problem. */
+    aiUnavailable?: boolean;
 }
+
+export type InfoOnlyResult = Partial<GenerationContext> & {
+    aiUnavailable?: boolean;
+    aiMessage?: string;
+};
 
 export type GenerationStep = 'info' | 'cost' | 'price' | 'marketing';
 
@@ -76,7 +83,7 @@ interface UseAIGenerationOrchestratorReturn {
         lockedFields?: Record<string, boolean>;
         lockedWords?: Record<string, string>;
         includeMarketingRefinement?: boolean;
-    }) => Promise<Partial<GenerationContext> | null>;
+    }) => Promise<InfoOnlyResult | null>;
     generateCostOnly: (params: {
         sku: string;
         name: string;
@@ -264,8 +271,10 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                 package_length_in?: number | string;
                 package_width_in?: number | string;
                 package_height_in?: number | string;
-            };
+            } | null;
             error?: string;
+            ai_unavailable?: boolean;
+            ai_message?: string;
         }): GenerationStepResult => {
             if (response && response.success && response.info_suggestion) {
                 return {
@@ -282,11 +291,23 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                     }
                 };
             }
+            if (response?.ai_unavailable) {
+                return {
+                    success: false,
+                    stepName: 'info',
+                    data: {},
+                    error: response.ai_message || "AI auto-fill isn't available right now. Your photo is already saved. Fill in the Name and Category, then click Create.",
+                    aiUnavailable: true
+                };
+            }
+            const fallbackError = response?.error || '';
+            const keyOrBilling = /cannot be decrypted|API key is not saved|API key missing|insufficient_quota|billing|quota/i.test(fallbackError);
             return {
                 success: false,
                 stepName: 'info',
                 data: {},
-                error: response?.error || 'Failed to generate item info from image'
+                error: fallbackError || 'Failed to generate item info from image',
+                aiUnavailable: keyOrBilling
             };
         };
 
@@ -347,8 +368,10 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                     package_height_in?: number | string;
                     confidence?: string | number;
                     reasoning?: string;
-                };
+                } | null;
                 error?: string;
+                ai_unavailable?: boolean;
+                ai_message?: string;
             }>('/api/suggest_all.php', {
                 sku,
                 imageData: imagePayload,
@@ -742,6 +765,13 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                 context.packageHeightIn = infoResult.data.packageHeightIn ?? context.packageHeightIn;
                 toastSuccess('✅ Generated title, description, and category');
                 onStepComplete?.('info', { ...context }, []);
+            } else if (infoResult.aiUnavailable) {
+                // Leave the form fields alone. The photo is already uploaded, and Create
+                // must stay available when auto-fill cannot run.
+                window.WFToast?.info?.(infoResult.error || "AI auto-fill isn't available right now. Fill in the Name and Category, then click Create.");
+                setIsGenerating(false);
+                setCurrentStep(null);
+                return null;
             } else {
                 const errorMessage = infoResult.error || 'Image analysis failed. Switch to a vision-capable model in AI Settings and run Test Provider.';
                 toastError(errorMessage);
@@ -884,7 +914,7 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
         lockedFields?: Record<string, boolean>;
         lockedWords?: Record<string, string>;
         includeMarketingRefinement?: boolean;
-    }): Promise<Partial<GenerationContext> | null> => {
+    }): Promise<InfoOnlyResult | null> => {
         setIsGenerating(true);
         setCurrentStep('info');
         try {
@@ -894,7 +924,15 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                 params.imageUrls || [],
                 params.lockedWords || {}
             );
-            if (!result.success) return null;
+            if (!result.success) {
+                if (result.aiUnavailable) {
+                    return {
+                        aiUnavailable: true,
+                        aiMessage: result.error || "AI auto-fill isn't available right now. Fill in the Name and Category, then click Create."
+                    };
+                }
+                return null;
+            }
             const lockedWords = params.lockedWords || {};
             const lockedFields = params.lockedFields || {};
             if (!params.lockedWords && !params.lockedFields) return result.data;

@@ -6,8 +6,12 @@ import { ApiClient } from '../../../core/ApiClient.js';
 
 interface CronData {
     token_masked: string;
-    web_cron_url: string;
+    web_cron_url?: string | null;
     base_url: string;
+    auth?: string;
+    curl_example?: string;
+    stored_as_hash?: boolean;
+    token?: string;
 }
 
 interface CronManagerProps {
@@ -47,7 +51,7 @@ export function CronManager({ onClose, title }: CronManagerProps) {
     const handleRotateToken = async () => {
         const confirmed = await themedConfirm({
             title: 'Rotate Token',
-            message: 'Rotate the maintenance token? You will need to update your cron scheduler with the new URL.',
+            message: 'Rotate the maintenance token? Store the one-time plaintext locally (header auth); only a hash is kept on the server.',
             confirmText: 'Rotate Now',
             confirmStyle: 'danger',
             iconKey: 'rotate'
@@ -63,7 +67,16 @@ export function CronManager({ onClose, title }: CronManagerProps) {
             const json = await ApiClient.post<{ success: boolean; error?: string; data?: CronData }>('/api/cron_manager.php?action=rotate_token', {});
             if (json.success) {
                 setData(json.data || null);
-                setMessage({ text: 'Token rotated successfully', type: 'success' });
+                if (json.data?.token) {
+                    try {
+                        await navigator.clipboard.writeText(json.data.token);
+                        setMessage({ text: 'Token rotated — plaintext copied once to clipboard. Update ~/.config/whimsicalfrog/prune-token.', type: 'success' });
+                    } catch {
+                        setMessage({ text: 'Token rotated — copy the one-time plaintext from the response before leaving this page.', type: 'success' });
+                    }
+                } else {
+                    setMessage({ text: 'Token rotated successfully', type: 'success' });
+                }
             } else {
                 setMessage({ text: json.error || 'Failed to rotate', type: 'error' });
             }
@@ -94,10 +107,11 @@ export function CronManager({ onClose, title }: CronManagerProps) {
     };
 
     const handleCopyUrl = async () => {
-        if (!data?.web_cron_url) return;
+        const text = data?.curl_example || data?.web_cron_url;
+        if (!text) return;
         try {
-            await navigator.clipboard.writeText(data.web_cron_url);
-            setMessage({ text: 'URL copied to clipboard', type: 'success' });
+            await navigator.clipboard.writeText(text);
+            setMessage({ text: 'Cron command copied to clipboard', type: 'success' });
         } catch {
             setMessage({ text: 'Failed to copy', type: 'error' });
         }
@@ -172,19 +186,19 @@ export function CronManager({ onClose, title }: CronManagerProps) {
                                     </button>
                                 </div>
                                 <p className="text-[10px] text-slate-400 italic">
-                                    After rotation, update your hosting scheduler with the new URL.
+                                    After rotation, update ~/.config/whimsicalfrog/prune-token (mode 600). Do not put the token in a URL.
                                 </p>
                             </div>
 
-                            {/* Web Cron URL */}
+                            {/* Header-auth cron */}
                             <div className="admin-card">
-                                <h2 className="admin-card-title mb-2">Web Cron (URL Trigger)</h2>
+                                <h2 className="admin-card-title mb-2">Web Cron (Header Auth)</h2>
                                 <p className="text-gray-600 mb-2 text-sm">
-                                    Use this URL in your hosting provider's cron scheduler for daily session cleanup:
+                                    POST with X-Maintenance-Token (or admin_token in the body). Never put the token in the query string:
                                 </p>
                                 <div className="relative group mb-4">
-                                    <pre className="bg-white text-slate-700 p-4 rounded-xl border border-slate-200 overflow-x-auto text-xs font-mono">
-                                        <code>{data?.web_cron_url}</code>
+                                    <pre className="bg-white text-slate-700 p-4 rounded-xl border border-slate-200 overflow-x-auto text-xs font-mono whitespace-pre-wrap">
+                                        <code>{data?.curl_example || data?.web_cron_url || '—'}</code>
                                     </pre>
                                     <button
                                         type="button"
@@ -202,7 +216,7 @@ export function CronManager({ onClose, title }: CronManagerProps) {
                                     </div>
                                     <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                                         <div className="text-[10px] font-black uppercase text-slate-400 mb-1">Method</div>
-                                        <div className="text-sm font-bold text-slate-700">HTTP GET</div>
+                                        <div className="text-sm font-bold text-slate-700">HTTP POST + header</div>
                                     </div>
                                 </div>
                                 <button

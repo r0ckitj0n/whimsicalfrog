@@ -46,7 +46,13 @@ export const useSquareSettings = () => {
             square_production_application_id: productionApp,
             square_production_access_token: productionToken,
             square_production_location_id: productionLoc,
-            square_sync_enabled: parseBool(raw.auto_sync_enabled ?? raw.square_sync_enabled)
+            square_sync_enabled: parseBool(raw.auto_sync_enabled ?? raw.square_sync_enabled),
+            access_token_secret_present: !!raw.access_token_secret_present,
+            access_token_secret_unreadable: !!raw.access_token_secret_unreadable,
+            square_production_access_token_present: !!raw.square_production_access_token_present,
+            square_production_access_token_unreadable: !!raw.square_production_access_token_unreadable,
+            square_sandbox_access_token_present: !!raw.square_sandbox_access_token_present,
+            square_sandbox_access_token_unreadable: !!raw.square_sandbox_access_token_unreadable,
         };
     };
 

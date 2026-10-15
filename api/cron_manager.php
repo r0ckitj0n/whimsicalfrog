@@ -26,9 +26,21 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 switch ($action) {
     case 'get':
         $currentToken = secret_get($tokenKey);
-        if (!$currentToken) {
+        if (!is_string($currentToken) || $currentToken === '') {
+            if (secret_has($tokenKey)) {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'maintenance_admin_token exists but is unreadable. Restore config/secret.key or re-enter the token in Secrets.',
+                ]);
+                exit;
+            }
             $currentToken = generate_cron_token();
-            secret_set($tokenKey, $currentToken);
+            if (!secret_set($tokenKey, $currentToken)) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'error' => 'Failed to persist maintenance token']);
+                exit;
+            }
         }
 
         $baseUrl = (defined('WF_PUBLIC_BASE') && WF_PUBLIC_BASE)

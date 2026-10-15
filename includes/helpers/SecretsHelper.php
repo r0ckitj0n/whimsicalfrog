@@ -29,32 +29,60 @@ class SecretsHelper {
     }
 
     /**
-     * Rotate encryption keys for all secrets
+     * Rotate encryption keys for all secrets.
+     * Refuses to write the new key file if any secret fails to decrypt with the old key,
+     * so ciphertext is never orphaned.
      */
     public static function rotateKeys(): array {
         $rows = Database::queryAll('SELECT `key`, value_enc FROM secrets');
         $oldKey = @file_get_contents(secret_key_path());
-        if ($oldKey === false) throw new Exception('Secret key not found');
+        if ($oldKey === false || strlen($oldKey) !== 32) {
+            throw new Exception('Secret key not found or invalid');
+        }
+
+        // Dry-run decrypt first — abort before writing anything if any value is unreadable.
+        $failedKeys = [];
+        $plainByKey = [];
+        foreach ($rows as $r) {
+            $plain = self::decrypt($r['value_enc'], $oldKey);
+            if ($plain === null) {
+                $failedKeys[] = (string) $r['key'];
+                continue;
+            }
+            $plainByKey[(string) $r['key']] = $plain;
+        }
+        if (!empty($failedKeys)) {
+            throw new Exception(
+                'Key rotation aborted: ' . count($failedKeys)
+                . ' secret(s) are unreadable with the current key ('
+                . implode(', ', $failedKeys)
+                . '). Restore the correct config/secret.key or re-enter those secrets first.'
+            );
+        }
 
         $newKey = random_bytes(32);
         $reenc = 0;
-        $failed = 0;
-
-        foreach ($rows as $r) {
-            $plain = self::decrypt($r['value_enc'], $oldKey);
-            if ($plain === null) { $failed++; continue; }
+        foreach ($plainByKey as $keyName => $plain) {
             $newEnc = self::encrypt($plain, $newKey);
-            Database::execute('UPDATE secrets SET value_enc = ?, updated_at = CURRENT_TIMESTAMP WHERE `key` = ?', [$newEnc, $r['key']]);
+            Database::execute(
+                'UPDATE secrets SET value_enc = ?, updated_at = CURRENT_TIMESTAMP WHERE `key` = ?',
+                [$newEnc, $keyName]
+            );
             $reenc++;
         }
 
         $keyPath = secret_key_path();
         $tmp = $keyPath . '.new';
-        file_put_contents($tmp, $newKey);
+        if (file_put_contents($tmp, $newKey) === false) {
+            throw new Exception('Failed to write new secret key file');
+        }
         @chmod($tmp, 0600);
-        @rename($tmp, $keyPath);
+        if (!@rename($tmp, $keyPath)) {
+            @unlink($tmp);
+            throw new Exception('Failed to install new secret key file');
+        }
 
-        return ['re_encrypted' => $reenc, 'failed' => $failed];
+        return ['re_encrypted' => $reenc, 'failed' => 0];
     }
 
     private static function decrypt($encoded, $key) {

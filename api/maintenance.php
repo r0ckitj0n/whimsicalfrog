@@ -23,9 +23,22 @@ function maintenance_get_token(): string
 {
     $key = 'maintenance_admin_token';
     $tok = secret_get($key);
-    if (!$tok) {
-        $tok = maintenance_generate_token();
-        secret_set($key, $tok);
+    if (is_string($tok) && $tok !== '') {
+        return $tok;
+    }
+
+    // Present-but-unreadable: do NOT mint a replacement. Writing a new value after a
+    // missing/rotated key file would create a brand-new encryption key and orphan
+    // every other secret in the table.
+    if (function_exists('secret_has') && secret_has($key)) {
+        error_log('CRITICAL: maintenance_admin_token exists but cannot be decrypted. Restore config/secret.key or re-enter secrets.');
+        return '';
+    }
+
+    $tok = maintenance_generate_token();
+    if (!secret_set($key, $tok)) {
+        error_log('CRITICAL: failed to persist new maintenance_admin_token');
+        return '';
     }
     return $tok;
 }

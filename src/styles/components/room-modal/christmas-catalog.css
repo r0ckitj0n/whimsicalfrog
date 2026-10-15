@@ -1,0 +1,47 @@
+/* Christmas Catalog dense product spreads (rooms 20–31) */
+
+.room-modal-body--christmas-catalog {
+    scrollbar-width: thin;
+    scrollbar-color: #8b1e1e #f3e6cf;
+}
+
+.room-modal-body--christmas-catalog::-webkit-scrollbar {
+    width: 10px;
+}
+
+.room-modal-body--christmas-catalog::-webkit-scrollbar-track {
+    background: #f3e6cf;
+}
+
+.room-modal-body--christmas-catalog::-webkit-scrollbar-thumb {
+    background: #8b1e1e;
+    border-radius: 6px;
+    border: 2px solid #f3e6cf;
+}
+
+.room-modal-body--christmas-catalog .room-item.room-item-icon,
+.room-modal-body--christmas-catalog .room-item-icon {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    overflow: visible;
+}
+
+.room-modal-body--christmas-catalog .room-item.room-item-icon img,
+.room-modal-body--christmas-catalog .room-item-icon-img,
+.room-modal-body--christmas-catalog .room-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    background: transparent;
+    filter: drop-shadow(0 1px 2px rgba(60, 30, 10, 0.25));
+}
+
+.room-modal-body--christmas-catalog .room-item.room-item-icon:hover img,
+.room-modal-body--christmas-catalog .room-item-icon:hover .room-item-icon-img {
+    filter: drop-shadow(0 2px 6px rgba(60, 30, 10, 0.4)) brightness(1.05);
+    transform: scale(1.06);
+    transform-origin: center center;
+}

@@ -1,6 +1,6 @@
 import React from 'react';
 import useRoomScaling from '../../../hooks/useRoomScaling.js';
-import { ApiClient } from '../../../core/ApiClient.js';
+import { isChristmasCatalogRoom } from '../../../core/constants/christmasCatalog.js';
 
 interface RoomBodyProps {
     room_number: string | null;
@@ -25,6 +25,7 @@ export const RoomBody: React.FC<RoomBodyProps> = ({
 }) => {
     const isFullscreen = renderContext === 'fullscreen';
     const isMiddleAligned = iconVerticalAlignment === 'middle';
+    const isCatalogRoom = isChristmasCatalogRoom(room_number);
     const panelAlignItems = iconVerticalAlignment === 'top'
         ? 'flex-start'
         : iconVerticalAlignment === 'bottom'
@@ -51,16 +52,19 @@ export const RoomBody: React.FC<RoomBodyProps> = ({
 
     return (
         <div
-            className="room-modal-body"
+            className={`room-modal-body${isCatalogRoom ? ' room-modal-body--christmas-catalog' : ''}`}
+            data-christmas-catalog={isCatalogRoom ? '1' : undefined}
             ref={bodyRef}
             style={{
                 ...bgStyle,
                 // Fill mode: background fills container 100%
                 backgroundSize: '100% 100%',
-                flex: "1 1 auto",
-                overflow: 'hidden',
+                flex: '1 1 auto',
+                // Catalog pages may be dense; allow vertical scroll only when needed.
+                overflowX: 'hidden',
+                overflowY: isCatalogRoom ? 'auto' : 'hidden',
                 width: '100%',
-                minWidth: isFullscreen ? '100%' : `${dims.w * 0.5}px`, // Prevent total collapse
+                minWidth: isFullscreen ? '100%' : `${dims.w * 0.5}px`,
                 minHeight: isFullscreen ? '400px' : `${dims.h * 0.5}px`,
                 height: (isFullscreen || window.location.search.includes('bare=1')) ? '100%' : 'auto',
                 maxWidth: '100%',

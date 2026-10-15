@@ -1,9 +1,10 @@
 <?php
 
 // Secure maintenance endpoint(s) for routine tasks like pruning old sessions.
-// Usage (example):
-//   GET /api/maintenance.php?action=prune_sessions&days=2&admin_token=whimsical_admin_2024
-// Response: {"success":true,"action":"prune_sessions","deleted":N}
+// Prefer POST + X-Maintenance-Token header (or admin_token in POST body). Do not put tokens in query strings.
+// Usage:
+//   curl -sS -X POST 'https://whimsicalfrog.us/api/maintenance.php?action=prune_sessions' \
+//     -H 'X-Maintenance-Token: <token>' -d 'days=2'
 
 declare(strict_types=1);
 
@@ -13,21 +14,60 @@ $root = dirname(__DIR__);
 require_once $root . '/api/config.php';
 require_once $root . '/includes/secret_store.php';
 
-// Token handling via Secret Store (rotatable)
+const MAINTENANCE_TOKEN_KEY = 'maintenance_admin_token';
+
 function maintenance_generate_token(): string
 {
     return bin2hex(random_bytes(24)); // 48 hex chars
 }
 
-function maintenance_get_token(): string
+/** True when secret_store value is a password_hash() digest. */
+function maintenance_is_hash(string $stored): bool
 {
-    $key = 'maintenance_admin_token';
-    $tok = secret_get($key);
-    if (!$tok) {
-        $tok = maintenance_generate_token();
-        secret_set($key, $tok);
+    // password_get_info is the reliable detector for PHP password_* digests.
+    $info = password_get_info($stored);
+    return isset($info['algo']) && $info['algo'] !== null && $info['algo'] !== 0;
+}
+
+/**
+ * Verify a provided bearer/admin token against the rotatable secret.
+ * Prefer storing password_hash() digests; plaintext is accepted only during migration.
+ */
+function maintenance_token_valid(string $provided): bool
+{
+    if ($provided === '') {
+        return false;
     }
-    return $tok;
+    $stored = secret_get(MAINTENANCE_TOKEN_KEY);
+    if (!is_string($stored) || $stored === '') {
+        return false;
+    }
+    if (maintenance_is_hash($stored)) {
+        return password_verify($provided, $stored);
+    }
+    // Legacy plaintext secret (pre-hash migration)
+    return hash_equals($stored, $provided);
+}
+
+/** Rotate: store only a hash server-side; return the one-time plaintext to the caller. */
+function maintenance_rotate_token(): string
+{
+    $plain = maintenance_generate_token();
+    $hash = password_hash($plain, PASSWORD_DEFAULT);
+    if ($hash === false || !secret_set(MAINTENANCE_TOKEN_KEY, $hash)) {
+        throw new RuntimeException('Failed to persist maintenance token hash');
+    }
+    return $plain;
+}
+
+function maintenance_ensure_token_exists(): void
+{
+    $stored = secret_get(MAINTENANCE_TOKEN_KEY);
+    if (is_string($stored) && $stored !== '') {
+        return;
+    }
+    // Bootstrap: store a hash only (plaintext is not retained server-side).
+    maintenance_rotate_token();
 }
 
 function maintenance_log_file(): string
@@ -51,25 +91,63 @@ function maintenance_log($event, array $data = []): void
     @file_put_contents(maintenance_log_file(), json_encode($entry, JSON_UNESCAPED_SLASHES) . PHP_EOL, FILE_APPEND | LOCK_EX);
 }
 
-$provided = $_REQUEST['admin_token'] ?? ($_SERVER['HTTP_X_MAINTENANCE_TOKEN'] ?? '');
-$expected = maintenance_get_token();
-$legacy = 'whimsical_admin_2024'; // temporary backward-compatibility
-if (!hash_equals($expected, (string)$provided)) {
-    if ($provided !== '' && hash_equals($legacy, (string)$provided)) {
-        header('X-Legacy-Token-Used: 1');
-        maintenance_log('auth.legacy_token_used');
-        // allow but encourage rotation; log handled above
-    } else {
-        http_response_code(403);
-        echo json_encode([
-            'success' => false,
-            'error' => 'Forbidden',
-        ]);
-        exit;
+/** Read php://input once (stream is not rewindable). */
+function maintenance_json_body(): array
+{
+    static $parsed = null;
+    if ($parsed !== null) {
+        return $parsed;
     }
+    $raw = file_get_contents('php://input');
+    if (!is_string($raw) || $raw === '') {
+        $parsed = [];
+        return $parsed;
+    }
+    $json = json_decode($raw, true);
+    $parsed = is_array($json) ? $json : [];
+    return $parsed;
+}
+
+function maintenance_read_provided_token(): string
+{
+    // Prefer header, then POST body / JSON — never require query-string tokens.
+    $header = $_SERVER['HTTP_X_MAINTENANCE_TOKEN'] ?? '';
+    if (is_string($header) && $header !== '') {
+        return $header;
+    }
+    if (isset($_POST['admin_token']) && is_string($_POST['admin_token']) && $_POST['admin_token'] !== '') {
+        return $_POST['admin_token'];
+    }
+    $json = maintenance_json_body();
+    if (isset($json['admin_token']) && is_string($json['admin_token']) && $json['admin_token'] !== '') {
+        return $json['admin_token'];
+    }
+    // Last-resort legacy query param (discouraged; kept so old cron fails closed after rotation)
+    if (isset($_GET['admin_token']) && is_string($_GET['admin_token'])) {
+        return $_GET['admin_token'];
+    }
+    return '';
+}
+
+maintenance_ensure_token_exists();
+
+$provided = maintenance_read_provided_token();
+if (!maintenance_token_valid($provided)) {
+    http_response_code(403);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Forbidden',
+    ]);
+    exit;
 }
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
+if ($action === '' ) {
+    $jsonAction = maintenance_json_body();
+    if (isset($jsonAction['action']) && is_string($jsonAction['action'])) {
+        $action = $jsonAction['action'];
+    }
+}
 $allowedActions = ['prune_sessions'];
 if (!in_array($action, $allowedActions, true)) {
     json_fail('Unknown or missing action', ['allowed' => $allowedActions], 400);
@@ -93,7 +171,15 @@ switch ($action) {
             json_fail('Method not allowed', [], 405);
             exit;
         }
-        $days = isset($_POST['days']) ? max(0, min(30, (int)$_POST['days'])) : 2;
+        $days = 2;
+        if (isset($_POST['days'])) {
+            $days = max(0, min(30, (int)$_POST['days']));
+        } else {
+            $json = maintenance_json_body();
+            if (isset($json['days'])) {
+                $days = max(0, min(30, (int)$json['days']));
+            }
+        }
         $sessionDir = '/tmp/whimsicalfrog_sessions';
 
         if (!is_dir($sessionDir)) {
